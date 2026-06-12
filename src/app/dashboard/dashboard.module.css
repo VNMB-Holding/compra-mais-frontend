@@ -1,0 +1,287 @@
+.viewDashboard {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.pageHeaderSimple h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.pageHeaderSimple p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.wave {
+  display: inline-block;
+  animation: wave-animation 2.5s infinite;
+  transform-origin: 70% 70%;
+}
+
+@keyframes wave-animation {
+  0% { transform: rotate( 0.0deg) }
+  10% { transform: rotate(14.0deg) }
+  20% { transform: rotate(-8.0deg) }
+  30% { transform: rotate(14.0deg) }
+  40% { transform: rotate(-4.0deg) }
+  50% { transform: rotate(10.0deg) }
+  65% { transform: rotate( 0.0deg) }
+  100% { transform: rotate( 0.0deg) }
+}
+
+.heroBanner {
+  background-image: url('/images/bg-hero-card.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 16px;
+  padding: 40px;
+  color: white;
+  min-height: 180px; 
+}
+
+.heroContent h2 {
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 0 0 16px 0;
+  color: #0f172a;
+}
+
+.heroContent h2 strong {
+  font-weight: 700;
+  color: #007d79;
+}
+
+.heroContent p {
+  font-size: 15px;
+  line-height: 1.5;
+  opacity: 0.9;
+  margin: 0;
+  color: #334155;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.middleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.chartCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  margin-bottom: 16px;
+}
+
+.cardHeader h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.chartValue h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pos { color: #16a34a; }
+.pos span { font-size: 14px; }
+.trend small { color: #94a3b8; font-weight: 400; margin-left: 2px;}
+
+.chartWrapperElement {
+  flex-grow: 1;
+  margin-top: 16px;
+}
+
+.cardLink {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #007d79;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: gap 0.2s;
+  width: fit-content;
+}
+
+.cardLink:hover { gap: 10px; }
+.cardLink span { font-size: 16px; }
+
+/* CARD URGENTE */
+.urgentCardWrapper {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  overflow: hidden;
+  min-height: 280px;
+}
+
+.uqContent {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.uqTitle h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 8px 0 2px 0;
+}
+
+.uqTitle span {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.uqDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.uqDetails small {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.uqDetails div {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.fullW { grid-column: span 2; }
+
+.uqImage {
+  height: 140px;
+  background-image: url('/images/bg-hero-card.png'); /* Ou a imagem do container/indústria */
+  background-size: cover;
+  background-position: center;
+  margin-top: auto;
+}
+
+/* DONUT CHART */
+.donutChartContainer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-grow: 1;
+  min-height: 160px;
+}
+
+.donutGraphicBox {
+  flex: 1;
+  max-width: 130px;
+  height: 140px; /* ALTERE AQUI: Mude de max-height para height fixa */
+  position: relative; /* Ajuda o Recharts a se posicionar */
+}
+
+.donutLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.legItem {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.legName {
+  flex-grow: 1;
+  white-content: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pct {
+  font-weight: 600;
+  color: #0f172a;
+  margin-left: 8px;
+}
+
+/* TABELA CARD */
+.tableCard {
+  padding: 24px;
+}
+
+.tableHeaderActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+}
+
+.tableHeaderActions :global(.Tabs_tabsWrapper__3nZ8x) {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.boldCode {
+  font-weight: 600;
+  color: #007d79 !important;
+}
+
+.rowActions {
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.rowActions:hover { color: #0f172a; }

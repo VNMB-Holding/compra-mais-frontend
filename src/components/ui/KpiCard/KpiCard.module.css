@@ -1,0 +1,84 @@
+.kpiCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 180px;
+  position: relative;
+}
+
+.iconWrapper {
+  width: 40px;
+  height: 40px;
+  background-color: #e6f2f2;
+  color: #007d79;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.iconWrapper span {
+  font-size: 22px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+}
+
+.title {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.trendValue {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.trendLabel {
+  color: #94a3b8;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #007d79;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  width: fit-content;
+  transition: gap 0.2s ease;
+}
+
+.linkButton:hover {
+  gap: 10px;
+}
+
+.linkButton span {
+  font-size: 18px;
+}

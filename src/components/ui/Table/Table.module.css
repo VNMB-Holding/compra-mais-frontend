@@ -1,0 +1,7 @@
+.tableResponsive { width: 100%; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; text-align: left; }
+.table th { padding: 16px; font-size: 12px; font-weight: 600; color: var(--text-muted, #64748b); border-bottom: 1px solid var(--border, #e2e8f0); text-transform: uppercase; letter-spacing: 0.05em; }
+.table :global(tr) { transition: background-color 0.2s ease; }
+.table :global(tr:hover) { background-color: var(--bg-color, #f8fafc); cursor: pointer; }
+.table :global(td) { padding: 16px; font-size: 13px; color: var(--text-main, #334155); border-bottom: 1px solid var(--border, #e2e8f0); vertical-align: middle; }
+.table :global(tr:last-child td) { border-bottom: none; }
