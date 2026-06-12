@@ -9,7 +9,6 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
-  // Função auxiliar para verificar se o link está ativo
   const isActive = (path: string) => {
     if (path === "/dashboard" && pathname === "/dashboard") return true;
     if (path !== "/dashboard" && pathname.startsWith(path)) return true;
@@ -18,7 +17,6 @@ export default function Sidebar() {
 
   return (
     <aside className={`${styles.mainNav} ${isCollapsed ? styles.collapsed : ""}`}>
-      {/* Botão de Controle do Menu (Toggle) */}
       <button 
         className={styles.toggleBtn} 
         onClick={() => setIsCollapsed(!isCollapsed)}
@@ -29,16 +27,14 @@ export default function Sidebar() {
         </span>
       </button>
 
-      {/* Área da Logo */}
       <div className={styles.logoArea}>
         <img 
-          src={isCollapsed ? "/images/window.svg" : "/images/next.svg"} 
+          src={isCollapsed ? "/images/vb-logo.svg" : "/images/vnmb-connect-logo.svg"} 
           alt="Logo" 
           className={styles.logoImg} 
         />
       </div>
 
-      {/* Links de Navegação */}
       <div className={styles.navContent}>
         <Link 
           href="/dashboard" 
@@ -48,7 +44,6 @@ export default function Sidebar() {
           {!isCollapsed && "Dashboard"}
         </Link>
 
-        {/* Seção COMPRAS */}
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>COMPRAS</div>
           <Link href="/compras/solicitacoes" className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}>
@@ -69,7 +64,6 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        {/* Seção FORNECEDORES */}
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>FORNECEDORES</div>
           <Link href="/fornecedores/diretorio" className={`${styles.navItem} ${isActive("/fornecedores/diretorio") ? styles.active : ""}`}>
@@ -86,7 +80,6 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        {/* Seção ANALYTICS */}
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>ANALYTICS</div>
           <Link href="/analytics/insights" className={`${styles.navItem} ${isActive("/analytics/insights") ? styles.active : ""}`}>
@@ -104,7 +97,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Rodapé da Sidebar */}
       <div className={styles.sidebarFooter}>
         {!isCollapsed && (
           <div className={styles.helpCard}>
