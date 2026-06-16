@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./Sidebar.module.css";
 
-export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+interface SidebarProps {
+  isCollapsed?: boolean;
+}
+
+export default function Sidebar({ isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (path: string) => {
@@ -17,15 +20,6 @@ export default function Sidebar() {
 
   return (
     <aside className={`${styles.mainNav} ${isCollapsed ? styles.collapsed : ""}`}>
-      <button 
-        className={styles.toggleBtn} 
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        title={isCollapsed ? "Expandir menu" : "Recolher menu"}
-      >
-        <span className="material-symbols-outlined">
-          {isCollapsed ? "menu" : "menu_open"}
-        </span>
-      </button>
 
       <div className={styles.logoArea}>
         <img 
