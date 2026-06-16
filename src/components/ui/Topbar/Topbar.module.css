@@ -1,0 +1,240 @@
+.topbar {
+  height: 72px;
+  background-color: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggleSidebarBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #64748b);
+  transition: all 0.2s;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.toggleSidebarBtn:hover {
+  color: var(--text-main, #0f172a);
+  background-color: var(--bg-color, #f8fafc);
+}
+
+.searchBar {
+  display: flex; 
+  align-items: center; 
+  background-color: var(--bg-color, #f8fafc);
+  border-radius: 8px; 
+  padding: 8px 16px; 
+  width: 400px;
+  border: 1px solid transparent; 
+  transition: border 0.2s, background-color 0.2s;
+}
+
+.searchBar:focus-within { 
+  border-color: var(--primary, #007d79); 
+  background: white; 
+}
+
+.searchBar span { 
+  color: var(--text-muted, #64748b); 
+  font-size: 20px; 
+}
+
+.searchBar input {
+  border: none; 
+  background: transparent; 
+  outline: none;
+  padding: 0 12px; 
+  flex: 1; 
+  font-size: 14px; 
+  color: var(--text-main, #0f172a);
+}
+
+.shortcut {
+  background: white; 
+  border: 1px solid var(--border, #e2e8f0); 
+  padding: 2px 6px;
+  border-radius: 4px; 
+  font-size: 11px; 
+  color: var(--text-muted, #64748b);
+}
+
+.topbarRight { 
+  display: flex; 
+  align-items: center; 
+  gap: 20px; 
+}
+
+/* POPUP E DROPDOWN SYSTEM */
+.popupWrapper {
+  position: relative;
+}
+
+.iconBtn { 
+  position: relative; 
+  cursor: pointer; 
+  color: var(--text-muted, #64748b); 
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.iconBtn:hover, .activeIcon { 
+  color: var(--text-main, #0f172a); 
+  background-color: var(--bg-color, #f8fafc);
+}
+
+.iconBtn .badge {
+  position: absolute; 
+  top: 2px; 
+  right: 2px; 
+  background: var(--primary, #007d79);
+  color: white; 
+  font-size: 10px; 
+  font-weight: bold; 
+  width: 16px; 
+  height: 16px;
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.companySelector {
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  font-size: 13px;
+  font-weight: 600; 
+  cursor: pointer; 
+  padding-left: 20px; 
+  border-left: 1px solid var(--border, #e2e8f0);
+  color: var(--text-main, #0f172a);
+}
+
+.companySelector span {
+  transition: transform 0.2s ease;
+}
+
+.rotate {
+  transform: rotate(180deg);
+}
+
+.userAvatarSmall {
+  width: 32px; 
+  height: 32px; 
+  background: var(--primary, #007d79); 
+  color: white;
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  font-weight: bold; 
+  font-size: 14px;
+}
+
+/* CAIXINHA CONTAINER DO POPUP */
+.dropdownBox {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  width: 320px;
+  background: white;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.companyDropdown {
+  width: 200px;
+  top: 36px;
+}
+
+.dropdownHeader {
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: #f8fafc;
+  color: var(--text-main);
+}
+
+.dropdownContent {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.dropdownItem {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 13px;
+}
+
+.dropdownItem:last-child {
+  border-bottom: none;
+}
+
+.dropdownItem:hover {
+  background: #f8fafc;
+}
+
+.dropdownItem strong {
+  display: block;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.dropdownItem p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.dropdownItem small {
+  color: var(--text-muted);
+  display: block;
+  margin-top: 4px;
+}
+
+.dropdownItemActive {
+  padding: 12px 16px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdownItemActive span {
+  font-size: 18px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
