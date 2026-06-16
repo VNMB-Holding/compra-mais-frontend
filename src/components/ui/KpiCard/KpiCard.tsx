@@ -6,8 +6,9 @@ interface KpiCardProps {
   title: string;
   value: string | number;
   icon: string;
-  linkLabel: string;
+  linkLabel?: string;
   onLinkClick?: () => void;
+  description?: string;
   trend?: {
     value: string;
     label: string;
@@ -20,6 +21,7 @@ export default function KpiCard({
   icon,
   linkLabel,
   onLinkClick,
+  description,
   trend
 }: KpiCardProps) {
   return (
@@ -31,7 +33,11 @@ export default function KpiCard({
       <div className={styles.content}>
         <span className={styles.title}>{title}</span>
         <h3 className={styles.value}>{value}</h3>
-        
+
+        {description && (
+          <span className={styles.description}>{description}</span>
+        )}
+
         {trend && (
           <div className={styles.trend}>
             <span className={styles.trendValue}>{trend.value}</span>
@@ -40,10 +46,12 @@ export default function KpiCard({
         )}
       </div>
 
-      <button className={styles.linkButton} onClick={onLinkClick}>
-        {linkLabel}
-        <span className="material-symbols-outlined">arrow_forward</span>
-      </button>
+      {linkLabel && (
+        <button className={styles.linkButton} onClick={onLinkClick}>
+          {linkLabel}
+          <span className="material-symbols-outlined">arrow_forward</span>
+        </button>
+      )}
     </Card>
   );
 }
