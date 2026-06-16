@@ -1,0 +1,69 @@
+.detailContainer { display: flex; flex-direction: column; gap: 24px; }
+.backBtn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: var(--primary, #007d79); font-size: 14px; font-weight: 600; cursor: pointer; align-self: flex-start; padding: 0; }
+.titleRow { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+.titleRow h1 { font-size: 28px; font-weight: 700; color: #0f172a; margin: 0; }
+.subtitleLarge { font-size: 18px; font-weight: 600; color: #334155; margin: 0 0 12px 0; }
+.pageHeader { display: flex; justify-content: space-between; align-items: flex-start; }
+.metadataTags { display: flex; gap: 12px; margin-top: 14px; }
+.infoTag { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 13px; color: #475569; display: inline-flex; align-items: center; gap: 6px; }
+.infoTag span { font-size: 18px; color: #64748b; }
+.tagHigh { background: #fee2e2; color: #b91c1c; border-color: transparent; font-weight: 600; }
+.tagHigh span { color: #b91c1c; }
+.headerActions { display: flex; gap: 12px; }
+
+/* GRID LAYOUT DE DUAS COLUNAS */
+.layout2Col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+.colMain, .colSide { display: flex; flex-direction: column; gap: 24px; }
+
+/* STEPPER */
+.flowCard h4, .infoCard h4, .sideCard h4 { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 20px 0; }
+.stepperContainer { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+.step { display: flex; flex-direction: column; align-items: center; text-align: center; width: 120px; gap: 8px; }
+.stepIcon { width: 44px; height: 44px; border-radius: 50%; background: white; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; position: relative; }
+.stepInfo { display: flex; flex-direction: column; gap: 2px; }
+.stepInfo strong { font-size: 13px; color: #0f172a; }
+.stepInfo span { font-size: 12px; color: #64748b; }
+.stepInfo small { font-size: 11px; color: #94a3b8; }
+
+.completed .stepIcon { border-color: #007d79; color: #007d79; }
+.checkBadge { position: absolute; bottom: -2px; right: -2px; background: #16a34a; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+.checkBadge span { font-size: 12px; font-weight: bold; }
+
+.active .stepIcon { border-color: #007d79; background: #007d79; color: white; }
+.active .stepInfo strong { color: #007d79; }
+.warningBadgeHint { background: #fef3c7; color: #d97706; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; align-self: center; margin-top: 2px; }
+
+.stepLine { flex: 1; height: 2px; background: #e2e8f0; margin: 0 -10px; transform: translateY(-30px); }
+.lineActive { background: #007d79; }
+
+/* FICHA TÉCNICA */
+.infoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+.infoItem { display: flex; flex-direction: column; gap: 4px; }
+.infoItem label { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+.infoItem span { font-size: 14px; color: #334155; }
+.infoItem strong { font-size: 16px; color: #0f172a; }
+.span2 { grid-column: span 2; }
+.textPrimary { color: #007d79; }
+
+/* TIMELINE VERTICAL LATERAL */
+.verticalTimeline { display: flex; flex-direction: column; padding-left: 8px; position: relative; }
+.verticalTimeline::before { content: ''; position: absolute; left: 12.5px; top: 4px; bottom: 4px; width: 2px; background: #e2e8f0; }
+.vtItem { display: flex; gap: 16px; padding-bottom: 24px; position: relative; }
+.vtItem:last-child { padding-bottom: 0; }
+.vtDot { width: 10px; height: 10px; border-radius: 50%; background: white; border: 2px solid #cbd5e1; z-index: 2; margin-top: 4px; }
+.vtContent { display: flex; flex-direction: column; font-size: 13px; }
+.vtContent strong { color: #0f172a; }
+.vtContent p { margin: 2px 0; color: #475569; }
+.vtContent small { color: #94a3b8; font-size: 11px; }
+.vtDone .vtDot { border-color: #007d79; background: #007d79; }
+.vtCurrent .vtDot { border-color: #d97706; border-width: 3px; }
+
+/* ANEXOS */
+.fileRow { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+.fileRow span { color: #b91c1c; font-size: 28px; }
+.fileInfo { flex-grow: 1; display: flex; flex-direction: column; font-size: 13px; }
+.fileInfo strong { color: #0f172a; }
+.fileInfo small { color: #64748b; }
+.downloadIconBtn { background: none; border: none; color: #64748b; cursor: pointer; padding: 4px; border-radius: 4px; }
+.downloadIconBtn:hover { background: #e2e8f0; color: #0f172a; }
+.downloadIconBtn span { font-size: 20px; }
