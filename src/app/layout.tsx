@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/ui";
+import LayoutClient from "./LayoutClient";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,12 +24,7 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <div style={{ display: 'flex', minHeight: '100vh', maxWidth: '100%' }}>
-          <Sidebar />
-          <main style={{ flexGrow: 1, backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-            {children}
-          </main>
-        </div>
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   );
