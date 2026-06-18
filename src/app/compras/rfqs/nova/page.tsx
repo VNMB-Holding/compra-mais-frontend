@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button } from "@/components/ui";
+import { Card, Button, Icon } from "@/components/ui";
 import styles from "./rfq-new.module.css";
 
 interface FornecedorConvidado {
@@ -95,7 +95,7 @@ Suprimentos | VNMB HOLDING`;
   return (
     <div className={styles.formContainer}>
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
-        <span className="material-symbols-outlined">chevron_left</span> Voltar para Cotações
+        <Icon name="chevron-left" /> Voltar para Cotações
       </button>
 
       <div className={styles.pageHeader}>
@@ -118,7 +118,7 @@ Suprimentos | VNMB HOLDING`;
 
             {solicitacaoVinculada && (
               <div className={styles.summaryBox}>
-                <span className="material-symbols-outlined">lock</span>
+                <Icon name="lock-01" />
                 <div>
                   <strong>{itens[0]?.descricao}</strong> — {itens[0]?.qtd.toLocaleString("pt-BR")} {itens[0]?.unidade}
                   <small>Dados protegidos contra alteração (Origem: {solicitacaoVinculada})</small>
@@ -173,7 +173,7 @@ Suprimentos | VNMB HOLDING`;
           <div className={styles.formActions}>
             <button className={styles.btnCancel} onClick={() => router.push("/compras/rfqs")}>Cancelar</button>
             <Button variant="primary" className={styles.btnSubmit} onClick={() => router.push("/compras/rfqs")}>
-              <span className="material-symbols-outlined">rocket_launch</span> Publicar e Enviar Cotação
+              <Icon name="rocket-01" /> Publicar e Enviar Cotação
             </Button>
           </div>
         </Card>
@@ -186,7 +186,7 @@ Suprimentos | VNMB HOLDING`;
               <span className={`${styles.dot} ${styles.dotG}`}></span>
             </div>
             <button className={styles.emailCopyBtn} onClick={handleCopiarMensagem}>
-              <span className="material-symbols-outlined">content_copy</span> Copiar
+              <Icon name="copy-01" /> Copiar
             </button>
           </div>
           <div className={styles.emailMeta}>

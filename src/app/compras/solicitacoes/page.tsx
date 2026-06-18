@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, Icon } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
@@ -51,7 +51,7 @@ export default function SolicitacoesPage() {
       width: "40px",
       cell: () => (
         <button className={styles.iconBtn}>
-          <span className="material-symbols-outlined">chevron_right</span>
+          <Icon name="chevron-right" />
         </button>
       )
     }
@@ -66,30 +66,30 @@ export default function SolicitacoesPage() {
           <p>Gerencie as demandas internas de materiais e serviços antes de abrir cotações.</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnExport}><span className="material-symbols-outlined">download</span> Exportar</button>
+          <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
           <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/solicitacoes/nova")}>
-            <span className="material-symbols-outlined">add</span> Nova Solicitação
+            <Icon name="plus" /> Nova Solicitação
           </Button>
         </div>
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de solicitações" value="3" icon="description" description="Neste mês" />
-        <KpiCard title="Aguardando aprovação" value="1" icon="hourglass_top" description="Pendente" />
-        <KpiCard title="Aprovadas" value="1" icon="check_circle" description="Prontas para cotar" />
-        <KpiCard title="Categorias" value="3" icon="category" description="Combustível, MRO, Serviços" />
+        <KpiCard title="Total de solicitações" value="3" icon="clipboard" description="Neste mês" />
+        <KpiCard title="Aguardando aprovação" value="1" icon="hourglass-01" description="Pendente" />
+        <KpiCard title="Aprovadas" value="1" icon="check-circle" description="Prontas para cotar" />
+        <KpiCard title="Categorias" value="3" icon="folder" description="Combustível, MRO, Serviços" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
 
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <span className="material-symbols-outlined">search</span>
+            <Icon name="search-md" />
             <input type="text" placeholder="Buscar solicitação..." />
           </div>
           <div className={styles.filtersGroup}>
             <div className={styles.selectWrapper}>
-              <span className="material-symbols-outlined">filter_list</span>
+              <Icon name="filter-lines" />
               <select defaultValue="Todas"><option value="Todas">Todas as categorias</option></select>
             </div>
             <div className={styles.selectWrapper}>
@@ -103,9 +103,9 @@ export default function SolicitacoesPage() {
         <div className={styles.tableFooter}>
           <span>Mostrando {listaSolicitacoes.length} de {listaSolicitacoes.length} solicitações</span>
           <div className={styles.paginationControls}>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_left</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_right</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
           </div>
         </div>
 

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button } from "@/components/ui";
+import { Card, Button, Icon } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
 export default function NovaSolicitacaoPage() {
@@ -11,7 +11,7 @@ export default function NovaSolicitacaoPage() {
   return (
     <div className={styles.formContainer}>
       <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
-        <span className="material-symbols-outlined">chevron_left</span> Voltar para Solicitações
+        <Icon name="chevron-left" /> Voltar para Solicitações
       </button>
 
       <div className={styles.pageHeader}>
@@ -96,7 +96,7 @@ export default function NovaSolicitacaoPage() {
         <div className={styles.formActions}>
           <button className={styles.btnCancel} onClick={() => router.push("/compras/solicitacoes")}>Cancelar</button>
           <Button variant="primary" className={styles.btnSubmit} onClick={() => router.push("/compras/solicitacoes")}>
-            <span className="material-symbols-outlined">send</span> Enviar para Aprovação
+            <Icon name="send-01" /> Enviar para Aprovação
           </Button>
         </div>
 

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, Icon } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./pedidos.module.css";
@@ -44,7 +44,7 @@ export default function PedidosPage() {
       width: "40px",
       cell: () => (
         <button className={styles.iconBtn}>
-          <span className="material-symbols-outlined">chevron_right</span>
+          <Icon name="chevron-right" />
         </button>
       )
     }
@@ -59,30 +59,30 @@ export default function PedidosPage() {
           <p>Acompanhe o faturamento, prazos de entrega e formalização dos contratos com fornecedores.</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnExport}><span className="material-symbols-outlined">download</span> Exportar</button>
+          <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
           <Button variant="primary" className={styles.btnAdd}>
-            <span className="material-symbols-outlined">add</span> Novo Pedido
+            <Icon name="plus" /> Novo Pedido
           </Button>
         </div>
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de pedidos" value="3" icon="shopping_cart" description="Este mês" />
-        <KpiCard title="Pendentes" value="1" icon="schedule" description="Aguardando entrega" />
-        <KpiCard title="Entregues" value="1" icon="check_circle" description="Finalizados" />
-        <KpiCard title="Valor total" value="R$ 28,8K" icon="payments" description="Em pedidos" />
+        <KpiCard title="Total de pedidos" value="3" icon="shopping-cart-01" description="Este mês" />
+        <KpiCard title="Pendentes" value="1" icon="clock" description="Aguardando entrega" />
+        <KpiCard title="Entregues" value="1" icon="check-circle" description="Finalizados" />
+        <KpiCard title="Valor total" value="R$ 28,8K" icon="currency-dollar-circle" description="Em pedidos" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
 
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <span className="material-symbols-outlined">search</span>
+            <Icon name="search-md" />
             <input type="text" placeholder="Buscar pedido..." />
           </div>
           <div className={styles.filtersGroup}>
             <div className={styles.selectWrapper}>
-              <span className="material-symbols-outlined">filter_list</span>
+              <Icon name="filter-lines" />
               <select defaultValue="Todas"><option value="Todas">Todos os fornecedores</option></select>
             </div>
             <div className={styles.selectWrapper}>
@@ -96,9 +96,9 @@ export default function PedidosPage() {
         <div className={styles.tableFooter}>
           <span>Mostrando {listaPedidos.length} de {listaPedidos.length} pedidos</span>
           <div className={styles.paginationControls}>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_left</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_right</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
           </div>
         </div>
 

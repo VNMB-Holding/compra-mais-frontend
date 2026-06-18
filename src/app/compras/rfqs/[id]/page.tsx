@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Icon } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import styles from "./rfq-detail.module.css";
 
@@ -41,7 +41,7 @@ export default function RfqDetailPage() {
     <div className={styles.detailContainer}>
       
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
-        <span className="material-symbols-outlined">chevron_left</span>
+        <Icon name="chevron-left" />
         Voltar para Cotações
       </button>
 
@@ -53,15 +53,15 @@ export default function RfqDetailPage() {
           </div>
           <p className={styles.subtitleLarge}>Óleo Diesel S10</p>
           <div className={styles.metadataRow}>
-            <span><span className="material-symbols-outlined">category</span> Combustíveis</span>
-            <span><span className="material-symbols-outlined">person</span> Criada por Maria Costa</span>
-            <span><span className="material-symbols-outlined">calendar_today</span> 22/05/2024</span>
-            <span><span className="material-symbols-outlined">schedule</span> Encerramento: 24/05/2024 às 14:00</span>
+            <span><Icon name="folder" /> Combustíveis</span>
+            <span><Icon name="user-01" /> Criada por Maria Costa</span>
+            <span><Icon name="calendar" /> 22/05/2024</span>
+            <span><Icon name="clock" /> Encerramento: 24/05/2024 às 14:00</span>
           </div>
         </div>
         <div className={styles.headerActions}>
           <Button variant="secondary">Encerrar RFQ</Button>
-          <Button variant="primary"><span className="material-symbols-outlined">edit</span> Editar</Button>
+          <Button variant="primary"><Icon name="edit-01" /> Editar</Button>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export default function RfqDetailPage() {
               <div className={styles.darkCardContent}>
                 <div className={styles.metricTop}>
                   <span>Economia Potencial</span>
-                  <span className="material-symbols-outlined">trending_up</span>
+                  <Icon name="trend-up-01" />
                 </div>
                 <h3>R$ 32.450</h3>
                 <span className={styles.subTextDark}>24,7% vs. referência</span>
@@ -110,7 +110,7 @@ export default function RfqDetailPage() {
               <div className={styles.recLeftBlock}>
                 <div className={styles.recBadgeRow}>
                   <div className={styles.recIconCircle}>
-                    <span className="material-symbols-outlined">workspace_premium</span>
+                    <Icon name="certificate-01" />
                   </div>
                   <span className={styles.blueTagText}>Recomendação automática</span>
                 </div>
@@ -128,10 +128,10 @@ export default function RfqDetailPage() {
               </div>
               <div className={styles.tableActionRow}>
                 <Button variant="primary" onClick={() => setIsModalOpen(true)} className={styles.launchBtnStyle}>
-                  <span className="material-symbols-outlined">mail</span> Lançar Preços do E-mail
+                  <Icon name="mail-01" /> Lançar Preços do E-mail
                 </Button>
                 <Button variant="secondary">
-                  <span className="material-symbols-outlined">download</span> Exportar Planilha
+                  <Icon name="download-01" /> Exportar Planilha
                 </Button>
               </div>
             </div>
@@ -233,7 +233,7 @@ export default function RfqDetailPage() {
               <h4>Documentos e Anexos Técnicos</h4>
               <p className={styles.anexoIntro}>Arquivos oficiais anexados à cotação:</p>
               <div className={styles.anexoRow}>
-                <span className="material-symbols-outlined">description</span>
+                <Icon name="file-01" />
                 <div className={styles.anexoInfo}>
                   <strong>Termo_de_Referencia_Diesel.pdf</strong>
                   <small>PDF • 2.4 MB</small>
@@ -250,7 +250,7 @@ export default function RfqDetailPage() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3>Lançar Proposta Comercial Recebida</h3>
-              <span className={`material-symbols-outlined ${styles.closeModal}`} onClick={() => setIsModalOpen(false)}>close</span>
+              <Icon name="x-close" className={styles.closeModal} onClick={() => setIsModalOpen(false)} />
             </div>
             
             <div className={styles.modalBody}>
@@ -292,7 +292,7 @@ export default function RfqDetailPage() {
             <div className={styles.modalFooter}>
               <button className={styles.cancelModalBtn} onClick={() => setIsModalOpen(false)}>Cancelar</button>
               <Button variant="primary" onClick={() => setIsModalOpen(false)}>
-                <span className="material-symbols-outlined">save</span> Consolidar Proposta
+                <Icon name="save-01" /> Consolidar Proposta
               </Button>
             </div>
           </div>

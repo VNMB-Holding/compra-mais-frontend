@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, Icon } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
@@ -45,7 +45,7 @@ export default function RfqsPage() {
       width: "40px",
       cell: () => (
         <button className={styles.iconBtn}>
-          <span className="material-symbols-outlined">chevron_right</span>
+          <Icon name="chevron-right" />
         </button>
       )
     }
@@ -60,30 +60,30 @@ export default function RfqsPage() {
           <p>Gerencie os processos de cotação e negociação com fornecedores.</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnExport}><span className="material-symbols-outlined">download</span> Exportar</button>
+          <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
           <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/rfqs/nova")}>
-            <span className="material-symbols-outlined">add</span> Nova RFQ
+            <Icon name="plus" /> Nova RFQ
           </Button>
         </div>
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs abertas" value="1" icon="receipt_long" description="Aguardando propostas" />
-        <KpiCard title="Encerrando hoje" value="1" icon="schedule" description="Atenção necessária" />
-        <KpiCard title="Propostas recebidas" value="4" icon="description" description="Nesta rodada" />
-        <KpiCard title="Categorias em jogo" value="3" icon="checklist" description="MRO, Serviços, Matérias-Primas" />
+        <KpiCard title="RFQs abertas" value="1" icon="receipt-check" description="Aguardando propostas" />
+        <KpiCard title="Encerrando hoje" value="1" icon="clock" description="Atenção necessária" />
+        <KpiCard title="Propostas recebidas" value="4" icon="mail-01" description="Nesta rodada" />
+        <KpiCard title="Categorias em jogo" value="3" icon="clipboard-check" description="MRO, Serviços, Matérias-Primas" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
 
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <span className="material-symbols-outlined">search</span>
+            <Icon name="search-md" />
             <input type="text" placeholder="Buscar RFQ..." />
           </div>
           <div className={styles.filtersGroup}>
             <div className={styles.selectWrapper}>
-              <span className="material-symbols-outlined">filter_list</span>
+              <Icon name="filter-lines" />
               <select defaultValue="Todas"><option value="Todas">Todas as categorias</option></select>
             </div>
             <div className={styles.selectWrapper}>
@@ -97,9 +97,9 @@ export default function RfqsPage() {
         <div className={styles.tableFooter}>
           <span>Mostrando {listaRfqs.length} de {listaRfqs.length} RFQs</span>
           <div className={styles.paginationControls}>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_left</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_right</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
           </div>
         </div>
 

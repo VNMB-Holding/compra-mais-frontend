@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Icon } from "@/components/ui";
 import styles from "./pedido-detail.module.css";
 
 export default function PedidoDetailPage() {
@@ -13,7 +13,7 @@ export default function PedidoDetailPage() {
   return (
     <div className={styles.detailContainer}>
       <button className={styles.backBtn} onClick={() => router.push("/compras/pedidos")}>
-        <span className="material-symbols-outlined">arrow_back</span> Voltar para Pedidos
+        <Icon name="arrow-left" /> Voltar para Pedidos
       </button>
 
       <div className={styles.pageHeader}>
@@ -26,10 +26,10 @@ export default function PedidoDetailPage() {
         </div>
         <div className={styles.headerActions}>
           <Button variant="secondary">
-            <span className="material-symbols-outlined">print</span> Imprimir PO
+            <Icon name="printer" /> Imprimir PO
           </Button>
           <Button variant="primary">
-            <span className="material-symbols-outlined">local_shipping</span> Confirmar Recebimento
+            <Icon name="truck-01" /> Confirmar Recebimento
           </Button>
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function PedidoDetailPage() {
             
             <div className={styles.verticalTimeline}>
               <div className={`${styles.vtItem} ${styles.vtDone}`}>
-                <div className={styles.vtDot}><span className="material-symbols-outlined">check</span></div>
+                <div className={styles.vtDot}><Icon name="check" /></div>
                 <div className={styles.vtContent}>
                   <strong>Pedido Emitido</strong>
                   <span>Enviado ao fornecedor por e-mail</span>

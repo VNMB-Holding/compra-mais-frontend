@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Icon } from "@/components/ui";
 import styles from "./solicitacoes-detail.module.css";
 
 export default function SolicitacaoDetailPage() {
@@ -13,7 +13,7 @@ export default function SolicitacaoDetailPage() {
   return (
     <div className={styles.detailContainer}>
       <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
-        <span className="material-symbols-outlined">chevron_left</span> Voltar para Solicitações
+        <Icon name="chevron-left" /> Voltar para Solicitações
       </button>
 
       {/* Cabeçalho */}
@@ -25,14 +25,14 @@ export default function SolicitacaoDetailPage() {
           </div>
           <p className={styles.subtitleLarge}>Óleo Diesel S10</p>
           <div className={styles.metadataTags}>
-            <span className={styles.infoTag}><span className="material-symbols-outlined">domain</span> Centro de custo: Operações</span>
-            <span className={styles.infoTag}><span className="material-symbols-outlined">category</span> Categoria: Combustíveis</span>
-            <span className={`${styles.infoTag} ${styles.tagHigh}`}><span className="material-symbols-outlined">keyboard_double_arrow_up</span> Prioridade: Alta</span>
+            <span className={styles.infoTag}><Icon name="building-01" /> Centro de custo: Operações</span>
+            <span className={styles.infoTag}><Icon name="folder" /> Categoria: Combustíveis</span>
+            <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: Alta</span>
           </div>
         </div>
         <div className={styles.headerActions}>
           <Button variant="secondary">Rejeitar Demandas</Button>
-          <Button variant="primary"><span className="material-symbols-outlined">check</span> Aprovar Solicitação</Button>
+          <Button variant="primary"><Icon name="check" /> Aprovar Solicitação</Button>
         </div>
       </div>
 
@@ -49,8 +49,8 @@ export default function SolicitacaoDetailPage() {
               
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
-                  <span className="material-symbols-outlined">description</span>
-                  <div className={styles.checkBadge}><span className="material-symbols-outlined">check</span></div>
+                  <Icon name="file-01" />
+                  <div className={styles.checkBadge}><Icon name="check" /></div>
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Solicitante</strong>
@@ -62,7 +62,7 @@ export default function SolicitacaoDetailPage() {
               <div className={`${styles.stepLine} ${styles.lineActive}`}></div>
 
               <div className={`${styles.step} ${styles.active}`}>
-                <div className={styles.stepIcon}><span className="material-symbols-outlined">groups</span></div>
+                <div className={styles.stepIcon}><Icon name="users-01" /></div>
                 <div className={styles.stepInfo}>
                   <strong>Gestor da Área</strong>
                   <span>Mariana Costa</span>
@@ -73,7 +73,7 @@ export default function SolicitacaoDetailPage() {
               <div className={styles.stepLine}></div>
 
               <div className={`${styles.step} ${styles.pending}`}>
-                <div className={styles.stepIcon}><span className="material-symbols-outlined">person</span></div>
+                <div className={styles.stepIcon}><Icon name="user-01" /></div>
                 <div className={styles.stepInfo}>
                   <strong>Diretoria Executiva</strong>
                   <span>Pendente</span>
@@ -144,13 +144,13 @@ export default function SolicitacaoDetailPage() {
           <Card className={styles.sideCard}>
             <h4>Arquivos e Termos Técnicos</h4>
             <div className={styles.fileRow}>
-              <span className="material-symbols-outlined">picture_as_pdf</span>
+              <Icon name="file-01" />
               <div className={styles.fileInfo}>
                 <strong>Especificacao_Tecnica_Diesel.pdf</strong>
                 <small>PDF • 245 KB</small>
               </div>
               <button className={styles.downloadIconBtn} title="Baixar anexo">
-                <span className="material-symbols-outlined">download</span>
+                <Icon name="download-01" />
               </button>
             </div>
           </Card>
