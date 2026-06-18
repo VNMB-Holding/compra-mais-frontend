@@ -22,7 +22,7 @@
   margin-bottom: 24px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
 }
 
@@ -32,7 +32,7 @@
 }
 
 .logoImg {
-  max-height: 28px;
+  max-height: 40px;
   width: auto;
 }
 

@@ -6,8 +6,9 @@ import LayoutClient from "./LayoutClient";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "VNMB Connect",
+  title: "Compra+",
   description: "Plataforma inteligente para compras estratégicas",
+  icons: [{ rel: "icon", url: "/images/carrinho-logo.png" }],
 };
 
 export default function RootLayout({

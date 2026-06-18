@@ -23,7 +23,7 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
 
       <div className={styles.logoArea}>
         <img 
-          src={isCollapsed ? "/images/vb-logo.svg" : "/images/vnmb-connect-logo.svg"} 
+          src={isCollapsed ? "/images/carrinho-logo.png" : "/images/logo-compra-mais.svg"} 
           alt="Logo" 
           className={styles.logoImg} 
         />
@@ -52,10 +52,6 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
             <span className="material-symbols-outlined">shopping_cart</span>
             {!isCollapsed && "Pedidos de Compra"}
           </Link>
-          <Link href="/compras/contratos" className={`${styles.navItem} ${isActive("/compras/contratos") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">contract</span>
-            {!isCollapsed && "Contratos"}
-          </Link>
         </div>
 
         <div className={styles.navSection}>
@@ -67,10 +63,6 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
           <Link href="/fornecedores/homologacao" className={`${styles.navItem} ${isActive("/fornecedores/homologacao") ? styles.active : ""}`}>
             <span className="material-symbols-outlined">verified</span>
             {!isCollapsed && "Homologação"}
-          </Link>
-          <Link href="/fornecedores/performance" className={`${styles.navItem} ${isActive("/fornecedores/performance") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">speed</span>
-            {!isCollapsed && "Performance"}
           </Link>
         </div>
 
