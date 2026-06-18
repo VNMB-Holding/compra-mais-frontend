@@ -11,7 +11,8 @@ import {
   KpiCard, 
   LineChart, 
   PieChart,
-  UrgentQuoteCard // 1. NOVO IMPORT INTEGRADO AQUI
+  UrgentQuoteCard,
+  Icon
 } from "@/components/ui";
 
 interface RFQ {
@@ -112,17 +113,17 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs em andamento" value="12" icon="description" linkLabel="Ver todas" />
-        <KpiCard title="Aprovações pendentes" value="8" icon="gpp_maybe" linkLabel="Ver todas" />
+        <KpiCard title="RFQs em andamento" value="12" icon="receipt-check" linkLabel="Ver todas" />
+        <KpiCard title="Aprovações pendentes" value="8" icon="shield-01" linkLabel="Ver todas" />
         <KpiCard 
           title="Economia acumulada" 
           value="R$ 12.458.000" 
-          icon="trending_up" 
+          icon="trend-up-01" 
           linkLabel="Ver detalhes" 
           trend={{ value: "+ 18,6%", label: "vs mês anterior" }}
         />
-        <KpiCard title="Pedidos emitidos" value="48" icon="inventory_2" linkLabel="Ver todos" />
-        <KpiCard title="Fornecedores ativos" value="156" icon="groups" linkLabel="Ver todos" />
+        <KpiCard title="Pedidos emitidos" value="48" icon="box" linkLabel="Ver todos" />
+        <KpiCard title="Fornecedores ativos" value="156" icon="users-01" linkLabel="Ver todos" />
       </div>
 
       <div className={styles.middleGrid}>
@@ -140,15 +141,15 @@ export default function DashboardPage() {
           </div>
           <div className={styles.chartValue}>
             <h3>R$ 920k</h3>
-            <span className={`${styles.trend} ${styles.pos}`}>
-              <span className="material-symbols-outlined">arrow_upward</span> 14,8% <small>vs mês anterior</small>
-            </span>
+              <span className={`${styles.trend} ${styles.pos}`}>
+                <Icon name="arrow-up" size={16} /> 14,8% <small>vs mês anterior</small>
+              </span>
           </div>
           <div className={styles.chartWrapperElement}>
             <LineChart data={economiaPotencialData} strokeColor="#007d79" />
           </div>
           <button className={styles.cardLink}>
-            Ver evolução completa <span className="material-symbols-outlined">arrow_forward</span>
+            Ver evolução completa <Icon name="arrow-right" size={16} />
           </button>
         </Card>
 
@@ -172,7 +173,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <button className={styles.cardLink}>
-            Ver todas as categorias <span className="material-symbols-outlined">arrow_forward</span>
+            Ver todas as categorias <Icon name="arrow-right" size={16} />
           </button>
         </Card>
       </div>
@@ -198,7 +199,7 @@ export default function DashboardPage() {
                 </Badge>
               </td>
               <td>
-                <span className={`material-symbols-outlined ${styles.rowActions}`}>more_horiz</span>
+                <Icon name="dots-horizontal" className={styles.rowActions} />
               </td>
             </tr>
           ))}
