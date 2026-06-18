@@ -1,5 +1,6 @@
 import React from 'react';
 import Card from '../Card/Card';
+import Icon from '../Icon/Icon';
 import styles from './KpiCard.module.css';
 
 interface KpiCardProps {
@@ -27,7 +28,7 @@ export default function KpiCard({
   return (
     <Card className={styles.kpiCard}>
       <div className={styles.iconWrapper}>
-        <span className="material-symbols-outlined">{icon}</span>
+        <Icon name={icon} />
       </div>
 
       <div className={styles.content}>
@@ -49,7 +50,7 @@ export default function KpiCard({
       {linkLabel && (
         <button className={styles.linkButton} onClick={onLinkClick}>
           {linkLabel}
-          <span className="material-symbols-outlined">arrow_forward</span>
+          <Icon name="arrow-right" size={16} />
         </button>
       )}
     </Card>

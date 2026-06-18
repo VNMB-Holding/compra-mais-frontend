@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Icon from "../Icon/Icon";
 import styles from "./Topbar.module.css";
 
 interface TopbarProps {
@@ -38,13 +39,13 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           onClick={onToggleSidebar}
           title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
         >
-          <span className="material-symbols-outlined">menu</span>
+          <Icon name="menu-01" />
         </button>
       </div>
 
       {/* Centro: Barra de Busca */}
       <div className={styles.searchBar}>
-        <span className="material-symbols-outlined">search</span>
+        <Icon name="search-md" />
         <input type="text" placeholder="Buscar no sistema..." />
       </div>
 
@@ -54,7 +55,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         {/* Notificações */}
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`} onClick={() => togglePopup("notifications")}>
-            <span className="material-symbols-outlined">notifications</span>
+            <Icon name="bell-01" />
             <span className={styles.badge}>3</span>
           </div>
           
@@ -80,7 +81,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         {/* Mensagens / E-mails */}
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "messages" ? styles.activeIcon : ""}`} onClick={() => togglePopup("messages")}>
-            <span className="material-symbols-outlined">mail</span>
+            <Icon name="mail-01" />
           </div>
 
           {activePopup === "messages" && (
@@ -101,15 +102,13 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         <div className={styles.popupWrapper}>
           <div className={styles.companySelector} onClick={() => togglePopup("company")}>
             VNMB HOLDING
-            <span className={`material-symbols-outlined ${activePopup === "company" ? styles.rotate : ""}`}>
-              expand_more
-            </span>
+            <Icon name="chevron-down" className={activePopup === "company" ? styles.rotate : ""} />
           </div>
 
           {activePopup === "company" && (
             <div className={`${styles.dropdownBox} ${styles.companyDropdown}`}>
               <div className={styles.dropdownItemActive}>
-                <span className="material-symbols-outlined">check</span> VNMB HOLDING
+                <Icon name="check" /> VNMB HOLDING
               </div>
               <div className={styles.dropdownItem}>VNMB LOGÍSTICA</div>
               <div className={styles.dropdownItem}>VNMB SERVIÇOS</div>

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Icon from "../Icon/Icon";
 import styles from "./Sidebar.module.css";
 
 interface SidebarProps {
@@ -34,22 +35,23 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
           href="/dashboard" 
           className={`${styles.navItem} ${isActive("/dashboard") ? styles.active : ""}`}
         >
-        <span className="material-symbols-outlined">dashboard</span>
+          <Icon name="layout-grid-01" />
           {!isCollapsed && "Dashboard"}
+
         </Link>
 
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>COMPRAS</div>
           <Link href="/compras/solicitacoes" className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">description</span>
+            <Icon name="clipboard" />
             {!isCollapsed && "Solicitações"}
           </Link>
           <Link href="/compras/rfqs" className={`${styles.navItem} ${isActive("/compras/rfqs") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">receipt_long</span>
+            <Icon name="receipt-check" />
             {!isCollapsed && "RFQs / Cotações"}
           </Link>
           <Link href="/compras/pedidos" className={`${styles.navItem} ${isActive("/compras/pedidos") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">shopping_cart</span>
+            <Icon name="shopping-cart-01" />
             {!isCollapsed && "Pedidos de Compra"}
           </Link>
         </div>
@@ -57,11 +59,11 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>FORNECEDORES</div>
           <Link href="/fornecedores/diretorio" className={`${styles.navItem} ${isActive("/fornecedores/diretorio") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">group</span>
+            <Icon name="users-01" />
             {!isCollapsed && "Diretório"}
           </Link>
           <Link href="/fornecedores/homologacao" className={`${styles.navItem} ${isActive("/fornecedores/homologacao") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">verified</span>
+            <Icon name="check-verified-01" />
             {!isCollapsed && "Homologação"}
           </Link>
         </div>
@@ -69,15 +71,15 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>ANALYTICS</div>
           <Link href="/analytics/insights" className={`${styles.navItem} ${isActive("/analytics/insights") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">insights</span>
+            <Icon name="presentation-chart-01" />
             {!isCollapsed && "Insights"}
           </Link>
           <Link href="/analytics/relatorios" className={`${styles.navItem} ${isActive("/analytics/relatorios") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">bar_chart</span>
+            <Icon name="bar-chart-01" />
             {!isCollapsed && "Relatórios"}
           </Link>
           <Link href="/analytics/economia" className={`${styles.navItem} ${isActive("/analytics/economia") ? styles.active : ""}`}>
-            <span className="material-symbols-outlined">savings</span>
+            <Icon name="piggy-bank-01" />
             {!isCollapsed && "Economia Gerada"}
           </Link>
         </div>
@@ -86,7 +88,7 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
       <div className={styles.sidebarFooter}>
         {!isCollapsed && (
           <div className={styles.helpCard}>
-            <span className={`material-symbols-outlined ${styles.helpIcon}`}>help</span>
+            <Icon name="help-circle" className={styles.helpIcon} />
             <div className={styles.helpText}>
               <strong>Precisa de ajuda?</strong>
               <span>Central de Ajuda</span>
