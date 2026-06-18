@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Icon } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import styles from "./homologacao.module.css";
 
@@ -23,6 +23,17 @@ interface HomologacaoRow {
 
 export default function HomologacaoPage() {
   const router = useRouter();
+
+  const catIconMap: Record<string, string> = {
+    local_gas_station: "settings-01",
+    local_shipping: "truck-01",
+    build: "tool-01",
+    bolt: "zap",
+    settings: "settings-01",
+    content_paste: "clipboard",
+    computer: "monitor-01",
+    room_service: "bell-01",
+  };
 
   const dados: HomologacaoRow[] = [
     { id: "1", iniciais: "FB", fornecedor: "Fornecedor Bravo LTDA", cnpj: "22.333.444/0001-82", categoria: "Combustíveis", catIcon: "local_gas_station", score: 18, etapa: "Análise de dados públicos", status: "Em análise", statusVariant: "primary", atualizacao: "22/05/2024", tempoAtras: "14:32" },
@@ -52,7 +63,7 @@ export default function HomologacaoPage() {
       header: "Categoria",
       cell: (row) => (
         <div className={styles.iconTextCell}>
-          <span className="material-symbols-outlined">{row.catIcon}</span>
+          <Icon name={catIconMap[row.catIcon] || "briefcase-01"} />
           {row.categoria}
         </div>
       )
@@ -104,7 +115,7 @@ export default function HomologacaoPage() {
     {
       header: "",
       width: "40px",
-      cell: () => <span className={`material-symbols-outlined ${styles.moreIcon}`}>more_vert</span>
+      cell: () => <Icon name="dots-vertical" className={styles.moreIcon} />
     }
   ];
 
@@ -117,10 +128,10 @@ export default function HomologacaoPage() {
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnExport}>
-            <span className="material-symbols-outlined">download</span> Exportar
+            <Icon name="download-01" /> Exportar
           </button>
           <Button variant="primary" className={styles.btnNew}>
-            <span className="material-symbols-outlined">add</span> Nova homologação
+            <Icon name="plus" /> Nova homologação
           </Button>
         </div>
       </div>
@@ -155,7 +166,7 @@ export default function HomologacaoPage() {
       <Card noPadding className={styles.tableSection}>
         <div className={styles.filterBar}>
           <div className={styles.searchBox}>
-            <span className="material-symbols-outlined">search</span>
+            <Icon name="search-md" />
             <input type="text" placeholder="Buscar fornecedor, CNPJ..." />
           </div>
           <div className={styles.selectGroup}>
@@ -163,7 +174,7 @@ export default function HomologacaoPage() {
             <select className={styles.minimalSelect}><option>Risco: Todas</option></select>
             <select className={styles.minimalSelect}><option>Etapa: Todas</option></select>
             <button className={styles.btnMoreFilters}>
-              <span className="material-symbols-outlined">filter_list</span> Mais filtros
+              <Icon name="filter-lines" /> Mais filtros
             </button>
           </div>
         </div>
@@ -177,13 +188,13 @@ export default function HomologacaoPage() {
         <div className={styles.footer}>
           <span>Mostrando 1 a 8 de 128 fornecedores</span>
           <div className={styles.pagination}>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_left</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={styles.pageBtn}>1</button>
             <button className={`${styles.pageBtn} ${styles.activePage}`}>2</button>
             <button className={styles.pageBtn}>3</button>
             <span>...</span>
             <button className={styles.pageBtn}>16</button>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_right</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
           </div>
         </div>
       </Card>

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button } from "@/components/ui";
+import { Card, Button, Icon } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
@@ -26,6 +26,12 @@ interface Fornecedor {
 export default function FornecedoresListPage() {
   const router = useRouter();
 
+  const catIconMap: Record<string, string> = {
+    work: "briefcase-01",
+    water_drop: "drop",
+    desktop_windows: "monitor-01",
+  };
+
   const fornecedores: Fornecedor[] = [
     { id: "1", iniciais: "FA", nome: "Fornecedor Alfa S.A.", cnpj: "11.111.111/0001-11", categoria: "Serviços", catIcon: "work", status: "Homologado", statusSub: "desde 12/05/2023", nota: "9,8", estrelas: 5, avaliacao: "28/04/2024", avaliacaoSub: "há 15 dias", cor: "green" },
     { id: "2", iniciais: "FB", nome: "Fornecedor Bravo LTDA", cnpj: "22.333.444/0001-82", categoria: "Combustíveis", catIcon: "water_drop", status: "Homologado", statusSub: "desde 18/08/2023", nota: "9,2", estrelas: 4, avaliacao: "22/04/2024", avaliacaoSub: "há 21 dias", cor: "green" },
@@ -37,7 +43,7 @@ export default function FornecedoresListPage() {
     return (
       <div className={styles.starRow}>
         {[...Array(5)].map((_, i) => (
-          <span key={i} className={`material-symbols-outlined ${i < count ? styles.starFilled : styles.starEmpty}`}>star</span>
+          <Icon key={i} name="star-01" className={i < count ? styles.starFilled : styles.starEmpty} />
         ))}
       </div>
     );
@@ -62,7 +68,7 @@ export default function FornecedoresListPage() {
       header: "Categoria",
       cell: (row) => (
         <div className={styles.catCell}>
-          <span className="material-symbols-outlined">{row.catIcon}</span>
+          <Icon name={catIconMap[row.catIcon] || "briefcase-01"} />
           {row.categoria}
         </div>
       )
@@ -103,7 +109,7 @@ export default function FornecedoresListPage() {
       cell: () => (
         <div className={styles.actionCell}>
           <button className={styles.iconBtn}>
-            <span className="material-symbols-outlined">chevron_right</span>
+                <Icon name="chevron-right" />
           </button>
         </div>
       )
@@ -119,8 +125,8 @@ export default function FornecedoresListPage() {
           <p>Consulte parceiros homologados e verifique o nível de performance atual.</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnExport}><span className="material-symbols-outlined">download</span> Exportar</button>
-          <Button variant="primary" className={styles.btnAdd}><span className="material-symbols-outlined">add</span> Adicionar fornecedor</Button>
+          <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
+          <Button variant="primary" className={styles.btnAdd}><Icon name="plus" /> Adicionar fornecedor</Button>
         </div>
       </div>
 
@@ -135,12 +141,12 @@ export default function FornecedoresListPage() {
         
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <span className="material-symbols-outlined">search</span>
+            <Icon name="search-md" />
             <input type="text" placeholder="Buscar fornecedor..." />
           </div>
           <div className={styles.filtersGroup}>
             <div className={styles.selectWrapper}>
-              <span className="material-symbols-outlined">filter_list</span>
+              <Icon name="filter-lines" />
               <select defaultValue="Todas"><option value="Todas">Todas as categorias</option></select>
             </div>
             <div className={styles.selectWrapper}>
@@ -154,9 +160,9 @@ export default function FornecedoresListPage() {
         <div className={styles.tableFooter}>
           <span>Mostrando 1 a 3 de 3 fornecedores</span>
           <div className={styles.paginationControls}>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_left</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-            <button className={styles.pageBtn}><span className="material-symbols-outlined">chevron_right</span></button>
+            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
           </div>
         </div>
 

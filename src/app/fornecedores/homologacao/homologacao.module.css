@@ -16,7 +16,7 @@
 .filterBar { padding: 16px 24px; display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
 .searchBox { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; width: 300px; }
 .searchBox input { background: transparent; border: none; outline: none; font-size: 13px; color: #0f172a; width: 100%; }
-.searchBox span { color: #94a3b8; font-size: 20px; }
+.searchBox svg { color: #94a3b8; }
 
 .selectGroup { display: flex; gap: 8px; }
 .minimalSelect { background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #334155; font-weight: 500; cursor: pointer; outline: none; }
@@ -30,7 +30,7 @@
 .linkText { color: #007d79 !important; font-weight: 600; cursor: pointer; }
 
 .iconTextCell { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; font-weight: 500; }
-.iconTextCell span { color: #94a3b8; font-size: 18px; }
+.iconTextCell svg { color: #94a3b8; }
 
 .scoreCell { display: flex; flex-direction: column; gap: 6px; width: 140px; }
 .scoreInfo { display: flex; justify-content: space-between; align-items: baseline; }

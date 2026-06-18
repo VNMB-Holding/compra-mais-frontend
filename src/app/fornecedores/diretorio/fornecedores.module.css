@@ -51,8 +51,6 @@
   color: #0f172a;
 }
 
-.btnExport span { font-size: 18px; }
-
 .btnAdd {
   background-color: #007d79 !important;
   display: flex;
@@ -130,7 +128,7 @@
   width: 280px;
 }
 
-.searchBox span { color: #94a3b8; font-size: 18px; }
+.searchBox svg { color: #94a3b8; }
 .searchBox input { border: none; outline: none; font-size: 13px; color: #0f172a; width: 100%; background: transparent; }
 
 .filtersGroup {
@@ -148,7 +146,7 @@
   background: white;
 }
 
-.selectWrapper span { color: #64748b; font-size: 16px; }
+.selectWrapper svg { color: #64748b; }
 .selectWrapper select { border: none; outline: none; font-size: 13px; color: #334155; font-weight: 500; cursor: pointer; background: transparent; }
 
 /* --- TABLE CUSTOM STYLES --- */
@@ -191,7 +189,7 @@
   font-weight: 500;
 }
 
-.catCell span { color: #64748b; font-size: 18px; }
+.catCell svg { color: #64748b; }
 
 .statusBadge {
   display: inline-flex;
@@ -216,7 +214,7 @@
 .mutedText { font-size: 12px; color: #94a3b8; }
 
 .starRow { display: flex; gap: 2px; }
-.starRow span { font-size: 14px; }
+
 .starFilled { color: #16a34a; }
 .starEmpty { color: #cbd5e1; }
 
