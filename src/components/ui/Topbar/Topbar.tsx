@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Icon from "../Icon/Icon";
 import styles from "./Topbar.module.css";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TopbarProps {
   isSidebarCollapsed: boolean;
@@ -11,7 +13,9 @@ interface TopbarProps {
 
 export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarProps) {
   // Estados para controlar os Popups/Dropdowns
-  const [activePopup, setActivePopup] = useState<"notifications" | "messages" | "company" | null>(null);
+  const [activePopup, setActivePopup] = useState<"notifications" | "messages" | "company" | "user" | null>(null);
+  const { user, logout, isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const topbarRef = useRef<HTMLHeadingElement>(null);
 
@@ -26,8 +30,22 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const togglePopup = (popup: "notifications" | "messages" | "company") => {
+  const togglePopup = (popup: "notifications" | "messages" | "company" | "user") => {
     setActivePopup(activePopup === popup ? null : popup);
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -116,8 +134,45 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        {/* Avatar do Usuário */}
-        <div className={styles.userAvatarSmall}>V</div>
+        {/* Avatar do Usuário com Dropdown */}
+        {isAuthenticated && user && (
+          <div className={styles.popupWrapper}>
+            <div 
+              className={styles.userAvatarSmall}
+              onClick={() => togglePopup("user")}
+              title={user.name}
+              style={{ cursor: "pointer" }}
+            >
+              {getInitials(user.name)}
+            </div>
+
+            {activePopup === "user" && (
+              <div className={`${styles.dropdownBox} ${styles.userDropdown}`}>
+                <div className={styles.dropdownUserHeader}>
+                  <div className={styles.userAvatarLarge}>
+                    {getInitials(user.name)}
+                  </div>
+                  <div>
+                    <strong>{user.name}</strong>
+                    <p>{user.email}</p>
+                    <small>{user.role}</small>
+                  </div>
+                </div>
+                <div className={styles.dropdownDivider} />
+                <div className={styles.dropdownItem} onClick={() => router.push("/perfil")}>
+                  <Icon name="user" /> Meu Perfil
+                </div>
+                <div className={styles.dropdownItem} onClick={() => router.push("/configuracoes")}>
+                  <Icon name="settings-01" /> Configurações
+                </div>
+                <div className={styles.dropdownDivider} />
+                <div className={styles.dropdownItem} onClick={handleLogout} style={{ color: "#ef4444" }}>
+                  <Icon name="log-out-01" /> Sair
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
