@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ProtectedLayout } from "@/components/ProtectedLayout";
+import { ROUTE_ROLES } from "@/lib/auth/roles";
 
 export default function ComprasLayout({
   children,
@@ -9,7 +10,7 @@ export default function ComprasLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedLayout allowedRoles={["procurist", "gerente", "admin"]}>
+    <ProtectedLayout allowedRoles={ROUTE_ROLES.compras}>
       {children}
     </ProtectedLayout>
   );
