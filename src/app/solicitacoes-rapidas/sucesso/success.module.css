@@ -1,0 +1,117 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 20px;
+  background-color: #f0fdf4;
+}
+
+.successCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.iconContainer {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  color: #22c55e;
+}
+
+.successCard h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.successCard > p {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+}
+
+.infoBox {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: left;
+  margin: 24px 0;
+}
+
+.infoBox p {
+  font-size: 13px;
+  font-weight: 700;
+  color: #166534;
+  margin: 0 0 12px 0;
+}
+
+.infoBox ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.infoBox li {
+  font-size: 13px;
+  color: #166534;
+  margin-bottom: 8px;
+  padding-left: 24px;
+  position: relative;
+}
+
+.infoBox li:last-child {
+  margin-bottom: 0;
+}
+
+.infoBox li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.secondaryBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.secondaryBtn:hover {
+  background-color: #e2e8f0;
+}
+
+@media (max-width: 640px) {
+  .successCard {
+    padding: 24px;
+  }
+
+  .successCard h1 {
+    font-size: 24px;
+  }
+}
