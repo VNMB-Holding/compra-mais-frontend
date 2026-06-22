@@ -114,7 +114,11 @@ function NovasolicitacaorapidaPageContent() {
       <Card className={styles.card}>
         <div className={styles.userInfo}>
           <div className={styles.userAvatar}>
-            <img src={user?.avatar} alt={user?.name} />
+            {user?.avatar ? (
+              <img src={user.avatar} alt={user.name} />
+            ) : (
+              <Icon name="user" size={24} style={{ margin: '12px', color: '#94a3b8' }} />
+            )}
           </div>
           <div>
             <p className={styles.userName}>{user?.name}</p>
