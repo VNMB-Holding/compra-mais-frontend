@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Icon } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable";
+import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
 
@@ -45,7 +45,7 @@ export default function RfqsPage() {
       width: "40px",
       cell: () => (
         <button className={styles.iconBtn}>
-          <Icon name="chevron-right" />
+          <Icon name="share-03" />
         </button>
       )
     }

@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Icon } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable";
+import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
 
@@ -51,7 +51,7 @@ export default function SolicitacoesPage() {
       width: "40px",
       cell: () => (
         <button className={styles.iconBtn}>
-          <Icon name="chevron-right" />
+          <Icon name="share-03" />
         </button>
       )
     }

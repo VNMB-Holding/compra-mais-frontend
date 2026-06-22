@@ -3,7 +3,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Badge, Card } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable";
+import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedor-detail.module.css";
 

@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Badge, Icon } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable";
+import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import styles from "./homologacao.module.css";
 
 interface HomologacaoRow {

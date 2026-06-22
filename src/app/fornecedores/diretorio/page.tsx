@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Icon } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable";
+import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
 
@@ -109,7 +109,7 @@ export default function FornecedoresListPage() {
       cell: () => (
         <div className={styles.actionCell}>
           <button className={styles.iconBtn}>
-                <Icon name="chevron-right" />
+                <Icon name="share-03" />
           </button>
         </div>
       )
