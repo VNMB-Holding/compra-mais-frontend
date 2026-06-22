@@ -1,0 +1,214 @@
+.container {
+  display: flex;
+  height: 100dvh;
+  width: 100vw;
+}
+
+/* --- LEFT PANEL --- */
+.left {
+  flex: 1;
+  background-image: url('/images/side-img.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.logoWrapper {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logoImg {
+  height: 48px;
+  width: auto;
+}
+
+/* --- RIGHT PANEL --- */
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: #fafbfc;
+}
+
+.card {
+  background: white;
+  width: 100%;
+  max-width: 440px;
+  padding: 44px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+}
+
+.cardTitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #111;
+}
+
+.cardSub {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 28px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #111;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.inputWrapper input {
+  width: 100%;
+  padding: 11px 14px 11px 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inputWrapper input:focus {
+  border-color: #008489;
+  box-shadow: 0 0 0 3px rgba(0,132,137,0.1);
+}
+
+.inputWrapper input::placeholder {
+  color: #a0aec0;
+}
+
+.inputWrapper input:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.textareaWrapper textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #333;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textareaWrapper textarea:focus {
+  border-color: #008489;
+  box-shadow: 0 0 0 3px rgba(0,132,137,0.1);
+}
+
+.textareaWrapper textarea::placeholder {
+  color: #a0aec0;
+}
+
+.textareaWrapper textarea:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.submit {
+  width: 100%;
+  background: #008489;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 13px;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit:hover:not(:disabled) {
+  background: #006b6f;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.register {
+  margin-top: 32px;
+  font-size: 14px;
+  color: #666;
+}
+
+.register a {
+  color: #008489;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register a:hover {
+  text-decoration: underline;
+}
+
+.successIcon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #008489;
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+  .left {
+    display: none;
+  }
+  .right {
+    padding: 24px;
+  }
+  .card {
+    padding: 32px 24px;
+  }
+}
