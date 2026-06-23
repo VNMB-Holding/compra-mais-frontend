@@ -58,12 +58,6 @@ export default function PedidosPage() {
           <h1>Pedidos de Compra</h1>
           <p>Acompanhe o faturamento, prazos de entrega e formalização dos contratos com fornecedores.</p>
         </div>
-        <div className={styles.headerActions}>
-          <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
-          <Button variant="primary" className={styles.btnAdd}>
-            <Icon name="plus" /> Novo Pedido
-          </Button>
-        </div>
       </div>
 
       <div className={styles.kpiGrid}>

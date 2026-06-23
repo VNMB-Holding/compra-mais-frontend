@@ -6,25 +6,35 @@
 }
 
 .backBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   background: none;
   border: none;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--primary, #007d79);
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
+  align-self: flex-start;
   padding: 0;
 }
-
-.backBtn:hover { color: #0f172a; }
-.backBtn span { font-size: 16px; }
 
 .pageHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+}
+
+.headerTitles { flex: 1; }
+
+.eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #007d79;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .titleRow {
@@ -34,17 +44,17 @@
 }
 
 .titleRow h1 {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   color: #0f172a;
   margin: 0;
 }
 
 .subtitleLarge {
-  font-size: 14px;
-  color: #475569;
-  margin: 2px 0 0 0;
+  font-size: 16px;
   font-weight: 600;
+  color: #334155;
+  margin: 0;
 }
 
 .headerActions {
@@ -75,12 +85,13 @@
 }
 
 .cleanCard h3 {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #475569;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .infoGrid {
@@ -122,107 +133,258 @@
   margin: 0;
 }
 
+.itemsCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+}
+
+.itemsCardHeader {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+}
+
+.itemsCardHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.itemsTableWrapper {
+  overflow-x: auto;
+}
+
 .itemsTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
-  margin-top: 16px;
+  font-size: 14px;
+  background: white;
 }
 
-.itemsTable th {
+.itemsTable thead th {
   background: #f8fafc;
-  padding: 12px 24px;
-  color: #475569;
-  font-weight: 600;
+  padding: 14px 24px;
+  color: #64748b;
+  font-weight: 700;
   border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-align: left;
+}
+
+.itemsTable tbody tr {
+  transition: background 0.2s;
+}
+
+.itemsTable tbody tr:hover {
+  background: #f8fafc;
 }
 
 .itemsTable td {
-  padding: 16px 24px;
+  padding: 20px 24px;
   border-bottom: 1px solid #e2e8f0;
-  color: #334155;
+  color: #1e293b;
+  vertical-align: middle;
 }
 
 .itemsTable tr:last-child td {
   border-bottom: none;
 }
 
-.itemsTable td small {
-  color: #64748b;
-}
-
-.verticalTimeline {
+.itemDesc {
   display: flex;
-  flex-direction: column;
-  position: relative;
-  padding-left: 16px;
-  margin-top: 8px;
+  align-items: center;
+  gap: 16px;
 }
 
-.verticalTimeline::before {
-  content: '';
-  position: absolute;
-  left: 23px;
-  top: 12px;
-  bottom: 12px;
-  width: 2px;
-  background: #cbd5e1;
-}
-
-.vtItem {
-  display: flex;
-  gap: 20px;
-  padding-bottom: 32px;
-  position: relative;
-}
-
-.vtItem:last-child {
-  padding-bottom: 0;
-}
-
-.vtDot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid #94a3b8;
-  z-index: 2;
-  margin-top: 3px;
+.itemIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #f0fdf9;
+  border: 1px solid #ccfbf1;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #0d9488;
+  flex-shrink: 0;
 }
 
-.vtContent {
+.itemDescText {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+}
+
+.itemDescText strong {
+  font-size: 15px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.itemDescText small {
   font-size: 13px;
+  color: #64748b;
 }
 
-.vtContent strong { color: #64748b; font-weight: 600; }
-.vtContent span { color: #94a3b8; }
-.vtContent small { color: #94a3b8; font-size: 11px; }
+.badgeUm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
 
-.vtDone .vtDot {
-  background: #007d79;
+.tdSubtotal {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* ============================
+   Trilha de estágios (Horizontal)
+   ============================ */
+.estagioPista {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  gap: 16px;
+}
+
+.estsgioItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  flex: 1;
+}
+
+.estsgioItem > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.estsgioItem strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #64748b;
+  display: block;
+}
+
+.estsgioItem span {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.estsgioIcone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.estsgioAtivo .estsgioIcone {
+  background: #f0fdf9;
+  color: #007d79;
   border-color: #007d79;
-  color: white;
-  width: 18px;
-  height: 18px;
-  transform: translateX(-1px);
+}
+.estsgioAtivo strong { color: #0f172a; }
+.estsgioAtivo span { color: #475569; }
+
+.estagioConcluido .estsgioIcone {
+  background: #007d79;
+  color: #ffffff;
+  border-color: #007d79;
+}
+.estagioConcluido strong { color: #0f172a; }
+.estagioConcluido span { color: #475569; }
+
+.estsgioInativo .estsgioIcone {
+  background: #f8fafc;
+  color: #cbd5e1;
+  border-color: #f1f5f9;
 }
 
-.vtDone .vtDot span { font-size: 12px; font-weight: bold; }
-.vtDone .vtContent strong { color: #0f172a; }
-.vtDone .vtContent span { color: #334155; }
-
-.vtActive .vtDot {
-  border-color: #0284c7;
-  border-width: 4px;
-  width: 18px;
-  height: 18px;
-  transform: translateX(-1px);
+.estagioConetor {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 16px;
+  border-radius: 2px;
 }
-.vtActive .vtContent strong { color: #0284c7; font-weight: 700; }
-.vtActive .vtContent span { color: #334155; }
+
+.estsgioConectorAtivo {
+  background: #007d79;
+}
+
+.premiumMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.premiumMetricCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.premiumMetricCard span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.premiumMetricCard h3 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.premiumMetricCard .sub {
+  font-size: 13px;
+  color: #475569;
+  margin-top: 6px;
+}
+
+.darkCard { background-color: #004d4a !important; border: none; }
+.darkCardContent { color: white; display: flex; flex-direction: column; }
+.darkCardContent span { color: #cce5e5; }
+.darkCardContent h3 { color: white !important; }
+.textPrimary { color: #007d79 !important; }
+

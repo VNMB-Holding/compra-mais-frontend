@@ -113,14 +113,6 @@ export default function NovaSolicitacaoPage() {
           <h1>Nova Solicitacao de Compra</h1>
           <p>Monte uma demanda completa, com escopo, orcamento, recebimento e requisitos para cotacao.</p>
         </div>
-        <div className={styles.headerActions}>
-          <button className={styles.secondaryAction}>
-            <Icon name="save-01" /> Salvar rascunho
-          </button>
-          <Button variant="primary" className={styles.btnSubmit} onClick={() => router.push("/compras/solicitacoes")}>
-            <Icon name="send-01" /> Enviar para aprovacao
-          </Button>
-        </div>
       </div>
 
       <div className={styles.workspaceGrid}>

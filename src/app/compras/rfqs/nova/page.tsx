@@ -1,206 +1,678 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Icon } from "@/components/ui";
 import styles from "./rfq-new.module.css";
 
-interface FornecedorConvidado {
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface Solicitacao {
   id: string;
-  nome: string;
-  cnpj: string;
+  titulo: string;
+  area: string;
+  solicitante: string;
+  prioridade: string;
+  valorEstimado: number;
+  itens: ItemCotacao[];
+  incoterm: string;
+  condicaoPagamento: string;
+  observacoes: string;
 }
 
-interface ItemSolicitado {
-  id: string;
+interface ItemCotacao {
+  id: number;
   descricao: string;
   qtd: number;
   unidade: string;
 }
 
+interface FornecedorConvidado {
+  id: string;
+  nome: string;
+  cnpj: string;
+  selecionado: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Mock data — solicitacoes aprovadas disponiveis
+// ---------------------------------------------------------------------------
+
+const SOLICITACOES_DISPONIVEIS: Solicitacao[] = [
+  {
+    id: "SOL-000456",
+    titulo: "Abastecimento emergencial de oleo diesel S10",
+    area: "Operacoes",
+    solicitante: "Breno Marques",
+    prioridade: "Alta",
+    valorEstimado: 2900000,
+    itens: [
+      { id: 1, descricao: "Oleo Diesel S10", qtd: 500000, unidade: "L" },
+      { id: 2, descricao: "Aditivo ARLA 32", qtd: 12000, unidade: "L" },
+    ],
+    incoterm: "CIF",
+    condicaoPagamento: "30 dias DDL",
+    observacoes:
+      "O fornecedor deve possuir certificacao ANP ativa e atender as normas ambientais vigentes de transporte.",
+  },
+  {
+    id: "SOL-000441",
+    titulo: "Reposicao de insumos de limpeza industrial",
+    area: "Facilities",
+    solicitante: "Carla Oliveira",
+    prioridade: "Media",
+    valorEstimado: 48500,
+    itens: [
+      { id: 1, descricao: "Desinfetante industrial 5L", qtd: 200, unidade: "UN" },
+      { id: 2, descricao: "Detergente concentrado galao 20L", qtd: 50, unidade: "UN" },
+    ],
+    incoterm: "CIF",
+    condicaoPagamento: "28 dias DDL",
+    observacoes: "Produtos devem possuir registro na ANVISA e ficha FISPQ atualizada.",
+  },
+];
+
+const FORNECEDORES_BASE: FornecedorConvidado[] = [
+  { id: "1", nome: "Fornecedor Alfa S.A.", cnpj: "11.222.333/0001-81", selecionado: false },
+  { id: "2", nome: "Petrolog Distribuidora LTDA", cnpj: "22.333.444/0001-82", selecionado: false },
+  { id: "3", nome: "Combustiveis Sul LTDA", cnpj: "33.444.555/0001-83", selecionado: false },
+  { id: "4", nome: "CleanPro Suprimentos LTDA", cnpj: "44.555.666/0001-84", selecionado: false },
+];
+
+const formatCurrency = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const PRIORITY_CLASS: Record<string, string> = {
+  Alta: styles.priorityAlta,
+  Critica: styles.priorityCritica,
+  Media: styles.priorityMedia,
+  Baixa: styles.priorityBaixa,
+};
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export default function NewRfqPage() {
   const router = useRouter();
 
-  const [solicitacaoVinculada, setSolicitacaoVinculada] = useState<string>("");
-  const [tituloRfq, setTituloRfq] = useState<string>("");
-  const [dataEncerramento, setDataEncerramento] = useState<string>("");
-  const [incoterm, setIncoterm] = useState<string>("CIF");
-  const [condicaoPagamento, setCondicaoPagamento] = useState<string>("30 dias DDL");
-  const [moeda, setMoeda] = useState<string>("BRL");
-  const [observacoes, setObservacoes] = useState<string>("");
+  // "portao": null = nenhuma selecionada, string = id selecionado mas nao confirmado
+  const [solicitacaoSelecionada, setSolicitacaoSelecionada] = useState<string>("");
+  // solicitacaoConfirmada = portao aberto, formulario visivel
+  const [solicitacaoConfirmada, setSolicitacaoConfirmada] = useState<Solicitacao | null>(null);
 
-  const [fornecedores] = useState<FornecedorConvidado[]>([
-    { id: "1", nome: "Fornecedor Alfa S.A.", cnpj: "11.222.333/0001-81" },
-    { id: "2", nome: "Fornecedor Bravo LTDA", cnpj: "22.333.444/0001-82" }
-  ]);
+  // Form fields — so existem apos confirmacao
+  const [tituloRfq, setTituloRfq] = useState("");
+  const [estrategia, setEstrategia] = useState("Menor Preco Equalizado");
+  const [dataEncerramento, setDataEncerramento] = useState("");
+  const [incoterm, setIncoterm] = useState("CIF");
+  const [condicaoPagamento, setCondicaoPagamento] = useState("30 dias DDL");
+  const [moeda, setMoeda] = useState("BRL");
+  const [observacoes, setObservacoes] = useState("");
+  const [itens, setItens] = useState<ItemCotacao[]>([]);
+  const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
 
-  const [itens, setItens] = useState<ItemSolicitado[]>([
-    { id: "1", descricao: "Filtro de Ar Motor X1", qtd: 50, unidade: "UN" }
-  ]);
+  // -------------------------------------------------------------------------
+  // Handlers
+  // -------------------------------------------------------------------------
 
-  const handleVincularSolicitacao = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    setSolicitacaoVinculada(val);
-
-    if (val === "SOL-000456") {
-      setTituloRfq("RFQ - Fornecimento de Óleo Diesel S10");
-      setIncoterm("CIF");
-      setCondicaoPagamento("30 dias DDL");
-      setMoeda("BRL");
-      setObservacoes("O fornecedor deve possuir certificação ANP ativa e atender às normas ambientais vigentes de transporte.");
-      setItens([{ id: "sol-1", descricao: "Óleo Diesel S10", qtd: 500000, unidade: "Litros (L)" }]);
-    } else {
-      setTituloRfq("");
-      setObservacoes("");
-      setItens([{ id: "1", descricao: "Filtro de Ar Motor X1", qtd: 50, unidade: "UN" }]);
-    }
+  const handleConfirmarSolicitacao = () => {
+    const sol = SOLICITACOES_DISPONIVEIS.find((s) => s.id === solicitacaoSelecionada);
+    if (!sol) return;
+    setSolicitacaoConfirmada(sol);
+    // Pre-preenche formulario com dados da solicitacao
+    setTituloRfq(`RFQ — ${sol.titulo}`);
+    setIncoterm(sol.incoterm);
+    setCondicaoPagamento(sol.condicaoPagamento);
+    setObservacoes(sol.observacoes);
+    setItens(sol.itens.map((i) => ({ ...i })));
   };
 
-  const gerarMensagemHumana = () => {
-    const dataLimite = dataEncerramento
-      ? new Date(dataEncerramento).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
-      : "[Data Limite]";
-
-    let blocoItens = "";
-    itens.forEach(item => {
-      blocoItens += `• ${item.descricao} — ${item.qtd.toLocaleString("pt-BR")} ${item.unidade}\n`;
-    });
-
-    return `Olá, tudo bem?
-
-Estamos iniciando uma nova cotação aqui na VNMB HOLDING e, como vocês são parceiros homologados da nossa base, gostaríamos muito de receber a proposta de vocês para este fornecimento.
-
-Dá uma olhada nos detalhes do escopo:
-
-${blocoItens}
-Diretrizes comerciais do processo:
-- Modalidade de frete: ${incoterm}
-- Condição de faturamento: ${condicaoPagamento}
-- Moeda base: ${moeda}
-${observacoes ? `\nNota técnica do solicitante:\n"${observacoes}"\n` : ""}
-Você conseguiria me retornar com as condições comerciais e valores precificados até o dia ${dataLimite}?
-
-Qualquer dúvida ou desalinhamento com o escopo técnico, pode me acionar respondendo diretamente por aqui.
-
-Um abraço,
-Breno Marques
-Suprimentos | VNMB HOLDING`;
+  const handleDesvincular = () => {
+    setSolicitacaoConfirmada(null);
+    setSolicitacaoSelecionada("");
+    setTituloRfq("");
+    setItens([]);
+    setObservacoes("");
+    setFornecedores(FORNECEDORES_BASE);
   };
 
-  const handleCopiarMensagem = () => {
-    navigator.clipboard.writeText(gerarMensagemHumana());
-    alert("Convite copiado para transferência!");
+  const toggleFornecedor = (id: string) => {
+    setFornecedores((cur) =>
+      cur.map((f) => (f.id === id ? { ...f, selecionado: !f.selecionado } : f))
+    );
   };
+
+  const addItem = () => {
+    const nextId = Math.max(...itens.map((i) => i.id), 0) + 1;
+    setItens((cur) => [...cur, { id: nextId, descricao: "", qtd: 1, unidade: "UN" }]);
+  };
+
+  const removeItem = (id: number) => {
+    setItens((cur) => cur.filter((i) => i.id !== id));
+  };
+
+  const updateItem = <K extends keyof ItemCotacao>(id: number, field: K, value: ItemCotacao[K]) => {
+    setItens((cur) => cur.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
+  };
+
+  // -------------------------------------------------------------------------
+  // Derived state
+  // -------------------------------------------------------------------------
+
+  const fornecedoresSelecionados = useMemo(
+    () => fornecedores.filter((f) => f.selecionado),
+    [fornecedores]
+  );
+
+  const checklistItems = [
+    { label: "Solicitacao vinculada", ok: !!solicitacaoConfirmada },
+    { label: "Titulo da cotacao definido", ok: tituloRfq.trim().length > 0 },
+    { label: "Data/hora limite configurada", ok: dataEncerramento.length > 0 },
+    { label: "Itens com volumes validos", ok: itens.length > 0 && itens.every((i) => i.descricao && i.qtd > 0) },
+    { label: "Ao menos 1 fornecedor convidado", ok: fornecedoresSelecionados.length >= 1 },
+    { label: "Notas tecnicas e compliance", ok: observacoes.trim().length > 0 },
+  ];
+
+  const solicitacaoPreview = SOLICITACOES_DISPONIVEIS.find((s) => s.id === solicitacaoSelecionada);
+
+  // =========================================================================
+  // RENDER — PORTAO (sem solicitacao confirmada)
+  // =========================================================================
+
+  if (!solicitacaoConfirmada) {
+    return (
+      <div className={styles.formContainer}>
+        <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
+          <Icon name="chevron-left" /> Voltar para Cotacoes
+        </button>
+
+        <div className={styles.pageHeader}>
+          <div>
+            <span className={styles.eyebrow}>Compras externas</span>
+            <h1>Nova Cotacao (RFQ)</h1>
+            <p>
+              Uma cotacao sempre parte de uma demanda interna aprovada. Selecione a solicitacao de
+              compra que origina este processo de mercado.
+            </p>
+          </div>
+        </div>
+
+        {/* Gate card */}
+        <div className={styles.gateWrapper}>
+          <Card className={styles.gateCard}>
+            <div className={styles.gateIconWrap}>
+              <Icon name="file-search-02" />
+            </div>
+            <h2 className={styles.gateTitle}>Vincular solicitacao aprovada</h2>
+            <p className={styles.gateSubtitle}>
+              Selecione abaixo qual solicitacao de compra (ja aprovada internamente) sera a origem
+              desta cotacao. Os dados de escopo, itens e condicoes comerciais serao importados
+              automaticamente.
+            </p>
+
+            <div className={styles.gateSelectGroup}>
+              <label className={styles.gateLabel}>Solicitacao de Compra Aprovada *</label>
+              <select
+                className={styles.formControl}
+                value={solicitacaoSelecionada}
+                onChange={(e) => setSolicitacaoSelecionada(e.target.value)}
+              >
+                <option value="">Selecione uma solicitacao...</option>
+                {SOLICITACOES_DISPONIVEIS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.id} — {s.titulo}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Preview da solicitacao selecionada */}
+            {solicitacaoPreview && (
+              <div className={styles.gatePreview}>
+                <div className={styles.gatePreviewHeader}>
+                  <span className={styles.gatePreviewId}>{solicitacaoPreview.id}</span>
+                  <span
+                    className={`${styles.priorityPill} ${PRIORITY_CLASS[solicitacaoPreview.prioridade] ?? ""}`}
+                  >
+                    {solicitacaoPreview.prioridade}
+                  </span>
+                </div>
+                <p className={styles.gatePreviewTitle}>{solicitacaoPreview.titulo}</p>
+                <dl className={styles.gatePreviewMeta}>
+                  <div>
+                    <dt>Area</dt>
+                    <dd>{solicitacaoPreview.area}</dd>
+                  </div>
+                  <div>
+                    <dt>Solicitante</dt>
+                    <dd>{solicitacaoPreview.solicitante}</dd>
+                  </div>
+                  <div>
+                    <dt>Itens</dt>
+                    <dd>{solicitacaoPreview.itens.length} item(s)</dd>
+                  </div>
+                  <div>
+                    <dt>Valor estimado</dt>
+                    <dd>{formatCurrency(solicitacaoPreview.valorEstimado)}</dd>
+                  </div>
+                </dl>
+                <ul className={styles.gatePreviewItens}>
+                  {solicitacaoPreview.itens.map((item) => (
+                    <li key={item.id}>
+                      <Icon name="package" size={14} />
+                      {item.descricao} — {item.qtd.toLocaleString("pt-BR")} {item.unidade}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className={styles.gateActions}>
+              <button
+                className={styles.btnCancel}
+                onClick={() => router.push("/compras/rfqs")}
+              >
+                Cancelar
+              </button>
+              <Button
+                variant="primary"
+                className={styles.btnSubmit}
+                onClick={handleConfirmarSolicitacao}
+                disabled={!solicitacaoSelecionada}
+              >
+                <Icon name="arrow-right" /> Continuar com esta solicitacao
+              </Button>
+            </div>
+          </Card>
+
+          <div className={styles.gateInfo}>
+            <div className={styles.gateInfoItem}>
+              <div className={styles.gateInfoIcon}><Icon name="shield-tick" /></div>
+              <div>
+                <strong>Rastreabilidade garantida</strong>
+                <span>Toda cotacao fica vinculada a uma demanda aprovada, garantindo auditoria completa do processo.</span>
+              </div>
+            </div>
+            <div className={styles.gateInfoItem}>
+              <div className={styles.gateInfoIcon}><Icon name="zap-fast" /></div>
+              <div>
+                <strong>Pre-preenchimento automatico</strong>
+                <span>Itens, quantidades, condicoes e notas tecnicas da solicitacao sao importados sem retrabalho.</span>
+              </div>
+            </div>
+            <div className={styles.gateInfoItem}>
+              <div className={styles.gateInfoIcon}><Icon name="check-verified-02" /></div>
+              <div>
+                <strong>Apenas demandas aprovadas</strong>
+                <span>Somente solicitacoes ja aprovadas pela chefia aparecem aqui, eliminando cotacoes sem autorizacao.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // RENDER — FORMULARIO COMPLETO (solicitacao confirmada)
+  // =========================================================================
 
   return (
     <div className={styles.formContainer}>
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
-        <Icon name="chevron-left" /> Voltar para Cotações
+        <Icon name="chevron-left" /> Voltar para Cotacoes
       </button>
 
       <div className={styles.pageHeader}>
-        <h1>Nova Cotação</h1>
-        <p>Configure a parametrização do mercado e vincule demandas internas de suprimentos.</p>
+        <div>
+          <span className={styles.eyebrow}>Compras externas</span>
+          <h1>Nova Cotacao (RFQ)</h1>
+          <p>
+            Configure o processo de cotacao, selecione fornecedores e defina os parametros de
+            compliance para equalizar propostas.
+          </p>
+        </div>
       </div>
 
-      <div className={styles.formGridLayout}>
+      <div className={styles.workspaceGrid}>
+        <div className={styles.mainColumn}>
+          <Card className={styles.formCard}>
 
-        <Card className={styles.formCard}>
-          <div className={styles.formSection}>
-            <h3>1. Vincular Demanda Interna</h3>
-            <div className={styles.formGroup}>
-              <label>Solicitação de Compra Aprovada</label>
-              <select className={styles.formControl} value={solicitacaoVinculada} onChange={handleVincularSolicitacao}>
-                <option value="">Nenhuma (Cotação Direta / Avulsa)</option>
-                <option value="SOL-000456">SOL-000456 — Óleo Diesel S10 (Aprovada)</option>
-              </select>
-            </div>
-
-            {solicitacaoVinculada && (
-              <div className={styles.summaryBox}>
-                <Icon name="lock-01" />
+            {/* Secao 0 — Solicitacao vinculada (somente leitura) */}
+            <section className={styles.formSection}>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionIcon}><Icon name="link-01" /></div>
                 <div>
-                  <strong>{itens[0]?.descricao}</strong> — {itens[0]?.qtd.toLocaleString("pt-BR")} {itens[0]?.unidade}
-                  <small>Dados protegidos contra alteração (Origem: {solicitacaoVinculada})</small>
+                  <h2>Origem da cotacao</h2>
+                  <p>Solicitacao de compra aprovada que origina este processo de mercado.</p>
                 </div>
               </div>
-            )}
-          </div>
 
-          <div className={styles.formSection}>
-            <h3>2. Parâmetros Gerais</h3>
-            <div className={`${styles.formGroup} ${styles.mb16}`}>
-              <label>Título da RFQ *</label>
-              <input type="text" className={styles.formControl} value={tituloRfq} onChange={(e) => setTituloRfq(e.target.value)} placeholder="Ex: Fornecimento Anual de Combustíveis Geral" />
-            </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>Estratégia de Compra</label>
-                <select className={styles.formControl}>
-                  <option>Menor Preço Equalizado</option>
-                  <option>Técnica e Preço</option>
-                </select>
+              <div className={styles.origemBox}>
+                <div className={styles.origemLeft}>
+                  <div className={styles.origemId}>{solicitacaoConfirmada.id}</div>
+                  <div className={styles.origemTitulo}>{solicitacaoConfirmada.titulo}</div>
+                  <div className={styles.origemMeta}>
+                    <span>{solicitacaoConfirmada.area}</span>
+                    <span>·</span>
+                    <span>{solicitacaoConfirmada.solicitante}</span>
+                    <span>·</span>
+                    <span>{formatCurrency(solicitacaoConfirmada.valorEstimado)} estimado</span>
+                  </div>
+                </div>
+                <div className={styles.origemRight}>
+                  <span
+                    className={`${styles.priorityPill} ${PRIORITY_CLASS[solicitacaoConfirmada.prioridade] ?? ""}`}
+                  >
+                    {solicitacaoConfirmada.prioridade}
+                  </span>
+                  <button className={styles.desvincularBtn} onClick={handleDesvincular}>
+                    <Icon name="switch-horizontal-01" size={14} /> Trocar
+                  </button>
+                </div>
               </div>
-              <div className={styles.formGroup}>
-                <label>Data/Hora Limite</label>
-                <input type="datetime-local" className={styles.formControl} value={dataEncerramento} onChange={(e) => setDataEncerramento(e.target.value)} />
+            </section>
+
+            {/* Secao 1 — Parametros Gerais */}
+            <section className={styles.formSection}>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionIcon}><Icon name="settings-01" /></div>
+                <div>
+                  <h2>1. Parametros gerais da cotacao</h2>
+                  <p>Titulo, estrategia de compra e prazo de encerramento do processo.</p>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className={styles.formSection}>
-            <h3>3. Compliance & Logística</h3>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>Incoterm (Frete)</label>
-                <select className={styles.formControl} value={incoterm} onChange={(e) => setIncoterm(e.target.value)}>
-                  <option value="CIF">CIF (Custos e frete pagos pelo fornecedor)</option>
-                  <option value="FOB">FOB (Frete sob coleta e conta da VNMB)</option>
-                </select>
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <label>Titulo da RFQ *</label>
+                <input
+                  className={styles.formControl}
+                  value={tituloRfq}
+                  onChange={(e) => setTituloRfq(e.target.value)}
+                  placeholder="Ex: Fornecimento Anual de Combustiveis Geral"
+                />
               </div>
-              <div className={styles.formGroup}>
-                <label>Prazo de Faturamento</label>
-                <input type="text" className={styles.formControl} value={condicaoPagamento} onChange={(e) => setCondicaoPagamento(e.target.value)} placeholder="Ex: 30 dias DDL" />
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Estrategia de compra</label>
+                  <select
+                    className={styles.formControl}
+                    value={estrategia}
+                    onChange={(e) => setEstrategia(e.target.value)}
+                  >
+                    <option>Menor Preco Equalizado</option>
+                    <option>Tecnica e Preco</option>
+                    <option>Melhor Valor Total</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Data/Hora Limite de Encerramento</label>
+                  <input
+                    type="datetime-local"
+                    className={styles.formControl}
+                    value={dataEncerramento}
+                    onChange={(e) => setDataEncerramento(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-            <div className={`${styles.formGroup} ${styles.mt16}`}>
-              <label>Notas Técnicas Gerais</label>
-              <textarea className={styles.formControl} rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Cláusulas de barreiras, horários de recebimento..." />
-            </div>
-          </div>
+            </section>
 
-          <div className={styles.formActions}>
-            <button className={styles.btnCancel} onClick={() => router.push("/compras/rfqs")}>Cancelar</button>
-            <Button variant="primary" className={styles.btnSubmit} onClick={() => router.push("/compras/rfqs")}>
-              <Icon name="rocket-01" /> Publicar e Enviar Cotação
-            </Button>
-          </div>
-        </Card>
+            {/* Secao 2 — Itens (readonly, origem da solicitacao) */}
+            <section className={styles.formSection}>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
+                <div>
+                  <h2>2. Itens e quantidades solicitadas</h2>
+                  <p>
+                    Importados da solicitacao <strong>{solicitacaoConfirmada.id}</strong>. Voce pode
+                    adicionar itens complementares ao escopo.
+                  </p>
+                </div>
+              </div>
 
-        <Card className={styles.emailCard}>
-          <div className={styles.emailHeader}>
-            <div className={styles.windowDots}>
-              <span className={`${styles.dot} ${styles.dotR}`}></span>
-              <span className={`${styles.dot} ${styles.dotY}`}></span>
-              <span className={`${styles.dot} ${styles.dotG}`}></span>
+              <div className={styles.itemsList}>
+                {itens.map((item, index) => {
+                  const isFromSol = solicitacaoConfirmada.itens.some((si) => si.id === item.id);
+                  return (
+                    <div className={styles.itemPanel} key={item.id}>
+                      <div className={styles.itemHeader}>
+                        <div className={styles.itemHeaderLeft}>
+                          <strong>Item {index + 1}</strong>
+                          {isFromSol && (
+                            <span className={styles.itemOrigemTag}>
+                              <Icon name="lock-01" size={12} /> Da solicitacao
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          disabled={isFromSol}
+                          title={isFromSol ? "Item importado da solicitacao nao pode ser removido" : "Remover item"}
+                        >
+                          <Icon name="x-close" size={18} />
+                        </button>
+                      </div>
+                      <div className={styles.rfqItemGrid}>
+                        <div className={`${styles.formGroup} ${styles.rfqItemDesc}`}>
+                          <label>Descricao do item / servico *</label>
+                          <input
+                            className={styles.formControl}
+                            value={item.descricao}
+                            onChange={(e) => updateItem(item.id, "descricao", e.target.value)}
+                            readOnly={isFromSol}
+                            placeholder="Ex: Oleo Diesel S10"
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Quantidade</label>
+                          <input
+                            type="number"
+                            min="0"
+                            className={styles.formControl}
+                            value={item.qtd}
+                            onChange={(e) => updateItem(item.id, "qtd", Number(e.target.value))}
+                            readOnly={isFromSol}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Unidade</label>
+                          <select
+                            className={styles.formControl}
+                            value={item.unidade}
+                            onChange={(e) => updateItem(item.id, "unidade", e.target.value)}
+                            disabled={isFromSol}
+                          >
+                            <option>L</option>
+                            <option>UN</option>
+                            <option>KG</option>
+                            <option>M</option>
+                            <option>H</option>
+                            <option>Pacote</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button type="button" className={styles.addItemButton} onClick={addItem}>
+                <Icon name="plus" /> Adicionar item complementar
+              </button>
+            </section>
+
+            {/* Secao 3 — Fornecedores */}
+            <section className={styles.formSection}>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionIcon}><Icon name="building-07" /></div>
+                <div>
+                  <h2>3. Fornecedores convidados</h2>
+                  <p>Selecione os fornecedores homologados que receberao o convite para cotacao.</p>
+                </div>
+              </div>
+
+              <div className={styles.fornecedoresList}>
+                {fornecedores.map((f) => (
+                  <label
+                    key={f.id}
+                    className={`${styles.fornecedorRow} ${f.selecionado ? styles.fornecedorSelecionado : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={f.selecionado}
+                      onChange={() => toggleFornecedor(f.id)}
+                      className={styles.fornecedorCheck}
+                    />
+                    <div className={styles.fornecedorInfo}>
+                      <strong>{f.nome}</strong>
+                      <span>{f.cnpj}</span>
+                    </div>
+                    {f.selecionado && (
+                      <span className={styles.fornecedorBadge}>Convidado</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            {/* Secao 4 — Compliance */}
+            <section className={styles.formSection}>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionIcon}><Icon name="truck-01" /></div>
+                <div>
+                  <h2>4. Compliance e logistica</h2>
+                  <p>Parametros comerciais que equalizam as propostas recebidas.</p>
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Incoterm (Frete)</label>
+                  <select
+                    className={styles.formControl}
+                    value={incoterm}
+                    onChange={(e) => setIncoterm(e.target.value)}
+                  >
+                    <option value="CIF">CIF — Custos e frete pagos pelo fornecedor</option>
+                    <option value="FOB">FOB — Frete por conta da VNMB</option>
+                    <option value="EXW">EXW — Retirada na planta do fornecedor</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Condicao de pagamento</label>
+                  <input
+                    className={styles.formControl}
+                    value={condicaoPagamento}
+                    onChange={(e) => setCondicaoPagamento(e.target.value)}
+                    placeholder="Ex: 30 dias DDL"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Moeda base</label>
+                  <select
+                    className={styles.formControl}
+                    value={moeda}
+                    onChange={(e) => setMoeda(e.target.value)}
+                  >
+                    <option value="BRL">BRL — Real Brasileiro</option>
+                    <option value="USD">USD — Dolar Americano</option>
+                    <option value="EUR">EUR — Euro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <label>Notas tecnicas e requisitos de compliance</label>
+                <textarea
+                  className={styles.formControl}
+                  rows={4}
+                  value={observacoes}
+                  onChange={(e) => setObservacoes(e.target.value)}
+                  placeholder="Ex: Fornecedor deve apresentar certificacao ANP ativa, laudos de analise quimica..."
+                />
+              </div>
+            </section>
+
+            <div className={styles.formActions}>
+              <button className={styles.btnCancel} onClick={() => router.push("/compras/rfqs")}>
+                Cancelar
+              </button>
+              <button className={styles.secondaryAction}>
+                <Icon name="save-01" /> Salvar rascunho
+              </button>
+              <Button
+                variant="primary"
+                className={styles.btnSubmit}
+                onClick={() => router.push("/compras/rfqs")}
+              >
+                <Icon name="rocket-01" /> Publicar e enviar cotacao
+              </Button>
             </div>
-            <button className={styles.emailCopyBtn} onClick={handleCopiarMensagem}>
-              <Icon name="copy-01" /> Copiar
-            </button>
-          </div>
-          <div className={styles.emailMeta}>
-            <div><strong>De:</strong> suprimentos@vnmb.com.br</div>
-            <div><strong>Para:</strong> fornecedores-selecionados@base.com</div>
-            <div><strong>Assunto:</strong> {tituloRfq || "[Inserir Assunto do Processo]"}</div>
-          </div>
-          <div className={styles.emailBody}>
-            {gerarMensagemHumana().split("\n").map((paragraph, index) => (
-              <p key={index}>{paragraph || <br />}</p>
-            ))}
-          </div>
-        </Card>
+          </Card>
+        </div>
 
+        {/* Sidebar */}
+        <aside className={styles.sideColumn}>
+          <Card className={styles.summaryCard}>
+            <div className={styles.summaryHeader}>
+              <span>Resumo da cotacao</span>
+              <strong className={styles.statusPill}>
+                {fornecedoresSelecionados.length} fornecedor
+                {fornecedoresSelecionados.length !== 1 ? "es" : ""}
+              </strong>
+            </div>
+            <h3>{tituloRfq || "Cotacao sem titulo"}</h3>
+
+            <div className={styles.summaryValue}>
+              <span>Total de itens no escopo</span>
+              <strong>
+                {itens.filter((i) => i.descricao).length} item
+                {itens.filter((i) => i.descricao).length !== 1 ? "s" : ""}
+              </strong>
+            </div>
+
+            <dl className={styles.summaryList}>
+              <div><dt>Origem</dt><dd>{solicitacaoConfirmada.id}</dd></div>
+              <div><dt>Estrategia</dt><dd>{estrategia || "—"}</dd></div>
+              <div><dt>Incoterm</dt><dd>{incoterm || "—"}</dd></div>
+              <div><dt>Pagamento</dt><dd>{condicaoPagamento || "—"}</dd></div>
+              <div><dt>Moeda</dt><dd>{moeda || "—"}</dd></div>
+              <div>
+                <dt>Encerra em</dt>
+                <dd>
+                  {dataEncerramento
+                    ? new Date(dataEncerramento).toLocaleString("pt-BR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })
+                    : "—"}
+                </dd>
+              </div>
+            </dl>
+          </Card>
+
+          <Card className={styles.checklistCard}>
+            <div className={styles.sideTitle}>
+              <Icon name="info-circle" />
+              <h3>Checklist da cotacao</h3>
+            </div>
+            <ul>
+              {checklistItems.map((item) => (
+                <li key={item.label} className={item.ok ? styles.done : ""}>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </aside>
       </div>
     </div>
   );

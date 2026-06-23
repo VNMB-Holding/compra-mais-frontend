@@ -3,302 +3,434 @@
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Icon } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import styles from "./rfq-detail.module.css";
 
-interface ItemRow {
-  codigo: string;
+// ---------------------------------------------------------------------------
+// Types & Data
+// ---------------------------------------------------------------------------
+type Estagio = "proposta" | "analise" | "aprovacao";
+type PropostaStatus = "aguardando" | "recebida" | "declinada";
+
+interface Proposta {
+  fornecedorId: string;
   nome: string;
-  especificacao: string;
-  unidade: string;
-  quantidade: string;
-  centroCusto: string;
+  cnpj: string;
+  status: PropostaStatus;
+  precoUnitario?: number;
+  frete?: number;
+  prazoEntrega?: number;
+  condicaoPagamento?: string;
+  observacoes?: string;
 }
 
-export default function RfqDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const rfqId = params.id;
+const RFQ_DATA = {
+  id: "RFQ-2026-004",
+  titulo: "Fornecimento de Oleo Diesel S10",
+  origem: "SOL-000456",
+  solicitante: "Breno Marques",
+  encerraEm: "05/07/2026",
+  itens: [
+    { id: 1, descricao: "Oleo Diesel S10", qtd: 500000, unidade: "L" },
+    { id: 2, descricao: "Aditivo ARLA 32", qtd: 12000, unidade: "L" },
+  ],
+};
 
-  const [activeTab, setActiveTab] = useState<"resumo" | "itens" | "historico">("resumo");
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState("Alfa");
+const PROPOSTAS_INICIAIS: Proposta[] = [
+  {
+    fornecedorId: "1",
+    nome: "Fornecedor Alfa S.A.",
+    cnpj: "11.222.333/0001-81",
+    status: "recebida",
+    precoUnitario: 5.95,
+    frete: 0.25,
+    prazoEntrega: 2,
+    condicaoPagamento: "30 dias DDL",
+  },
+  {
+    fornecedorId: "2",
+    nome: "Petrolog Distribuidora LTDA",
+    cnpj: "22.333.444/0001-82",
+    status: "recebida",
+    precoUnitario: 5.89,
+    frete: 0.2,
+    prazoEntrega: 1,
+    condicaoPagamento: "30 dias DDL",
+  },
+  {
+    fornecedorId: "3",
+    nome: "Combustiveis Sul LTDA",
+    cnpj: "33.444.555/0001-83",
+    status: "aguardando",
+  },
+];
 
-  const itensList: ItemRow[] = [
-    { codigo: "01", nome: "Óleo Diesel S10", especificacao: "Refinado automotivo de alta fluidez.", unidade: "Litros (L)", quantidade: "500.000", centroCusto: "Logística Geral" }
-  ];
+const formatCurrency = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const itensColumns: ColumnDef<ItemRow>[] = [
-    { header: "Item", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
-    { header: "Especificação", cell: (row) => <><strong>{row.nome}</strong> - {row.especificacao}</> },
-    { header: "Unidade", accessorKey: "unidade" },
-    { header: "Quantidade", accessorKey: "quantidade" },
-    { header: "Centro de Custo", accessorKey: "centroCusto" }
-  ];
+// ---------------------------------------------------------------------------
+// Component: Proposta Card (Estilo Original VNMB)
+// ---------------------------------------------------------------------------
+function PropostaCard({
+  proposta,
+  isWinner,
+  onSalvar,
+}: {
+  proposta: Proposta;
+  isWinner: boolean;
+  onSalvar: (id: string, dados: Partial<Proposta>) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [draft, setDraft] = useState({
+    precoUnitario: proposta.precoUnitario ?? 0,
+    frete: proposta.frete ?? 0,
+    prazoEntrega: proposta.prazoEntrega ?? 1,
+    condicaoPagamento: proposta.condicaoPagamento ?? "30 dias DDL",
+  });
+
+  const handleSalvar = () => {
+    onSalvar(proposta.fornecedorId, { ...draft, status: "recebida" });
+    setAberto(false);
+  };
+
+  const totalEqualizado = (draft.precoUnitario + draft.frete) * RFQ_DATA.itens.reduce((s, i) => s + i.qtd, 0);
 
   return (
-    <div className={styles.detailContainer}>
-      
+    <div className={`${styles.propostaCard} ${proposta.status === "recebida" ? styles.propostaRecebida : ""} ${isWinner ? styles.propostaVencedora : ""}`}>
+      <div className={styles.propostaCardHeader}>
+        <div className={styles.propostaInfo}>
+          <div className={styles.propostaFornecedorNome}>
+            {isWinner && (
+              <span className={styles.vencedorTag}>
+                <Icon name="trophy-01" size={12} /> Melhor proposta
+              </span>
+            )}
+            <strong>{proposta.nome}</strong>
+          </div>
+          <span className={styles.propostaCnpj}>{proposta.cnpj}</span>
+        </div>
+
+        <div className={styles.propostaCardRight}>
+          {proposta.status === "aguardando" && (
+            <span className={styles.badgeAguardando}>
+              <Icon name="clock" size={13} /> Aguardando
+            </span>
+          )}
+          {proposta.status === "recebida" && !aberto && (
+            <div className={styles.propostaSumario}>
+              <span className={styles.propostaPreco}>{formatCurrency(proposta.precoUnitario!)} / un</span>
+              <span className={styles.propostaPrazo}>{proposta.prazoEntrega} dia(s) · {proposta.condicaoPagamento}</span>
+            </div>
+          )}
+
+          <div className={styles.propostaActions}>
+            {proposta.status === "aguardando" && (
+              <button className={styles.btnRegistrar} onClick={() => setAberto(!aberto)}>
+                <Icon name="plus" size={15} /> Registrar proposta
+              </button>
+            )}
+            {proposta.status === "recebida" && (
+              <button className={styles.btnEditar} onClick={() => setAberto(!aberto)}>
+                <Icon name="edit-01" size={15} /> {aberto ? "Fechar" : "Editar"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {aberto && (
+        <div className={styles.propostaForm}>
+          <div className={styles.propostaFormDivider} />
+          <div className={styles.propostaFormGrid}>
+            <div className={styles.propostaField}>
+              <label>Preço unitário liquido (R$)</label>
+              <input type="number" step="0.01" className={styles.propostaInput} value={draft.precoUnitario} onChange={(e) => setDraft((d) => ({ ...d, precoUnitario: Number(e.target.value) }))} />
+            </div>
+            <div className={styles.propostaField}>
+              <label>Custo de frete unitário (R$)</label>
+              <input type="number" step="0.01" className={styles.propostaInput} value={draft.frete} onChange={(e) => setDraft((d) => ({ ...d, frete: Number(e.target.value) }))} />
+            </div>
+            <div className={styles.propostaField}>
+              <label>Prazo de entrega (dias)</label>
+              <input type="number" className={styles.propostaInput} value={draft.prazoEntrega} onChange={(e) => setDraft((d) => ({ ...d, prazoEntrega: Number(e.target.value) }))} />
+            </div>
+            <div className={styles.propostaField}>
+              <label>Condição de pagamento</label>
+              <input className={styles.propostaInput} value={draft.condicaoPagamento} onChange={(e) => setDraft((d) => ({ ...d, condicaoPagamento: e.target.value }))} />
+            </div>
+          </div>
+
+          {draft.precoUnitario > 0 && (
+            <div className={styles.propostaTotalPreview}>
+              <span>Custo total equalizado estimado:</span>
+              <strong>{formatCurrency(totalEqualizado)}</strong>
+            </div>
+          )}
+
+          <div className={styles.propostaFormActions}>
+            <button className={styles.btnCancelarForm} onClick={() => setAberto(false)}>Cancelar</button>
+            <button className={styles.btnSalvarProposta} onClick={handleSalvar}><Icon name="save-01" size={15} /> Salvar proposta</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Page
+// ---------------------------------------------------------------------------
+export default function RfqDetailPage() {
+  const router = useRouter();
+  const [estagio, setEstagio] = useState<Estagio>("proposta");
+  const [propostas, setPropostas] = useState<Proposta[]>(PROPOSTAS_INICIAIS);
+  const [vencedorId, setVencedorId] = useState<string | null>(null);
+
+  const recebidas = propostas.filter((p) => p.status === "recebida");
+  const handleSalvarProposta = (id: string, dados: Partial<Proposta>) => setPropostas((c) => c.map((p) => (p.fornecedorId === id ? { ...p, ...dados } : p)));
+
+  const propostasRankeadas = [...recebidas].sort((a, b) => (a.precoUnitario! + a.frete!) - (b.precoUnitario! + b.frete!));
+  const melhorProposta = propostasRankeadas[0];
+  const totalQtd = RFQ_DATA.itens.reduce((s, i) => s + i.qtd, 0);
+
+  const Header = () => (
+    <>
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
-        <Icon name="chevron-left" />
-        Voltar para Cotações
+        <Icon name="chevron-left" /> Voltar para Cotações
       </button>
 
       <div className={styles.pageHeader}>
         <div className={styles.headerTitles}>
+          <span className={styles.eyebrow}>Compras externas</span>
           <div className={styles.titleRow}>
-            <h1>{rfqId || "RFQ-2026-002"}</h1>
-            <Badge variant="success">Aberta</Badge>
+            <h1>{RFQ_DATA.id}</h1>
+            <Badge variant={estagio === "aprovacao" ? "warning" : estagio === "analise" ? "primary" : "success"}>
+              {estagio === "proposta" ? "Aguardando propostas" : estagio === "analise" ? "Em analise" : "Em aprovacao"}
+            </Badge>
           </div>
-          <p className={styles.subtitleLarge}>Óleo Diesel S10</p>
-          <div className={styles.metadataRow}>
-            <span><Icon name="folder" /> Combustíveis</span>
-            <span><Icon name="user-01" /> Criada por Maria Costa</span>
-            <span><Icon name="calendar" /> 22/05/2024</span>
-            <span><Icon name="clock" /> Encerramento: 24/05/2024 às 14:00</span>
-          </div>
+          <p className={styles.subtitleLarge}>{RFQ_DATA.titulo}</p>
         </div>
         <div className={styles.headerActions}>
-          <Button variant="secondary">Encerrar RFQ</Button>
-          <Button variant="primary"><Icon name="edit-01" /> Editar</Button>
+          <Button variant="secondary" className={styles.scopeBtn}>
+            <Icon name="file-04" /> Ver escopo e anexos
+          </Button>
         </div>
       </div>
 
-      <div className={styles.pageTabs}>
-        <span className={activeTab === "resumo" ? styles.tabActive : ""} onClick={() => setActiveTab("resumo")}>Resumo Executivo & Matriz</span>
-        <span className={activeTab === "itens" ? styles.tabActive : ""} onClick={() => setActiveTab("itens")}>Itens Solicitados</span>
-        <span className={activeTab === "historico" ? styles.tabActive : ""} onClick={() => setActiveTab("historico")}>Histórico & Anexos</span>
-      </div>
-
-      {activeTab === "resumo" && (
-        <div className={styles.tabLayoutFade}>
-          
-          <div className={styles.rfqMetricsGrid}>
-            <Card noPadding className={`${styles.metricCard} ${styles.darkCard}`}>
-              <div className={styles.darkCardContent}>
-                <div className={styles.metricTop}>
-                  <span>Economia Potencial</span>
-                  <Icon name="trend-up-01" />
-                </div>
-                <h3>R$ 32.450</h3>
-                <span className={styles.subTextDark}>24,7% vs. referência</span>
-              </div>
-            </Card>
-
-            <Card className={styles.metricCard}>
-              <span className={styles.label}>Menor preço</span>
-              <h3 className={styles.textPrimary}>R$ 5,89</h3>
-              <span className={styles.sub}>Fornecedor Bravo</span>
-            </Card>
-
-            <Card className={styles.metricCard}>
-              <span className={styles.label}>Média das propostas</span>
-              <h3>R$ 6,08</h3>
-              <span className={styles.sub}>Base: 4 propostas</span>
-            </Card>
-
-            <Card className={styles.metricCard}>
-              <span className={styles.label}>Melhor condition</span>
-              <h3>30 dias</h3>
-              <span className={styles.sub}>Fornecedor Alfa</span>
-            </Card>
+      <div className={styles.estagioPista}>
+        <div className={`${styles.estsgioItem} ${estagio === "proposta" ? styles.estsgioAtivo : styles.estagioConcluido}`}>
+          <div className={styles.estsgioIcone}>{estagio === "proposta" ? "1" : <Icon name="check" size={16} />}</div>
+          <div>
+            <strong>Coleta de propostas</strong>
+            <span>{recebidas.length} de {propostas.length} recebidas</span>
           </div>
+        </div>
+        <div className={`${styles.estagioConetor} ${estagio !== "proposta" ? styles.estsgioConectorAtivo : ""}`} />
+        <div className={`${styles.estsgioItem} ${estagio === "analise" ? styles.estsgioAtivo : (estagio === "aprovacao" ? styles.estagioConcluido : styles.estsgioInativo)}`}>
+          <div className={styles.estsgioIcone}>{estagio === "aprovacao" ? <Icon name="check" size={16} /> : "2"}</div>
+          <div>
+            <strong>Analise e comparativo</strong>
+            <span>Equalizacao comercial</span>
+          </div>
+        </div>
+        <div className={`${styles.estagioConetor} ${estagio === "aprovacao" ? styles.estsgioConectorAtivo : ""}`} />
+        <div className={`${styles.estsgioItem} ${estagio === "aprovacao" ? styles.estsgioAtivo : styles.estsgioInativo}`}>
+          <div className={styles.estsgioIcone}>3</div>
+          <div>
+            <strong>Aprovacao e PO</strong>
+            <span>Geracao do pedido</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
-          <Card className={styles.recommendationCard}>
-            <div className={styles.recMainRow}>
-              <div className={styles.recLeftBlock}>
-                <div className={styles.recBadgeRow}>
-                  <div className={styles.recIconCircle}>
-                    <Icon name="certificate-01" />
-                  </div>
-                  <span className={styles.blueTagText}>Recomendação automática</span>
-                </div>
-                <h3>Fornecedor Bravo oferece a melhor proposta.</h3>
-                <p>Menor preço, menor frete e menor prazo de entrega.</p>
-              </div>
+  if (estagio === "proposta") {
+    return (
+      <div className={styles.detailContainer}>
+        <Header />
+
+        <div className={styles.coletaHeader}>
+          <h2 className={styles.coletaTitulo}>Fornecedores Convidados</h2>
+          {recebidas.length > 0 && (
+            <Button variant="primary" onClick={() => setEstagio("analise")}>
+              Encerrar coleta e ir para análise
+            </Button>
+          )}
+        </div>
+
+        <div className={styles.propostasList}>
+          {propostas.map((p) => <PropostaCard key={p.fornecedorId} proposta={p} isWinner={false} onSalvar={handleSalvarProposta} />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (estagio === "analise") {
+    return (
+      <div className={styles.detailContainer}>
+        <Header />
+
+        <div className={styles.rfqMetricsGrid}>
+          <Card noPadding className={`${styles.metricCard} ${styles.darkCard}`}>
+            <div className={styles.darkCardContent}>
+              <div className={styles.metricTop}><span>Menor custo equalizado</span><Icon name="trend-up-01" /></div>
+              <h3>{formatCurrency(melhorProposta.precoUnitario! + melhorProposta.frete!)}/un</h3>
+              <span className={styles.subTextDark}>{melhorProposta.nome}</span>
             </div>
           </Card>
+          <Card className={styles.metricCard}>
+            <span className={styles.label}>Menor preco unitario</span>
+            <h3 className={styles.textPrimary}>{formatCurrency(Math.min(...recebidas.map((p) => p.precoUnitario!)))}</h3>
+            <span className={styles.sub}>{propostasRankeadas[0]?.nome}</span>
+          </Card>
+          <Card className={styles.metricCard}>
+            <span className={styles.label}>Media das propostas</span>
+            <h3>{formatCurrency(recebidas.reduce((s, p) => s + p.precoUnitario!, 0) / recebidas.length)}</h3>
+            <span className={styles.sub}>Base: {recebidas.length} propostas</span>
+          </Card>
+          <Card className={styles.metricCard}>
+            <span className={styles.label}>Melhor prazo</span>
+            <h3>{Math.min(...recebidas.map((p) => p.prazoEntrega!))} dia(s)</h3>
+            <span className={styles.sub}>{recebidas.find((p) => p.prazoEntrega === Math.min(...recebidas.map((x) => x.prazoEntrega!)))?.nome}</span>
+          </Card>
+        </div>
 
-          <Card noPadding className={styles.compareCard}>
-            <div className={styles.cardHeaderFlex}>
-              <div>
-                <h4>Matriz de Equalização Comercial</h4>
-                <p>Valores consolidados com impostos e fretes inclusos para tomada de decisão.</p>
-              </div>
-              <div className={styles.tableActionRow}>
-                <Button variant="primary" onClick={() => setIsModalOpen(true)} className={styles.launchBtnStyle}>
-                  <Icon name="mail-01" /> Lançar Preços do E-mail
-                </Button>
-                <Button variant="secondary">
-                  <Icon name="download-01" /> Exportar Planilha
-                </Button>
-              </div>
+        <Card noPadding className={styles.compareCard}>
+          <div className={styles.cardHeaderFlex}>
+            <div>
+              <h4>Matriz de Equalizacao Comercial</h4>
+              <p>Valores consolidados para tomada de decisao.</p>
             </div>
+            <button className={styles.btnVoltarColeta} onClick={() => setEstagio("proposta")}><Icon name="arrow-left" size={15} /> Voltar e editar propostas</button>
+          </div>
 
-            <div className={styles.compareTableWrapper}>
-              <table className={styles.compareTable}>
-                <thead>
-                  <tr>
-                    <th className={styles.rowHeader}>Critérios Analisados</th>
-                    <th>Fornecedor Alfa</th>
-                    <th className={styles.winnerHeaderCol}>
-                      <div className={styles.winnerBadgeTip}>MELHOR OPÇÃO</div>
-                      Fornecedor Bravo
+          <div className={styles.compareTableWrapper}>
+            <table className={styles.compareTable}>
+              <thead>
+                <tr>
+                  <th className={styles.rowHeader}>Criterio</th>
+                  {propostasRankeadas.map((p, i) => (
+                    <th key={p.fornecedorId} className={i === 0 ? styles.winnerHeaderCol : ""}>
+                      {i === 0 && <div className={styles.winnerBadgeTip}>MELHOR OPCAO</div>}
+                      {p.nome.split(" ").slice(0, 2).join(" ")}
                     </th>
-                    <th>Fornecedor Charlie</th>
-                    <th>Fornecedor Delta</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className={styles.rowHeader}>Preço Unitário Líquido</td>
-                    <td className={styles.mutedCellText}>R$ 5,95</td>
-                    <td className={styles.winnerCellSuccess}>R$ 5,89</td>
-                    <td className={styles.mutedCellText}>R$ 6,10</td>
-                    <td className={styles.dangerCellText}>R$ 6,40</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.rowHeader}>Custo de Frete (FOB)</td>
-                    <td className={styles.mutedCellText}>R$ 0,25</td>
-                    <td className={styles.winnerCellSuccess}>R$ 0,20</td>
-                    <td className={styles.mutedCellText}>R$ 0,30</td>
-                    <td className={styles.mutedCellText}>R$ 0,25</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.rowHeader}>Prazo de Entrega</td>
-                    <td className={styles.mutedCellText}>2 dias</td>
-                    <td className={styles.winnerCellSuccess}>1 dia</td>
-                    <td className={styles.mutedCellText}>2 dias</td>
-                    <td className={styles.dangerCellText}>3 dias</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.rowHeader}>Condição de Faturamento</td>
-                    <td className={styles.mutedCellText}>30 dias DDL</td>
-                    <td className={styles.winnerCellNormal}>30 dias DDL</td>
-                    <td className={styles.specialCellSuccess}>45 dias DDL</td>
-                    <td className={styles.mutedCellText}>30 dias DDL</td>
-                  </tr>
-                  <tr className={styles.totalRow}>
-                    <td className={styles.rowHeaderTotal}>Custo Total Equalizado</td>
-                    <td className={styles.totalMutedText}>R$ 6,20</td>
-                    <td className={styles.winnerCellTotal}>R$ 6,09</td>
-                    <td className={styles.totalMutedText}>R$ 6,40</td>
-                    <td className={styles.totalDangerText}>R$ 6,65</td>
-                  </tr>
-                </tbody>
-              </table>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className={styles.rowHeader}>Preco Unitario Liquido</td>
+                  {propostasRankeadas.map((p, i) => <td key={p.fornecedorId} className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}>{formatCurrency(p.precoUnitario!)}</td>)}
+                </tr>
+                <tr>
+                  <td className={styles.rowHeader}>Custo de Frete (unit)</td>
+                  {propostasRankeadas.map((p, i) => <td key={p.fornecedorId} className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}>{formatCurrency(p.frete!)}</td>)}
+                </tr>
+                <tr>
+                  <td className={styles.rowHeader}>Prazo de Entrega</td>
+                  {propostasRankeadas.map((p, i) => <td key={p.fornecedorId} className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}>{p.prazoEntrega} dia(s)</td>)}
+                </tr>
+                <tr>
+                  <td className={styles.rowHeader}>Condicao de Pagamento</td>
+                  {propostasRankeadas.map((p, i) => <td key={p.fornecedorId} className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}>{p.condicaoPagamento}</td>)}
+                </tr>
+                <tr className={styles.totalRow}>
+                  <td className={styles.rowHeaderTotal}>Custo Total Equalizado</td>
+                  {propostasRankeadas.map((p, i) => <td key={p.fornecedorId} className={i === 0 ? styles.winnerCellTotal : styles.totalMutedText}>{formatCurrency((p.precoUnitario! + p.frete!) * totalQtd)}</td>)}
+                </tr>
+                <tr>
+                  <td className={styles.rowHeader} />
+                  {propostasRankeadas.map((p, i) => (
+                    <td key={p.fornecedorId} className={styles.selectCell}>
+                      <button className={i === 0 ? styles.btnSelecionarVencedor : styles.btnSelecionarSecundario} onClick={() => { setVencedorId(p.fornecedorId); setEstagio("aprovacao"); }}>
+                        {i === 0 ? <><Icon name="trophy-01" size={14} /> Selecionar vencedor</> : "Selecionar este"}
+                      </button>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const vencedor = propostas.find((p) => p.fornecedorId === vencedorId);
+
+  return (
+    <div className={styles.detailContainer}>
+      <Header />
+
+      <div className={styles.aprovacaoContainer}>
+        
+        <div className={styles.aprovacaoBanner}>
+          <div className={styles.aprovacaoBannerIcon}>
+            <Icon name="trophy-01" />
+          </div>
+          <div className={styles.aprovacaoBannerText}>
+            <h2>Proposta Selecionada</h2>
+            <p>Revise os detalhes comerciais antes de emitir o Pedido de Compra Oficial.</p>
+          </div>
+        </div>
+
+        <div className={styles.aprovacaoGrid}>
+          <Card className={styles.aprovacaoBox}>
+            <h3><Icon name="building-01" size={18} /> Fornecedor Vencedor</h3>
+            <div className={styles.aprovacaoDataRow}>
+              <span>Razao Social</span>
+              <strong>{vencedor?.nome}</strong>
+            </div>
+            <div className={styles.aprovacaoDataRow}>
+              <span>CNPJ</span>
+              <strong>{vencedor?.cnpj}</strong>
+            </div>
+          </Card>
+
+          <Card className={styles.aprovacaoBox}>
+            <h3><Icon name="file-04" size={18} /> Condicoes Comerciais</h3>
+            <div className={styles.aprovacaoDataRow}>
+              <span>Prazo de Entrega</span>
+              <strong>{vencedor?.prazoEntrega} dia(s)</strong>
+            </div>
+            <div className={styles.aprovacaoDataRow}>
+              <span>Condicao de Pagamento</span>
+              <strong>{vencedor?.condicaoPagamento}</strong>
+            </div>
+          </Card>
+
+          <Card className={styles.aprovacaoBox}>
+            <h3><Icon name="bank-note-01" size={18} /> Precos Acordados</h3>
+            <div className={styles.aprovacaoDataRow}>
+              <span>Preco Unitario Liquido</span>
+              <strong>{formatCurrency(vencedor?.precoUnitario ?? 0)} / unidade</strong>
+            </div>
+            <div className={styles.aprovacaoDataRow}>
+              <span>Custo de Frete Adicional</span>
+              <strong>{formatCurrency(vencedor?.frete ?? 0)} / unidade</strong>
             </div>
           </Card>
         </div>
-      )}
 
-      {activeTab === "itens" && (
-        <div className={styles.tabLayoutFade}>
-          <Card noPadding>
-            <div className={styles.cardHeaderFlex}>
-              <h4>Itens Vinculados ao Processo</h4>
-            </div>
-            <DataTable data={itensList} columns={itensColumns} />
-          </Card>
-        </div>
-      )}
-
-      {activeTab === "historico" && (
-        <div className={styles.tabLayoutFade}>
-          <div className={styles.historicoGrid}>
-            <Card className={styles.historyCard}>
-              <h4>Linha do Tempo do Processo</h4>
-              <div className={styles.timeline}>
-                <div className={styles.timelineItem}>
-                  <div className={styles.timelineIcon}></div>
-                  <div className={styles.timelineContent}>
-                    <strong>Processo Criado</strong>
-                    <p>Maria Costa iniciou a requisição no sistema.</p>
-                    <small>22/05/2024 às 09:30</small>
-                  </div>
-                </div>
-                <div className={styles.timelineItem}>
-                  <div className={styles.timelineIcon}></div>
-                  <div className={styles.timelineContent}>
-                    <strong>Disparado para o Mercado</strong>
-                    <p>6 fornecedores homologados foram convidados via portal.</p>
-                    <small>22/05/2024 às 10:00</small>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className={styles.historyCard}>
-              <h4>Documentos e Anexos Técnicos</h4>
-              <p className={styles.anexoIntro}>Arquivos oficiais anexados à cotação:</p>
-              <div className={styles.anexoRow}>
-                <Icon name="file-01" />
-                <div className={styles.anexoInfo}>
-                  <strong>Termo_de_Referencia_Diesel.pdf</strong>
-                  <small>PDF • 2.4 MB</small>
-                </div>
-                <Button variant="secondary">Baixar</Button>
-              </div>
-            </Card>
+        <div className={styles.aprovacaoTotalHighlight}>
+          <div className={styles.aprovacaoTotalLeft}>
+            <span>Valor Total Equalizado do Pedido</span>
+            <p>Ja contemplando impostos, taxas e frete incidentes</p>
+          </div>
+          <div className={styles.aprovacaoTotalValue}>
+            {formatCurrency(((vencedor?.precoUnitario ?? 0) + (vencedor?.frete ?? 0)) * totalQtd)}
           </div>
         </div>
-      )}
 
-      {isModalOpen && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h3>Lançar Proposta Comercial Recebida</h3>
-              <Icon name="x-close" className={styles.closeModal} onClick={() => setIsModalOpen(false)} />
-            </div>
-            
-            <div className={styles.modalBody}>
-              <p className={styles.modalContext}>Insira as condições e valores contidos na planilha ou e-mail enviado pelo parceiro.</p>
-              
-              <div className={styles.modalField}>
-                <label>Selecione o Fornecedor Convidado</label>
-                <select className={styles.modalInput} value={selectedSupplier} onChange={(e) => setSelectedSupplier(e.target.value)}>
-                  <option value="Alfa">Fornecedor Alfa S.A.</option>
-                  <option value="Bravo">Fornecedor Bravo LTDA</option>
-                  <option value="Charlie">Fornecedor Charlie</option>
-                  <option value="Delta">Fornecedor Delta</option>
-                </select>
-              </div>
-
-              <div className={styles.modalRowFields}>
-                <div className={styles.modalField}>
-                  <label>Preço Unitário Líquido (R$)</label>
-                  <input type="text" className={styles.modalInput} placeholder="Ex: 5,89" />
-                </div>
-                <div className={styles.modalField}>
-                  <label>Custo de Frete Unitário (R$)</label>
-                  <input type="text" className={styles.modalInput} placeholder="Ex: 0,20" />
-                </div>
-              </div>
-
-              <div className={styles.modalRowFields}>
-                <div className={styles.modalField}>
-                  <label>Prazo de Entrega (Dias)</label>
-                  <input type="number" className={styles.modalInput} placeholder="Ex: 1" />
-                </div>
-                <div className={styles.modalField}>
-                  <label>Prazo de Faturamento (DDL)</label>
-                  <input type="text" className={styles.modalInput} placeholder="Ex: 30 dias" />
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button className={styles.cancelModalBtn} onClick={() => setIsModalOpen(false)}>Cancelar</button>
-              <Button variant="primary" onClick={() => setIsModalOpen(false)}>
-                <Icon name="save-01" /> Consolidar Proposta
-              </Button>
-            </div>
-          </div>
+        <div className={styles.aprovacaoFooter}>
+          <button className={styles.btnVoltarAnalise} onClick={() => setEstagio("analise")}>
+            <Icon name="arrow-left" size={15} /> Voltar para Matriz
+          </button>
+          <Button variant="primary" className={styles.btnGerarPO} onClick={() => router.push("/compras/rfqs")}>
+            Gerar Pedido de Compra <Icon name="arrow-right" />
+          </Button>
         </div>
-      )}
-
+      </div>
     </div>
   );
 }
