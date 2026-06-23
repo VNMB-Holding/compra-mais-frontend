@@ -21,7 +21,6 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
     return false;
   };
 
-  // Menu para solicitantes (fazenda)
   const solicitanteMenu = (
     <>
       <div className={styles.navSection}>
@@ -34,7 +33,6 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
     </>
   );
 
-  // Menu para procuristas e gerentes
   const procuristMenu = (
     <>
       <div className={styles.navSection}>
@@ -87,16 +85,16 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
     <aside className={`${styles.mainNav} ${isCollapsed ? styles.collapsed : ""}`}>
 
       <div className={styles.logoArea}>
-        <img 
-          src={isCollapsed ? "/images/carrinho-logo.png" : "/images/logo-compra-mais.svg"} 
-          alt="Logo" 
-          className={styles.logoImg} 
+        <img
+          src={isCollapsed ? "/images/carrinho-logo.png" : "/images/logo-compra-mais.svg"}
+          alt="Logo"
+          className={styles.logoImg}
         />
       </div>
 
       <div className={styles.navContent}>
-        <Link 
-          href="/dashboard" 
+        <Link
+          href="/dashboard"
           className={`${styles.navItem} ${isActive("/dashboard") ? styles.active : ""}`}
         >
           <Icon name="layout-grid-01" />
@@ -116,35 +114,6 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
             </div>
           </div>
         )}
-
-        <div className={styles.userProfile}>
-          <div 
-            className={styles.avatar}
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              fontWeight: "bold",
-              fontSize: "14px",
-            }}
-            title={user?.name}
-          >
-            {user?.name
-              ?.split(" ")
-              .map((word) => word[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2)}
-          </div>
-          {!isCollapsed && (
-            <div className={styles.userInfo}>
-              <strong>{user?.name || "Usuário"}</strong>
-              <span>{user?.role === "solicitante" ? "Solicitante" : "Procurista"}</span>
-            </div>
-          )}
-        </div>
       </div>
     </aside>
   );
