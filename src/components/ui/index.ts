@@ -10,3 +10,4 @@ export { default as PieChart } from './PieChart/PieChart';
 export { default as UrgentQuoteCard } from './UrgentQuoteCard/UrgentQuoteCard';
 export { default as Sidebar } from './Sidebar/Sidebar';
 export { default as Icon } from './Icon/Icon';
+export { default as Loading } from './Loading/Loading';
