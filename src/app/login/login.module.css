@@ -61,14 +61,11 @@
   flex-direction: column;
 }
 
-.error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
-  padding: 12px;
-  border-radius: 8px;
+.errorMessage {
+  color: #e11d48;
   font-size: 13px;
-  margin-bottom: 16px;
+  font-weight: 500;
+  margin-top: 8px;
 }
 
 .field {

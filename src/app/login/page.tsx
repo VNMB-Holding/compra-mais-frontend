@@ -54,8 +54,6 @@ export default function LoginPage() {
           <p className={styles.cardSub}>Faça login para acessar sua conta.</p>
 
           <form onSubmit={handleSubmit} className={styles.form}>
-            {error && <div className={styles.error}>{error}</div>}
-
             <div className={styles.field}>
               <label>E-mail</label>
               <div className={styles.inputWrapper}>
@@ -91,6 +89,7 @@ export default function LoginPage() {
                   <Icon name={showPassword ? "eye-off" : "eye"} size={20} />
                 </button>
               </div>
+              {error && <div className={styles.errorMessage}>{error}</div>}
             </div>
 
             <div className={styles.actions}>
