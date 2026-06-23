@@ -1,0 +1,195 @@
+.page {
+  padding: 8px 24px 100px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === WELCOME SECTION === */
+.welcomeSection {
+  margin-bottom: 24px;
+}
+
+.welcomeTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.welcomeSubtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+/* === MAIN CTA CARD === */
+.ctaCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #008489;
+  border-radius: 16px;
+  padding: 20px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 132, 137, 0.16);
+  margin-bottom: 24px;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.ctaCard:active {
+  opacity: 0.95;
+  transform: scale(0.99);
+}
+
+.ctaText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ctaTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.ctaDescription {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ctaArrow {
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+}
+
+/* === STATS ROW === */
+.statsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.statCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(0, 132, 137, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 100, 110, 0.03);
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  display: block;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 6px;
+  display: block;
+}
+
+/* === RECENT SECTION === */
+.recentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.seeAllLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: #008489;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.seeAllLink:hover {
+  opacity: 0.8;
+}
+
+.recentList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recentItemCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(0, 132, 137, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 100, 110, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recentDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.recentItemTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recentItemMeta {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+  display: block;
+}
+
+.statusBadge {
+  font-size: 12px;
+  font-weight: 550;
+  padding: 4px 10px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.statusBadge.andamento {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.statusBadge.pendente {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.statusBadge.concluido {
+  background: #ecfdf5;
+  color: #047857;
+}

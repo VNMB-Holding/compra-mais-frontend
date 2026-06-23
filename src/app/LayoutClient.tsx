@@ -11,7 +11,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
   // Páginas que não devem mostrar sidebar/topbar
   // Adicionamos a rota de solicitação rápida para exibir apenas o formulário (sem header/sidebar)
-  const noLayoutPages = ["/login", "/unauthorized", "/solicitar-acesso", "/esqueci-senha", "/solicitacoes-rapidas/nova", "/solicitacoes-rapidas/sucesso"];
+  const noLayoutPages = ["/login", "/unauthorized", "/solicitar-acesso", "/esqueci-senha", "/solicitacoes-rapidas/nova", "/solicitacoes-rapidas/sucesso", "/solicitacoes-rapidas/minhas", "/solicitacoes-rapidas/home", "/solicitacoes-rapidas/perfil"];
   const shouldShowLayout = !noLayoutPages.includes(pathname);
 
   if (!shouldShowLayout) {

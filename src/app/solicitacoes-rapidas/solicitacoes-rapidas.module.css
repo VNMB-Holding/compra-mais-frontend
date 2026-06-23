@@ -1,3 +1,124 @@
+/* ===========================
+   APP SHELL
+=========================== */
+
+.appShell {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #e8f5f5 0%, #f0fafa 40%, #f8fcfc 100%);
+}
+
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* TOP BAR */
+.appTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.appBrand {
+  display: flex;
+  align-items: center;
+}
+
+.topAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.topAvatarFallback {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #008489;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* CONTENT */
+.appContent {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 110px;
+}
+
+.appContent::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* BOTTOM TAB BAR — white pill, clean */
+.bottomTabBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #ffffff;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 48px);
+  max-width: 432px;
+  padding: 10px 16px;
+  border-radius: 32px;
+  box-shadow: 0 8px 40px rgba(0, 100, 110, 0.12), 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0, 132, 137, 0.08);
+  z-index: 100;
+}
+
+.tabItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #a0b4b5;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.tabItem span {
+  display: block;
+}
+
+.tabItem:active {
+  transform: scale(0.94);
+}
+
+.tabActive {
+  color: #008489;
+  background: rgba(0, 132, 137, 0.08);
+}
+
+
+/* ===========================
+   LEGACY ADMIN STYLES (kept)
+=========================== */
+
 .container {
   max-width: 1000px;
   margin: 0 auto;
@@ -54,7 +175,7 @@
 
 .statIcon {
   font-size: 32px;
-  color: #667eea;
+  color: #008489;
   flex-shrink: 0;
 }
 
@@ -170,9 +291,5 @@
   .requestItem {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .requestBadges {
-    flex-wrap: wrap;
   }
 }

@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { Card, Button, Icon } from "@/components/ui";
+import { Icon } from "@/components/ui";
 import styles from "./solicitacao-rapida.module.css";
 
 interface RequestItem {
@@ -18,7 +17,6 @@ const urgencyOptions = ["Baixa", "Media", "Alta", "Critica"] as const;
 
 function NovasolicitacaorapidaPageContent() {
   const router = useRouter();
-  const { user } = useAuth();
 
   const [items, setItems] = useState<RequestItem[]>([
     {
@@ -62,7 +60,6 @@ function NovasolicitacaorapidaPageContent() {
   };
 
   const handleSubmit = async () => {
-    // Validar se há itens com descrição
     if (items.some((item) => !item.description.trim())) {
       alert("Por favor, preencha a descrição de todos os itens");
       return;
@@ -70,18 +67,7 @@ function NovasolicitacaorapidaPageContent() {
 
     setIsSubmitting(true);
     try {
-      // Simular envio para servidor
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      console.log("Solicitação enviada:", {
-        requester: user?.name,
-        department: user?.department,
-        items,
-        notes: generalNotes,
-        timestamp: new Date(),
-      });
-
-      // Aqui você integraria com sua API real
       router.push("/solicitacoes-rapidas/nova?sent=1");
     } catch (error) {
       alert("Erro ao enviar solicitação. Tente novamente.");
@@ -100,176 +86,156 @@ function NovasolicitacaorapidaPageContent() {
   };
 
   return (
-    <div className={styles.container}>
-      <button className={styles.backBtn} onClick={handleCancel}>
-        <Icon name="chevron-left" /> Voltar
-      </button>
-
-      <div className={styles.header}>
-        <span className={styles.eyebrow}>Solicitação rápida</span>
-        <h1>O que você precisa?</h1>
-        <p>Descreva os itens que precisa e o seu departamento fará a cotação com fornecedores</p>
+    <div className={styles.page}>
+      <div className={styles.welcomeSection}>
+        <h1 className={styles.welcomeTitle}>Nova solicitação</h1>
+        <p className={styles.welcomeSubtitle}>Preencha os itens que deseja pedir</p>
       </div>
 
-      <Card className={styles.card}>
-        <div className={styles.userInfo}>
-          <div className={styles.userAvatar}>
-            {user?.avatar ? (
-              <img src={user.avatar} alt={user.name} />
-            ) : (
-              <Icon name="user" size={24} style={{ margin: '12px', color: '#94a3b8' }} />
-            )}
-          </div>
-          <div>
-            <p className={styles.userName}>{user?.name}</p>
-            <p className={styles.userDept}>{user?.department}</p>
-          </div>
-        </div>
+      <form className={styles.form}>
+        <div className={styles.itemsList}>
+          {items.map((item, index) => (
+            <div key={item.id} className={styles.itemCard}>
+              <div className={styles.itemHeader}>
+                <div className={styles.itemBadge}>
+                  <Icon name="package" size={16} className={styles.itemBadgeIcon} />
+                  Item {index + 1}
+                </div>
+                {items.length > 1 && (
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    onClick={() => removeItem(item.id)}
+                    title="Remover item"
+                  >
+                    <Icon name="trash-01" size={16} />
+                  </button>
+                )}
+              </div>
 
-        <form className={styles.form}>
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>
-              <Icon name="shopping-cart-01" />
-              O que você precisa?
-            </h2>
-            <p className={styles.sectionDesc}>
-              Liste os itens que você quer solicitar
-            </p>
+              <div className={styles.itemForm}>
+                <div className={styles.formGroup}>
+                  <label>O que você precisa?</label>
+                  <div className={styles.inputWrapper}>
+                    <Icon name="search-sm" size={20} className={styles.inputIcon} />
+                    <input
+                      type="text"
+                      className={styles.formControl}
+                      value={item.description}
+                      onChange={(e) =>
+                        updateItem(item.id, "description", e.target.value)
+                      }
+                      placeholder="Ex: Pneu para trator 420/90R30"
+                    />
+                  </div>
+                </div>
 
-            <div className={styles.itemsList}>
-              {items.map((item, index) => (
-                <div key={item.id} className={styles.itemCard}>
-                  <div className={styles.itemHeader}>
-                    <span className={styles.itemNumber}>Item {index + 1}</span>
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        className={styles.removeBtn}
-                        onClick={() => removeItem(item.id)}
-                        title="Remover item"
-                      >
-                        <Icon name="x-close" size={18} />
-                      </button>
-                    )}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Quantidade</label>
+                    <div className={styles.inputWrapper}>
+                      <Icon name="hash-01" size={20} className={styles.inputIcon} />
+                      <input
+                        type="number"
+                        min="1"
+                        className={styles.formControl}
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateItem(item.id, "quantity", Number(e.target.value))
+                        }
+                      />
+                    </div>
                   </div>
 
-                  <div className={styles.itemForm}>
-                    <div className={styles.formGroup}>
-                      <label>O que você precisa? *</label>
-                      <input
-                        type="text"
+                  <div className={styles.formGroup}>
+                    <label>Urgência</label>
+                    <div className={styles.inputWrapper}>
+                      <Icon name="clock" size={20} className={styles.inputIcon} />
+                      <select
                         className={styles.formControl}
-                        value={item.description}
+                        value={item.urgency}
                         onChange={(e) =>
-                          updateItem(item.id, "description", e.target.value)
+                          updateItem(
+                            item.id,
+                            "urgency",
+                            e.target.value as RequestItem["urgency"]
+                          )
                         }
-                        placeholder="Ex: Pneu para trator 420/90R30"
-                      />
-                    </div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup}>
-                        <label>Quantidade *</label>
-                        <input
-                          type="number"
-                          min="1"
-                          className={styles.formControl}
-                          value={item.quantity}
-                          onChange={(e) =>
-                            updateItem(item.id, "quantity", Number(e.target.value))
-                          }
-                        />
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label>Urgência</label>
-                        <select
-                          className={styles.formControl}
-                          value={item.urgency}
-                          onChange={(e) =>
-                            updateItem(
-                              item.id,
-                              "urgency",
-                              e.target.value as RequestItem["urgency"]
-                            )
-                          }
-                        >
-                          {urgencyOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Observações</label>
-                      <textarea
-                        className={styles.formControl}
-                        rows={2}
-                        value={item.notes}
-                        onChange={(e) =>
-                          updateItem(item.id, "notes", e.target.value)
-                        }
-                        placeholder="Especificações, marca preferida, etc."
-                      />
+                      >
+                        {urgencyOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
-              ))}
+
+                <div className={styles.formGroup}>
+                  <label>Observações (opcional)</label>
+                  <textarea
+                    className={styles.formControl}
+                    value={item.notes}
+                    onChange={(e) =>
+                      updateItem(item.id, "notes", e.target.value)
+                    }
+                    placeholder="Especificações, marca preferida, etc."
+                  />
+                </div>
+              </div>
             </div>
+          ))}
 
-            <button
-              type="button"
-              className={styles.addItemBtn}
-              onClick={addItem}
-            >
-              <Icon name="plus" /> Adicionar outro item
-            </button>
-          </section>
-
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>
-              <Icon name="message-square" />
-              Algo mais?
-            </h2>
-            <p className={styles.sectionDesc}>
-              Observações gerais para quem vai cotar
-            </p>
-
-            <div className={styles.formGroup}>
-              <textarea
-                className={styles.formControl}
-                rows={3}
-                value={generalNotes}
-                onChange={(e) => setGeneralNotes(e.target.value)}
-                placeholder="Ex: Preferência por fornecedor local, data de entrega, condição de pagamento, etc."
-              />
+          <button
+            type="button"
+            className={styles.addItemBtn}
+            onClick={addItem}
+          >
+            <div className={styles.addItemBtnIcon}>
+              <Icon name="plus" size={20} />
             </div>
-          </section>
+            Adicionar outro item
+          </button>
+        </div>
 
-          <div className={styles.formActions}>
-            <button
-              type="button"
-              className={styles.btnCancel}
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </button>
-            <Button
-              variant="primary"
-              className={styles.btnSubmit}
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-            >
-              <Icon name="send-01" />
-              {isSubmitting ? "Enviando..." : "Enviar solicitação"}
-            </Button>
+        <div className={styles.notesSection}>
+          <div className={styles.formGroup}>
+            <label style={{ marginBottom: "8px" }}>
+              <Icon name="message-square-01" size={20} style={{ color: "#008489" }} />
+              Instruções Gerais (opcional)
+            </label>
+            <textarea
+              className={styles.formControl}
+              rows={2}
+              value={generalNotes}
+              onChange={(e) => setGeneralNotes(e.target.value)}
+              placeholder="Ex: Entregar na fazenda principal. Preciso apenas de opções novas."
+              style={{ paddingLeft: "16px" }}
+            />
           </div>
-        </form>
-      </Card>
+        </div>
+
+        <div className={styles.formActions}>
+          <button
+            type="button"
+            className={styles.btnCancel}
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className={styles.btnSubmit}
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            <Icon name="send-01" size={20} />
+            {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
