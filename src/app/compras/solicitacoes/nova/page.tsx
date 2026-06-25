@@ -231,7 +231,7 @@ export default function NovaSolicitacaoPage() {
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Titulo da solicitacao *</label>
+                <label>Titulo da solicitacao <span className="required-asterisk">*</span></label>
                 <input className={styles.formControl} value={title} onChange={(event) => setTitle(event.target.value)} />
               </div>
 
@@ -289,7 +289,7 @@ export default function NovaSolicitacaoPage() {
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Justificativa de negocio *</label>
+                <label>Justificativa de negocio <span className="required-asterisk">*</span></label>
                 <textarea
                   className={styles.formControl}
                   rows={4}
@@ -321,7 +321,7 @@ export default function NovaSolicitacaoPage() {
 
                     <div className={styles.itemGrid}>
                       <div className={`${styles.formGroup} ${styles.itemDescription}`}>
-                        <label>Descricao do item/servico *</label>
+                        <label>Descricao do item/servico <span className="required-asterisk">*</span></label>
                         <input
                           className={styles.formControl}
                           value={item.description}

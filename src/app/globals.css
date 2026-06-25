@@ -63,4 +63,11 @@ a {
 
 *::-webkit-scrollbar-thumb:hover {
   background-color: #007d79;
+}
+
+/* Required field asterisk styling */
+.required-asterisk {
+  color: #f43f5e;
+  font-weight: 600;
+  margin-left: 3px;
 }

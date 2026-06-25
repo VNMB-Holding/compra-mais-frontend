@@ -240,7 +240,7 @@ export default function NovoFornecedorPage() {
 
                 <div className={styles.formRow}>
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <label>Razão Social *</label>
+                    <label>Razão Social <span className="required-asterisk">*</span></label>
                     <input
                       className={styles.formControl}
                       name="razaoSocial"
@@ -266,7 +266,7 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>CNPJ *</label>
+                    <label>CNPJ <span className="required-asterisk">*</span></label>
                     <input
                       className={styles.formControl}
                       name="cnpj"
@@ -328,7 +328,7 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>E-mail Corporativo *</label>
+                    <label>E-mail Corporativo <span className="required-asterisk">*</span></label>
                     <input
                       className={styles.formControl}
                       type="email"
@@ -344,7 +344,7 @@ export default function NovoFornecedorPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Telefone / WhatsApp *</label>
+                    <label>Telefone / WhatsApp <span className="required-asterisk">*</span></label>
                     <input
                       className={styles.formControl}
                       name="contatoTelefone"
@@ -394,7 +394,7 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Estado *</label>
+                    <label>Estado <span className="required-asterisk">*</span></label>
                     <Select
                       options={ESTADO_OPTIONS}
                       value={formData.estado}
@@ -456,7 +456,7 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Cidade *</label>
+                    <label>Cidade <span className="required-asterisk">*</span></label>
                     <input
                       className={styles.formControl}
                       name="cidade"

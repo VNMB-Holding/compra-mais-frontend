@@ -267,7 +267,7 @@ export default function NewRfqPage() {
             </p>
 
             <div className={styles.gateSelectGroup}>
-              <label className={styles.gateLabel}>Solicitacao de Compra Aprovada *</label>
+              <label className={styles.gateLabel}>Solicitacao de Compra Aprovada <span className="required-asterisk">*</span></label>
               <Select
                 options={SOLICITACOES_DISPONIVEIS.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
                 value={solicitacaoSelecionada}
@@ -434,7 +434,7 @@ export default function NewRfqPage() {
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Titulo da RFQ *</label>
+                <label>Titulo da RFQ <span className="required-asterisk">*</span></label>
                 <input
                   className={styles.formControl}
                   value={tituloRfq}
@@ -506,7 +506,7 @@ export default function NewRfqPage() {
                       </div>
                       <div className={styles.rfqItemGrid}>
                         <div className={`${styles.formGroup} ${styles.rfqItemDesc}`}>
-                          <label>Descricao do item / servico *</label>
+                          <label>Descricao do item / servico <span className="required-asterisk">*</span></label>
                           <input
                             className={styles.formControl}
                             value={item.descricao}
