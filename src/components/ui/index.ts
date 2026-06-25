@@ -17,4 +17,5 @@ export { default as AreaChart } from './AreaChart/AreaChart';
 export { default as ConfirmDialog } from './ConfirmDialog/ConfirmDialog';
 export type { ConfirmDialogProps } from './ConfirmDialog/ConfirmDialog';
 export { default as ToastContainer } from './Toast/Toast';
+export { default as CommandPalette } from './CommandPalette/CommandPalette';
 

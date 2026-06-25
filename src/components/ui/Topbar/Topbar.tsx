@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Icon from "../Icon/Icon";
 import styles from "./Topbar.module.css";
 import { useAuth } from "@/hooks/useAuth";
+import CommandPalette from "../CommandPalette/CommandPalette";
 
 interface TopbarProps {
   isSidebarCollapsed: boolean;
@@ -15,10 +16,23 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   // Estados para controlar os Popups/Dropdowns
   const [activePopup, setActivePopup] = useState<"notifications" | "messages" | "company" | "user" | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
 
   const topbarRef = useRef<HTMLHeadingElement>(null);
+
+  // Keyboard shortcut Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsPaletteOpen(true);
+      }
+    }
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   // Fecha os popups se o usuário clicar fora da Topbar
   useEffect(() => {
@@ -71,9 +85,11 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       </div>
 
       {/* Centro: Barra de Busca */}
-      <div className={styles.searchBar}>
+      <div className={styles.searchBar} onClick={() => setIsPaletteOpen(true)}>
         <Icon name="search-md" />
-        <input type="text" placeholder="Buscar no sistema..." />
+        <span className={styles.searchPlaceholder}>
+          Buscar no sistema... <span className={styles.searchShortcut}>⌘K</span>
+        </span>
       </div>
 
       {/* Direita: Ações e Dropdowns */}
@@ -183,6 +199,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           </div>
         )}
       </div>
+
+      <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
     </header>
   );
 }

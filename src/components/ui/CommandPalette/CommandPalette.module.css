@@ -1,0 +1,240 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  padding-top: 120px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 640px;
+  height: fit-content;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: scaleUp 0.15s ease-out;
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.searchHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #edf2f7;
+  background: #ffffff;
+}
+
+.searchIcon {
+  color: #94a3b8;
+  display: inline-flex;
+}
+
+.searchInput {
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 16px;
+  color: #0f172a;
+  background: transparent;
+}
+
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+
+.escShortcut {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.resultsList {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 12px 6px;
+}
+
+.itemButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.itemButton:hover {
+  background: #f8fafc;
+}
+
+.selectedItem {
+  background: #edfcfb !important;
+}
+
+.itemContentLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.itemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  flex-shrink: 0;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.selectedItem .itemIcon {
+  background: #007d79;
+  color: #ffffff;
+}
+
+.itemTexts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selectedItem .itemTitle {
+  color: #007d79;
+}
+
+.itemDescription {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemShortcut {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  flex-shrink: 0;
+}
+
+.selectedItem .itemShortcut {
+  color: #007d79;
+  background: #e6f5f4;
+  border-color: #cbdad9;
+}
+
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.emptyState svg {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.emptyStateTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.emptyStateText {
+  font-size: 13px;
+  margin: 0;
+}
+
+.footerHelp {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid #edf2f7;
+  padding: 12px 20px;
+  font-size: 11px;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.footerHelpItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.keyLabel {
+  font-weight: 800;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: #475569;
+}
