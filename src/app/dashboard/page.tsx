@@ -1,19 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
 import { 
   Button, 
   Card, 
   Badge, 
   Tabs, 
-  Table, 
   KpiCard, 
   LineChart, 
   PieChart,
   UrgentQuoteCard,
   Icon
 } from "@/components/ui";
+import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 
 interface RFQ {
   codigo: string;
@@ -26,6 +27,7 @@ interface RFQ {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("Todas");
 
   const economiaPotencialData = [
@@ -93,6 +95,27 @@ export default function DashboardPage() {
     { id: "Aberta", label: "Abertas", count: rfqs.filter((r) => r.status === "Aberta").length },
     { id: "Encerrando hoje", label: "Encerrando hoje", count: rfqs.filter((r) => r.status === "Encerrando hoje").length },
     { id: "Encerrada", label: "Encerradas", count: rfqs.filter((r) => r.status === "Encerrada").length },
+  ];
+
+  const columns: ColumnDef<RFQ>[] = [
+    { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
+    { header: "Descrição", accessorKey: "descricao" },
+    { header: "Categoria", accessorKey: "categoria" },
+    { header: "Abertura", accessorKey: "dataAbertura" },
+    { header: "Encerramento", accessorKey: "dataEncerramento" },
+    { header: "Tipo", accessorKey: "tipoSegmento" },
+    {
+      header: "Status",
+      cell: (row) => (
+        <Badge variant={row.status === "Aberta" ? "success" : row.status === "Encerrando hoje" ? "warning" : "gray"}>
+          {row.status}
+        </Badge>
+      )
+    },
+    {
+      header: "",
+      cell: () => <Icon name="dots-horizontal" className={styles.rowActions} />
+    }
   ];
 
   const filteredRfqs = rfqs.filter((r) => activeTab === "Todas" || r.status === activeTab);
@@ -178,32 +201,13 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className={styles.tableCard}>
+      <Card noPadding className={styles.tableCard}>
         <div className={styles.tableHeaderActions}>
           <Tabs tabs={tabsConfig} activeTab={activeTab} onChange={setActiveTab} />
           <Button variant="secondary">Filtrar Avançado</Button>
         </div>
 
-        <Table headers={["Código", "Descrição", "Categoria", "Abertura", "Encerramento", "Tipo", "Status", ""]}>
-          {filteredRfqs.map((rfq) => (
-            <tr key={rfq.codigo}>
-              <td className={styles.boldCode}>{rfq.codigo}</td>
-              <td>{rfq.descricao}</td>
-              <td>{rfq.categoria}</td>
-              <td>{rfq.dataAbertura}</td>
-              <td>{rfq.dataEncerramento}</td>
-              <td>{rfq.tipoSegmento}</td>
-              <td>
-                <Badge variant={rfq.status === "Aberta" ? "success" : rfq.status === "Encerrando hoje" ? "warning" : "gray"}>
-                  {rfq.status}
-                </Badge>
-              </td>
-              <td>
-                <Icon name="dots-horizontal" className={styles.rowActions} />
-              </td>
-            </tr>
-          ))}
-        </Table>
+        <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.codigo}`)} />
       </Card>
     </div>
   );
