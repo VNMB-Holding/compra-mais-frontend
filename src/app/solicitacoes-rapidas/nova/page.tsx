@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@/components/ui";
+import { Icon, Select } from "@/components/ui";
 import styles from "./solicitacao-rapida.module.css";
 
 interface RequestItem {
@@ -149,26 +149,12 @@ function NovasolicitacaorapidaPageContent() {
 
                   <div className={styles.formGroup}>
                     <label>Urgência</label>
-                    <div className={styles.inputWrapper}>
-                      <Icon name="clock" size={20} className={styles.inputIcon} />
-                      <select
-                        className={styles.formControl}
-                        value={item.urgency}
-                        onChange={(e) =>
-                          updateItem(
-                            item.id,
-                            "urgency",
-                            e.target.value as RequestItem["urgency"]
-                          )
-                        }
-                      >
-                        {urgencyOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <Select
+                      options={urgencyOptions.map(option => ({ label: option, value: option }))}
+                      value={item.urgency}
+                      onChange={(value) => updateItem(item.id, "urgency", value as RequestItem["urgency"])}
+                      icon="clock"
+                    />
                   </div>
                 </div>
 
