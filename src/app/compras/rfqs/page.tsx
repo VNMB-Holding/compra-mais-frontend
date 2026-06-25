@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon } from "@/components/ui";
+import { Button, Card, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
@@ -19,6 +19,23 @@ interface RFQ {
 
 export default function RfqsPage() {
   const router = useRouter();
+
+  const [categoria, setCategoria] = React.useState("Todas");
+  const [status, setStatus] = React.useState("Todos");
+
+  const categoriasOptions = [
+    { label: "Todas as categorias", value: "Todas" },
+    { label: "MRO", value: "MRO" },
+    { label: "Serviços", value: "Serviços" },
+    { label: "Matérias-Primas", value: "Matérias-Primas" }
+  ];
+
+  const statusOptions = [
+    { label: "Status: Todos", value: "Todos" },
+    { label: "Aberta", value: "Aberta" },
+    { label: "Encerrando hoje", value: "Encerrando hoje" },
+    { label: "Encerrada", value: "Encerrada" }
+  ];
 
   const listaRfqs: RFQ[] = [
     { codigo: "RFQ-2026-001", descricao: "Aquisição de Motores Elétricos JBS Lins", categoria: "MRO", dataAbertura: "10/06/2026", dataEncerramento: "15/06/2026 18:00", tipoSegmento: "Menor Preço", status: "Aberta" },
@@ -82,13 +99,19 @@ export default function RfqsPage() {
             <input type="text" placeholder="Buscar RFQ..." />
           </div>
           <div className={styles.filtersGroup}>
-            <div className={styles.selectWrapper}>
-              <Icon name="filter-lines" />
-              <select defaultValue="Todas"><option value="Todas">Todas as categorias</option></select>
-            </div>
-            <div className={styles.selectWrapper}>
-              <select defaultValue="Todos"><option value="Todos">Status: Todos</option></select>
-            </div>
+            <Select
+              options={categoriasOptions}
+              value={categoria}
+              onChange={setCategoria}
+              icon="filter-lines"
+              className={styles.customSelectFilter}
+            />
+            <Select
+              options={statusOptions}
+              value={status}
+              onChange={setStatus}
+              className={styles.customSelectFilter}
+            />
           </div>
         </div>
 

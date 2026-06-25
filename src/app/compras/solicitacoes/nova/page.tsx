@@ -2,8 +2,78 @@
 
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon } from "@/components/ui";
+import { Card, Button, Icon, Select } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
+
+// ---------------------------------------------------------------------------
+// Modal de confirmação de envio para aprovação
+// ---------------------------------------------------------------------------
+function ApprovalModal({
+  title,
+  totalValue,
+  priority,
+  onOpenRfq,
+  onGoToList,
+  onClose,
+}: {
+  title: string;
+  totalValue: number;
+  priority: string;
+  onOpenRfq: () => void;
+  onGoToList: () => void;
+  onClose: () => void;
+}) {
+  const formatCurrency = (v: number) =>
+    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        {/* Ícone de sucesso */}
+        <div className={styles.modalSuccessIcon}>
+          <Icon name="check-circle" />
+        </div>
+
+        <div className={styles.modalHeader}>
+          <h2>Solicitação enviada para aprovação!</h2>
+          <p>Sua demanda foi registrada e está aguardando alçada. O que deseja fazer agora?</p>
+        </div>
+
+        {/* Resumo da SOL */}
+        <div className={styles.modalSummary}>
+          <div className={styles.modalSummaryRow}>
+            <span>Solicitação</span>
+            <strong>SOL-000457</strong>
+          </div>
+          <div className={styles.modalSummaryRow}>
+            <span>Título</span>
+            <strong>{title || "Solicitação sem título"}</strong>
+          </div>
+          <div className={styles.modalSummaryRow}>
+            <span>Valor estimado</span>
+            <strong className={styles.modalValueHighlight}>{formatCurrency(totalValue)}</strong>
+          </div>
+          <div className={styles.modalSummaryRow}>
+            <span>Prioridade</span>
+            <strong>{priority}</strong>
+          </div>
+        </div>
+
+        {/* Ações */}
+        <div className={styles.modalActions}>
+          <button className={styles.modalBtnSecondary} onClick={onGoToList}>
+            <Icon name="list" />
+            Ir para lista de Solicitações
+          </button>
+          <Button variant="primary" className={styles.modalBtnPrimary} onClick={onOpenRfq}>
+            <Icon name="send-03" />
+            Abrir RFQ agora
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";
 
@@ -27,6 +97,8 @@ const priorityLabels: Record<Priority, string> = {
 
 export default function NovaSolicitacaoPage() {
   const router = useRouter();
+
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
 
   const [title, setTitle] = useState("Abastecimento emergencial de oleo diesel S10");
   const [requester, setRequester] = useState("Breno Marques");
@@ -101,8 +173,39 @@ export default function NovaSolicitacaoPage() {
   const formatCurrency = (value: number) =>
     value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  const handleSubmit = () => {
+    setShowApprovalModal(true);
+  };
+
+  const handleOpenRfq = () => {
+    const params = new URLSearchParams({
+      sol: "SOL-000457",
+      titulo: title,
+      valor: String(totalEstimated),
+      prioridade: priority,
+      area: department,
+      solicitante: requester,
+    });
+    router.push(`/compras/rfqs/nova?${params.toString()}`);
+  };
+
+  const handleGoToList = () => {
+    router.push("/compras/solicitacoes");
+  };
+
   return (
     <div className={styles.formContainer}>
+      {showApprovalModal && (
+        <ApprovalModal
+          title={title}
+          totalValue={totalEstimated}
+          priority={priority}
+          onOpenRfq={handleOpenRfq}
+          onGoToList={handleGoToList}
+          onClose={() => setShowApprovalModal(false)}
+        />
+      )}
+
       <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
         <Icon name="chevron-left" /> Voltar para Solicitacoes
       </button>
@@ -139,13 +242,17 @@ export default function NovaSolicitacaoPage() {
                 </div>
                 <div className={styles.formGroup}>
                   <label>Area requisitante</label>
-                  <select className={styles.formControl} value={department} onChange={(event) => setDepartment(event.target.value)}>
-                    <option>Operacoes</option>
-                    <option>Manutencao</option>
-                    <option>Administrativo</option>
-                    <option>Facilities</option>
-                    <option>TI</option>
-                  </select>
+                  <Select
+                    options={[
+                      { label: "Operações", value: "Operacoes" },
+                      { label: "Manutenção", value: "Manutencao" },
+                      { label: "Administrativo", value: "Administrativo" },
+                      { label: "Facilities", value: "Facilities" },
+                      { label: "TI", value: "TI" }
+                    ]}
+                    value={department}
+                    onChange={setDepartment}
+                  />
                 </div>
               </div>
 
@@ -167,13 +274,17 @@ export default function NovaSolicitacaoPage() {
                 </div>
                 <div className={styles.formGroup}>
                   <label>Tipo de compra</label>
-                  <select className={styles.formControl} value={purchaseType} onChange={(event) => setPurchaseType(event.target.value)}>
-                    <option>Material recorrente</option>
-                    <option>Compra spot</option>
-                    <option>Servico tecnico</option>
-                    <option>Contrato recorrente</option>
-                    <option>Projeto especial</option>
-                  </select>
+                  <Select
+                    options={[
+                      { label: "Material recorrente", value: "Material recorrente" },
+                      { label: "Compra spot", value: "Compra spot" },
+                      { label: "Serviço técnico", value: "Servico tecnico" },
+                      { label: "Contrato recorrente", value: "Contrato recorrente" },
+                      { label: "Projeto especial", value: "Projeto especial" }
+                    ]}
+                    value={purchaseType}
+                    onChange={setPurchaseType}
+                  />
                 </div>
               </div>
 
@@ -220,13 +331,17 @@ export default function NovaSolicitacaoPage() {
                       </div>
                       <div className={styles.formGroup}>
                         <label>Categoria</label>
-                        <select className={styles.formControl} value={item.category} onChange={(event) => updateItem(item.id, "category", event.target.value)}>
-                          <option>Combustiveis</option>
-                          <option>Insumos operacionais</option>
-                          <option>MRO / Pecas</option>
-                          <option>Servicos tecnicos</option>
-                          <option>Facilities</option>
-                        </select>
+                        <Select
+                          options={[
+                            { label: "Combustiveis", value: "Combustiveis" },
+                            { label: "Insumos operacionais", value: "Insumos operacionais" },
+                            { label: "MRO / Pecas", value: "MRO / Pecas" },
+                            { label: "Servicos tecnicos", value: "Servicos tecnicos" },
+                            { label: "Facilities", value: "Facilities" }
+                          ]}
+                          value={item.category}
+                          onChange={(value) => updateItem(item.id, "category", value)}
+                        />
                       </div>
                       <div className={styles.formGroup}>
                         <label>Quantidade</label>
@@ -240,14 +355,18 @@ export default function NovaSolicitacaoPage() {
                       </div>
                       <div className={styles.formGroup}>
                         <label>Unidade</label>
-                        <select className={styles.formControl} value={item.unit} onChange={(event) => updateItem(item.id, "unit", event.target.value)}>
-                          <option>L</option>
-                          <option>UN</option>
-                          <option>KG</option>
-                          <option>M</option>
-                          <option>H</option>
-                          <option>Pacote</option>
-                        </select>
+                        <Select
+                          options={[
+                            { label: "L", value: "L" },
+                            { label: "UN", value: "UN" },
+                            { label: "KG", value: "KG" },
+                            { label: "M", value: "M" },
+                            { label: "H", value: "H" },
+                            { label: "Pacote", value: "Pacote" }
+                          ]}
+                          value={item.unit}
+                          onChange={(value) => updateItem(item.id, "unit", value)}
+                        />
                       </div>
                       <div className={styles.formGroup}>
                         <label>Valor unitario</label>
@@ -299,12 +418,16 @@ export default function NovaSolicitacaoPage() {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Local de entrega</label>
-                  <select className={styles.formControl} value={deliveryLocation} onChange={(event) => setDeliveryLocation(event.target.value)}>
-                    <option>Base Operacional - Paulinia/SP</option>
-                    <option>Matriz - Sao Paulo/SP</option>
-                    <option>Filial - Campinas/SP</option>
-                    <option>Obra / campo operacional</option>
-                  </select>
+                  <Select
+                    options={[
+                      { label: "Base Operacional - Paulinia/SP", value: "Base Operacional - Paulinia/SP" },
+                      { label: "Matriz - Sao Paulo/SP", value: "Matriz - Sao Paulo/SP" },
+                      { label: "Filial - Campinas/SP", value: "Filial - Campinas/SP" },
+                      { label: "Obra / campo operacional", value: "Obra / campo operacional" }
+                    ]}
+                    value={deliveryLocation}
+                    onChange={setDeliveryLocation}
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Janela de recebimento</label>
@@ -334,8 +457,8 @@ export default function NovaSolicitacaoPage() {
               <button className={styles.secondaryAction}>
                 <Icon name="save-01" /> Salvar rascunho
               </button>
-              <Button variant="primary" className={styles.btnSubmit} onClick={() => router.push("/compras/solicitacoes")}>
-                <Icon name="send-01" /> Enviar para aprovacao
+              <Button variant="primary" className={styles.btnSubmit} onClick={handleSubmit}>
+                <Icon name="send-01" /> Enviar para aprovação
               </Button>
             </div>
           </Card>

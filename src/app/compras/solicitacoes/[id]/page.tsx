@@ -1,27 +1,103 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
+import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
+
+type DialogType = "approve" | "reject" | null;
 
 export default function SolicitacaoDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const solId = params.id;
+  const solId = params.id as string;
+
+  const [dialog, setDialog] = useState<DialogType>(null);
+  const [approved, setApproved] = useState<boolean | null>(null);
+  const { toast } = useToast();
+
+  const handleApprove = () => {
+    setApproved(true);
+    setDialog(null);
+    toast({
+      variant: "success",
+      title: "Solicitação aprovada!",
+      message: `${solId || "SOL-000456"} foi aprovada e está liberada para abertura de RFQ.`,
+    });
+  };
+
+  const handleReject = () => {
+    setApproved(false);
+    setDialog(null);
+    toast({
+      variant: "error",
+      title: "Solicitação rejeitada",
+      message: `${solId || "SOL-000456"} foi rejeitada. O solicitante será notificado.`,
+    });
+  };
 
   return (
     <div className={styles.detailContainer}>
+
+      {/* Dialog — Aprovar */}
+      <ConfirmDialog
+        open={dialog === "approve"}
+        variant="success"
+        icon="check-circle"
+        title="Aprovar esta solicitação?"
+        message={
+          <>
+            A solicitação <strong>{solId || "SOL-000456"}</strong> será aprovada e liberada para abertura de RFQ.
+            Esta ação ficará registrada no histórico de aprovações.
+          </>
+        }
+        confirmLabel="Sim, aprovar"
+        onConfirm={handleApprove}
+        onCancel={() => setDialog(null)}
+      />
+
+      {/* Dialog — Rejeitar */}
+      <ConfirmDialog
+        open={dialog === "reject"}
+        variant="danger"
+        icon="x-circle"
+        title="Rejeitar esta solicitação?"
+        message={
+          <>
+            A solicitação <strong>{solId || "SOL-000456"}</strong> será rejeitada e o solicitante será notificado.
+            Esta ação não pode ser desfeita.
+          </>
+        }
+        confirmLabel="Sim, rejeitar"
+        onConfirm={handleReject}
+        onCancel={() => setDialog(null)}
+      />
+
       <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
         <Icon name="chevron-left" /> Voltar para Solicitações
       </button>
+
+      {/* Feedback de resultado */}
+      {approved === true && (
+        <div className={styles.resultBanner} style={{ background: "#d1fae5", borderColor: "#6ee7b7", color: "#065f46" }}>
+          <Icon name="check-circle" /> Solicitação <strong>{solId || "SOL-000456"}</strong> aprovada com sucesso. Agora você pode abrir uma RFQ.
+        </div>
+      )}
+      {approved === false && (
+        <div className={styles.resultBanner} style={{ background: "#fee2e2", borderColor: "#fca5a5", color: "#991b1b" }}>
+          <Icon name="x-circle" /> Solicitação <strong>{solId || "SOL-000456"}</strong> rejeitada.
+        </div>
+      )}
 
       {/* Cabeçalho */}
       <div className={styles.pageHeader}>
         <div>
           <div className={styles.titleRow}>
             <h1>{solId || "SOL-000456"}</h1>
-            <Badge variant="warning">Aguardando aprovação</Badge>
+            <Badge variant={approved === true ? "success" : approved === false ? "gray" : "warning"}>
+              {approved === true ? "Aprovada" : approved === false ? "Rejeitada" : "Aguardando aprovação"}
+            </Badge>
           </div>
           <p className={styles.subtitleLarge}>Óleo Diesel S10</p>
           <div className={styles.metadataTags}>
@@ -30,23 +106,29 @@ export default function SolicitacaoDetailPage() {
             <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: Alta</span>
           </div>
         </div>
-        <div className={styles.headerActions}>
-          <Button variant="secondary">Rejeitar Demandas</Button>
-          <Button variant="primary"><Icon name="check" /> Aprovar Solicitação</Button>
-        </div>
+        {approved === null && (
+          <div className={styles.headerActions}>
+            <Button variant="secondary" onClick={() => setDialog("reject")}>
+              <Icon name="x-close" /> Rejeitar Demanda
+            </Button>
+            <Button variant="primary" onClick={() => setDialog("approve")}>
+              <Icon name="check" /> Aprovar Solicitação
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Layout de Duas Colunas */}
       <div className={styles.layout2Col}>
-        
+
         {/* Coluna Principal (Esquerda) */}
         <div className={styles.colMain}>
-          
+
           {/* STEPPER DE APROVAÇÃO HORIZONTAL */}
           <Card className={styles.flowCard}>
             <h4>Fluxo de Alçadas de Aprovação</h4>
             <div className={styles.stepperContainer}>
-              
+
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-01" />
@@ -58,15 +140,23 @@ export default function SolicitacaoDetailPage() {
                   <small>22/05/2024 14:00</small>
                 </div>
               </div>
-              
+
               <div className={`${styles.stepLine} ${styles.lineActive}`}></div>
 
-              <div className={`${styles.step} ${styles.active}`}>
-                <div className={styles.stepIcon}><Icon name="users-01" /></div>
+              <div className={`${styles.step} ${approved !== null ? styles.completed : styles.active}`}>
+                <div className={styles.stepIcon}>
+                  {approved !== null
+                    ? <><Icon name="users-01" /><div className={styles.checkBadge}><Icon name="check" /></div></>
+                    : <Icon name="users-01" />
+                  }
+                </div>
                 <div className={styles.stepInfo}>
                   <strong>Gestor da Área</strong>
                   <span>Mariana Costa</span>
-                  <span className={styles.warningBadgeHint}>Aguardando</span>
+                  {approved === null
+                    ? <span className={styles.warningBadgeHint}>Aguardando</span>
+                    : <small>{new Date().toLocaleDateString("pt-BR")}</small>
+                  }
                 </div>
               </div>
 
@@ -117,7 +207,7 @@ export default function SolicitacaoDetailPage() {
 
         {/* Coluna Lateral (Direita) */}
         <div className={styles.colSide}>
-          
+
           {/* TIMELINE VERTICAL */}
           <Card className={styles.sideCard}>
             <h4>Rastreabilidade</h4>
@@ -130,11 +220,12 @@ export default function SolicitacaoDetailPage() {
                   <small>22/05/2024 às 14:00</small>
                 </div>
               </div>
-              <div className={`${styles.vtItem} ${styles.vtCurrent}`}>
+              <div className={`${styles.vtItem} ${approved !== null ? styles.vtDone : styles.vtCurrent}`}>
                 <div className={styles.vtDot}></div>
                 <div className={styles.vtContent}>
-                  <strong>Aguardando assinatura</strong>
+                  <strong>{approved === true ? "Aprovada pelo Gestor" : approved === false ? "Rejeitada pelo Gestor" : "Aguardando assinatura"}</strong>
                   <span>Mariana Costa (Gestão Geral)</span>
+                  {approved !== null && <small>{new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</small>}
                 </div>
               </div>
             </div>

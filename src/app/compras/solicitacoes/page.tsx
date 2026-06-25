@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon } from "@/components/ui";
+import { Button, Card, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
@@ -18,6 +18,24 @@ interface SolicitationRow {
 
 export default function SolicitacoesPage() {
   const router = useRouter();
+
+  const [categoria, setCategoria] = React.useState("Todas");
+  const [prioridade, setPrioridade] = React.useState("Todos");
+
+  const categoriasOptions = [
+    { label: "Todas as categorias", value: "Todas" },
+    { label: "Combustível", value: "Combustível" },
+    { label: "MRO", value: "MRO" },
+    { label: "Serviços", value: "Serviços" }
+  ];
+
+  const prioridadesOptions = [
+    { label: "Prioridade: Todas", value: "Todos" },
+    { label: "Baixa", value: "Baixa" },
+    { label: "Média", value: "Média" },
+    { label: "Alta", value: "Alta" },
+    { label: "Crítica", value: "Crítica" }
+  ];
 
   const listaSolicitacoes: SolicitationRow[] = [
     { codigo: "SOL-000456", descricao: "Óleo Diesel S10", solicitante: "Breno Marques", data: "22/05/2024", status: "Aguardando aprovação", prioridade: "Alta" },
@@ -88,13 +106,19 @@ export default function SolicitacoesPage() {
             <input type="text" placeholder="Buscar solicitação..." />
           </div>
           <div className={styles.filtersGroup}>
-            <div className={styles.selectWrapper}>
-              <Icon name="filter-lines" />
-              <select defaultValue="Todas"><option value="Todas">Todas as categorias</option></select>
-            </div>
-            <div className={styles.selectWrapper}>
-              <select defaultValue="Todos"><option value="Todos">Prioridade: Todas</option></select>
-            </div>
+            <Select
+              options={categoriasOptions}
+              value={categoria}
+              onChange={setCategoria}
+              icon="filter-lines"
+              className={styles.customSelectFilter}
+            />
+            <Select
+              options={prioridadesOptions}
+              value={prioridade}
+              onChange={setPrioridade}
+              className={styles.customSelectFilter}
+            />
           </div>
         </div>
 

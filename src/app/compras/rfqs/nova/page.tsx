@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Card, Button, Icon } from "@/components/ui";
+import React, { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Card, Button, Icon, Select } from "@/components/ui";
 import styles from "./rfq-new.module.css";
 
 // ---------------------------------------------------------------------------
@@ -97,6 +97,15 @@ const PRIORITY_CLASS: Record<string, string> = {
 
 export default function NewRfqPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Params vindos do modal de aprovacao de SOL
+  const paramSol = searchParams.get("sol") ?? "";
+  const paramTitulo = searchParams.get("titulo") ?? "";
+  const paramValor = searchParams.get("valor") ?? "";
+  const paramPrioridade = searchParams.get("prioridade") ?? "";
+  const paramArea = searchParams.get("area") ?? "";
+  const paramSolicitante = searchParams.get("solicitante") ?? "";
 
   // "portao": null = nenhuma selecionada, string = id selecionado mas nao confirmado
   const [solicitacaoSelecionada, setSolicitacaoSelecionada] = useState<string>("");
@@ -113,6 +122,50 @@ export default function NewRfqPage() {
   const [observacoes, setObservacoes] = useState("");
   const [itens, setItens] = useState<ItemCotacao[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
+
+  // -------------------------------------------------------------------------
+  // Auto-confirmar solicitacao quando vem de URL params (modal de aprovacao)
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!paramSol) return;
+
+    // Tenta encontrar nos mocks existentes primeiro
+    const solExistente = SOLICITACOES_DISPONIVEIS.find((s) => s.id === paramSol);
+
+    if (solExistente) {
+      setSolicitacaoConfirmada(solExistente);
+      setSolicitacaoSelecionada(solExistente.id);
+      setTituloRfq(`RFQ — ${solExistente.titulo}`);
+      setIncoterm(solExistente.incoterm);
+      setCondicaoPagamento(solExistente.condicaoPagamento);
+      setObservacoes(solExistente.observacoes);
+      setItens(solExistente.itens.map((i) => ({ ...i })));
+    } else {
+      // SOL nova (vem do fluxo de criacao) — monta um objeto dinamico
+      const solDinamica: Solicitacao = {
+        id: paramSol,
+        titulo: paramTitulo || "Solicitação de compra",
+        area: paramArea || "Operacoes",
+        solicitante: paramSolicitante || "—",
+        prioridade: paramPrioridade || "Alta",
+        valorEstimado: Number(paramValor) || 0,
+        itens: [
+          { id: 1, descricao: paramTitulo || "Item principal", qtd: 1, unidade: "UN" },
+        ],
+        incoterm: "CIF",
+        condicaoPagamento: "30 dias DDL",
+        observacoes: "",
+      };
+      setSolicitacaoConfirmada(solDinamica);
+      setSolicitacaoSelecionada(paramSol);
+      setTituloRfq(`RFQ — ${solDinamica.titulo}`);
+      setIncoterm(solDinamica.incoterm);
+      setCondicaoPagamento(solDinamica.condicaoPagamento);
+      setItens(solDinamica.itens.map((i) => ({ ...i })));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramSol]);
 
   // -------------------------------------------------------------------------
   // Handlers
@@ -215,18 +268,12 @@ export default function NewRfqPage() {
 
             <div className={styles.gateSelectGroup}>
               <label className={styles.gateLabel}>Solicitacao de Compra Aprovada *</label>
-              <select
-                className={styles.formControl}
+              <Select
+                options={SOLICITACOES_DISPONIVEIS.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
                 value={solicitacaoSelecionada}
-                onChange={(e) => setSolicitacaoSelecionada(e.target.value)}
-              >
-                <option value="">Selecione uma solicitacao...</option>
-                {SOLICITACOES_DISPONIVEIS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.id} — {s.titulo}
-                  </option>
-                ))}
-              </select>
+                onChange={setSolicitacaoSelecionada}
+                placeholder="Selecione uma solicitacao..."
+              />
             </div>
 
             {/* Preview da solicitacao selecionada */}
@@ -399,15 +446,15 @@ export default function NewRfqPage() {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Estrategia de compra</label>
-                  <select
-                    className={styles.formControl}
+                  <Select
+                    options={[
+                      { label: "Menor Preco Equalizado", value: "Menor Preco Equalizado" },
+                      { label: "Tecnica e Preco", value: "Tecnica e Preco" },
+                      { label: "Melhor Valor Total", value: "Melhor Valor Total" }
+                    ]}
                     value={estrategia}
-                    onChange={(e) => setEstrategia(e.target.value)}
-                  >
-                    <option>Menor Preco Equalizado</option>
-                    <option>Tecnica e Preco</option>
-                    <option>Melhor Valor Total</option>
-                  </select>
+                    onChange={setEstrategia}
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Data/Hora Limite de Encerramento</label>
@@ -481,19 +528,19 @@ export default function NewRfqPage() {
                         </div>
                         <div className={styles.formGroup}>
                           <label>Unidade</label>
-                          <select
-                            className={styles.formControl}
+                          <Select
+                            options={[
+                              { label: "L", value: "L" },
+                              { label: "UN", value: "UN" },
+                              { label: "KG", value: "KG" },
+                              { label: "M", value: "M" },
+                              { label: "H", value: "H" },
+                              { label: "Pacote", value: "Pacote" }
+                            ]}
                             value={item.unidade}
-                            onChange={(e) => updateItem(item.id, "unidade", e.target.value)}
+                            onChange={(value) => updateItem(item.id, "unidade", value)}
                             disabled={isFromSol}
-                          >
-                            <option>L</option>
-                            <option>UN</option>
-                            <option>KG</option>
-                            <option>M</option>
-                            <option>H</option>
-                            <option>Pacote</option>
-                          </select>
+                          />
                         </div>
                       </div>
                     </div>
@@ -553,15 +600,15 @@ export default function NewRfqPage() {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Incoterm (Frete)</label>
-                  <select
-                    className={styles.formControl}
+                  <Select
+                    options={[
+                      { label: "CIF — Custos e frete pagos pelo fornecedor", value: "CIF" },
+                      { label: "FOB — Frete por conta da VNMB", value: "FOB" },
+                      { label: "EXW — Retirada na planta do fornecedor", value: "EXW" }
+                    ]}
                     value={incoterm}
-                    onChange={(e) => setIncoterm(e.target.value)}
-                  >
-                    <option value="CIF">CIF — Custos e frete pagos pelo fornecedor</option>
-                    <option value="FOB">FOB — Frete por conta da VNMB</option>
-                    <option value="EXW">EXW — Retirada na planta do fornecedor</option>
-                  </select>
+                    onChange={setIncoterm}
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Condicao de pagamento</label>
@@ -577,15 +624,15 @@ export default function NewRfqPage() {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Moeda base</label>
-                  <select
-                    className={styles.formControl}
+                  <Select
+                    options={[
+                      { label: "BRL — Real Brasileiro", value: "BRL" },
+                      { label: "USD — Dolar Americano", value: "USD" },
+                      { label: "EUR — Euro", value: "EUR" }
+                    ]}
                     value={moeda}
-                    onChange={(e) => setMoeda(e.target.value)}
-                  >
-                    <option value="BRL">BRL — Real Brasileiro</option>
-                    <option value="USD">USD — Dolar Americano</option>
-                    <option value="EUR">EUR — Euro</option>
-                  </select>
+                    onChange={setMoeda}
+                  />
                 </div>
               </div>
 
@@ -611,9 +658,9 @@ export default function NewRfqPage() {
               <Button
                 variant="primary"
                 className={styles.btnSubmit}
-                onClick={() => router.push("/compras/rfqs")}
+                onClick={() => router.push("/compras/rfqs/RFQ-2026-004")}
               >
-                <Icon name="rocket-01" /> Publicar e enviar cotacao
+                <Icon name="rocket-01" /> Publicar e enviar cotação
               </Button>
             </div>
           </Card>

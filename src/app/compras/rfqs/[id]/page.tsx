@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
+import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 
 // ---------------------------------------------------------------------------
@@ -185,15 +186,104 @@ export default function RfqDetailPage() {
   const [propostas, setPropostas] = useState<Proposta[]>(PROPOSTAS_INICIAIS);
   const [vencedorId, setVencedorId] = useState<string | null>(null);
 
+  // Confirm dialogs
+  type DialogType = "encerrar" | "selecionar" | "gerar" | null;
+  const [dialog, setDialog] = useState<DialogType>(null);
+  const [pendingVencedorId, setPendingVencedorId] = useState<string | null>(null);
+
   const recebidas = propostas.filter((p) => p.status === "recebida");
   const handleSalvarProposta = (id: string, dados: Partial<Proposta>) => setPropostas((c) => c.map((p) => (p.fornecedorId === id ? { ...p, ...dados } : p)));
 
   const propostasRankeadas = [...recebidas].sort((a, b) => (a.precoUnitario! + a.frete!) - (b.precoUnitario! + b.frete!));
   const melhorProposta = propostasRankeadas[0];
   const totalQtd = RFQ_DATA.itens.reduce((s, i) => s + i.qtd, 0);
+  const vencedor = propostas.find((p) => p.fornecedorId === vencedorId);
+  const pendingVencedor = propostas.find((p) => p.fornecedorId === pendingVencedorId);
+  const { toast } = useToast();
 
   const Header = () => (
     <>
+      {/* Confirm — Encerrar coleta */}
+      <ConfirmDialog
+        open={dialog === "encerrar"}
+        variant="warning"
+        icon="alert-triangle"
+        title="Encerrar coleta de propostas?"
+        message={`${recebidas.length} de ${propostas.length} propostas foram registradas. Após encerrar, não será possível adicionar novas respostas.`}
+        confirmLabel="Encerrar e analisar"
+        onConfirm={() => {
+          setEstagio("analise");
+          setDialog(null);
+          toast({
+            variant: "warning",
+            title: "Coleta encerrada",
+            message: `${recebidas.length} proposta${recebidas.length !== 1 ? "s" : ""} recebida${recebidas.length !== 1 ? "s" : ""}. Agora você pode analisar e selecionar o vencedor.`,
+          });
+        }}
+        onCancel={() => setDialog(null)}
+      />
+
+      {/* Confirm — Selecionar vencedor */}
+      <ConfirmDialog
+        open={dialog === "selecionar"}
+        variant="success"
+        icon="trophy-01"
+        title="Selecionar este fornecedor como vencedor?"
+        message={
+          pendingVencedor
+            ? <><strong>{pendingVencedor.nome}</strong> será declarado vencedor desta RFQ. Um Pedido de Compra será gerado em seguida.</>
+            : "Confirmar seleção do vencedor."
+        }
+        confirmLabel="Confirmar seleção"
+        onConfirm={() => {
+          setVencedorId(pendingVencedorId);
+          setEstagio("aprovacao");
+          setDialog(null);
+          toast({
+            variant: "success",
+            title: "Fornecedor selecionado!",
+            message: `${pendingVencedor?.nome ?? "Fornecedor"} foi declarado vencedor desta RFQ.`,
+          });
+        }}
+        onCancel={() => { setPendingVencedorId(null); setDialog(null); }}
+      />
+
+      {/* Confirm — Gerar Pedido de Compra */}
+      <ConfirmDialog
+        open={dialog === "gerar"}
+        variant="info"
+        icon="file-check-02"
+        title="Emitir Pedido de Compra?"
+        message={
+          vencedor
+            ? <>O PO será emitido para <strong>{vencedor.nome}</strong> no valor total de <strong>{formatCurrency(((vencedor.precoUnitario ?? 0) + (vencedor.frete ?? 0)) * totalQtd)}</strong>. Esta ação é definitiva.</>
+            : "Confirmar emissão do Pedido de Compra."
+        }
+        confirmLabel="Emitir Pedido de Compra"
+        onConfirm={() => {
+          setDialog(null);
+          toast({
+            variant: "success",
+            title: "Pedido de Compra emitido!",
+            message: `PO gerado para ${vencedor?.nome ?? "fornecedor"}. Valor: ${formatCurrency(((vencedor?.precoUnitario ?? 0) + (vencedor?.frete ?? 0)) * totalQtd)}.`,
+            duration: 6000,
+          });
+          const params = new URLSearchParams({
+            fornecedor: vencedor?.nome ?? "",
+            cnpj: vencedor?.cnpj ?? "",
+            precoUnit: String(vencedor?.precoUnitario ?? 0),
+            frete: String(vencedor?.frete ?? 0),
+            prazo: String(vencedor?.prazoEntrega ?? 0),
+            pagamento: vencedor?.condicaoPagamento ?? "",
+            qtdTotal: String(totalQtd),
+            rfq: RFQ_DATA.id,
+            origem: RFQ_DATA.origem,
+          });
+          router.push(`/compras/pedidos/PED-NOVO?${params.toString()}`);
+        }}
+        onCancel={() => setDialog(null)}
+      />
+
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
         <Icon name="chevron-left" /> Voltar para Cotações
       </button>
@@ -252,7 +342,7 @@ export default function RfqDetailPage() {
         <div className={styles.coletaHeader}>
           <h2 className={styles.coletaTitulo}>Fornecedores Convidados</h2>
           {recebidas.length > 0 && (
-            <Button variant="primary" onClick={() => setEstagio("analise")}>
+            <Button variant="primary" onClick={() => setDialog("encerrar")}>
               Encerrar coleta e ir para análise
             </Button>
           )}
@@ -342,7 +432,13 @@ export default function RfqDetailPage() {
                   <td className={styles.rowHeader} />
                   {propostasRankeadas.map((p, i) => (
                     <td key={p.fornecedorId} className={styles.selectCell}>
-                      <button className={i === 0 ? styles.btnSelecionarVencedor : styles.btnSelecionarSecundario} onClick={() => { setVencedorId(p.fornecedorId); setEstagio("aprovacao"); }}>
+                      <button
+                        className={i === 0 ? styles.btnSelecionarVencedor : styles.btnSelecionarSecundario}
+                        onClick={() => {
+                          setPendingVencedorId(p.fornecedorId);
+                          setDialog("selecionar");
+                        }}
+                      >
                         {i === 0 ? <><Icon name="trophy-01" size={14} /> Selecionar vencedor</> : "Selecionar este"}
                       </button>
                     </td>
@@ -355,8 +451,6 @@ export default function RfqDetailPage() {
       </div>
     );
   }
-
-  const vencedor = propostas.find((p) => p.fornecedorId === vencedorId);
 
   return (
     <div className={styles.detailContainer}>
@@ -426,7 +520,11 @@ export default function RfqDetailPage() {
           <button className={styles.btnVoltarAnalise} onClick={() => setEstagio("analise")}>
             <Icon name="arrow-left" size={15} /> Voltar para Matriz
           </button>
-          <Button variant="primary" className={styles.btnGerarPO} onClick={() => router.push("/compras/rfqs")}>
+          <Button
+            variant="primary"
+            className={styles.btnGerarPO}
+            onClick={() => setDialog("gerar")}
+          >
             Gerar Pedido de Compra <Icon name="arrow-right" />
           </Button>
         </div>

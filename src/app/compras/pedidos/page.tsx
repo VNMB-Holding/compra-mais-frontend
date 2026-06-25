@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon } from "@/components/ui";
+import { Button, Card, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./pedidos.module.css";
@@ -18,6 +18,23 @@ interface PedidoRow {
 
 export default function PedidosPage() {
   const router = useRouter();
+
+  const [fornecedor, setFornecedor] = React.useState("Todas");
+  const [status, setStatus] = React.useState("Todos");
+
+  const fornecedoresOptions = [
+    { label: "Todos os fornecedores", value: "Todas" },
+    { label: "Fornecedor Alfa", value: "Fornecedor Alfa" },
+    { label: "Distribuidora Beta", value: "Distribuidora Beta" },
+    { label: "Serviços Omega", value: "Serviços Omega" }
+  ];
+
+  const statusOptions = [
+    { label: "Status: Todos", value: "Todos" },
+    { label: "Emitido", value: "Emitido" },
+    { label: "Faturado", value: "Faturado" },
+    { label: "Entregue", value: "Entregue" }
+  ];
 
   const listaPedidos: PedidoRow[] = [
     { numero: "PED-000234", fornecedor: "Fornecedor Alfa", emissao: "22/05/2024", valorTotal: "R$ 15.400,00", entrega: "30/05/2024", status: "Emitido" },
@@ -75,13 +92,19 @@ export default function PedidosPage() {
             <input type="text" placeholder="Buscar pedido..." />
           </div>
           <div className={styles.filtersGroup}>
-            <div className={styles.selectWrapper}>
-              <Icon name="filter-lines" />
-              <select defaultValue="Todas"><option value="Todas">Todos os fornecedores</option></select>
-            </div>
-            <div className={styles.selectWrapper}>
-              <select defaultValue="Todos"><option value="Todos">Status: Todos</option></select>
-            </div>
+            <Select
+              options={fornecedoresOptions}
+              value={fornecedor}
+              onChange={setFornecedor}
+              icon="filter-lines"
+              className={styles.customSelectFilter}
+            />
+            <Select
+              options={statusOptions}
+              value={status}
+              onChange={setStatus}
+              className={styles.customSelectFilter}
+            />
           </div>
         </div>
 

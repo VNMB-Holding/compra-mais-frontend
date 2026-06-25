@@ -388,3 +388,118 @@
 .darkCardContent h3 { color: white !important; }
 .textPrimary { color: #007d79 !important; }
 
+/* =========================================================
+   ORIGIN TAGS (rastreabilidade no cabeçalho)
+   ========================================================= */
+
+.originTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.originTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   SUPPLIER WINNER CARD
+   ========================================================= */
+
+.supplierCard {
+  padding: 24px !important;
+  border: 1px solid #d0f0ee !important;
+  background: linear-gradient(135deg, #f0fdfb 0%, #e6f5f4 100%) !important;
+}
+
+.supplierCard h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.supplierCard h3 svg {
+  color: #007d79;
+}
+
+.supplierGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid #b2e2df;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.supplierRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.supplierRow:nth-child(3n) {
+  border-right: none;
+}
+
+.supplierRow:nth-last-child(-n+3) {
+  border-bottom: none;
+}
+
+.supplierRow span {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.supplierRow strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+@media (max-width: 800px) {
+  .supplierGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .supplierRow:nth-child(3n) {
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .supplierRow:nth-child(2n) {
+    border-right: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .supplierGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .supplierRow {
+    border-right: none !important;
+  }
+}
+
+
