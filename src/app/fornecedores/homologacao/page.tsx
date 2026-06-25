@@ -2,8 +2,9 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon } from "@/components/ui";
+import { Card, Button, Badge, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
+import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./homologacao.module.css";
 
 interface HomologacaoRow {
@@ -23,6 +24,35 @@ interface HomologacaoRow {
 
 export default function HomologacaoPage() {
   const router = useRouter();
+
+  const [categoria, setCategoria] = React.useState("Todas");
+  const [risco, setRisco] = React.useState("Todas");
+  const [etapa, setEtapa] = React.useState("Todas");
+
+  const categoriasOptions = [
+    { label: "Categoria: Todas", value: "Todas" },
+    { label: "Combustíveis", value: "Combustíveis" },
+    { label: "Logística", value: "Logística" },
+    { label: "MRO", value: "MRO" },
+    { label: "Energia", value: "Energia" },
+    { label: "Serviços", value: "Serviços" },
+    { label: "TI", value: "TI" },
+  ];
+
+  const riscosOptions = [
+    { label: "Risco: Todas", value: "Todas" },
+    { label: "Baixo", value: "Baixo" },
+    { label: "Médio", value: "Médio" },
+    { label: "Alto", value: "Alto" },
+  ];
+
+  const etapasOptions = [
+    { label: "Etapa: Todas", value: "Todas" },
+    { label: "Análise de dados públicos", value: "Análise de dados públicos" },
+    { label: "Fluxo de Assinatura", value: "Fluxo de Assinatura" },
+    { label: "Aguardando documentos", value: "Aguardando documentos" },
+    { label: "Análise jurídica", value: "Análise jurídica" },
+  ];
 
   const catIconMap: Record<string, string> = {
     local_gas_station: "settings-01",
@@ -120,59 +150,49 @@ export default function HomologacaoPage() {
   ];
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
+    <div className={styles.pageContainer}>
+      <div className={styles.pageHeader}>
         <div>
           <h1>Homologação de Fornecedores</h1>
           <p>Acompanhe o gerenciamento e o progresso de homologação de novos fornecedores.</p>
         </div>
-        <div className={styles.headerActions}>
-          <button className={styles.btnExport}>
-            <Icon name="download-01" /> Exportar
-          </button>
-          <Button variant="primary" className={styles.btnNew}>
-            <Icon name="plus" /> Nova homologação
-          </Button>
-        </div>
       </div>
 
-      <div className={styles.kpiRow}>
-        <Card className={styles.kpiCard}>
-          <small>Total de solicitações</small>
-          <strong>128</strong>
-        </Card>
-        <Card className={styles.kpiCard}>
-          <small>Em análise</small>
-          <strong className={styles.textBlue}>24</strong>
-        </Card>
-        <Card className={styles.kpiCard}>
-          <small>Pendências</small>
-          <strong className={styles.textOrange}>8</strong>
-        </Card>
-        <Card className={styles.kpiCard}>
-          <small>Aguardando documentos</small>
-          <strong className={styles.textBlue}>14</strong>
-        </Card>
-        <Card className={styles.kpiCard}>
-          <small>Homologados</small>
-          <strong className={styles.textGreen}>56</strong>
-        </Card>
-        <Card className={styles.kpiCard}>
-          <small>Rejeitados</small>
-          <strong className={styles.textRed}>18</strong>
-        </Card>
+      <div className={styles.kpiGrid}>
+        <KpiCard title="Total solicitações" value="128" icon="file-02" description="Total Geral" />
+        <KpiCard title="Em análise" value="24" icon="search-md" description="Processando" />
+        <KpiCard title="Pendências" value="8" icon="clock" description="Necessita ação" />
+        <KpiCard title="Aguardando docs." value="14" icon="file-01" description="Pendente parceiro" />
+        <KpiCard title="Homologados" value="56" icon="check-circle" description="Sucesso" />
+        <KpiCard title="Rejeitados" value="18" icon="x-circle" description="Recusados" />
       </div>
 
-      <Card noPadding className={styles.tableSection}>
-        <div className={styles.filterBar}>
+      <Card noPadding className={styles.mainListCard}>
+        <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
             <Icon name="search-md" />
             <input type="text" placeholder="Buscar fornecedor, CNPJ..." />
           </div>
-          <div className={styles.selectGroup}>
-            <select className={styles.minimalSelect}><option>Categoria: Todas</option></select>
-            <select className={styles.minimalSelect}><option>Risco: Todas</option></select>
-            <select className={styles.minimalSelect}><option>Etapa: Todas</option></select>
+          <div className={styles.filtersGroup}>
+            <Select
+              options={categoriasOptions}
+              value={categoria}
+              onChange={setCategoria}
+              icon="filter-lines"
+              className={styles.customSelectFilter}
+            />
+            <Select
+              options={riscosOptions}
+              value={risco}
+              onChange={setRisco}
+              className={styles.customSelectFilter}
+            />
+            <Select
+              options={etapasOptions}
+              value={etapa}
+              onChange={setEtapa}
+              className={styles.customSelectFilter}
+            />
             <button className={styles.btnMoreFilters}>
               <Icon name="filter-lines" /> Mais filtros
             </button>
@@ -185,14 +205,14 @@ export default function HomologacaoPage() {
           onRowClick={(row) => router.push(`/fornecedores/homologacao/${row.id}`)} 
         />
 
-        <div className={styles.footer}>
+        <div className={styles.tableFooter}>
           <span>Mostrando 1 a 8 de 128 fornecedores</span>
-          <div className={styles.pagination}>
+          <div className={styles.paginationControls}>
             <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={styles.pageBtn}>1</button>
-            <button className={`${styles.pageBtn} ${styles.activePage}`}>2</button>
+            <button className={`${styles.pageBtn} ${styles.pageActive}`}>2</button>
             <button className={styles.pageBtn}>3</button>
-            <span>...</span>
+            <span style={{ display: 'flex', alignItems: 'center', padding: '0 4px', color: '#64748b' }}>...</span>
             <button className={styles.pageBtn}>16</button>
             <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
           </div>

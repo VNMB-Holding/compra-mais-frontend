@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon } from "@/components/ui";
+import { Card, Button, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
@@ -25,6 +25,22 @@ interface Fornecedor {
 
 export default function FornecedoresListPage() {
   const router = useRouter();
+
+  const [categoria, setCategoria] = React.useState("Todas");
+  const [status, setStatus] = React.useState("Todos");
+
+  const categoriasOptions = [
+    { label: "Todas as categorias", value: "Todas" },
+    { label: "Serviços", value: "Serviços" },
+    { label: "Combustíveis", value: "Combustíveis" },
+    { label: "TI", value: "TI" },
+  ];
+
+  const statusOptions = [
+    { label: "Status: Todos", value: "Todos" },
+    { label: "Homologado", value: "Homologado" },
+    { label: "Em homologação", value: "Em homologação" },
+  ];
 
   const catIconMap: Record<string, string> = {
     work: "briefcase-01",
@@ -131,10 +147,10 @@ export default function FornecedoresListPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Fornecedores homologados" value="2" icon="groups" description="Ativos" />
-        <KpiCard title="Em homologação" value="1" icon="schedule" description="Pendente" />
-        <KpiCard title="Nota média de performance" value="9,5" icon="star_rate" description="Entre homologados" />
-        <KpiCard title="Categorias cobertas" value="3" icon="shield" description="Serviços, Combustíveis, TI" />
+        <KpiCard title="Fornecedores homologados" value="2" icon="users-01" description="Ativos" />
+        <KpiCard title="Em homologação" value="1" icon="clock" description="Pendente" />
+        <KpiCard title="Nota média de performance" value="9,5" icon="star-01" description="Entre homologados" />
+        <KpiCard title="Categorias cobertas" value="3" icon="shield-01" description="Serviços, Combustíveis, TI" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -145,13 +161,19 @@ export default function FornecedoresListPage() {
             <input type="text" placeholder="Buscar fornecedor..." />
           </div>
           <div className={styles.filtersGroup}>
-            <div className={styles.selectWrapper}>
-              <Icon name="filter-lines" />
-              <select defaultValue="Todas"><option value="Todas">Todas as categorias</option></select>
-            </div>
-            <div className={styles.selectWrapper}>
-              <select defaultValue="Todos"><option value="Todos">Status: Todos</option></select>
-            </div>
+            <Select
+              options={categoriasOptions}
+              value={categoria}
+              onChange={setCategoria}
+              icon="filter-lines"
+              className={styles.customSelectFilter}
+            />
+            <Select
+              options={statusOptions}
+              value={status}
+              onChange={setStatus}
+              className={styles.customSelectFilter}
+            />
           </div>
         </div>
 
