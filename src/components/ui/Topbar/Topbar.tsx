@@ -14,6 +14,7 @@ interface TopbarProps {
 export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarProps) {
   // Estados para controlar os Popups/Dropdowns
   const [activePopup, setActivePopup] = useState<"notifications" | "messages" | "company" | "user" | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -55,9 +56,17 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         <button 
           className={styles.toggleSidebarBtn} 
           onClick={onToggleSidebar}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
           title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
         >
-          <Icon name="menu-01" />
+          <Icon 
+            name={
+              isSidebarCollapsed 
+                ? (isHovered ? "leftbar-right" : "leftbar") 
+                : (isHovered ? "leftbar-left" : "leftbar")
+            } 
+          />
         </button>
       </div>
 
