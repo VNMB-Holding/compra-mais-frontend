@@ -81,15 +81,14 @@
   font-weight: 500; 
   border-radius: 8px;
   margin-bottom: 4px; 
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s;
   white-space: nowrap;
   width: 100%;
 }
 
 .navItem:hover { 
-  background-color: var(--primary-light, #e6f2f2); 
-  color: var(--primary, #007d79); 
-  transform: translateX(4px) scale(1.02);
+  background-color: var(--bg-color, #f8fafc); 
+  color: var(--text-main, #0f172a); 
 }
 
 .navItem.active { 
@@ -98,18 +97,10 @@
   font-weight: 600; 
 }
 
-.navItem.active:hover {
-  transform: scale(1.02);
-}
-
 .collapsed .navItem {
   justify-content: center;
   padding: 12px 0;
   gap: 0;
-}
-
-.collapsed .navItem:hover {
-  transform: scale(1.08);
 }
 
 .navItem span {
@@ -133,12 +124,6 @@
   border-radius: 12px; 
   margin-bottom: 16px; 
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.helpCard:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 125, 121, 0.15);
 }
 
 .helpIcon { color: var(--primary, #007d79); }
