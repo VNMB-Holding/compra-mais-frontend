@@ -95,12 +95,18 @@
   border-radius: 50%;
   display: flex;
   align-items: center;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.iconBtn:hover, .activeIcon { 
-  color: var(--text-main, #0f172a); 
-  background-color: var(--bg-color, #f8fafc);
+.iconBtn:hover { 
+  color: var(--primary, #007d79); 
+  background-color: var(--primary-light, #e6f2f2);
+  transform: scale(1.08);
+}
+
+.activeIcon {
+  color: var(--primary, #007d79); 
+  background-color: var(--primary-light, #e6f2f2);
 }
 
 .iconBtn .badge {
@@ -130,6 +136,11 @@
   padding-left: 20px; 
   border-left: 1px solid var(--border, #e2e8f0);
   color: var(--text-main, #0f172a);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.companySelector:hover {
+  color: var(--primary, #007d79);
 }
 
 .companySelector span {
@@ -151,6 +162,12 @@
   justify-content: center;
   font-weight: bold; 
   font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.userAvatarSmall:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 125, 121, 0.25);
 }
 
 /* CAIXINHA CONTAINER DO POPUP */
