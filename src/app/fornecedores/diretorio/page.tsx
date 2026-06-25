@@ -142,7 +142,9 @@ export default function FornecedoresListPage() {
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
-          <Button variant="primary" className={styles.btnAdd}><Icon name="plus" /> Adicionar fornecedor</Button>
+          <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/fornecedores/novo")}>
+            <Icon name="plus" /> Adicionar fornecedor
+          </Button>
         </div>
       </div>
 
