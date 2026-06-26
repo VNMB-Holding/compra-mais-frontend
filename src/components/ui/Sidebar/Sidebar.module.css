@@ -8,7 +8,8 @@
   width: 260px;
   position: relative;
   flex-shrink: 0;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
 .collapsed {
@@ -22,8 +23,12 @@
   margin-bottom: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
+  position: relative;
+  height: 40px;
+  box-sizing: border-box;
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .collapsed .logoArea {
@@ -34,6 +39,32 @@
 .logoImg {
   max-height: 40px;
   width: auto;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fullLogo {
+  opacity: 1;
+  transform: scale(1) translateX(0);
+}
+
+.collapsedLogo {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.collapsed .fullLogo {
+  opacity: 0;
+  transform: scale(0.8) translateX(-10px);
+  pointer-events: none;
+  position: absolute;
+}
+
+.collapsed .collapsedLogo {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .navContent {
@@ -61,13 +92,18 @@
   padding: 0 12px; 
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  max-height: 20px;
+  overflow: hidden;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
 }
 
 .collapsed .sectionTitle {
   opacity: 0;
-  height: 0;
-  margin: 0;
-  overflow: hidden;
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  pointer-events: none;
 }
 
 .navItem {
@@ -81,9 +117,11 @@
   font-weight: 500; 
   border-radius: 8px;
   margin-bottom: 4px; 
-  transition: all 0.2s;
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), gap 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s, color 0.2s;
   white-space: nowrap;
   width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .navItem:hover { 
@@ -98,13 +136,28 @@
 }
 
 .collapsed .navItem {
-  justify-content: center;
-  padding: 12px 0;
+  padding: 10px 22px;
   gap: 0;
 }
 
-.navItem span {
+.navItem span:not(.navText) {
   font-size: 20px;
+  flex-shrink: 0;
+}
+
+.navText {
+  opacity: 1;
+  max-width: 180px;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.collapsed .navText {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
 }
 
 /* FOOTER */
@@ -113,6 +166,11 @@
   padding-top: 16px;
   border-top: 1px solid var(--border, #e2e8f0);
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .helpCard {
@@ -124,10 +182,44 @@
   border-radius: 12px; 
   margin-bottom: 16px; 
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: auto;
 }
 
-.helpIcon { color: var(--primary, #007d79); }
-.helpText { display: flex; flex-direction: column; font-size: 12px; }
+.collapsed .helpCard {
+  padding: 12px;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  gap: 0;
+}
+
+.helpIcon { 
+  color: var(--primary, #007d79); 
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.helpText { 
+  display: flex; 
+  flex-direction: column; 
+  font-size: 12px; 
+  opacity: 1;
+  max-width: 150px;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.collapsed .helpText {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+}
+
 .helpText strong { color: var(--text-main); }
 .helpText span { color: var(--primary); font-weight: 500; }
 

@@ -9,9 +9,10 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarProps {
   isCollapsed?: boolean;
+  onHelpClick?: () => void;
 }
 
-export default function Sidebar({ isCollapsed = false }: SidebarProps) {
+export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -27,7 +28,7 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
         <div className={styles.sectionTitle}>MINHAS SOLICITAÇÕES</div>
         <Link href="/solicitacoes-rapidas/nova" className={`${styles.navItem} ${isActive("/solicitacoes-rapidas/nova") ? styles.active : ""}`}>
           <Icon name="clipboard" />
-          {!isCollapsed && "Solicitações"}
+          <span className={styles.navText}>Solicitações</span>
         </Link>
       </div>
     </>
@@ -39,15 +40,15 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
         <div className={styles.sectionTitle}>COMPRAS</div>
         <Link href="/compras/solicitacoes" className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}>
           <Icon name="clipboard" />
-          {!isCollapsed && "Solicitações"}
+          <span className={styles.navText}>Solicitações</span>
         </Link>
         <Link href="/compras/rfqs" className={`${styles.navItem} ${isActive("/compras/rfqs") ? styles.active : ""}`}>
           <Icon name="receipt-check" />
-          {!isCollapsed && "RFQs / Cotações"}
+          <span className={styles.navText}>RFQs / Cotações</span>
         </Link>
         <Link href="/compras/pedidos" className={`${styles.navItem} ${isActive("/compras/pedidos") ? styles.active : ""}`}>
           <Icon name="shopping-cart-01" />
-          {!isCollapsed && "Pedidos de Compra"}
+          <span className={styles.navText}>Pedidos de Compra</span>
         </Link>
       </div>
 
@@ -55,27 +56,23 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
         <div className={styles.sectionTitle}>FORNECEDORES</div>
         <Link href="/fornecedores/diretorio" className={`${styles.navItem} ${isActive("/fornecedores/diretorio") ? styles.active : ""}`}>
           <Icon name="users-01" />
-          {!isCollapsed && "Diretório"}
+          <span className={styles.navText}>Diretório</span>
         </Link>
         <Link href="/fornecedores/homologacao" className={`${styles.navItem} ${isActive("/fornecedores/homologacao") ? styles.active : ""}`}>
           <Icon name="check-verified-01" />
-          {!isCollapsed && "Homologação"}
+          <span className={styles.navText}>Homologação</span>
         </Link>
       </div>
 
       <div className={styles.navSection}>
         <div className={styles.sectionTitle}>ANALYTICS</div>
-        <Link href="/analytics/insights" className={`${styles.navItem} ${isActive("/analytics/insights") ? styles.active : ""}`}>
-          <Icon name="presentation-chart-01" />
-          {!isCollapsed && "Insights"}
-        </Link>
-        <Link href="/analytics/relatorios" className={`${styles.navItem} ${isActive("/analytics/relatorios") ? styles.active : ""}`}>
-          <Icon name="bar-chart-01" />
-          {!isCollapsed && "Relatórios"}
+        <Link href="/analytics/spend" className={`${styles.navItem} ${isActive("/analytics/spend") ? styles.active : ""}`}>
+          <Icon name="coins-02" />
+          <span className={styles.navText}>Análise de Spend</span>
         </Link>
         <Link href="/analytics/economia" className={`${styles.navItem} ${isActive("/analytics/economia") ? styles.active : ""}`}>
           <Icon name="piggy-bank-01" />
-          {!isCollapsed && "Economia Gerada"}
+          <span className={styles.navText}>Economia Gerada</span>
         </Link>
       </div>
     </>
@@ -86,9 +83,14 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
 
       <div className={styles.logoArea}>
         <img
-          src={isCollapsed ? "/images/carrinho-logo.png" : "/images/logo-compra-mais.svg"}
+          src="/images/logo-compra-mais.svg"
           alt="Logo"
-          className={styles.logoImg}
+          className={`${styles.logoImg} ${styles.fullLogo}`}
+        />
+        <img
+          src="/images/carrinho-logo.png"
+          alt="Logo"
+          className={`${styles.logoImg} ${styles.collapsedLogo}`}
         />
       </div>
 
@@ -98,7 +100,7 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
           className={`${styles.navItem} ${isActive("/dashboard") ? styles.active : ""}`}
         >
           <Icon name="layout-grid-01" />
-          {!isCollapsed && "Dashboard"}
+          <span className={styles.navText}>Dashboard</span>
         </Link>
 
         {user?.role === "solicitante" ? solicitanteMenu : procuristMenu}
@@ -108,22 +110,20 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
             <div className={styles.sectionTitle}>SISTEMA</div>
             <Link href="/administracao" className={`${styles.navItem} ${isActive("/administracao") ? styles.active : ""}`}>
               <Icon name="settings-01" />
-              {!isCollapsed && "Administração"}
+              <span className={styles.navText}>Administração</span>
             </Link>
           </div>
         )}
       </div>
 
       <div className={styles.sidebarFooter}>
-        {!isCollapsed && (
-          <div className={styles.helpCard}>
-            <Icon name="help-circle" className={styles.helpIcon} />
-            <div className={styles.helpText}>
-              <strong>Precisa de ajuda?</strong>
-              <span>Central de Ajuda</span>
-            </div>
+        <div className={styles.helpCard} onClick={onHelpClick}>
+          <Icon name="help-circle" className={styles.helpIcon} />
+          <div className={styles.helpText}>
+            <strong>Precisa de ajuda?</strong>
+            <span>Central de Ajuda</span>
           </div>
-        )}
+        </div>
       </div>
     </aside>
   );
