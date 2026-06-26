@@ -21,22 +21,46 @@
   gap: 12px;
 }
 
-.aiTag {
+.systemTag {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #007d79 0%, #005a57 100%);
-  color: white;
-  padding: 4px 8px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
   border-radius: 9999px;
   letter-spacing: 0.05em;
-  box-shadow: 0 2px 8px rgba(0, 125, 121, 0.2);
 }
 
 .header p {
   font-size: 14px;
   color: #64748b;
   margin: 0;
+}
+
+/* Filter Bar */
+.filterCard {
+  padding: 20px 24px;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.filterInput {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterInput label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
 }
 
 .kpiGrid {
@@ -92,6 +116,9 @@
 
 .chartWrapper {
   flex-grow: 1;
+  min-height: 240px;
+  width: 100%;
+  margin-top: 16px;
 }
 
 /* Custom Table Styles */
