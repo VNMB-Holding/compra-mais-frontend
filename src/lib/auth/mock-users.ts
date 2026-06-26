@@ -39,6 +39,17 @@ export const MOCK_USERS: Record<string, MockCredential> = {
       avatar: "https://ui-avatars.com/api/?name=Carlos+Gerente",
     },
   },
+  "admin@compra.com": {
+    password: "123456",
+    user: {
+      id: "4",
+      name: "Ana Lima",
+      email: "admin@compra.com",
+      role: "admin",
+      department: "Operações e Suprimentos",
+      avatar: "https://ui-avatars.com/api/?name=Ana+Lima",
+    },
+  },
 };
 
 export function findMockUser(email: string, password: string): User {
