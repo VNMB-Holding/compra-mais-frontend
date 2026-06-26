@@ -8,7 +8,8 @@ import {
   PieChart,
   Select,
   Icon,
-  Loading
+  Loading,
+  ExportButton
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -264,9 +265,7 @@ export default function EconomiaPage() {
           </div>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.outlineBtn} onClick={() => handleExport("PDF")}>
-            <Icon name="download-02" size={16} /> Exportar
-          </button>
+          <ExportButton onExport={handleExport} />
         </div>
       </div>
 
