@@ -20,7 +20,7 @@
 .toggleSidebarBtn {
   background: none;
   border: none;
-  cursor: pointer;
+  cursor: ew-resize;
   display: flex;
   align-items: center;
   justify-content: center;

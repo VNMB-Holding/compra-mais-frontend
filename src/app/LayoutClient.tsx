@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/ui";
 import Topbar from "@/components/ui/Topbar/Topbar";
+import HelpModal from "@/components/HelpModal/HelpModal";
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const pathname = usePathname();
 
   // Páginas que não devem mostrar sidebar/topbar
@@ -20,7 +22,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
   return (
     <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', maxWidth: '100%' }}>
-      <Sidebar isCollapsed={sidebarCollapsed} />
+      <Sidebar isCollapsed={sidebarCollapsed} onHelpClick={() => setHelpOpen(true)} />
       <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
         <div style={{ flexShrink: 0 }}>
           <Topbar isSidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -29,6 +31,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           {children}
         </main>
       </div>
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }
