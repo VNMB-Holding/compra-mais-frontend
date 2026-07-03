@@ -96,7 +96,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
               <span className={styles.cardAction}>Iniciar conversa <Icon name="arrow-right" size={14} /></span>
             </a>
 
-            <a href="mailto:suporte@compramais.com.br" className={styles.supportCard}>
+            <a href="mailto:breno@vnmb.com.br" className={styles.supportCard}>
               <div className={styles.supportCardHeader}>
                 <div className={`${styles.supportIconWrap} ${styles.emailBg}`}>
                   <Icon name="mail-01" className={styles.supportIcon} />
