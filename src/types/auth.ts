@@ -7,6 +7,9 @@ export interface User {
   role: UserRole;
   department?: string;
   avatar?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tenantId?: string;
 }
 
 export interface AuthContextType {
