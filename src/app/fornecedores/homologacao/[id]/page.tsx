@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Icon } from "@/components/ui";
 import styles from "./homologacao-detail.module.css";
 
 export default function HomologacaoDetailPage() {
@@ -15,7 +15,7 @@ export default function HomologacaoDetailPage() {
       {/* 1. NAVEGAÇÃO E CABEÇALHO */}
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/homologacao")}>
-          <span className="material-symbols-outlined">arrow_back</span> Voltar para a lista
+          <Icon name="arrow-left" size={16} /> Voltar para a lista
         </button>
 
         <div className={styles.headerRow}>
@@ -42,7 +42,7 @@ export default function HomologacaoDetailPage() {
               <div className={styles.updateInfo}>
                 <span>Última análise: 22/05/2024 às 14:32</span>
                 <button className={styles.btnRefresh}>
-                  <span className="material-symbols-outlined">refresh</span> Atualizar dados
+                  <Icon name="refresh-cw-01" size={16} /> Atualizar dados
                 </button>
               </div>
             </div>
@@ -52,7 +52,7 @@ export default function HomologacaoDetailPage() {
           <div className={styles.summaryColScore}>
             <div className={styles.scoreHeader}>
               <span>Score de risco</span>
-              <span className="material-symbols-outlined">info</span>
+              <Icon name="info-circle" size={16} />
             </div>
             <div className={styles.scoreValue}>
               <strong className={styles.textGreen}>18</strong>
@@ -96,76 +96,71 @@ export default function HomologacaoDetailPage() {
               
               <div className={styles.analysisItem}>
                 <div className={styles.aiLeft}>
-                  <span className="material-symbols-outlined">domain</span>
+                  <Icon name="building-01" size={20} />
                   <div>
                     <strong>Situação Cadastral</strong>
                     <p>Consulta à Receita Federal</p>
                   </div>
                 </div>
                 <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><span className="material-symbols-outlined">check_circle</span> Regular</div>
+                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Regular</div>
                   <span>22/05/2024</span>
-                  <span className={`material-symbols-outlined ${styles.chevron}`}>expand_more</span>
                 </div>
               </div>
 
               <div className={styles.analysisItem}>
                 <div className={styles.aiLeft}>
-                  <span className="material-symbols-outlined">balance</span>
+                  <Icon name="scales-01" size={20} />
                   <div>
                     <strong>Restrições e Sanções</strong>
                     <p>Consulta a listas OFAC, CEIS, CNJ, TCU e Portal da Transparência</p>
                   </div>
                 </div>
                 <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><span className="material-symbols-outlined">check_circle</span> Nada encontrado</div>
+                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Nada encontrado</div>
                   <span>22/05/2024</span>
-                  <span className={`material-symbols-outlined ${styles.chevron}`}>expand_more</span>
                 </div>
               </div>
 
               <div className={styles.analysisItem}>
                 <div className={styles.aiLeft}>
-                  <span className="material-symbols-outlined">request_quote</span>
+                  <Icon name="bank-note-01" size={20} />
                   <div>
                     <strong>Saúde Financeira</strong>
                     <p>Análise de indicadores financeiros</p>
                   </div>
                 </div>
                 <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><span className="material-symbols-outlined">check_circle</span> Boa</div>
+                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Boa</div>
                   <span>22/05/2024</span>
-                  <span className={`material-symbols-outlined ${styles.chevron}`}>expand_more</span>
                 </div>
               </div>
 
               <div className={styles.analysisItem}>
                 <div className={styles.aiLeft}>
-                  <span className="material-symbols-outlined">article</span>
+                  <Icon name="file-01" size={20} />
                   <div>
                     <strong>Notícias e Reputação</strong>
                     <p>Monitoramento de notícias e mídias</p>
                   </div>
                 </div>
                 <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><span className="material-symbols-outlined">check_circle</span> Sem ocorrências relevantes</div>
+                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Sem ocorrências relevantes</div>
                   <span>22/05/2024</span>
-                  <span className={`material-symbols-outlined ${styles.chevron}`}>expand_more</span>
                 </div>
               </div>
 
               <div className={styles.analysisItem}>
                 <div className={styles.aiLeft}>
-                  <span className="material-symbols-outlined">bar_chart</span>
+                  <Icon name="bar-chart-01" size={20} />
                   <div>
                     <strong>Comportamento Comercial</strong>
                     <p>Histórico em órgãos públicos e parceiros</p>
                   </div>
                 </div>
                 <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><span className="material-symbols-outlined">check_circle</span> Positivo</div>
+                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Positivo</div>
                   <span>22/05/2024</span>
-                  <span className={`material-symbols-outlined ${styles.chevron}`}>expand_more</span>
                 </div>
               </div>
 
@@ -179,7 +174,7 @@ export default function HomologacaoDetailPage() {
         <div className={styles.rightColumn}>
           <Card className={styles.contentCard}>
             <div className={styles.cardHeaderFlex}>
-              <h3 className={styles.cardTitle}>Últimas notícias identificadas <span className="material-symbols-outlined">info</span></h3>
+              <h3 className={styles.cardTitle}>Últimas notícias identificadas <Icon name="info-circle" size={16} style={{ marginLeft: 6 }} /></h3>
               <button className={styles.linkAction}>Ver todas</button>
             </div>
             
@@ -195,26 +190,26 @@ export default function HomologacaoDetailPage() {
           </Card>
 
           <Card className={styles.contentCard}>
-            <h3 className={styles.cardTitle}>Fontes consultadas <span className="material-symbols-outlined">info</span></h3>
+            <h3 className={styles.cardTitle}>Fontes consultadas <Icon name="info-circle" size={16} style={{ marginLeft: 6 }} /></h3>
             
             <div className={styles.sourcesGrid}>
               <div className={styles.sourceBox}>
                 <div className={styles.sourceIconBox}>
-                  <span className="material-symbols-outlined">account_balance</span>
+                  <Icon name="bank" size={20} />
                 </div>
                 <span>Receita Federal</span>
               </div>
               
               <div className={styles.sourceBox}>
                 <div className={styles.sourceIconBox}>
-                  <span className="material-symbols-outlined">domain</span>
+                  <Icon name="building-01" size={20} />
                 </div>
                 <span>Portal da Transparência</span>
               </div>
               
               <div className={styles.sourceBox}>
                 <div className={styles.sourceIconBox}>
-                  <span className="material-symbols-outlined">account_balance</span>
+                  <Icon name="bank" size={20} />
                 </div>
                 <span>CEIS</span>
               </div>
