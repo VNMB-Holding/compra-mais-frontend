@@ -67,7 +67,7 @@ export default function ExportButton({ onExport, defaultType = "PDF" }: ExportBu
           <button 
             type="button" 
             className={styles.exportDropdownItem}
-            onClick={() => handleOptionClick("table")}
+            onClick={() => handleOptionClick("XLS")}
           >
             <Icon name="table" size={14} style={{ color: "#22c55e" }} />
             <span>Planilha Excel (.xlsx)</span>
