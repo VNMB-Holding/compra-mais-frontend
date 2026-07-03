@@ -30,7 +30,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     question: "Como exportar relatórios de Spend e Economia?",
-    answer: "No menu lateral, clique em 'Analytics > Análise de Spend' ou 'Economia Gerada'. Utilize os filtros de período e departamento conforme necessário e clique no botão 'Exportar' no canto superior direito para fazer o download dos dados em formato CSV/Excel."
+    answer: "No menu lateral, clique em 'Analytics > Análise de Spend' ou 'Análise de Savings'. Utilize os filtros de período e departamento conforme necessário e clique no botão 'Exportar' no canto superior direito para fazer o download dos dados em formato CSV/Excel."
   },
   {
     question: "Como recuperar ou alterar minha senha de acesso?",

@@ -26,7 +26,7 @@ export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarPro
     <>
       <div className={styles.navSection}>
         <div className={styles.sectionTitle}>MINHAS SOLICITAÇÕES</div>
-        <Link href="/solicitacoes-rapidas/nova" className={`${styles.navItem} ${isActive("/solicitacoes-rapidas/nova") ? styles.active : ""}`}>
+        <Link href="/compras/solicitacoes" className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}>
           <Icon name="clipboard" />
           <span className={styles.navText}>Solicitações</span>
         </Link>
@@ -72,7 +72,7 @@ export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarPro
         </Link>
         <Link href="/analytics/economia" className={`${styles.navItem} ${isActive("/analytics/economia") ? styles.active : ""}`}>
           <Icon name="piggy-bank-01" />
-          <span className={styles.navText}>Economia Gerada</span>
+          <span className={styles.navText}>Análise de Savings</span>
         </Link>
       </div>
     </>

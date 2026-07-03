@@ -260,7 +260,7 @@ export default function EconomiaPage() {
             <Icon name="presentation-chart-01" size={24} />
           </div>
           <div className={styles.titleText}>
-            <h1>Economia Gerada</h1>
+            <h1>Análise de savings</h1>
             <p>Acompanhe o valor economizado através de negociações estratégicas e decisões de compra inteligentes.</p>
           </div>
         </div>
