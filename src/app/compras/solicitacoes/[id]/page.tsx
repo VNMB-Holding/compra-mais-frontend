@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Stepper } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 
@@ -95,7 +95,10 @@ export default function SolicitacaoDetailPage() {
         <div>
           <div className={styles.titleRow}>
             <h1>{solId || "SOL-000456"}</h1>
-            <Badge variant={approved === true ? "success" : approved === false ? "gray" : "warning"}>
+            <Badge
+              variant={approved === true ? "success" : approved === false ? "gray" : "warning"}
+              icon={approved === true ? "check-circle" : approved === false ? "x-close" : "clock"}
+            >
               {approved === true ? "Aprovada" : approved === false ? "Rejeitada" : "Aguardando aprovação"}
             </Badge>
           </div>
@@ -127,50 +130,31 @@ export default function SolicitacaoDetailPage() {
           {/* STEPPER DE APROVAÇÃO HORIZONTAL */}
           <Card className={styles.flowCard}>
             <h4>Fluxo de Alçadas de Aprovação</h4>
-            <div className={styles.stepperContainer}>
-
-              <div className={`${styles.step} ${styles.completed}`}>
-                <div className={styles.stepIcon}>
-                  <Icon name="file-01" />
-                  <div className={styles.checkBadge}><Icon name="check" /></div>
-                </div>
-                <div className={styles.stepInfo}>
-                  <strong>Solicitante</strong>
-                  <span>Breno Marques</span>
-                  <small>22/05/2024 14:00</small>
-                </div>
-              </div>
-
-              <div className={`${styles.stepLine} ${styles.lineActive}`}></div>
-
-              <div className={`${styles.step} ${approved !== null ? styles.completed : styles.active}`}>
-                <div className={styles.stepIcon}>
-                  {approved !== null
-                    ? <><Icon name="users-01" /><div className={styles.checkBadge}><Icon name="check" /></div></>
-                    : <Icon name="users-01" />
-                  }
-                </div>
-                <div className={styles.stepInfo}>
-                  <strong>Gestor da Área</strong>
-                  <span>Mariana Costa</span>
-                  {approved === null
-                    ? <span className={styles.warningBadgeHint}>Aguardando</span>
-                    : <small>{new Date().toLocaleDateString("pt-BR")}</small>
-                  }
-                </div>
-              </div>
-
-              <div className={styles.stepLine}></div>
-
-              <div className={`${styles.step} ${styles.pending}`}>
-                <div className={styles.stepIcon}><Icon name="user-01" /></div>
-                <div className={styles.stepInfo}>
-                  <strong>Diretoria Executiva</strong>
-                  <span>Pendente</span>
-                </div>
-              </div>
-
-            </div>
+            <Stepper
+              steps={[
+                {
+                  label: "Solicitante",
+                  description: "Breno Marques",
+                  subDescription: "22/05/2024 14:00",
+                  status: "completed",
+                  icon: "file-01",
+                },
+                {
+                  label: "Gestor da Área",
+                  description: "Mariana Costa",
+                  subDescription: approved !== null ? new Date().toLocaleDateString("pt-BR") : undefined,
+                  status: approved !== null ? "completed" : "active",
+                  icon: "users-01",
+                  warningBadge: approved === null ? "Aguardando" : undefined,
+                },
+                {
+                  label: "Diretoria Executiva",
+                  description: "Pendente",
+                  status: "pending",
+                  icon: "user-01",
+                },
+              ]}
+            />
           </Card>
 
           {/* FICHA TÉCNICA INFORMATIVA */}

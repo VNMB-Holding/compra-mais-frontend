@@ -64,7 +64,7 @@
 
 .layout2Col {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 24px;
   width: 100%;
   align-items: start;
@@ -501,5 +501,200 @@
     border-right: none !important;
   }
 }
+
+/* =========================================================
+   STANDARD STEPPER / ACCORDION / TIMELINE PORTED CLASSES
+   ========================================================= */
+
+.flowCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.flowCard h4, .infoCard h4, .sideCard h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 20px 0;
+}
+
+.stepLine { }
+
+.infoCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoItem label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.infoItem span {
+  font-size: 14px;
+  color: #334155;
+}
+
+.infoItem strong {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.span2 {
+  grid-column: span 2;
+}
+
+.textPrimary {
+  color: #007d79;
+}
+
+.sideCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.verticalTimeline {
+  display: flex;
+  flex-direction: column;
+  padding-left: 8px;
+  position: relative;
+}
+
+.verticalTimeline::before {
+  content: '';
+  position: absolute;
+  left: 12.5px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.vtItem {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 24px;
+  position: relative;
+}
+
+.vtItem:last-child {
+  padding-bottom: 0;
+}
+
+.vtDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #cbd5e1;
+  z-index: 2;
+  margin-top: 4px;
+}
+
+.vtContent {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.vtContent strong {
+  color: #0f172a;
+}
+
+.vtContent p {
+  margin: 2px 0;
+  color: #475569;
+}
+
+.vtContent small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.vtDone .vtDot {
+  border-color: #007d79;
+  background: #007d79;
+}
+
+.vtCurrent .vtDot {
+  border-color: #d97706;
+  border-width: 3px;
+}
+
+.vtPending .vtDot {
+  border-color: #cbd5e1;
+  background: #cbd5e1;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.fileRow span {
+  color: #b91c1c;
+  font-size: 28px;
+}
+
+.fileInfo {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.fileInfo strong {
+  color: #0f172a;
+}
+
+.fileInfo small {
+  color: #64748b;
+}
+
+.downloadIconBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.downloadIconBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.downloadIconBtn span {
+  font-size: 20px;
+}
+
 
 

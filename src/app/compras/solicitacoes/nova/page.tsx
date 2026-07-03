@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon, Select } from "@/components/ui";
+import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
 // ---------------------------------------------------------------------------
@@ -90,15 +90,25 @@ interface RequestItem {
 
 const priorityLabels: Record<Priority, string> = {
   Baixa: "Baixa",
-  Media: "Media",
+  Media: "Média",
   Alta: "Alta",
-  Critica: "Critica",
+  Critica: "Crítica",
+};
+
+const PRIORITY_BADGE_CONFIG: Record<Priority, { variant: "gray" | "warning" | "danger" | "dark"; icon: string }> = {
+  Critica: { variant: "dark", icon: "zap" },
+  Alta: { variant: "danger", icon: "alert-triangle" },
+  Media: { variant: "warning", icon: "clock" },
+  Baixa: { variant: "gray", icon: "info-circle" },
 };
 
 export default function NovaSolicitacaoPage() {
   const router = useRouter();
 
   const [showApprovalModal, setShowApprovalModal] = useState(false);
+
+  const [currentStep, setCurrentStep] = useState(1);
+  const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
 
   const [title, setTitle] = useState("Abastecimento emergencial de oleo diesel S10");
   const [requester, setRequester] = useState("Breno Marques");
@@ -164,6 +174,7 @@ export default function NovaSolicitacaoPage() {
         requiredDate: "",
       },
     ]);
+    setExpandedItemId(nextId);
   };
 
   const removeItem = (id: number) => {
@@ -207,259 +218,412 @@ export default function NovaSolicitacaoPage() {
       )}
 
       <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
-        <Icon name="chevron-left" /> Voltar para Solicitacoes
+        <Icon name="chevron-left" /> Voltar para Solicitações
       </button>
 
       <div className={styles.pageHeader}>
         <div>
           <span className={styles.eyebrow}>Compras internas</span>
-          <h1>Nova Solicitacao de Compra</h1>
-          <p>Monte uma demanda completa, com escopo, orcamento, recebimento e requisitos para cotacao.</p>
+          <h1>Nova Solicitação de Compra</h1>
+          <p>Monte uma demanda completa, com escopo, orçamento, recebimento e requisitos para cotação.</p>
+        </div>
+      </div>
+
+      {/* STEPPER PROGRESS BAR */}
+      <div className={styles.stepperNav}>
+        <div 
+          className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
+          onClick={() => setCurrentStep(1)}
+        >
+          <div className={styles.stepNumber}>
+            {currentStep > 1 ? <Icon name="check" size={16} /> : "1"}
+          </div>
+          <span className={styles.stepLabel}>Identificação</span>
+        </div>
+        <div className={styles.stepConnectorLine} />
+        <div 
+          className={`${styles.stepIndicator} ${currentStep === 2 ? styles.stepActive : currentStep > 2 ? styles.stepCompleted : ""} ${currentStep < 2 ? styles.stepDisabled : ""}`}
+          onClick={() => currentStep >= 2 ? setCurrentStep(2) : undefined}
+        >
+          <div className={styles.stepNumber}>
+            {currentStep > 2 ? <Icon name="check" size={16} /> : "2"}
+          </div>
+          <span className={styles.stepLabel}>Itens da Demanda</span>
+        </div>
+        <div className={styles.stepConnectorLine} />
+        <div 
+          className={`${styles.stepIndicator} ${currentStep === 3 ? styles.stepActive : ""} ${currentStep < 3 ? styles.stepDisabled : ""}`}
+          onClick={() => currentStep >= 3 ? setCurrentStep(3) : undefined}
+        >
+          <div className={styles.stepNumber}>3</div>
+          <span className={styles.stepLabel}>Entrega e Condições</span>
         </div>
       </div>
 
       <div className={styles.workspaceGrid}>
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
-            <section className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <div className={styles.sectionIcon}><Icon name="edit-01" /></div>
-                <div>
-                  <h2>1. Identificacao da demanda</h2>
-                  <p>Contexto executivo para aprovar rapido e cotar sem retrabalho.</p>
-                </div>
-              </div>
-
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Titulo da solicitacao <span className="required-asterisk">*</span></label>
-                <input className={styles.formControl} value={title} onChange={(event) => setTitle(event.target.value)} />
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Solicitante</label>
-                  <input className={styles.formControl} value={requester} onChange={(event) => setRequester(event.target.value)} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Area requisitante</label>
-                  <Select
-                    options={[
-                      { label: "Operações", value: "Operacoes" },
-                      { label: "Manutenção", value: "Manutencao" },
-                      { label: "Administrativo", value: "Administrativo" },
-                      { label: "Facilities", value: "Facilities" },
-                      { label: "TI", value: "TI" }
-                    ]}
-                    value={department}
-                    onChange={setDepartment}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Prioridade</label>
-                  <div className={styles.segmentedControl} role="group" aria-label="Prioridade da solicitacao">
-                    {(["Baixa", "Media", "Alta", "Critica"] as Priority[]).map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        className={priority === option ? styles.segmentActive : ""}
-                        onClick={() => setPriority(option)}
-                      >
-                        {priorityLabels[option]}
-                      </button>
-                    ))}
+            
+            {/* ETAPA 1: IDENTIFICAÇÃO */}
+            {currentStep === 1 && (
+              <section className={styles.formSection}>
+                <div className={styles.sectionHeader}>
+                  <div className={styles.sectionIcon}><Icon name="edit-01" /></div>
+                  <div>
+                    <h2>1. Identificação da demanda</h2>
+                    <p>Contexto executivo para aprovar rápido e cotar sem retrabalho.</p>
                   </div>
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Tipo de compra</label>
-                  <Select
-                    options={[
-                      { label: "Material recorrente", value: "Material recorrente" },
-                      { label: "Compra spot", value: "Compra spot" },
-                      { label: "Serviço técnico", value: "Servico tecnico" },
-                      { label: "Contrato recorrente", value: "Contrato recorrente" },
-                      { label: "Projeto especial", value: "Projeto especial" }
-                    ]}
-                    value={purchaseType}
-                    onChange={setPurchaseType}
-                  />
+
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label>Título da solicitação <span className="required-asterisk">*</span></label>
+                  <input className={styles.formControl} value={title} onChange={(event) => setTitle(event.target.value)} />
                 </div>
-              </div>
 
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Justificativa de negocio <span className="required-asterisk">*</span></label>
-                <textarea
-                  className={styles.formControl}
-                  rows={4}
-                  value={justification}
-                  onChange={(event) => setJustification(event.target.value)}
-                  placeholder="Explique impacto operacional, risco de nao comprar, ganho esperado e urgencia."
-                />
-              </div>
-            </section>
-
-            <section className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
-                <div>
-                  <h2>2. Itens, categorias e centros de custo</h2>
-                  <p>Inclua todos os itens que devem seguir no mesmo pacote de aprovacao.</p>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Solicitante</label>
+                    <input className={styles.formControl} value={requester} onChange={(event) => setRequester(event.target.value)} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Área requisitante</label>
+                    <Select
+                      options={[
+                        { label: "Operações", value: "Operacoes" },
+                        { label: "Manutenção", value: "Manutencao" },
+                        { label: "Administrativo", value: "Administrativo" },
+                        { label: "Facilities", value: "Facilities" },
+                        { label: "TI", value: "TI" }
+                      ]}
+                      value={department}
+                      onChange={setDepartment}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className={styles.itemsList}>
-                {items.map((item, index) => (
-                  <div className={styles.itemPanel} key={item.id}>
-                    <div className={styles.itemHeader}>
-                      <strong>Item {index + 1}</strong>
-                      <button type="button" onClick={() => removeItem(item.id)} disabled={items.length === 1} title="Remover item">
-                        <Icon name="x-close" size={18} />
-                      </button>
-                    </div>
-
-                    <div className={styles.itemGrid}>
-                      <div className={`${styles.formGroup} ${styles.itemDescription}`}>
-                        <label>Descricao do item/servico <span className="required-asterisk">*</span></label>
-                        <input
-                          className={styles.formControl}
-                          value={item.description}
-                          onChange={(event) => updateItem(item.id, "description", event.target.value)}
-                          placeholder="Ex: Filtro de ar motor X1"
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Categoria</label>
-                        <Select
-                          options={[
-                            { label: "Combustiveis", value: "Combustiveis" },
-                            { label: "Insumos operacionais", value: "Insumos operacionais" },
-                            { label: "MRO / Pecas", value: "MRO / Pecas" },
-                            { label: "Servicos tecnicos", value: "Servicos tecnicos" },
-                            { label: "Facilities", value: "Facilities" }
-                          ]}
-                          value={item.category}
-                          onChange={(value) => updateItem(item.id, "category", value)}
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Quantidade</label>
-                        <input
-                          type="number"
-                          min="0"
-                          className={styles.formControl}
-                          value={item.quantity}
-                          onChange={(event) => updateItem(item.id, "quantity", Number(event.target.value))}
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Unidade</label>
-                        <Select
-                          options={[
-                            { label: "L", value: "L" },
-                            { label: "UN", value: "UN" },
-                            { label: "KG", value: "KG" },
-                            { label: "M", value: "M" },
-                            { label: "H", value: "H" },
-                            { label: "Pacote", value: "Pacote" }
-                          ]}
-                          value={item.unit}
-                          onChange={(value) => updateItem(item.id, "unit", value)}
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Valor unitario</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          className={styles.formControl}
-                          value={item.unitPrice}
-                          onChange={(event) => updateItem(item.id, "unitPrice", Number(event.target.value))}
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Centro de custo</label>
-                        <input className={styles.formControl} value={item.costCenter} onChange={(event) => updateItem(item.id, "costCenter", event.target.value)} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Necessario ate</label>
-                        <input
-                          type="date"
-                          className={styles.formControl}
-                          value={item.requiredDate}
-                          onChange={(event) => updateItem(item.id, "requiredDate", event.target.value)}
-                        />
-                      </div>
-                      <div className={styles.itemTotal}>
-                        <span>Total do item</span>
-                        <strong>{formatCurrency(item.quantity * item.unitPrice)}</strong>
-                      </div>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Prioridade</label>
+                    <div className={styles.segmentedControl} role="group" aria-label="Prioridade da solicitação">
+                      {(["Baixa", "Media", "Alta", "Critica"] as Priority[]).map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={priority === option ? styles.segmentActive : ""}
+                          onClick={() => setPriority(option)}
+                        >
+                          {priorityLabels[option]}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-
-              <button type="button" className={styles.addItemButton} onClick={addItem}>
-                <Icon name="plus" /> Adicionar item
-              </button>
-            </section>
-
-            <section className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <div className={styles.sectionIcon}><Icon name="truck-01" /></div>
-                <div>
-                  <h2>3. Entrega, condicoes e fornecedores</h2>
-                  <p>Informacoes que Compras precisa para equalizar propostas corretamente.</p>
+                  <div className={styles.formGroup}>
+                    <label>Tipo de compra</label>
+                    <Select
+                      options={[
+                        { label: "Material recorrente", value: "Material recorrente" },
+                        { label: "Compra spot", value: "Compra spot" },
+                        { label: "Serviço técnico", value: "Servico tecnico" },
+                        { label: "Contrato recorrente", value: "Contrato recorrente" },
+                        { label: "Projeto especial", value: "Projeto especial" }
+                      ]}
+                      value={purchaseType}
+                      onChange={setPurchaseType}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Local de entrega</label>
-                  <Select
-                    options={[
-                      { label: "Base Operacional - Paulinia/SP", value: "Base Operacional - Paulinia/SP" },
-                      { label: "Matriz - Sao Paulo/SP", value: "Matriz - Sao Paulo/SP" },
-                      { label: "Filial - Campinas/SP", value: "Filial - Campinas/SP" },
-                      { label: "Obra / campo operacional", value: "Obra / campo operacional" }
-                    ]}
-                    value={deliveryLocation}
-                    onChange={setDeliveryLocation}
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label>Justificativa de negócio <span className="required-asterisk">*</span></label>
+                  <textarea
+                    className={styles.formControl}
+                    rows={4}
+                    value={justification}
+                    onChange={(event) => setJustification(event.target.value)}
+                    placeholder="Explique impacto operacional, risco de não comprar, ganho esperado e urgência."
                   />
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Janela de recebimento</label>
-                  <input className={styles.formControl} value={deliveryWindow} onChange={(event) => setDeliveryWindow(event.target.value)} />
-                </div>
-              </div>
+              </section>
+            )}
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Condicao de pagamento esperada</label>
-                  <input className={styles.formControl} value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
+            {/* ETAPA 2: ITENS DA DEMANDA (ACCORDION) */}
+            {currentStep === 2 && (
+              <section className={styles.formSection}>
+                <div className={styles.sectionHeader}>
+                  <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
+                  <div>
+                    <h2>2. Itens, categorias e centros de custo</h2>
+                    <p>Inclua todos os itens que devem seguir no mesmo pacote de aprovação.</p>
+                  </div>
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Fornecedor preferencial</label>
-                  <input className={styles.formControl} value={preferredSupplier} onChange={(event) => setPreferredSupplier(event.target.value)} />
+
+                <div className={styles.itemsList}>
+                  {items.map((item, index) => {
+                    const isExpanded = expandedItemId === item.id;
+                    const itemTotalValue = item.quantity * item.unitPrice;
+
+                    return (
+                      <div className={styles.itemPanel} key={item.id}>
+                        
+                        {/* Collapsed State Header Row */}
+                        <div 
+                          className={styles.itemSummaryRow} 
+                          onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
+                        >
+                          <div className={styles.itemSummaryLeft}>
+                            <span className={styles.itemSummaryBadge}>Item {index + 1}</span>
+                            <div className={styles.itemSummaryText}>
+                              <span className={styles.itemSummaryTitle}>
+                                {item.description || "Novo item sem descrição"}
+                              </span>
+                              <span className={styles.itemSummaryMeta}>
+                                {item.quantity} {item.unit} {item.unitPrice > 0 ? `× ${formatCurrency(item.unitPrice)}` : ""} • CC: {item.costCenter || "Não informado"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className={styles.itemSummaryRight}>
+                            <strong className={styles.modalValueHighlight} style={{ marginRight: "8px" }}>
+                              {formatCurrency(itemTotalValue)}
+                            </strong>
+                            <button
+                              type="button"
+                              className={styles.actionIconBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedItemId(isExpanded ? null : item.id);
+                              }}
+                              title={isExpanded ? "Recolher detalhes" : "Editar detalhes"}
+                            >
+                              <Icon 
+                                name="chevron-down" 
+                                size={18} 
+                                className={`${styles.chevronRotate} ${isExpanded ? styles.chevronRotateActive : ""}`} 
+                              />
+                            </button>
+                            <button
+                              type="button"
+                              className={`${styles.actionIconBtn} ${styles.actionDeleteBtn}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeItem(item.id);
+                              }}
+                              disabled={items.length === 1}
+                              title="Remover item"
+                            >
+                              <Icon name="x-close" size={18} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expanded State Form Fields (12-Column Grid Alignment) */}
+                        {isExpanded && (
+                          <div className={styles.accordionExpandable}>
+                            <div className={styles.gridCol12}>
+                              <div className={`${styles.formGroup} ${styles.col8}`}>
+                                <label>Descrição do item/serviço <span className="required-asterisk">*</span></label>
+                                <input
+                                  className={styles.formControl}
+                                  value={item.description}
+                                  onChange={(event) => updateItem(item.id, "description", event.target.value)}
+                                  placeholder="Ex: Filtro de ar motor X1"
+                                />
+                              </div>
+                              <div className={`${styles.formGroup} ${styles.col4}`}>
+                                <label>Categoria</label>
+                                <Select
+                                  options={[
+                                    { label: "Combustíveis", value: "Combustiveis" },
+                                    { label: "Insumos operacionais", value: "Insumos operacionais" },
+                                    { label: "MRO / Peças", value: "MRO / Pecas" },
+                                    { label: "Serviços técnicos", value: "Servicos tecnicos" },
+                                    { label: "Facilities", value: "Facilities" }
+                                  ]}
+                                  value={item.category}
+                                  onChange={(value) => updateItem(item.id, "category", value)}
+                                />
+                              </div>
+
+                              <div className={`${styles.formGroup} ${styles.col3}`}>
+                                <label>Quantidade</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  className={styles.formControl}
+                                  value={item.quantity}
+                                  onChange={(event) => updateItem(item.id, "quantity", Number(event.target.value))}
+                                />
+                              </div>
+                              <div className={`${styles.formGroup} ${styles.col3}`}>
+                                <label>Unidade</label>
+                                <Select
+                                  options={[
+                                    { label: "L", value: "L" },
+                                    { label: "UN", value: "UN" },
+                                    { label: "KG", value: "KG" },
+                                    { label: "M", value: "M" },
+                                    { label: "H", value: "H" },
+                                    { label: "Pacote", value: "Pacote" }
+                                  ]}
+                                  value={item.unit}
+                                  onChange={(value) => updateItem(item.id, "unit", value)}
+                                />
+                              </div>
+                              <div className={`${styles.formGroup} ${styles.col3}`}>
+                                <label>Valor unitário</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  className={styles.formControl}
+                                  value={item.unitPrice}
+                                  onChange={(event) => updateItem(item.id, "unitPrice", Number(event.target.value))}
+                                />
+                              </div>
+                              <div className={`${styles.itemTotal} ${styles.col3}`} style={{ minHeight: "auto", height: "44px", marginTop: "22px" }}>
+                                <span style={{ fontSize: "10px", fontWeight: "800" }}>Total do item</span>
+                                <strong style={{ fontSize: "14px" }}>{formatCurrency(itemTotalValue)}</strong>
+                              </div>
+
+                              <div className={`${styles.formGroup} ${styles.col6}`}>
+                                <label>Centro de custo</label>
+                                <input className={styles.formControl} value={item.costCenter} onChange={(event) => updateItem(item.id, "costCenter", event.target.value)} />
+                              </div>
+                              <div className={`${styles.formGroup} ${styles.col6}`}>
+                                <label>Necessário até</label>
+                                <input
+                                  type="date"
+                                  className={styles.formControl}
+                                  value={item.requiredDate}
+                                  onChange={(event) => updateItem(item.id, "requiredDate", event.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
 
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Observacoes para Compras</label>
-                <textarea className={styles.formControl} rows={4} value={notes} onChange={(event) => setNotes(event.target.value)} />
-              </div>
-            </section>
+                <button type="button" className={styles.addItemButton} onClick={addItem}>
+                  <Icon name="plus" /> Adicionar item
+                </button>
+              </section>
+            )}
 
+            {/* ETAPA 3: ENTREGA E CONDIÇÕES */}
+            {currentStep === 3 && (
+              <section className={styles.formSection}>
+                <div className={styles.sectionHeader}>
+                  <div className={styles.sectionIcon}><Icon name="truck-01" /></div>
+                  <div>
+                    <h2>3. Entrega, condições e fornecedores</h2>
+                    <p>Informações que Compras precisa para equalizar propostas corretamente.</p>
+                  </div>
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Local de entrega</label>
+                    <Select
+                      options={[
+                        { label: "Base Operacional - Paulínia/SP", value: "Base Operacional - Paulinia/SP" },
+                        { label: "Matriz - São Paulo/SP", value: "Matriz - Sao Paulo/SP" },
+                        { label: "Filial - Campinas/SP", value: "Filial - Campinas/SP" },
+                        { label: "Obra / campo operacional", value: "Obra / campo operacional" }
+                      ]}
+                      value={deliveryLocation}
+                      onChange={setDeliveryLocation}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Janela de recebimento</label>
+                    <input className={styles.formControl} value={deliveryWindow} onChange={(event) => setDeliveryWindow(event.target.value)} />
+                  </div>
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Condição de pagamento esperada</label>
+                    <input className={styles.formControl} value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Fornecedor preferencial</label>
+                    <input className={styles.formControl} value={preferredSupplier} onChange={(event) => setPreferredSupplier(event.target.value)} />
+                  </div>
+                </div>
+
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label>Observações para Compras</label>
+                  <textarea className={styles.formControl} rows={4} value={notes} onChange={(event) => setNotes(event.target.value)} />
+                </div>
+              </section>
+            )}
+
+            {/* STEP BUTTONS */}
             <div className={styles.formActions}>
-              <button className={styles.btnCancel} onClick={() => router.push("/compras/solicitacoes")}>Cancelar</button>
-              <button className={styles.secondaryAction}>
-                <Icon name="save-01" /> Salvar rascunho
-              </button>
-              <Button variant="primary" className={styles.btnSubmit} onClick={handleSubmit}>
-                <Icon name="send-01" /> Enviar para aprovação
-              </Button>
+              {currentStep === 1 && (
+                <>
+                  <button type="button" className={styles.btnCancel} onClick={() => router.push("/compras/solicitacoes")}>
+                    Cancelar
+                  </button>
+                  <Button 
+                    variant="primary" 
+                    type="button" 
+                    className={styles.btnSubmit} 
+                    onClick={() => {
+                      if (!title.trim()) {
+                        alert("Por favor, preencha o título da solicitação");
+                        return;
+                      }
+                      if (!justification.trim()) {
+                        alert("Por favor, preencha a justificativa da solicitação");
+                        return;
+                      }
+                      setCurrentStep(2);
+                    }}
+                  >
+                    Avançar <Icon name="chevron-right" />
+                  </Button>
+                </>
+              )}
+
+              {currentStep === 2 && (
+                <>
+                  <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(1)}>
+                    <Icon name="chevron-left" /> Voltar
+                  </button>
+                  <Button 
+                    variant="primary" 
+                    type="button" 
+                    className={styles.btnSubmit} 
+                    onClick={() => {
+                      if (items.some((item) => !item.description.trim())) {
+                        alert("Por favor, preencha a descrição de todos os itens");
+                        return;
+                      }
+                      setCurrentStep(3);
+                    }}
+                  >
+                    Avançar <Icon name="chevron-right" />
+                  </Button>
+                </>
+              )}
+
+              {currentStep === 3 && (
+                <>
+                  <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(2)}>
+                    <Icon name="chevron-left" /> Voltar
+                  </button>
+                  <button type="button" className={styles.secondaryAction} onClick={() => router.push("/compras/solicitacoes")}>
+                    <Icon name="save-01" /> Salvar rascunho
+                  </button>
+                  <Button variant="primary" className={styles.btnSubmit} onClick={handleSubmit}>
+                    <Icon name="send-01" /> Enviar para aprovação
+                  </Button>
+                </>
+              )}
             </div>
           </Card>
         </div>
@@ -468,36 +632,28 @@ export default function NovaSolicitacaoPage() {
           <Card className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Resumo executivo</span>
-              <strong className={`${styles.priorityPill} ${styles[`priority${priority}`]}`}>{priorityLabels[priority]}</strong>
+              <Badge
+                variant={PRIORITY_BADGE_CONFIG[priority]?.variant ?? "gray"}
+                icon={PRIORITY_BADGE_CONFIG[priority]?.icon ?? "info-circle"}
+              >
+                {priorityLabels[priority]}
+              </Badge>
             </div>
-            <h3>{title || "Solicitacao sem titulo"}</h3>
+            <h3>{title || "Solicitação sem título"}</h3>
             <div className={styles.summaryValue}>
               <span>Valor estimado total</span>
               <strong>{formatCurrency(totalEstimated)}</strong>
             </div>
             <dl className={styles.summaryList}>
-              <div><dt>Area</dt><dd>{department}</dd></div>
+              <div><dt>Área</dt><dd>{department}</dd></div>
               <div><dt>Solicitante</dt><dd>{requester}</dd></div>
               <div><dt>Tipo</dt><dd>{purchaseType}</dd></div>
               <div><dt>Entrega</dt><dd>{deliveryLocation}</dd></div>
-              <div><dt>Condicao</dt><dd>{paymentTerms}</dd></div>
+              <div><dt>Condição</dt><dd>{paymentTerms}</dd></div>
             </dl>
           </Card>
 
-          <Card className={styles.checklistCard}>
-            <div className={styles.sideTitle}>
-              <Icon name="info-circle" />
-              <h3>Checklist da demanda</h3>
-            </div>
-            <ul>
-              <li className={title.trim() ? styles.done : ""}>Titulo e escopo definidos</li>
-              <li className={justification.trim() ? styles.done : ""}>Justificativa de negocio</li>
-              <li className={items.every((item) => item.description && item.quantity > 0) ? styles.done : ""}>Itens com volumes validos</li>
-              <li className={totalEstimated > 0 ? styles.done : ""}>Estimativa financeira</li>
-              <li className={deliveryLocation ? styles.done : ""}>Local de recebimento</li>
-              <li className={notes.trim() ? styles.done : ""}>Requisitos para cotacao</li>
-            </ul>
-          </Card>
+
         </aside>
       </div>
     </div>

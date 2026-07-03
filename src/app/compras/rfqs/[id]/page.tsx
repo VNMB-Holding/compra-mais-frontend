@@ -293,7 +293,10 @@ export default function RfqDetailPage() {
           <span className={styles.eyebrow}>Compras externas</span>
           <div className={styles.titleRow}>
             <h1>{RFQ_DATA.id}</h1>
-            <Badge variant={estagio === "aprovacao" ? "warning" : estagio === "analise" ? "primary" : "success"}>
+            <Badge
+              variant={estagio === "aprovacao" ? "warning" : estagio === "analise" ? "primary" : "success"}
+              icon={estagio === "aprovacao" ? "clock" : estagio === "analise" ? "file-search-02" : "users-01"}
+            >
               {estagio === "proposta" ? "Aguardando propostas" : estagio === "analise" ? "Em analise" : "Em aprovacao"}
             </Badge>
           </div>
