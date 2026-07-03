@@ -8,9 +8,17 @@ import { loginApi, getMeApi, logoutApi } from "@/lib/auth/api";
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 function mapApiRole(roles: string[]): UserRole {
-  if (roles.includes("admin")) return "admin";
-  if (roles.includes("gerente")) return "gerente";
-  if (roles.includes("procurist") || roles.includes("procurista")) return "procurist";
+  if (!roles) return "solicitante";
+  const normalized = roles.map(r => r.toLowerCase().trim());
+  if (normalized.some(r => r === "admin" || r === "administrator" || r === "administrador")) {
+    return "admin";
+  }
+  if (normalized.some(r => r === "gerente" || r === "manager" || r === "diretor")) {
+    return "gerente";
+  }
+  if (normalized.some(r => r === "procurist" || r === "procurista" || r === "comprador")) {
+    return "procurist";
+  }
   return "solicitante";
 }
 
@@ -19,26 +27,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setUser(loadSession());
-    setIsLoading(false);
+    async function checkAuth() {
+      try {
+        const meData = await getMeApi();
+        console.log("BFF checkAuth (me) response:", meData);
+        const role = mapApiRole(meData.user.roles || []);
+        console.log("Mapped role for checkAuth:", role);
+        const loggedInUser: User = {
+          id: meData.user.id,
+          name: meData.user.name,
+          email: meData.user.email,
+          role,
+          roles: meData.user.roles,
+          scopes: meData.user.scopes,
+          tenantId: meData.user.tenantId,
+          tenantName: meData.user.tenantName,
+          availableTenants: meData.user.availableTenants,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(meData.user.name)}`,
+        };
+        setUser(loggedInUser);
+        saveSession(loggedInUser);
+      } catch (err) {
+        console.error("BFF checkAuth error:", err);
+        setUser(null);
+        clearSession();
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    checkAuth();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe?: boolean) => {
     setIsLoading(true);
     try {
-      const loginData = await loginApi(email, password);
-      const meData = await getMeApi(loginData.access_token);
-      
-      const role = mapApiRole(meData.roles);
+      const loginData = await loginApi(email, password, rememberMe);
+      console.log("BFF login response:", loginData);
+      const role = mapApiRole(loginData.user.roles || []);
+      console.log("Mapped role for login:", role);
       
       const loggedInUser: User = {
         id: loginData.user.id,
         name: loginData.user.name,
         email: loginData.user.email,
         role,
-        tenantId: meData.tenant_id,
-        accessToken: loginData.access_token,
-        refreshToken: loginData.refresh_token,
+        roles: loginData.user.roles,
+        scopes: loginData.user.scopes,
+        tenantId: loginData.user.tenantId,
+        tenantName: loginData.user.tenantName,
+        availableTenants: loginData.user.availableTenants,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(loginData.user.name)}`,
       };
 
@@ -51,12 +88,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    if (user?.refreshToken && user?.accessToken) {
-      logoutApi(user.refreshToken, user.accessToken).catch(console.error);
-    }
+    logoutApi().catch(console.error);
     setUser(null);
     clearSession();
-  }, [user]);
+  }, []);
 
   const value: AuthContextType = {
     user,

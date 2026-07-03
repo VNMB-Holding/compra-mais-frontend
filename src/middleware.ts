@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = request.cookies.get("currentUser");
+  const session = request.cookies.get("compra_session");
 
   if (!session) {
     const loginUrl = new URL("/login", request.url);

@@ -1,38 +1,26 @@
-const API_URL = process.env.NEXT_PUBLIC_IDENTITY_API_URL || "http://localhost:19842";
-const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID || "compra-mais-client-id";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  roles?: string[];
+  scopes?: string[];
+  tenantId?: string;
+  tenantName?: string;
+  availableTenants?: { id: string; name: string; type?: "Matriz" | "Filial" }[];
+}
 
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  message: string;
+  user: UserResponse;
 }
 
 export interface MeResponse {
-  user_id: string;
-  tenant_id: string;
-  application: string;
-  roles: string[];
-  scopes: string[];
+  user: UserResponse;
 }
 
-export interface RefreshResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
-
-export async function loginApi(email: string, password: string): Promise<LoginResponse> {
+export async function loginApi(email: string, password: string, rememberMe?: boolean): Promise<LoginResponse> {
   const response = await fetch(`${API_URL}/api/auth/login`, {
     method: "POST",
     headers: {
@@ -41,8 +29,9 @@ export async function loginApi(email: string, password: string): Promise<LoginRe
     body: JSON.stringify({
       email,
       password,
-      client_id: CLIENT_ID,
+      rememberMe,
     }),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -53,12 +42,10 @@ export async function loginApi(email: string, password: string): Promise<LoginRe
   return response.json();
 }
 
-export async function getMeApi(accessToken: string): Promise<MeResponse> {
+export async function getMeApi(): Promise<MeResponse> {
   const response = await fetch(`${API_URL}/api/auth/me`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -68,33 +55,9 @@ export async function getMeApi(accessToken: string): Promise<MeResponse> {
   return response.json();
 }
 
-export async function logoutApi(refreshToken: string, accessToken: string): Promise<void> {
+export async function logoutApi(): Promise<void> {
   await fetch(`${API_URL}/api/auth/logout`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      refresh_token: refreshToken,
-    }),
+    credentials: "include",
   });
-}
-
-export async function refreshApi(refreshToken: string): Promise<RefreshResponse> {
-  const response = await fetch(`${API_URL}/api/auth/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      refresh_token: refreshToken,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Sessão expirada.");
-  }
-
-  return response.json();
 }

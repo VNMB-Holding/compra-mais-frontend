@@ -12,23 +12,32 @@ export default function LoginPage() {
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     try {
-      const loggedInUser = await login(email, password);
+      await login(email, password, rememberMe);
+
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
 
       const params = Object.fromEntries(new URLSearchParams(window.location.search));
       const requested = params.redirect;
-
-      if (loggedInUser.role === "solicitante") {
-        router.push("/solicitacoes-rapidas/nova");
-        return;
-      }
 
       if (requested) {
         router.push(requested);
@@ -94,7 +103,11 @@ export default function LoginPage() {
 
             <div className={styles.actions}>
               <label className={styles.checkbox}>
-                <input type="checkbox" defaultChecked />
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
                 Lembrar-me
               </label>
               <Link href="/esqueci-senha" className={styles.forgot}>Esqueci minha senha</Link>
