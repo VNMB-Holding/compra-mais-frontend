@@ -3,9 +3,16 @@ import Icon from "@/components/ui/Icon/Icon";
 import { Button } from "@/components/ui";
 import styles from "@/app/administracao/administracao.module.css";
 
+export interface EmpresaOption {
+  id: string;
+  razaoSocial: string;
+  cnpj: string;
+}
+
 interface AdminUserModalProps {
   open: boolean;
   mode: "create" | "edit";
+  empresas: EmpresaOption[];
   initialData?: {
     name: string;
     email: string;
@@ -13,6 +20,7 @@ interface AdminUserModalProps {
     phone: string;
     role: string;
     isActive: boolean;
+    empresaId: string;
   };
   onClose: () => void;
   onSave: (data: UserFormData) => void;
@@ -25,6 +33,7 @@ export interface UserFormData {
   phone: string;
   role: string;
   isActive: boolean;
+  empresaId: string;
 }
 
 const ROLE_OPTIONS = [
@@ -51,11 +60,13 @@ const DEFAULT_DATA: UserFormData = {
   phone: "",
   role: "solicitante",
   isActive: true,
+  empresaId: "",
 };
 
 export default function AdminUserModal({
   open,
   mode,
+  empresas,
   initialData,
   onClose,
   onSave,
@@ -178,6 +189,38 @@ export default function AdminUserModal({
                   placeholder="(11) 99999-9999"
                   disabled={loading}
                 />
+              </div>
+            </div>
+
+            <hr className={styles.sectionDivider} />
+            <p className={styles.sectionSubtitle}>Empresa</p>
+
+            <div className={styles.formRow}>
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <label>Empresa Vinculada <span style={{ color: "#ef4444" }}>*</span></label>
+                <select
+                  className={styles.formControl}
+                  name="empresaId"
+                  value={form.empresaId}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                >
+                  <option value="">Selecione a empresa...</option>
+                  {empresas.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.razaoSocial}
+                    </option>
+                  ))}
+                </select>
+                {form.empresaId && (() => {
+                  const emp = empresas.find(e => e.id === form.empresaId);
+                  return emp ? (
+                    <span style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+                      CNPJ: {emp.cnpj}
+                    </span>
+                  ) : null;
+                })()}
               </div>
             </div>
 

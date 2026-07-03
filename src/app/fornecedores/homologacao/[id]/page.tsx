@@ -23,14 +23,6 @@ export default function HomologacaoDetailPage() {
             <h1>Homologação de Fornecedor</h1>
             <p>Análise automática e verificação de dados públicos</p>
           </div>
-          <div className={styles.headerActions}>
-            <button className={styles.btnOutline}>
-              Ações <span className="material-symbols-outlined">expand_more</span>
-            </button>
-            <Button variant="primary" className={styles.btnPrimary}>
-              Avançar para próxima etapa
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -92,17 +84,6 @@ export default function HomologacaoDetailPage() {
 
         </div>
       </Card>
-
-      {/* 3. SISTEMA DE ABAS */}
-      <div className={styles.tabsContainer}>
-        <button className={activeTab === "visao-geral" ? styles.tabActive : ""} onClick={() => setActiveTab("visao-geral")}>Visão geral</button>
-        <button className={activeTab === "dados-cadastrais" ? styles.tabActive : ""} onClick={() => setActiveTab("dados-cadastrais")}>Dados cadastrais</button>
-        <button className={activeTab === "analise-financeira" ? styles.tabActive : ""} onClick={() => setActiveTab("analise-financeira")}>Análise financeira</button>
-        <button className={activeTab === "noticias" ? styles.tabActive : ""} onClick={() => setActiveTab("noticias")}>Notícias e reputação</button>
-        <button className={activeTab === "pendencias" ? styles.tabActive : ""} onClick={() => setActiveTab("pendencias")}>Pendências</button>
-        <button className={activeTab === "historico" ? styles.tabActive : ""} onClick={() => setActiveTab("historico")}>Histórico</button>
-      </div>
-
       {/* 4. CONTEÚDO PRINCIPAL (2 COLUNAS) */}
       <div className={styles.contentGrid}>
         
@@ -196,23 +177,6 @@ export default function HomologacaoDetailPage() {
 
         {/* COLUNA DIREITA */}
         <div className={styles.rightColumn}>
-          
-          <Card className={styles.contentCard}>
-            <h3 className={styles.cardTitle}>Classificação de risco <span className="material-symbols-outlined">info</span></h3>
-            
-            <div className={styles.riskGradientBar}>
-              <div className={styles.riskMarker} style={{ left: '18%' }}>
-                <div className={styles.markerTriangle}></div>
-              </div>
-            </div>
-            
-            <div className={styles.riskLabels}>
-              <div className={styles.riskLabel}><strong>0 - 30</strong><span className={styles.textGreen}>Baixo</span></div>
-              <div className={styles.riskLabel}><strong>31 - 60</strong><span className={styles.textOrange}>Médio</span></div>
-              <div className={styles.riskLabel}><strong>61 - 100</strong><span className={styles.textRed}>Alto</span></div>
-            </div>
-          </Card>
-
           <Card className={styles.contentCard}>
             <div className={styles.cardHeaderFlex}>
               <h3 className={styles.cardTitle}>Últimas notícias identificadas <span className="material-symbols-outlined">info</span></h3>

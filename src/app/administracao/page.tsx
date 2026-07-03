@@ -15,10 +15,14 @@ import {
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import AdminUserModal, {
   UserFormData,
+  EmpresaOption,
 } from "@/components/AdminUserModal/AdminUserModal";
 import AdminAlcadaModal, {
   AlcadaFormData,
 } from "@/components/AdminAlcadaModal/AdminAlcadaModal";
+import AdminEmpresaModal, {
+  EmpresaFormData,
+} from "@/components/AdminEmpresaModal/AdminEmpresaModal";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./administracao.module.css";
 
@@ -32,6 +36,20 @@ interface UserRow {
   role: "solicitante" | "procurist" | "gerente" | "admin";
   status: "Ativo" | "Inativo";
   lastAccess: string;
+  phone: string;
+  empresaId: string;
+}
+
+interface EmpresaRow {
+  id: string;
+  razaoSocial: string;
+  nomeFantasia: string;
+  cnpj: string;
+  segmento: string;
+  inscricaoEstadual: string;
+  cep: string;
+  endereco: string;
+  status: "Ativa" | "Inativa";
 }
 
 interface AlcadaRow {
@@ -56,6 +74,8 @@ const INITIAL_USERS: UserRow[] = [
     role: "admin",
     status: "Ativo",
     lastAccess: "Hoje, 09:12",
+    phone: "(11) 99999-0001",
+    empresaId: "1",
   },
   {
     id: "2",
@@ -65,6 +85,8 @@ const INITIAL_USERS: UserRow[] = [
     role: "gerente",
     status: "Ativo",
     lastAccess: "Ontem, 17:43",
+    phone: "(11) 99999-0002",
+    empresaId: "1",
   },
   {
     id: "3",
@@ -74,6 +96,8 @@ const INITIAL_USERS: UserRow[] = [
     role: "procurist",
     status: "Ativo",
     lastAccess: "Hoje, 08:55",
+    phone: "(11) 99999-0003",
+    empresaId: "2",
   },
   {
     id: "4",
@@ -83,6 +107,8 @@ const INITIAL_USERS: UserRow[] = [
     role: "solicitante",
     status: "Ativo",
     lastAccess: "22/06/2026",
+    phone: "(11) 99999-0004",
+    empresaId: "2",
   },
   {
     id: "5",
@@ -92,6 +118,44 @@ const INITIAL_USERS: UserRow[] = [
     role: "solicitante",
     status: "Inativo",
     lastAccess: "10/05/2026",
+    phone: "(11) 99999-0005",
+    empresaId: "3",
+  },
+];
+
+const INITIAL_EMPRESAS: EmpresaRow[] = [
+  {
+    id: "1",
+    razaoSocial: "NMB Holdings S.A.",
+    nomeFantasia: "NMB Holding",
+    cnpj: "12.345.678/0001-90",
+    segmento: "Transporte e Logística",
+    inscricaoEstadual: "123.456.789.000",
+    cep: "01310-100",
+    endereco: "Av. Paulista, 1000 - Bela Vista, São Paulo - SP",
+    status: "Ativa",
+  },
+  {
+    id: "2",
+    razaoSocial: "Mineradora Ouro Preto Ltda",
+    nomeFantasia: "Ouro Preto Min.",
+    cnpj: "98.765.432/0001-10",
+    segmento: "Mineração",
+    inscricaoEstadual: "987.654.321.000",
+    cep: "35400-000",
+    endereco: "Rod. MG-030, km 45 - Ouro Preto - MG",
+    status: "Ativa",
+  },
+  {
+    id: "3",
+    razaoSocial: "Agro Sul Exportações S.A.",
+    nomeFantasia: "AgroSul",
+    cnpj: "45.678.901/0001-23",
+    segmento: "Agronegócio",
+    inscricaoEstadual: "ISENTO",
+    cep: "85800-000",
+    endereco: "Rua das Catenárias, 200 - Cascavel - PR",
+    status: "Ativa",
   },
 ];
 
@@ -247,11 +311,20 @@ export default function AdministracaoPage() {
   const [editingAlcada, setEditingAlcada] = useState<AlcadaRow | null>(null);
   const [deleteAlcadaDialog, setDeleteAlcadaDialog] = useState<AlcadaRow | null>(null);
 
+  // Empresas state
+  const [empresas, setEmpresas] = useState<EmpresaRow[]>(INITIAL_EMPRESAS);
+  const [empresaSearch, setEmpresaSearch] = useState("");
+  const [empresaModalOpen, setEmpresaModalOpen] = useState(false);
+  const [empresaModalMode, setEmpresaModalMode] = useState<"create" | "edit">("create");
+  const [editingEmpresa, setEditingEmpresa] = useState<EmpresaRow | null>(null);
+  const [deleteEmpresaDialog, setDeleteEmpresaDialog] = useState<EmpresaRow | null>(null);
+
   /* ── Tabs ── */
   const tabItems = [
     { id: "usuarios", label: "Usuários", count: users.length },
     { id: "perfis", label: "Tipos de Acesso" },
     { id: "alcadas", label: "Alçadas de Aprovação", count: alcadas.length },
+    { id: "empresas", label: "Empresas", count: empresas.length },
   ];
 
   /* ── Filters ── */
@@ -301,6 +374,8 @@ export default function AdministracaoPage() {
         role: data.role as UserRow["role"],
         status: data.isActive ? "Ativo" : "Inativo",
         lastAccess: "Nunca",
+        phone: data.phone,
+        empresaId: data.empresaId,
       };
       setUsers((prev) => [newUser, ...prev]);
       toast({
@@ -318,6 +393,8 @@ export default function AdministracaoPage() {
                 department: data.department,
                 role: data.role as UserRow["role"],
                 status: data.isActive ? "Ativo" : "Inativo",
+                phone: data.phone,
+                empresaId: data.empresaId,
               }
             : u
         )
@@ -404,6 +481,48 @@ export default function AdministracaoPage() {
     setDeleteAlcadaDialog(null);
   };
 
+  /* ── Empresa actions ── */
+  const openCreateEmpresa = () => {
+    setEmpresaModalMode("create");
+    setEditingEmpresa(null);
+    setEmpresaModalOpen(true);
+  };
+
+  const openEditEmpresa = (empresa: EmpresaRow) => {
+    setEmpresaModalMode("edit");
+    setEditingEmpresa(empresa);
+    setEmpresaModalOpen(true);
+  };
+
+  const handleSaveEmpresa = (data: EmpresaFormData) => {
+    const row: EmpresaRow = {
+      id: editingEmpresa?.id || String(Date.now()),
+      razaoSocial: data.razaoSocial,
+      nomeFantasia: data.nomeFantasia,
+      cnpj: data.cnpj,
+      segmento: data.segmento,
+      inscricaoEstadual: data.inscricaoEstadual,
+      cep: data.cep,
+      endereco: data.endereco,
+      status: data.isActive ? "Ativa" : "Inativa",
+    };
+    if (empresaModalMode === "create") {
+      setEmpresas((prev) => [...prev, row]);
+      toast({ title: "Empresa cadastrada!", message: `${row.razaoSocial} foi adicionada ao sistema.`, variant: "success" });
+    } else {
+      setEmpresas((prev) => prev.map((e) => (e.id === row.id ? row : e)));
+      toast({ title: "Empresa atualizada", message: "Os dados foram salvos.", variant: "success" });
+    }
+    setEmpresaModalOpen(false);
+  };
+
+  const handleDeleteEmpresa = () => {
+    if (!deleteEmpresaDialog) return;
+    setEmpresas((prev) => prev.filter((e) => e.id !== deleteEmpresaDialog.id));
+    toast({ title: "Empresa removida", message: `${deleteEmpresaDialog.razaoSocial} foi removida.`, variant: "success" });
+    setDeleteEmpresaDialog(null);
+  };
+
   /* ── User columns ── */
   const userColumns: ColumnDef<UserRow>[] = [
     {
@@ -417,6 +536,18 @@ export default function AdministracaoPage() {
           </div>
         </div>
       ),
+    },
+    {
+      header: "Empresa",
+      cell: (row) => {
+        const emp = empresas.find((e) => e.id === row.empresaId);
+        return (
+          <div className={styles.doubleText}>
+            <strong style={{ fontSize: "13px", color: "#334155" }}>{emp?.razaoSocial || "—"}</strong>
+            <span>{emp?.cnpj || ""}</span>
+          </div>
+        );
+      },
     },
     {
       header: "Departamento",
@@ -437,9 +568,9 @@ export default function AdministracaoPage() {
       ),
     },
     {
-      header: "Último Acesso",
+      header: "Celular",
       cell: (row) => (
-        <span style={{ fontSize: "13px", color: "#64748b" }}>{row.lastAccess}</span>
+        <span style={{ fontSize: "13px", color: "#64748b" }}>{row.phone || "—"}</span>
       ),
     },
     {
@@ -561,6 +692,80 @@ export default function AdministracaoPage() {
   const activeCount = users.filter((u) => u.status === "Ativo").length;
   const adminCount = users.filter((u) => u.role === "admin").length;
   const inactiveCount = users.filter((u) => u.status === "Inativo").length;
+
+  /* ── Empresa columns ── */
+  const empresaColumns: ColumnDef<EmpresaRow>[] = [
+    {
+      header: "Empresa",
+      cell: (row) => (
+        <div className={styles.userCell}>
+          <div className={styles.userAvatar} style={{ background: "linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%)", borderRadius: 8 }}>
+            <Icon name="building-01" size={16} />
+          </div>
+          <div className={styles.doubleText}>
+            <strong>{row.razaoSocial}</strong>
+            <span>{row.nomeFantasia || row.razaoSocial}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "CNPJ",
+      cell: (row) => (
+        <span style={{ fontSize: "13px", color: "#334155", fontFamily: "monospace", fontWeight: 600 }}>{row.cnpj}</span>
+      ),
+    },
+    {
+      header: "Segmento",
+      cell: (row) => (
+        <span style={{ fontSize: "13px", color: "#334155" }}>{row.segmento}</span>
+      ),
+    },
+    {
+      header: "Usuários",
+      cell: (row) => {
+        const count = users.filter((u) => u.empresaId === row.id).length;
+        return (
+          <Badge variant="primary">{count} {count === 1 ? "usuário" : "usuários"}</Badge>
+        );
+      },
+    },
+    {
+      header: "Status",
+      cell: (row) => (
+        <Badge variant={row.status === "Ativa" ? "success" : "gray"}>{row.status}</Badge>
+      ),
+    },
+    {
+      header: "",
+      width: "96px",
+      cell: (row) => (
+        <div className={styles.actionCell}>
+          <button
+            className={styles.iconBtn}
+            title="Editar"
+            onClick={(e) => { e.stopPropagation(); openEditEmpresa(row); }}
+          >
+            <Icon name="edit-02" size={16} />
+          </button>
+          <button
+            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+            title="Remover"
+            onClick={(e) => { e.stopPropagation(); setDeleteEmpresaDialog(row); }}
+          >
+            <Icon name="trash-01" size={16} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const filteredEmpresas = empresas.filter(
+    (e) =>
+      !empresaSearch ||
+      e.razaoSocial.toLowerCase().includes(empresaSearch.toLowerCase()) ||
+      e.cnpj.includes(empresaSearch)
+  );
 
   return (
     <ProtectedLayout allowedRoles={["admin"]}>
@@ -781,21 +986,79 @@ export default function AdministracaoPage() {
             </Card>
           </>
         )}
+        {/* ── ABA: EMPRESAS ─────────────────────────────── */}
+        {activeTab === "empresas" && (
+          <>
+            <div className={styles.kpiGrid}>
+              <KpiCard
+                title="Total de Empresas"
+                value={empresas.length}
+                icon="building-01"
+                description="Cadastradas no sistema"
+              />
+              <KpiCard
+                title="Empresas Ativas"
+                value={empresas.filter((e) => e.status === "Ativa").length}
+                icon="check-verified-01"
+                description="Em operação"
+              />
+              <KpiCard
+                title="Usuários Vinculados"
+                value={users.filter((u) => u.empresaId).length}
+                icon="users-01"
+                description="Com empresa definida"
+              />
+              <KpiCard
+                title="CNPJs Distintos"
+                value={new Set(empresas.map((e) => e.cnpj)).size}
+                icon="file-02"
+                description="Registros únicos"
+              />
+            </div>
+
+            <Card noPadding className={styles.tableCard}>
+              <div className={styles.tableToolbar}>
+                <div className={styles.searchBox}>
+                  <Icon name="search-md" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Buscar por razão social ou CNPJ..."
+                    value={empresaSearch}
+                    onChange={(e) => setEmpresaSearch(e.target.value)}
+                  />
+                </div>
+                <Button variant="primary" onClick={openCreateEmpresa}>
+                  <Icon name="plus" size={16} /> Nova Empresa
+                </Button>
+              </div>
+
+              <DataTable data={filteredEmpresas} columns={empresaColumns} />
+
+              <div className={styles.tableFooter}>
+                <span>
+                  Mostrando {filteredEmpresas.length} de {empresas.length} empresas
+                </span>
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* ── Modals ── */}
       <AdminUserModal
         open={userModalOpen}
         mode={userModalMode}
+        empresas={empresas.map((e) => ({ id: e.id, razaoSocial: e.razaoSocial, cnpj: e.cnpj }))}
         initialData={
           editingUser
             ? {
                 name: editingUser.name,
                 email: editingUser.email,
                 department: editingUser.department,
-                phone: "",
+                phone: editingUser.phone || "",
                 role: editingUser.role,
                 isActive: editingUser.status === "Ativo",
+                empresaId: editingUser.empresaId || "",
               }
             : undefined
         }
@@ -842,6 +1105,32 @@ export default function AdministracaoPage() {
         confirmLabel="Remover"
         onConfirm={handleDeleteAlcada}
         onCancel={() => setDeleteAlcadaDialog(null)}
+      />
+      <AdminEmpresaModal
+        open={empresaModalOpen}
+        mode={empresaModalMode}
+        initialData={editingEmpresa ? {
+          razaoSocial: editingEmpresa.razaoSocial,
+          nomeFantasia: editingEmpresa.nomeFantasia,
+          cnpj: editingEmpresa.cnpj,
+          segmento: editingEmpresa.segmento,
+          inscricaoEstadual: editingEmpresa.inscricaoEstadual,
+          cep: editingEmpresa.cep,
+          endereco: editingEmpresa.endereco,
+          isActive: editingEmpresa.status === "Ativa",
+        } : undefined}
+        onClose={() => setEmpresaModalOpen(false)}
+        onSave={handleSaveEmpresa}
+      />
+
+      <ConfirmDialog
+        open={!!deleteEmpresaDialog}
+        variant="danger"
+        title="Remover empresa?"
+        message={`${deleteEmpresaDialog?.razaoSocial} será removida do sistema. Os usuários vinculados perderão a associação.`}
+        confirmLabel="Remover"
+        onConfirm={handleDeleteEmpresa}
+        onCancel={() => setDeleteEmpresaDialog(null)}
       />
     </ProtectedLayout>
   );
