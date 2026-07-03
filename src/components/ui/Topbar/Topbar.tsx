@@ -18,7 +18,21 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const [isHovered, setIsHovered] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
   const router = useRouter();
+
+  useEffect(() => {
+    if (user?.tenantName) {
+      setSelectedCompany(user.tenantName.toUpperCase());
+    }
+  }, [user]);
+
+  const getAvailableCompanies = () => {
+    return user?.availableTenants || [];
+  };
+
+  const availableCompanies = getAvailableCompanies();
+  const canSwitchCompany = availableCompanies.length > 1;
 
   const topbarRef = useRef<HTMLHeadingElement>(null);
 
@@ -143,18 +157,77 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
         {/* Seletor de Empresa */}
         <div className={styles.popupWrapper}>
-          <div className={styles.companySelector} onClick={() => togglePopup("company")}>
-            VNMB HOLDING
-            <Icon name="chevron-down" className={activePopup === "company" ? styles.rotate : ""} />
+          <div 
+            className={styles.companySelector} 
+            onClick={() => canSwitchCompany && togglePopup("company")}
+            style={{ cursor: canSwitchCompany ? "pointer" : "default" }}
+          >
+            {selectedCompany || "EMPRESA"}
+            {canSwitchCompany && (
+              <Icon name="chevron-down" className={activePopup === "company" ? styles.rotate : ""} />
+            )}
           </div>
 
-          {activePopup === "company" && (
+          {canSwitchCompany && activePopup === "company" && (
             <div className={`${styles.dropdownBox} ${styles.companyDropdown}`}>
-              <div className={styles.dropdownItemActive}>
-                <Icon name="check" /> VNMB HOLDING
-              </div>
-              <div className={styles.dropdownItem}>VNMB LOGÍSTICA</div>
-              <div className={styles.dropdownItem}>VNMB SERVIÇOS</div>
+              {/* Matriz section */}
+              {availableCompanies.some(c => c.type === 'Matriz') && (
+                <>
+                  <div className={styles.companyDropdownSectionHeader}>Matriz</div>
+                  {availableCompanies.filter(c => c.type === 'Matriz').map((company) => (
+                    <div 
+                      key={company.id}
+                      className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
+                      onClick={() => {
+                        setSelectedCompany(company.name.toUpperCase());
+                        setActivePopup(null);
+                      }}
+                    >
+                      {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Filiais section */}
+              {availableCompanies.some(c => c.type === 'Filial') && (
+                <>
+                  <div className={styles.companyDropdownSectionHeader}>Filiais</div>
+                  {availableCompanies.filter(c => c.type === 'Filial').map((company) => (
+                    <div 
+                      key={company.id}
+                      className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
+                      onClick={() => {
+                        setSelectedCompany(company.name.toUpperCase());
+                        setActivePopup(null);
+                      }}
+                    >
+                      {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Uncategorized section */}
+              {availableCompanies.some(c => c.type !== 'Matriz' && c.type !== 'Filial') && (
+                <>
+                  {availableCompanies.some(c => c.type === 'Matriz' || c.type === 'Filial') && (
+                    <div className={styles.companyDropdownSectionHeader}>Outras</div>
+                  )}
+                  {availableCompanies.filter(c => c.type !== 'Matriz' && c.type !== 'Filial').map((company) => (
+                    <div 
+                      key={company.id}
+                      className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
+                      onClick={() => {
+                        setSelectedCompany(company.name.toUpperCase());
+                        setActivePopup(null);
+                      }}
+                    >
+                      {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
