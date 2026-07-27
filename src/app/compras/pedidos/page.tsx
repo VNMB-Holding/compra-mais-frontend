@@ -1,13 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select } from "@/components/ui";
+import { Card, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./pedidos.module.css";
+import { apiClient } from "@/lib/api-client";
+
+interface PurchaseOrder {
+  id: string;
+  code: string;
+  totalValue: number;
+  estimatedDeliveryDate: string;
+  status: string;
+  createdAt: string;
+  supplier?: { tradeName: string };
+}
 
 interface PedidoRow {
+  id: string;
   numero: string;
   fornecedor: string;
   emissao: string;
@@ -16,31 +28,77 @@ interface PedidoRow {
   status: "Emitido" | "Faturado" | "Entregue";
 }
 
+const STATUS_MAP: Record<string, "Emitido" | "Faturado" | "Entregue"> = {
+  AwaitingSignature: "Emitido",
+  Signed: "Faturado",
+  Delivered: "Entregue",
+};
+
+function formatCurrency(value: number): string {
+  return `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function mapToRow(po: PurchaseOrder): PedidoRow {
+  return {
+    id: po.id,
+    numero: po.code,
+    fornecedor: po.supplier?.tradeName || "—",
+    emissao: new Date(po.createdAt).toLocaleDateString("pt-BR"),
+    valorTotal: formatCurrency(po.totalValue),
+    entrega: new Date(po.estimatedDeliveryDate).toLocaleDateString("pt-BR"),
+    status: STATUS_MAP[po.status] || "Emitido",
+  };
+}
+
 export default function PedidosPage() {
   const router = useRouter();
 
-  const [fornecedor, setFornecedor] = React.useState("Todas");
-  const [status, setStatus] = React.useState("Todos");
+  const [fornecedor, setFornecedor] = useState("Todas");
+  const [status, setStatus] = useState("Todos");
+  const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalValue, setTotalValue] = useState(0);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Purchase orders use the existing purchase-order controller path
+        const data = await apiClient.get<PurchaseOrder[]>("/api/purchase-orders");
+        const rows = data.map(mapToRow);
+        setPedidos(rows);
+        setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
+      } catch (err) {
+        console.error("Erro ao carregar pedidos:", err);
+        setPedidos([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const fornecedoresOptions = [
     { label: "Todos os fornecedores", value: "Todas" },
-    { label: "Fornecedor Alfa", value: "Fornecedor Alfa" },
-    { label: "Distribuidora Beta", value: "Distribuidora Beta" },
-    { label: "Serviços Omega", value: "Serviços Omega" }
+    ...Array.from(new Set(pedidos.map((p) => p.fornecedor)))
+      .filter((f) => f !== "—")
+      .map((f) => ({ label: f, value: f })),
   ];
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
     { label: "Emitido", value: "Emitido" },
     { label: "Faturado", value: "Faturado" },
-    { label: "Entregue", value: "Entregue" }
+    { label: "Entregue", value: "Entregue" },
   ];
 
-  const listaPedidos: PedidoRow[] = [
-    { numero: "PED-000234", fornecedor: "Fornecedor Alfa", emissao: "22/05/2024", valorTotal: "R$ 15.400,00", entrega: "30/05/2024", status: "Emitido" },
-    { numero: "PED-000233", fornecedor: "Distribuidora Beta", emissao: "20/05/2024", valorTotal: "R$ 8.900,00", entrega: "25/05/2024", status: "Faturado" },
-    { numero: "PED-000232", fornecedor: "Serviços Omega", emissao: "18/05/2024", valorTotal: "R$ 4.500,00", entrega: "18/05/2024", status: "Entregue" }
-  ];
+  const filtered = pedidos.filter((p) => {
+    if (fornecedor !== "Todas" && p.fornecedor !== fornecedor) return false;
+    if (status !== "Todos" && p.status !== status) return false;
+    return true;
+  });
+
+  const entregueCount = pedidos.filter((p) => p.status === "Entregue").length;
+  const pendentCount = pedidos.filter((p) => p.status !== "Entregue").length;
 
   const columns: ColumnDef<PedidoRow>[] = [
     { header: "Número", cell: (row) => <span className={styles.boldCode}>{row.numero}</span> },
@@ -78,10 +136,10 @@ export default function PedidosPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de pedidos" value="3" icon="shopping-cart-01" description="Este mês" />
-        <KpiCard title="Pendentes" value="1" icon="clock" description="Aguardando entrega" />
-        <KpiCard title="Entregues" value="1" icon="check-circle" description="Finalizados" />
-        <KpiCard title="Valor total" value="R$ 28,8K" icon="currency-dollar-circle" description="Em pedidos" />
+        <KpiCard title="Total de pedidos" value={loading ? "..." : String(pedidos.length)} icon="shopping-cart-01" description="Este mês" />
+        <KpiCard title="Pendentes" value={loading ? "..." : String(pendentCount)} icon="clock" description="Aguardando entrega" />
+        <KpiCard title="Entregues" value={loading ? "..." : String(entregueCount)} icon="check-circle" description="Finalizados" />
+        <KpiCard title="Valor total" value={loading ? "..." : formatCurrency(totalValue)} icon="currency-dollar-circle" description="Em pedidos" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -108,10 +166,10 @@ export default function PedidosPage() {
           </div>
         </div>
 
-        <DataTable data={listaPedidos} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.numero}`)} />
+        <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />
 
         <div className={styles.tableFooter}>
-          <span>Mostrando {listaPedidos.length} de {listaPedidos.length} pedidos</span>
+          <span>Mostrando {filtered.length} de {pedidos.length} pedidos</span>
           <div className={styles.paginationControls}>
             <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>

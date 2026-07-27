@@ -165,7 +165,6 @@ export default function HomologacaoDetailPage() {
               </div>
 
             </div>
-            <button className={styles.linkAction}>Ver detalhes de todas as análises</button>
           </Card>
 
         </div>

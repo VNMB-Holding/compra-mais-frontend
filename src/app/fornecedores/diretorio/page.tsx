@@ -1,13 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
+import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 
-interface Fornecedor {
+interface FornecedorRow {
   id: string;
   iniciais: string;
   nome: string;
@@ -23,17 +24,74 @@ interface Fornecedor {
   cor: "green" | "orange";
 }
 
+const SEGMENT_ICON_MAP: Record<string, string> = {
+  "Serviços": "briefcase-01",
+  "Combustíveis": "drop",
+  "TI": "monitor-01",
+  "MRO": "tool-01",
+  "Matérias-Primas": "box",
+  "Logística": "truck-01",
+};
+
+function mapSupplierToRow(s: Supplier): FornecedorRow {
+  const isActive = s.status === "Active";
+  const score = s.performanceScore ? Number(s.performanceScore) : null;
+  const stars = score ? Math.round(score / 2) : 0;
+
+  return {
+    id: s.id,
+    iniciais: s.tradeName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
+    nome: s.tradeName,
+    cnpj: s.cnpj,
+    categoria: s.segment,
+    catIcon: SEGMENT_ICON_MAP[s.segment] || "briefcase-01",
+    status: isActive ? "Homologado" : s.status === "UnderCertification" ? "Em homologação" : "Inativo",
+    statusSub: s.createdAt ? `desde ${new Date(s.createdAt).toLocaleDateString("pt-BR")}` : "",
+    nota: score ? score.toFixed(1).replace(".", ",") : "-",
+    estrelas: stars,
+    avaliacao: s.updatedAt ? new Date(s.updatedAt).toLocaleDateString("pt-BR") : "-",
+    avaliacaoSub: s.updatedAt
+      ? (() => {
+          const days = Math.floor((Date.now() - new Date(s.updatedAt).getTime()) / 86400000);
+          return days === 0 ? "hoje" : `há ${days} dia(s)`;
+        })()
+      : "Ainda sem avaliação",
+    cor: isActive ? "green" : "orange",
+  };
+}
+
 export default function FornecedoresListPage() {
   const router = useRouter();
 
-  const [categoria, setCategoria] = React.useState("Todas");
-  const [status, setStatus] = React.useState("Todos");
+  const [categoria, setCategoria] = useState("Todas");
+  const [status, setStatus] = useState("Todos");
+  const [fornecedores, setFornecedores] = useState<FornecedorRow[]>([]);
+  const [kpis, setKpis] = useState<SupplierKpis | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [suppliers, kpisData] = await Promise.all([
+          suppliersApi.list(),
+          suppliersApi.getKpis(),
+        ]);
+        setFornecedores(suppliers.map(mapSupplierToRow));
+        setKpis(kpisData);
+      } catch (err) {
+        console.error("Erro ao carregar fornecedores:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },
-    { label: "Serviços", value: "Serviços" },
-    { label: "Combustíveis", value: "Combustíveis" },
-    { label: "TI", value: "TI" },
+    ...Array.from(new Set(fornecedores.map((f) => f.categoria)))
+      .filter(Boolean)
+      .map((c) => ({ label: c, value: c })),
   ];
 
   const statusOptions = [
@@ -42,17 +100,11 @@ export default function FornecedoresListPage() {
     { label: "Em homologação", value: "Em homologação" },
   ];
 
-  const catIconMap: Record<string, string> = {
-    work: "briefcase-01",
-    water_drop: "drop",
-    desktop_windows: "monitor-01",
-  };
-
-  const fornecedores: Fornecedor[] = [
-    { id: "1", iniciais: "FA", nome: "Fornecedor Alfa S.A.", cnpj: "11.111.111/0001-11", categoria: "Serviços", catIcon: "work", status: "Homologado", statusSub: "desde 12/05/2023", nota: "9,8", estrelas: 5, avaliacao: "28/04/2024", avaliacaoSub: "há 15 dias", cor: "green" },
-    { id: "2", iniciais: "FB", nome: "Fornecedor Bravo LTDA", cnpj: "22.333.444/0001-82", categoria: "Combustíveis", catIcon: "water_drop", status: "Homologado", statusSub: "desde 18/08/2023", nota: "9,2", estrelas: 4, avaliacao: "22/04/2024", avaliacaoSub: "há 21 dias", cor: "green" },
-    { id: "3", iniciais: "CT", nome: "Charlie Tech", cnpj: "33.555.666/0001-33", categoria: "TI", catIcon: "desktop_windows", status: "Em homologação", statusSub: "iniciado em 10/05/2024", nota: "-", estrelas: 0, avaliacao: "-", avaliacaoSub: "Ainda sem avaliação", cor: "orange" }
-  ];
+  const filtered = fornecedores.filter((f) => {
+    if (categoria !== "Todas" && f.categoria !== categoria) return false;
+    if (status !== "Todos" && f.status !== status) return false;
+    return true;
+  });
 
   const renderStars = (count: number) => {
     if (count === 0) return null;
@@ -65,7 +117,7 @@ export default function FornecedoresListPage() {
     );
   };
 
-  const columns: ColumnDef<Fornecedor>[] = [
+  const columns: ColumnDef<FornecedorRow>[] = [
     {
       header: "Fornecedor",
       cell: (row) => (
@@ -84,7 +136,7 @@ export default function FornecedoresListPage() {
       header: "Categoria",
       cell: (row) => (
         <div className={styles.catCell}>
-          <Icon name={catIconMap[row.catIcon] || "briefcase-01"} />
+          <Icon name={row.catIcon} />
           {row.categoria}
         </div>
       )
@@ -148,10 +200,10 @@ export default function FornecedoresListPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Fornecedores homologados" value="2" icon="users-01" description="Ativos" />
-        <KpiCard title="Em homologação" value="1" icon="clock" description="Pendente" />
-        <KpiCard title="Nota média de performance" value="9,5" icon="star-01" description="Entre homologados" />
-        <KpiCard title="Categorias cobertas" value="3" icon="shield-01" description="Serviços, Combustíveis, TI" />
+        <KpiCard title="Fornecedores homologados" value={loading ? "..." : String(kpis?.active || 0)} icon="users-01" description="Ativos" />
+        <KpiCard title="Em homologação" value={loading ? "..." : String(kpis?.underCertification || 0)} icon="clock" description="Pendente" />
+        <KpiCard title="Nota média de performance" value={loading ? "..." : (kpis?.avgPerformanceScore || "-")} icon="star-01" description="Entre homologados" />
+        <KpiCard title="Categorias cobertas" value={loading ? "..." : String(kpis?.segmentCount || 0)} icon="shield-01" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -178,10 +230,10 @@ export default function FornecedoresListPage() {
           </div>
         </div>
 
-        <DataTable data={fornecedores} columns={columns} onRowClick={(row) => router.push(`/fornecedores/${row.id}`)} />
+        <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/fornecedores/${row.id}`)} />
 
         <div className={styles.tableFooter}>
-          <span>Mostrando 1 a 3 de 3 fornecedores</span>
+          <span>Mostrando {filtered.length} de {fornecedores.length} fornecedores</span>
           <div className={styles.paginationControls}>
             <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>

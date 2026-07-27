@@ -1,32 +1,83 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
+import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib/api/purchase-requests";
 
 interface SolicitationRow {
+  id: string;
   codigo: string;
   descricao: string;
   solicitante: string;
   data: string;
   status: string;
-  prioridade: "Alta" | "Média" | "Baixa";
+  prioridade: string;
+  categoria: string;
+}
+
+const STATUS_MAP: Record<string, string> = {
+  Draft: "Rascunho",
+  AwaitingApproval: "Aguardando aprovação",
+  Approved: "Aprovada",
+  Rejected: "Rejeitada",
+};
+
+const PRIORITY_MAP: Record<string, string> = {
+  Low: "Baixa",
+  Medium: "Média",
+  High: "Alta",
+  Urgent: "Urgente",
+};
+
+function mapToRow(pr: PurchaseRequest): SolicitationRow {
+  return {
+    id: pr.id,
+    codigo: pr.code,
+    descricao: pr.description,
+    solicitante: pr.requesterId,
+    data: new Date(pr.createdAt).toLocaleDateString("pt-BR"),
+    status: STATUS_MAP[pr.status] || pr.status,
+    prioridade: PRIORITY_MAP[pr.priority] || pr.priority,
+    categoria: pr.category,
+  };
 }
 
 export default function SolicitacoesPage() {
   const router = useRouter();
 
-  const [categoria, setCategoria] = React.useState("Todas");
-  const [prioridade, setPrioridade] = React.useState("Todos");
+  const [categoria, setCategoria] = useState("Todas");
+  const [prioridade, setPrioridade] = useState("Todos");
+  const [solicitacoes, setSolicitacoes] = useState<SolicitationRow[]>([]);
+  const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [list, kpisData] = await Promise.all([
+          purchaseRequestsApi.list(),
+          purchaseRequestsApi.getKpis(),
+        ]);
+        setSolicitacoes(list.map(mapToRow));
+        setKpis(kpisData);
+      } catch (err) {
+        console.error("Erro ao carregar solicitações:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },
-    { label: "Combustível", value: "Combustível" },
-    { label: "MRO", value: "MRO" },
-    { label: "Serviços", value: "Serviços" }
+    ...Array.from(new Set(solicitacoes.map((s) => s.categoria)))
+      .filter(Boolean)
+      .map((c) => ({ label: c, value: c })),
   ];
 
   const prioridadesOptions = [
@@ -34,24 +85,23 @@ export default function SolicitacoesPage() {
     { label: "Baixa", value: "Baixa" },
     { label: "Média", value: "Média" },
     { label: "Alta", value: "Alta" },
-    { label: "Crítica", value: "Crítica" }
+    { label: "Urgente", value: "Urgente" },
   ];
 
-  const listaSolicitacoes: SolicitationRow[] = [
-    { codigo: "SOL-000456", descricao: "Óleo Diesel S10", solicitante: "Breno Marques", data: "22/05/2024", status: "Aguardando aprovação", prioridade: "Alta" },
-    { codigo: "SOL-000455", descricao: "Filtro de Ar de Cabine", solicitante: "Carlos Silva", data: "21/05/2024", status: "Aprovada", prioridade: "Média" },
-    { codigo: "SOL-000454", descricao: "Serviço de Limpeza", solicitante: "Ana Paula", data: "20/05/2024", status: "Em cotação", prioridade: "Baixa" }
-  ];
+  const filtered = solicitacoes.filter((s) => {
+    if (categoria !== "Todas" && s.categoria !== categoria) return false;
+    if (prioridade !== "Todos" && s.prioridade !== prioridade) return false;
+    return true;
+  });
 
   const columns: ColumnDef<SolicitationRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
-    { header: "Solicitante", accessorKey: "solicitante" },
     { header: "Data", accessorKey: "data" },
     {
       header: "Prioridade",
       cell: (row) => (
-        <span className={`${styles.statusBadge} ${row.prioridade === "Alta" ? styles.badgeRed : row.prioridade === "Média" ? styles.badgeYellow : styles.badgeGray}`}>
+        <span className={`${styles.statusBadge} ${row.prioridade === "Alta" || row.prioridade === "Urgente" ? styles.badgeRed : row.prioridade === "Média" ? styles.badgeYellow : styles.badgeGray}`}>
           {row.prioridade}
         </span>
       )
@@ -59,7 +109,7 @@ export default function SolicitacoesPage() {
     {
       header: "Status",
       cell: (row) => (
-        <span className={`${styles.statusBadge} ${row.status === "Aprovada" ? styles.badgeGreen : row.status === "Aguardando aprovação" ? styles.badgeYellow : styles.badgeGray}`}>
+        <span className={`${styles.statusBadge} ${row.status === "Aprovada" ? styles.badgeGreen : row.status === "Aguardando aprovação" ? styles.badgeYellow : row.status === "Rejeitada" ? styles.badgeRed : styles.badgeGray}`}>
           {row.status}
         </span>
       )
@@ -92,10 +142,10 @@ export default function SolicitacoesPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de solicitações" value="3" icon="clipboard" description="Neste mês" />
-        <KpiCard title="Aguardando aprovação" value="1" icon="hourglass-01" description="Pendente" />
-        <KpiCard title="Aprovadas" value="1" icon="check-circle" description="Prontas para cotar" />
-        <KpiCard title="Categorias" value="3" icon="folder" description="Combustível, MRO, Serviços" />
+        <KpiCard title="Total de solicitações" value={loading ? "..." : String(kpis?.total || 0)} icon="clipboard" description="Neste mês" />
+        <KpiCard title="Aguardando aprovação" value={loading ? "..." : String(kpis?.awaitingApproval || 0)} icon="hourglass-01" description="Pendente" />
+        <KpiCard title="Aprovadas" value={loading ? "..." : String(kpis?.approved || 0)} icon="check-circle" description="Prontas para cotar" />
+        <KpiCard title="Categorias" value={loading ? "..." : String(kpis?.categoryCount || 0)} icon="folder" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -122,10 +172,10 @@ export default function SolicitacoesPage() {
           </div>
         </div>
 
-        <DataTable data={listaSolicitacoes} columns={columns} onRowClick={(row) => router.push(`/compras/solicitacoes/${row.codigo}`)} />
+        <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/solicitacoes/${row.id}`)} />
 
         <div className={styles.tableFooter}>
-          <span>Mostrando {listaSolicitacoes.length} de {listaSolicitacoes.length} solicitações</span>
+          <span>Mostrando {filtered.length} de {solicitacoes.length} solicitações</span>
           <div className={styles.paginationControls}>
             <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>

@@ -11,7 +11,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const [helpOpen, setHelpOpen] = useState(false);
   const pathname = usePathname();
 
-  const noLayoutPages = ["/login", "/unauthorized", "/solicitar-acesso", "/esqueci-senha"];
+  const noLayoutPages = ["/login", "/unauthorized", "/solicitar-acesso"];
   const shouldShowLayout = !noLayoutPages.includes(pathname);
 
   if (!shouldShowLayout) {

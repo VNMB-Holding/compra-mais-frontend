@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
 import { 
@@ -15,8 +15,12 @@ import {
   Icon
 } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
+import { useAuth } from "@/hooks/useAuth";
+import { dashboardApi, DashboardKpis, CategoryBreakdown, MonthlyEconomy } from "@/lib/api/dashboard";
+import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 
-interface RFQ {
+interface RFQRow {
+  id: string;
   codigo: string;
   descricao: string;
   categoria: string;
@@ -26,69 +30,88 @@ interface RFQ {
   status: "Aberta" | "Encerrando hoje" | "Encerrada";
 }
 
+const PIE_COLORS = ["#007d79", "#7c3aed", "#db2777", "#64748b", "#f59e0b", "#10b981"];
+
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(0)}k`;
+  return `R$ ${value.toLocaleString("pt-BR")}`;
+}
+
+function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
+  if (rfq.status === "Closed" || rfq.status === "Cancelled") return "Encerrada";
+  if (rfq.status === "Open") {
+    const closes = new Date(rfq.closesAt);
+    const today = new Date();
+    if (closes.toDateString() === today.toDateString()) return "Encerrando hoje";
+    return "Aberta";
+  }
+  return "Aberta";
+}
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString("pt-BR");
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function DashboardPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("Todas");
+  const [kpis, setKpis] = useState<DashboardKpis | null>(null);
+  const [rfqs, setRfqs] = useState<RFQRow[]>([]);
+  const [economyData, setEconomyData] = useState<MonthlyEconomy[]>([]);
+  const [categories, setCategories] = useState<CategoryBreakdown[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const economiaPotencialData = [
-    { name: "Jan", value: 300 },
-    { name: "Fev", value: 450 },
-    { name: "Mar", value: 400 },
-    { name: "Abr", value: 550 },
-    { name: "Mai", value: 700 },
-    { name: "Jun", value: 650 },
-    { name: "Jul", value: 850 },
-    { name: "Ago", value: 920 },
-  ];
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [kpisData, rfqsData, economyChart, categoriesData] = await Promise.all([
+          dashboardApi.getKpis(),
+          rfqsApi.list(),
+          dashboardApi.getMonthlyEconomy(),
+          dashboardApi.getCategories(),
+        ]);
 
-  const topCategoriasData = [
-    { name: "MRO", value: 45, color: "#007d79" },
-    { name: "Serviços", value: 25, color: "#7c3aed" },
-    { name: "Matérias-Primas", value: 20, color: "#db2777" },
-    { name: "Logística", value: 10, color: "#64748b" },
-  ];
+        setKpis(kpisData);
+        setEconomyData(economyChart);
+        setCategories(categoriesData);
 
-  const rfqs: RFQ[] = [
-    {
-      codigo: "RFQ-2026-001",
-      descricao: "Aquisição de Motores Elétricos JBS Lins",
-      categoria: "MRO",
-      dataAbertura: "10/06/2026",
-      dataEncerramento: "15/06/2026 18:00",
-      tipoSegmento: "Menor Preço",
-      status: "Aberta",
-    },
-    {
-      codigo: "RFQ-2026-002",
-      descricao: "Prestação de Serviço de Manutenção Preventiva",
-      categoria: "Serviços",
-      dataAbertura: "11/06/2026",
-      dataEncerramento: "12/06/2026 16:00",
-      tipoSegmento: "Técnica e Preço",
-      status: "Encerrando hoje",
-    },
-    {
-      codigo: "RFQ-2026-003",
-      descricao: "Fornecimento de Embalagens de Papelão",
-      categoria: "Matérias-Primas",
-      dataAbertura: "01/06/2026",
-      dataEncerramento: "08/06/2026 14:00",
-      tipoSegmento: "Menor Preço",
-      status: "Encerrada",
-    },
-  ];
+        const mapped: RFQRow[] = rfqsData.map((rfq) => ({
+          id: rfq.id,
+          codigo: rfq.code,
+          descricao: rfq.title || rfq.purchaseRequest?.description || "",
+          categoria: rfq.purchaseRequest?.category || "",
+          dataAbertura: formatDate(rfq.createdAt),
+          dataEncerramento: formatDate(rfq.closesAt),
+          tipoSegmento: "Menor Preço",
+          status: mapRfqStatus(rfq),
+        }));
+        setRfqs(mapped);
+      } catch (err) {
+        console.error("Erro ao carregar dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
-  // 2. OBJETO DINÂMICO DO CARD DE DESTAQUE (Mude as infos e a foto aqui quando quiser)
-  const rfqMaisUrgente = {
-    title: "Óleo Diesel S10",
-    code: "RFQ-000128",
-    comprador: "Breno",
-    quantity: "500.000 L",
-    category: "Combustíveis",
-    type: "Menor preço",
-    timeRemaining: "Vence em 02h 34m",
-    imageUrl: "/images/bg-tubo-card.png" 
-  };
+  const firstName = user?.name?.split(" ")[0] || "Usuário";
+
+  const topCategoriasData = categories.length > 0
+    ? categories.map((c, i) => ({
+        name: c.name,
+        value: c.value,
+        color: PIE_COLORS[i % PIE_COLORS.length],
+      }))
+    : [{ name: "Sem dados", value: 100, color: "#e2e8f0" }];
+
+  const rfqMaisUrgente = rfqs.find((r) => r.status === "Encerrando hoje") || rfqs[0];
 
   const tabsConfig = [
     { id: "Todas", label: "Todas", count: rfqs.length },
@@ -97,7 +120,7 @@ export default function DashboardPage() {
     { id: "Encerrada", label: "Encerradas", count: rfqs.filter((r) => r.status === "Encerrada").length },
   ];
 
-  const columns: ColumnDef<RFQ>[] = [
+  const columns: ColumnDef<RFQRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
     { header: "Categoria", accessorKey: "categoria" },
@@ -120,11 +143,13 @@ export default function DashboardPage() {
 
   const filteredRfqs = rfqs.filter((r) => activeTab === "Todas" || r.status === activeTab);
 
+  const lastEconomy = economyData.length > 0 ? economyData[economyData.length - 1] : null;
+
   return (
     <div className={styles.viewDashboard}>
       
       <div className={styles.pageHeaderSimple}>
-        <h1>Bom dia, Breno. <span className={styles.wave}>👋</span></h1>
+        <h1>Bom dia, {firstName}. <span className={styles.wave}>👋</span></h1>
         <p>Aqui está o panorama das suas operações de suprimentos hoje.</p>
       </div>
 
@@ -136,26 +161,35 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs em andamento" value="12" icon="receipt-check" linkLabel="Ver todas" />
-        <KpiCard title="Aprovações pendentes" value="8" icon="shield-01" linkLabel="Ver todas" />
+        <KpiCard title="RFQs em andamento" value={loading ? "..." : String(kpis?.rfqsInProgress || 0)} icon="receipt-check" linkLabel="Ver todas" />
+        <KpiCard title="Aprovações pendentes" value={loading ? "..." : String(kpis?.approvalsPending || 0)} icon="shield-01" linkLabel="Ver todas" />
         <KpiCard 
           title="Economia acumulada" 
-          value="R$ 12.458.000" 
+          value={loading ? "..." : formatCurrency(kpis?.economy || 0)} 
           icon="trend-up-01" 
           linkLabel="Ver detalhes" 
-          trend={{ value: "+ 18,6%", label: "vs mês anterior" }}
         />
-        <KpiCard title="Pedidos emitidos" value="48" icon="box" linkLabel="Ver todos" />
-        <KpiCard title="Fornecedores ativos" value="156" icon="users-01" linkLabel="Ver todos" />
+        <KpiCard title="Pedidos emitidos" value={loading ? "..." : String(kpis?.ordersEmitted || 0)} icon="box" linkLabel="Ver todos" />
+        <KpiCard title="Fornecedores ativos" value={loading ? "..." : String(kpis?.suppliersActive || 0)} icon="users-01" linkLabel="Ver todos" />
       </div>
 
       <div className={styles.middleGrid}>
         
-        {/* 3. NOVO CARD IMPLANTADO AQUI (Substituindo o HTML estático antigo) */}
-        <UrgentQuoteCard 
-          quote={rfqMaisUrgente} 
-          onAction={() => console.log("Redirecionando para RFQ...")} 
-        />
+        {rfqMaisUrgente && (
+          <UrgentQuoteCard 
+            quote={{
+              title: rfqMaisUrgente.descricao,
+              code: rfqMaisUrgente.codigo,
+              comprador: firstName,
+              quantity: "",
+              category: rfqMaisUrgente.categoria,
+              type: rfqMaisUrgente.tipoSegmento,
+              timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
+              imageUrl: "/images/bg-tubo-card.png",
+            }} 
+            onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.codigo}`)} 
+          />
+        )}
 
         <Card className={styles.chartCard}>
           <div className={styles.cardHeader}>
@@ -163,13 +197,10 @@ export default function DashboardPage() {
             <span className={styles.subtitle}>Evolução mensal</span>
           </div>
           <div className={styles.chartValue}>
-            <h3>R$ 920k</h3>
-              <span className={`${styles.trend} ${styles.pos}`}>
-                <Icon name="arrow-up" size={16} /> 14,8% <small>vs mês anterior</small>
-              </span>
+            <h3>{lastEconomy ? formatCurrency(lastEconomy.value) : "—"}</h3>
           </div>
           <div className={styles.chartWrapperElement}>
-            <LineChart data={economiaPotencialData} strokeColor="#007d79" />
+            <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
           </div>
           <button className={styles.cardLink}>
             Ver evolução completa <Icon name="arrow-right" size={16} />

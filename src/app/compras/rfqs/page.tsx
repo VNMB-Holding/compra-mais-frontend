@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Icon, Select } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
+import { rfqsApi, Rfq, RfqKpis } from "@/lib/api/rfqs";
 
-interface RFQ {
+interface RFQRow {
+  id: string;
   codigo: string;
   descricao: string;
   categoria: string;
@@ -17,33 +19,78 @@ interface RFQ {
   status: "Aberta" | "Encerrando hoje" | "Encerrada";
 }
 
+function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
+  if (rfq.status === "Closed" || rfq.status === "Cancelled") return "Encerrada";
+  if (rfq.status === "Open") {
+    const closes = new Date(rfq.closesAt);
+    const today = new Date();
+    if (closes.toDateString() === today.toDateString()) return "Encerrando hoje";
+    return "Aberta";
+  }
+  return "Aberta";
+}
+
+function mapToRow(rfq: Rfq): RFQRow {
+  return {
+    id: rfq.id,
+    codigo: rfq.code,
+    descricao: rfq.title || rfq.purchaseRequest?.description || "",
+    categoria: rfq.purchaseRequest?.category || "",
+    dataAbertura: new Date(rfq.createdAt).toLocaleDateString("pt-BR"),
+    dataEncerramento: new Date(rfq.closesAt).toLocaleDateString("pt-BR"),
+    tipoSegmento: "Menor Preço",
+    status: mapRfqStatus(rfq),
+  };
+}
+
 export default function RfqsPage() {
   const router = useRouter();
 
-  const [categoria, setCategoria] = React.useState("Todas");
-  const [status, setStatus] = React.useState("Todos");
+  const [categoria, setCategoria] = useState("Todas");
+  const [status, setStatus] = useState("Todos");
+  const [rfqs, setRfqs] = useState<RFQRow[]>([]);
+  const [kpis, setKpis] = useState<RfqKpis | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [list, kpisData] = await Promise.all([
+          rfqsApi.list(),
+          rfqsApi.getKpis(),
+        ]);
+        setRfqs(list.map(mapToRow));
+        setKpis(kpisData);
+      } catch (err) {
+        console.error("Erro ao carregar RFQs:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },
-    { label: "MRO", value: "MRO" },
-    { label: "Serviços", value: "Serviços" },
-    { label: "Matérias-Primas", value: "Matérias-Primas" }
+    ...Array.from(new Set(rfqs.map((r) => r.categoria)))
+      .filter(Boolean)
+      .map((c) => ({ label: c, value: c })),
   ];
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
     { label: "Aberta", value: "Aberta" },
     { label: "Encerrando hoje", value: "Encerrando hoje" },
-    { label: "Encerrada", value: "Encerrada" }
+    { label: "Encerrada", value: "Encerrada" },
   ];
 
-  const listaRfqs: RFQ[] = [
-    { codigo: "RFQ-2026-001", descricao: "Aquisição de Motores Elétricos JBS Lins", categoria: "MRO", dataAbertura: "10/06/2026", dataEncerramento: "15/06/2026 18:00", tipoSegmento: "Menor Preço", status: "Aberta" },
-    { codigo: "RFQ-2026-002", descricao: "Prestação de Serviço de Manutenção Preventiva", categoria: "Serviços", dataAbertura: "11/06/2026", dataEncerramento: "12/06/2026 16:00", tipoSegmento: "Técnica e Preço", status: "Encerrando hoje" },
-    { codigo: "RFQ-2026-003", descricao: "Fornecimento de Embalagens de Papelão", categoria: "Matérias-Primas", dataAbertura: "01/06/2026", dataEncerramento: "08/06/2026 14:00", tipoSegmento: "Menor Preço", status: "Encerrada" },
-  ];
+  const filtered = rfqs.filter((r) => {
+    if (categoria !== "Todas" && r.categoria !== categoria) return false;
+    if (status !== "Todos" && r.status !== status) return false;
+    return true;
+  });
 
-  const columns: ColumnDef<RFQ>[] = [
+  const columns: ColumnDef<RFQRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
     { header: "Categoria", accessorKey: "categoria" },
@@ -85,10 +132,10 @@ export default function RfqsPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs abertas" value="1" icon="receipt-check" description="Aguardando propostas" />
-        <KpiCard title="Encerrando hoje" value="1" icon="clock" description="Atenção necessária" />
-        <KpiCard title="Propostas recebidas" value="4" icon="mail-01" description="Nesta rodada" />
-        <KpiCard title="Categorias em jogo" value="3" icon="clipboard-check" description="MRO, Serviços, Matérias-Primas" />
+        <KpiCard title="RFQs abertas" value={loading ? "..." : String(kpis?.open || 0)} icon="receipt-check" description="Aguardando propostas" />
+        <KpiCard title="Encerrando hoje" value={loading ? "..." : String(kpis?.closingToday || 0)} icon="clock" description="Atenção necessária" />
+        <KpiCard title="Propostas recebidas" value={loading ? "..." : String(kpis?.proposalCount || 0)} icon="mail-01" description="Nesta rodada" />
+        <KpiCard title="Total de RFQs" value={loading ? "..." : String(kpis?.total || 0)} icon="clipboard-check" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -115,10 +162,10 @@ export default function RfqsPage() {
           </div>
         </div>
 
-        <DataTable data={listaRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.codigo}`)} />
+        <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
 
         <div className={styles.tableFooter}>
-          <span>Mostrando {listaRfqs.length} de {listaRfqs.length} RFQs</span>
+          <span>Mostrando {filtered.length} de {rfqs.length} RFQs</span>
           <div className={styles.paginationControls}>
             <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
             <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
