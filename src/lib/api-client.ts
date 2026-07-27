@@ -1,8 +1,9 @@
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const API_URL = rawApiUrl.replace(/\/+$/, "");
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://vnmb-identity-api.onrender.com";
+const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/+$/, "");
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
+  auth?: boolean;
 }
 
 class ApiError extends Error {
@@ -17,34 +18,42 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers: customHeaders, ...rest } = options;
+let tokenProvider: (() => string | null) | null = null;
 
-  const headers: HeadersInit = {
+export function setTokenProvider(provider: () => string | null) {
+  tokenProvider = provider;
+}
+
+async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  const { body, headers: customHeaders, auth = false, ...rest } = options;
+
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...customHeaders,
+    ...(customHeaders as Record<string, string>),
   };
+
+  const token = tokenProvider ? tokenProvider() : null;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const baseUrl = auth ? AUTH_API_URL.replace(/\/+$/, "") : BIZ_API_URL;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
   const config: RequestInit = {
     ...rest,
     headers,
-    credentials: "include",
   };
 
   if (body !== undefined) {
     config.body = JSON.stringify(body);
   }
 
-  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  const response = await fetch(`${API_URL}${cleanEndpoint}`, config);
+  const response = await fetch(`${baseUrl}${cleanEndpoint}`, config);
 
-  if (response.status === 401) {
-    // Session expired or invalid — redirect to login
-    if (typeof window !== "undefined") {
-      const currentPath = window.location.pathname;
-      if (currentPath !== "/login") {
-        window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
-      }
+  if (response.status === 401 && !auth) {
+    if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
     }
     throw new ApiError("Sessão expirada. Faça login novamente.", 401);
   }
@@ -54,15 +63,15 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     try {
       errorData = await response.json();
     } catch {
-      // response body is not JSON
+      // Body is not JSON
     }
     const message =
-      (errorData as { message?: string })?.message ||
+      (errorData as { message?: string; error?: string })?.message ||
+      (errorData as { error?: string })?.error ||
       `Erro ${response.status}: ${response.statusText}`;
     throw new ApiError(message, response.status, errorData);
   }
 
-  // Handle 204 No Content
   if (response.status === 204) {
     return undefined as T;
   }

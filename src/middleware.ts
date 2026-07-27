@@ -10,10 +10,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for session cookie (httpOnly cookie set by the BFF)
-  const session = request.cookies.get("compra_session");
+  // Check for login flag cookie
+  const loggedIn = request.cookies.get("compra_logged_in");
 
-  if (!session) {
+  if (!loggedIn) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);

@@ -1,39 +1,37 @@
-/**
- * Session management utilities.
- * 
- * The actual session lives in an httpOnly cookie (`compra_session`)
- * managed by the BFF backend. The frontend cannot read it directly.
- * 
- * We use a lightweight client-side flag cookie so the Next.js middleware
- * can detect whether the user has logged in without needing to parse
- * the httpOnly cookie (which it can read, but we keep this simple).
- */
+import { User } from "@/types/auth";
 
-const FLAG_COOKIE = "compra_logged_in";
-const FLAG_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+const TOKEN_KEY = "compra_access_token";
+const REFRESH_KEY = "compra_refresh_token";
+const USER_KEY = "compra_user";
 
-/**
- * Sets a flag cookie indicating the user has an active session.
- * Called after a successful login.
- */
-export function markSessionActive() {
-  if (typeof document === "undefined") return;
-  document.cookie = `${FLAG_COOKIE}=1; path=/; max-age=${FLAG_MAX_AGE}; SameSite=Lax`;
+export function saveSession(accessToken: string, refreshToken: string, user: User) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(TOKEN_KEY, accessToken);
+  localStorage.setItem(REFRESH_KEY, refreshToken);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  document.cookie = `compra_logged_in=1; path=/; max-age=86400; SameSite=Lax`;
 }
 
-/**
- * Clears the flag cookie. Called on logout.
- * Also clears the old `currentUser` cookie/localStorage if present.
- */
-export function clearSession() {
-  if (typeof document === "undefined") return;
-  document.cookie = `${FLAG_COOKIE}=; path=/; max-age=0`;
-  // Clean up legacy localStorage session
+export function loadStoredSession(): { accessToken: string; refreshToken: string; user: User } | null {
+  if (typeof window === "undefined") return null;
+  const accessToken = localStorage.getItem(TOKEN_KEY);
+  const refreshToken = localStorage.getItem(REFRESH_KEY);
+  const userStr = localStorage.getItem(USER_KEY);
+
+  if (!accessToken || !userStr) return null;
+
   try {
-    localStorage.removeItem("currentUser");
+    const user = JSON.parse(userStr) as User;
+    return { accessToken, refreshToken: refreshToken || "", user };
   } catch {
-    // SSR or storage unavailable
+    return null;
   }
-  // Clean up legacy cookie
-  document.cookie = "currentUser=; path=/; max-age=0";
+}
+
+export function clearSession() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(USER_KEY);
+  document.cookie = `compra_logged_in=; path=/; max-age=0`;
 }
