@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = rawApiUrl.replace(/\/+$/, "");
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
@@ -34,7 +35,8 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     config.body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, config);
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const response = await fetch(`${API_URL}${cleanEndpoint}`, config);
 
   if (response.status === 401) {
     // Session expired or invalid — redirect to login
