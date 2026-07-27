@@ -1,0 +1,41 @@
+import { apiClient } from "@/lib/api-client";
+
+export interface Rfq {
+  id: string;
+  tenantId: string;
+  code: string;
+  requestId: string;
+  title: string;
+  closesAt: string;
+  status: "Draft" | "Open" | "Closed" | "Cancelled";
+  createdAt: string;
+  updatedAt: string;
+  purchaseRequest?: {
+    id: string;
+    code: string;
+    description: string;
+    category: string;
+  };
+}
+
+export interface RfqKpis {
+  total: number;
+  open: number;
+  closingToday: number;
+  closed: number;
+  proposalCount: number;
+}
+
+export const rfqsApi = {
+  list: () => apiClient.get<Rfq[]>("/api/rfqs"),
+  
+  getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
+  
+  getKpis: () => apiClient.get<RfqKpis>("/api/rfqs/kpis"),
+  
+  create: (data: { requestId: string; title: string; closesAt: string; supplierIds?: string[] }) =>
+    apiClient.post<Rfq>("/api/rfqs", data),
+  
+  updateStatus: (id: string, status: Rfq["status"]) =>
+    apiClient.patch<Rfq>(`/api/rfqs/${id}/status`, { status }),
+};
