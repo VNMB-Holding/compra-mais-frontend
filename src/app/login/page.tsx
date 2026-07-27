@@ -1,13 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { Icon } from "@/components/ui";
 import styles from "./login.module.css";
 
 export default function LoginPage() {
-  const router = useRouter();
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,15 +33,12 @@ export default function LoginPage() {
         localStorage.removeItem("rememberedEmail");
       }
 
-      const params = Object.fromEntries(new URLSearchParams(window.location.search));
-      const requested = params.redirect;
+      const params = new URLSearchParams(window.location.search);
+      const requested = params.get("redirect");
+      const targetUrl = requested || "/dashboard";
 
-      if (requested) {
-        router.push(requested);
-        return;
-      }
-
-      router.push("/dashboard");
+      // Redirecionamento completo do navegador para atualizar os cookies no middleware
+      window.location.href = targetUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao fazer login");
     }
