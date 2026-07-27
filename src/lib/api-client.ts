@@ -24,6 +24,17 @@ export function setTokenProvider(provider: () => string | null) {
   tokenProvider = provider;
 }
 
+function getStoredToken(): string | null {
+  if (tokenProvider) {
+    const t = tokenProvider();
+    if (t) return t;
+  }
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("compra_access_token");
+  }
+  return null;
+}
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { body, headers: customHeaders, auth = false, ...rest } = options;
 
@@ -32,7 +43,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     ...(customHeaders as Record<string, string>),
   };
 
-  const token = tokenProvider ? tokenProvider() : null;
+  const token = getStoredToken();
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -52,8 +63,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const response = await fetch(`${baseUrl}${cleanEndpoint}`, config);
 
   if (response.status === 401 && !auth) {
+    // Only redirect if on client side and not already on /login
     if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      console.warn("401 Unauthorized received from API:", cleanEndpoint);
     }
     throw new ApiError("Sessão expirada. Faça login novamente.", 401);
   }
