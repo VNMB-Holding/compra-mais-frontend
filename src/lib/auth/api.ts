@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { apiClient } from "@/lib/api-client";
 
 export interface UserResponse {
   id: string;
@@ -21,43 +21,21 @@ export interface MeResponse {
 }
 
 export async function loginApi(email: string, password: string, rememberMe?: boolean): Promise<LoginResponse> {
-  const response = await fetch(`${API_URL}/api/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      password,
-      rememberMe,
-    }),
-    credentials: "include",
+  return apiClient.post<LoginResponse>("/api/auth/login", {
+    email,
+    password,
+    rememberMe,
   });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || "E-mail ou senha inválidos");
-  }
-
-  return response.json();
 }
 
 export async function getMeApi(): Promise<MeResponse> {
-  const response = await fetch(`${API_URL}/api/auth/me`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Não foi possível carregar as informações do usuário.");
-  }
-
-  return response.json();
+  return apiClient.get<MeResponse>("/api/auth/me");
 }
 
 export async function logoutApi(): Promise<void> {
-  await fetch(`${API_URL}/api/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
+  return apiClient.post<void>("/api/auth/logout");
+}
+
+export async function refreshTokenApi(): Promise<LoginResponse> {
+  return apiClient.post<LoginResponse>("/api/auth/refresh");
 }

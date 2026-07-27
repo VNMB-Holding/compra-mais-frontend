@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Icon } from "@/components/ui";
 import styles from "./login.module.css";
@@ -110,7 +109,6 @@ export default function LoginPage() {
                 />
                 Lembrar-me
               </label>
-              <Link href="/esqueci-senha" className={styles.forgot}>Esqueci minha senha</Link>
             </div>
 
             <button type="submit" className={styles.submit} disabled={isLoading}>
@@ -134,7 +132,7 @@ export default function LoginPage() {
         </div>
 
         <p className={styles.register}>
-          Ainda não tem uma conta? <Link href="/solicitar-acesso">Solicitar Acesso</Link>
+          Ainda não tem uma conta? <a href="/solicitar-acesso">Solicitar Acesso</a>
         </p>
       </div>
     </div>

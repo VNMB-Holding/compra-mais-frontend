@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useCallback, useEffect } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
-import { saveSession, loadSession, clearSession } from "@/lib/auth/session";
+import { markSessionActive, clearSession } from "@/lib/auth/session";
 import { loginApi, getMeApi, logoutApi } from "@/lib/auth/api";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -26,31 +26,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // On mount, validate session by calling the BFF's /api/auth/me
   useEffect(() => {
     async function checkAuth() {
       try {
-        const meData = await getMeApi();
-        console.log("BFF checkAuth (me) response:", meData);
-        const role = mapApiRole(meData.user.roles || []);
-        console.log("Mapped role for checkAuth:", role);
-        const loggedInUser: User = {
-          id: meData.user.id,
-          name: meData.user.name,
-          email: meData.user.email,
-          role,
-          roles: meData.user.roles,
-          scopes: meData.user.scopes,
-          tenantId: meData.user.tenantId,
-          tenantName: meData.user.tenantName,
-          availableTenants: meData.user.availableTenants,
-          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(meData.user.name)}`,
-        };
-        setUser(loggedInUser);
-        saveSession(loggedInUser);
-      } catch (err) {
-        console.error("BFF checkAuth error:", err);
+        const data = await getMeApi();
+        if (data?.user) {
+          const u = data.user;
+          const role = mapApiRole(u.roles || []);
+          setUser({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role,
+            roles: u.roles,
+            scopes: u.scopes,
+            tenantId: u.tenantId,
+            tenantName: u.tenantName,
+            availableTenants: u.availableTenants,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}`,
+          });
+        } else {
+          setUser(null);
+        }
+      } catch {
+        // No active session — user is not logged in
         setUser(null);
-        clearSession();
       } finally {
         setIsLoading(false);
       }
@@ -62,10 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const loginData = await loginApi(email, password, rememberMe);
-      console.log("BFF login response:", loginData);
       const role = mapApiRole(loginData.user.roles || []);
-      console.log("Mapped role for login:", role);
-      
+
       const loggedInUser: User = {
         id: loginData.user.id,
         name: loginData.user.name,
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       setUser(loggedInUser);
-      saveSession(loggedInUser);
+      markSessionActive();
       return loggedInUser;
     } finally {
       setIsLoading(false);
@@ -103,4 +102,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
