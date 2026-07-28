@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Stepper } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
-import styles from "./solicitacao-detail.module.css";
+import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 
 const formatCurrency = (v: number) =>
