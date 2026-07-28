@@ -86,7 +86,7 @@ export default function HomologacaoDetailPage() {
             <p className={styles.actionDesc}>De acordo com a política de compliance, este fornecedor está apto a operar.</p>
             <div className={styles.actionButtons}>
               <Button variant="danger" disabled><Icon name="x-circle"/> Bloquear</Button>
-              <Button variant="success"><Icon name="check-verified-01"/> Aprovar Homologação</Button>
+              <Button variant="primary"><Icon name="check-verified-01"/> Aprovar Homologação</Button>
             </div>
           </div>
 
@@ -154,7 +154,7 @@ export default function HomologacaoDetailPage() {
 
         {activeTab !== "visao-geral" && (
           <Card className={styles.placeholderCard}>
-            <Icon name="tools" size={48} color="var(--gray-300)" />
+            <Icon name="tools" size={48} />
             <h3>Aba em Construção</h3>
             <p>Os detalhes aprofundados para esta seção serão exibidos aqui.</p>
           </Card>
