@@ -40,8 +40,8 @@ function mapSupplierToRow(s: Supplier): FornecedorRow {
 
   return {
     id: s.id,
-    iniciais: s.tradeName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
-    nome: s.tradeName,
+    iniciais: s.corporateName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
+    nome: s.corporateName,
     cnpj: s.cnpj,
     categoria: s.segment,
     catIcon: SEGMENT_ICON_MAP[s.segment] || "briefcase-01",

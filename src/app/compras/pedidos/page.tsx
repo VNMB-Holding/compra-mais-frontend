@@ -15,7 +15,7 @@ interface PurchaseOrder {
   estimatedDeliveryDate: string;
   status: string;
   createdAt: string;
-  supplier?: { tradeName: string };
+  supplier?: { corporateName: string };
 }
 
 interface PedidoRow {
@@ -42,7 +42,7 @@ function mapToRow(po: PurchaseOrder): PedidoRow {
   return {
     id: po.id,
     numero: po.code,
-    fornecedor: po.supplier?.tradeName || "—",
+    fornecedor: po.supplier?.corporateName || "—",
     emissao: new Date(po.createdAt).toLocaleDateString("pt-BR"),
     valorTotal: formatCurrency(po.totalValue),
     entrega: new Date(po.estimatedDeliveryDate).toLocaleDateString("pt-BR"),
