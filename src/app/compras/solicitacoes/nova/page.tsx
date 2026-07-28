@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { categoriesApi, Category } from "@/lib/api/categories";
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
@@ -114,6 +115,12 @@ export default function NovaSolicitacaoPage() {
   const [requester, setRequester] = useState("Breno Marques");
   const [department, setDepartment] = useState("Operacoes");
   const [priority, setPriority] = useState<Priority>("Alta");
+  const [categoryId, setCategoryId] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    categoriesApi.list().then(setCategories).catch(console.error);
+  }, []);
   const [purchaseType, setPurchaseType] = useState("Material recorrente");
   const [justification, setJustification] = useState(
     "Reposicao preventiva para manter a frota operacional e evitar indisponibilidade nas rotas contratadas."
@@ -284,6 +291,14 @@ export default function NovaSolicitacaoPage() {
                   <div className={styles.formGroup}>
                     <label>Solicitante</label>
                     <input className={styles.formControl} value={requester} onChange={(event) => setRequester(event.target.value)} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Categoria do Pedido <span className="required-asterisk">*</span></label>
+                    <Select
+                      options={categories.map(c => ({ label: c.name, value: c.id }))}
+                      value={categoryId}
+                      onChange={setCategoryId}
+                    />
                   </div>
                   <div className={styles.formGroup}>
                     <label>Área requisitante</label>
