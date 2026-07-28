@@ -21,12 +21,19 @@ interface RFQRow {
 
 function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
   if (rfq.status === "Closed" || rfq.status === "Cancelled") return "Encerrada";
-  if (rfq.status === "Open") {
-    const closes = new Date(rfq.closesAt);
-    const today = new Date();
-    if (closes.toDateString() === today.toDateString()) return "Encerrando hoje";
-    return "Aberta";
+  
+  const closes = new Date(rfq.closesAt);
+  const now = new Date();
+  
+  // Se a data de encerramento já passou, está Encerrada
+  if (closes < now && closes.toDateString() !== now.toDateString()) {
+    return "Encerrada";
   }
+  
+  if (closes.toDateString() === now.toDateString()) {
+    return "Encerrando hoje";
+  }
+  
   return "Aberta";
 }
 
