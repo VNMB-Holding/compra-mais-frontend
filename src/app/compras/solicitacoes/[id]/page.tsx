@@ -1,197 +1,251 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Stepper } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
-import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 
-const formatCurrency = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+type DialogType = "approve" | "reject" | null;
 
 export default function SolicitacaoDetailPage() {
-  const router = useRouter();
   const params = useParams();
-  const reqId = params.id as string;
+  const router = useRouter();
+  const solId = params.id as string;
+
+  const [dialog, setDialog] = useState<DialogType>(null);
+  const [approved, setApproved] = useState<boolean | null>(null);
   const { toast } = useToast();
 
-  const [req, setReq] = useState<PurchaseRequest | null>(null);
-  const [loading, setLoading] = useState(true);
-  
-  const [dialog, setDialog] = useState<"approve" | "reject" | null>(null);
-
-  useEffect(() => {
-    async function loadReq() {
-      try {
-        const data = await purchaseRequestsApi.getById(reqId);
-        setReq(data);
-      } catch (err) {
-        console.error(err);
-        toast({ variant: "error", title: "Erro", message: "Falha ao carregar solicitação." });
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadReq();
-  }, [reqId, toast]);
-
-  if (loading) return <Loading variant="fullscreen" message="Carregando Solicitação..." />;
-  if (!req) return <div style={{padding:40}}>Solicitação não encontrada.</div>;
-
-  const handleApprove = async () => {
-    try {
-       await purchaseRequestsApi.updateStatus(reqId, "Approved");
-       setReq(prev => prev ? { ...prev, status: "Approved" } : prev);
-       toast({ variant: "success", title: "Aprovada", message: "A solicitação foi aprovada." });
-    } catch(err) {
-       toast({ variant: "error", title: "Erro", message: "Erro ao aprovar solicitação." });
-    } finally {
-       setDialog(null);
-    }
+  const handleApprove = () => {
+    setApproved(true);
+    setDialog(null);
+    toast({
+      variant: "success",
+      title: "Solicitação aprovada!",
+      message: `${solId || "SOL-000456"} foi aprovada e está liberada para abertura de RFQ.`,
+    });
   };
 
-  const handleReject = async () => {
-    try {
-       await purchaseRequestsApi.updateStatus(reqId, "Rejected");
-       setReq(prev => prev ? { ...prev, status: "Rejected" } : prev);
-       toast({ variant: "success", title: "Recusada", message: "A solicitação foi recusada." });
-    } catch(err) {
-       toast({ variant: "error", title: "Erro", message: "Erro ao recusar solicitação." });
-    } finally {
-       setDialog(null);
-    }
+  const handleReject = () => {
+    setApproved(false);
+    setDialog(null);
+    toast({
+      variant: "error",
+      title: "Solicitação rejeitada",
+      message: `${solId || "SOL-000456"} foi rejeitada. O solicitante será notificado.`,
+    });
   };
-
-  const hasRfq = req.rfqs && req.rfqs.length > 0;
 
   return (
-    <div className={styles.pageContainer}>
-      
-      <ConfirmDialog open={dialog === "approve"} variant="success" icon="check-circle" title="Aprovar Solicitação?"
-        message={<>Você está aprovando esta solicitação de compra. Ela será liberada para cotação (RFQ).</>}
-        confirmLabel="Aprovar" onConfirm={handleApprove} onCancel={() => setDialog(null)} />
+    <div className={styles.detailContainer}>
 
-      <ConfirmDialog open={dialog === "reject"} variant="danger" icon="x-circle" title="Recusar Solicitação?"
-        message={<>A solicitação será recusada e devolvida ao solicitante original.</>}
-        confirmLabel="Recusar" onConfirm={handleReject} onCancel={() => setDialog(null)} />
+      {/* Dialog — Aprovar */}
+      <ConfirmDialog
+        open={dialog === "approve"}
+        variant="success"
+        icon="check-circle"
+        title="Aprovar esta solicitação?"
+        message={
+          <>
+            A solicitação <strong>{solId || "SOL-000456"}</strong> será aprovada e liberada para abertura de RFQ.
+            Esta ação ficará registrada no histórico de aprovações.
+          </>
+        }
+        confirmLabel="Sim, aprovar"
+        onConfirm={handleApprove}
+        onCancel={() => setDialog(null)}
+      />
 
-      <div className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerLeft}>
-            <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
-              <Icon name="chevron-left" /> Voltar
-            </button>
-            <div className={styles.titleSection}>
-              <h1>{req.code}</h1>
-              <Badge variant={req.status === "AwaitingApproval" ? "warning" : req.status === "Approved" ? "success" : req.status === "Rejected" ? "gray" : "primary"}>
-                {req.status === "AwaitingApproval" ? "Aguardando Aprovação" : req.status === "Approved" ? "Aprovado" : req.status === "Rejected" ? "Recusado" : "Rascunho"}
-              </Badge>
-            </div>
-            <p className={styles.subtitleLarge}>{req.description}</p>
+      {/* Dialog — Rejeitar */}
+      <ConfirmDialog
+        open={dialog === "reject"}
+        variant="danger"
+        icon="x-circle"
+        title="Rejeitar esta solicitação?"
+        message={
+          <>
+            A solicitação <strong>{solId || "SOL-000456"}</strong> será rejeitada e o solicitante será notificado.
+            Esta ação não pode ser desfeita.
+          </>
+        }
+        confirmLabel="Sim, rejeitar"
+        onConfirm={handleReject}
+        onCancel={() => setDialog(null)}
+      />
+
+      <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
+        <Icon name="chevron-left" /> Voltar para Solicitações
+      </button>
+
+      {/* Feedback de resultado */}
+      {approved === true && (
+        <div className={styles.resultBanner} style={{ background: "#d1fae5", borderColor: "#6ee7b7", color: "#065f46" }}>
+          <Icon name="check-circle" /> Solicitação <strong>{solId || "SOL-000456"}</strong> aprovada com sucesso. Agora você pode abrir uma RFQ.
+        </div>
+      )}
+      {approved === false && (
+        <div className={styles.resultBanner} style={{ background: "#fee2e2", borderColor: "#fca5a5", color: "#991b1b" }}>
+          <Icon name="x-circle" /> Solicitação <strong>{solId || "SOL-000456"}</strong> rejeitada.
+        </div>
+      )}
+
+      {/* Cabeçalho */}
+      <div className={styles.pageHeader}>
+        <div>
+          <div className={styles.titleRow}>
+            <h1>{solId || "SOL-000456"}</h1>
+            <Badge variant={approved === true ? "success" : approved === false ? "gray" : "warning"}>
+              {approved === true ? "Aprovada" : approved === false ? "Rejeitada" : "Aguardando aprovação"}
+            </Badge>
           </div>
-          <div className={styles.headerActions}>
-             {req.status === "AwaitingApproval" && (
-                <>
-                  <Button variant="danger" onClick={() => setDialog("reject")}>
-                    <Icon name="x-close" /> Recusar
-                  </Button>
-                  <Button variant="primary" onClick={() => setDialog("approve")}>
-                    <Icon name="check" /> Aprovar
-                  </Button>
-                </>
-             )}
-             {req.status === "Approved" && !hasRfq && (
-                <Button variant="primary" onClick={() => router.push(`/compras/rfqs/nova?solicitacao=${reqId}`)}>
-                  <Icon name="file-plus-02" /> Iniciar Cotação (RFQ)
-                </Button>
-             )}
-             {hasRfq && (
-                <Button variant="secondary" onClick={() => router.push(`/compras/rfqs/${req.rfqs![0].id}`)}>
-                   <Icon name="search-md" /> Ver RFQ
-                </Button>
-             )}
+          <p className={styles.subtitleLarge}>Óleo Diesel S10</p>
+          <div className={styles.metadataTags}>
+            <span className={styles.infoTag}><Icon name="building-01" /> Centro de custo: Operações</span>
+            <span className={styles.infoTag}><Icon name="folder" /> Categoria: Combustíveis</span>
+            <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: Alta</span>
           </div>
         </div>
+        {approved === null && (
+          <div className={styles.headerActions}>
+            <Button variant="secondary" onClick={() => setDialog("reject")}>
+              <Icon name="x-close" /> Rejeitar Demanda
+            </Button>
+            <Button variant="primary" onClick={() => setDialog("approve")}>
+              <Icon name="check" /> Aprovar Solicitação
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className={styles.mainLayout}>
-        <div className={styles.colMain}>
-          <div className={styles.infoGridGrid}>
-            <Card className={styles.infoCard}>
-              <div className={styles.cardIconHeader}><Icon name="user-01" size={20} /><h4>Detalhes</h4></div>
-              <ul className={styles.infoList}>
-                <li><span>Categoria</span><strong>{req.category}</strong></li>
-                <li><span>Centro de Custo</span><strong>{req.costCenter}</strong></li>
-                <li><span>Local de Entrega</span><strong>{req.deliveryLocation}</strong></li>
-              </ul>
-            </Card>
+      {/* Layout de Duas Colunas */}
+      <div className={styles.layout2Col}>
 
-            <Card className={styles.infoCard}>
-              <div className={styles.cardIconHeader}><Icon name="clock" size={20} /><h4>Prazos & Valores</h4></div>
-              <ul className={styles.infoList}>
-                <li><span>Data Limite</span><strong>{new Date(req.deadline).toLocaleDateString("pt-BR")}</strong></li>
-                <li><span>Prioridade</span><strong>{req.priority}</strong></li>
-                <li><span>Budget Estimado</span><strong>{formatCurrency(Number(req.estimatedBudget))}</strong></li>
-              </ul>
-            </Card>
-          </div>
-          
-          <Card className={styles.infoCard} style={{ marginTop: 24 }}>
-             <div className={styles.cardIconHeader}><Icon name="file-text-02" size={20} /><h4>Justificativa</h4></div>
-             <p style={{ marginTop: 12, lineHeight: 1.6, color: "var(--gray-600)" }}>{req.justification}</p>
+        {/* Coluna Principal (Esquerda) */}
+        <div className={styles.colMain}>
+
+          {/* STEPPER DE APROVAÇÃO HORIZONTAL */}
+          <Card className={styles.flowCard}>
+            <h4>Fluxo de Alçadas de Aprovação</h4>
+            <div className={styles.stepperContainer}>
+
+              <div className={`${styles.step} ${styles.completed}`}>
+                <div className={styles.stepIcon}>
+                  <Icon name="file-01" />
+                  <div className={styles.checkBadge}><Icon name="check" /></div>
+                </div>
+                <div className={styles.stepInfo}>
+                  <strong>Solicitante</strong>
+                  <span>Breno Marques</span>
+                  <small>22/05/2024 14:00</small>
+                </div>
+              </div>
+
+              <div className={`${styles.stepLine} ${styles.lineActive}`}></div>
+
+              <div className={`${styles.step} ${approved !== null ? styles.completed : styles.active}`}>
+                <div className={styles.stepIcon}>
+                  {approved !== null
+                    ? <><Icon name="users-01" /><div className={styles.checkBadge}><Icon name="check" /></div></>
+                    : <Icon name="users-01" />
+                  }
+                </div>
+                <div className={styles.stepInfo}>
+                  <strong>Gestor da Área</strong>
+                  <span>Mariana Costa</span>
+                  {approved === null
+                    ? <span className={styles.warningBadgeHint}>Aguardando</span>
+                    : <small>{new Date().toLocaleDateString("pt-BR")}</small>
+                  }
+                </div>
+              </div>
+
+              <div className={styles.stepLine}></div>
+
+              <div className={`${styles.step} ${styles.pending}`}>
+                <div className={styles.stepIcon}><Icon name="user-01" /></div>
+                <div className={styles.stepInfo}>
+                  <strong>Diretoria Executiva</strong>
+                  <span>Pendente</span>
+                </div>
+              </div>
+
+            </div>
           </Card>
 
-          <div className={styles.tableWrapper} style={{ marginTop: 24 }}>
-            <div className={styles.tableHeaderSection}>
-              <h4>Itens Solicitados ({req.items?.length || 0})</h4>
+          {/* FICHA TÉCNICA INFORMATIVA */}
+          <Card className={styles.infoCard}>
+            <h4>Ficha de Informações Técnicas</h4>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <label>Descrição do Item</label>
+                <span>Óleo Diesel S10</span>
+              </div>
+              <div className={`${styles.infoItem} ${styles.span2}`}>
+                <label>Justificativa de Aquisição</label>
+                <span>Reabastecimento estratégico da frota logística e continuidade operacional de distribuição.</span>
+              </div>
+              <div className={styles.infoItem}>
+                <label>Volume Estimado</label>
+                <strong>500.000 L</strong>
+              </div>
+              <div className={styles.infoItem}>
+                <label>Orçamento Previsto</label>
+                <strong className={styles.textPrimary}>R$ 3.250.000,00</strong>
+              </div>
+              <div className={styles.infoItem}>
+                <label>Local de Entrega</label>
+                <span>Base Operacional - Paulínia/SP</span>
+              </div>
+              <div className={styles.infoItem}>
+                <label>Data Limite Desejada</label>
+                <span>05/06/2024</span>
+              </div>
             </div>
-            <div className={styles.scrollableTable}>
-              <table className={styles.itemsTable}>
-                <thead>
-                  <tr>
-                    <th style={{ width: "40%" }}>Descrição</th>
-                    <th style={{ textAlign: "right" }}>Qtd</th>
-                    <th style={{ textAlign: "center" }}>Un</th>
-                    <th style={{ textAlign: "right" }}>Pr. Unit. Est.</th>
-                    <th style={{ textAlign: "right" }}>Subtotal Est.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {req.items?.map((item) => (
-                    <tr key={item.id}>
-                      <td><strong>{item.description}</strong></td>
-                      <td style={{ textAlign: "right", fontWeight: "600" }}>{item.quantity}</td>
-                      <td style={{ textAlign: "center" }}><span className={styles.unBadge}>{item.unit}</span></td>
-                      <td style={{ textAlign: "right" }}>{formatCurrency(Number(item.estimatedUnitPrice || 0))}</td>
-                      <td style={{ textAlign: "right", fontWeight: "600" }}>{formatCurrency(Number(item.estimatedUnitPrice || 0) * Number(item.quantity))}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          </Card>
         </div>
 
+        {/* Coluna Lateral (Direita) */}
         <div className={styles.colSide}>
-           <Card className={styles.sideCard}>
-             <h4>Histórico de Aprovações</h4>
-             <div className={styles.verticalTimeline} style={{ marginTop: 16 }}>
-                {req.approvalHistories?.map((hist, i) => (
-                   <div key={hist.id} className={`${styles.vtItem} ${styles.vtDone}`}>
-                     <div className={styles.vtDot}></div>
-                     <div className={styles.vtContent}>
-                       <strong>{hist.action === "Approved" ? "Aprovado" : hist.action === "Rejected" ? "Recusado" : "Submetido"}</strong>
-                       <span>{hist.comments || "—"}</span>
-                       <small>{new Date(hist.actionDate).toLocaleString("pt-BR")}</small>
-                     </div>
-                   </div>
-                ))}
-                {(!req.approvalHistories || req.approvalHistories.length === 0) && (
-                   <div className={styles.emptyHist}>Nenhum histórico disponível.</div>
-                )}
-             </div>
-           </Card>
+
+          {/* TIMELINE VERTICAL */}
+          <Card className={styles.sideCard}>
+            <h4>Rastreabilidade</h4>
+            <div className={styles.verticalTimeline}>
+              <div className={`${styles.vtItem} ${styles.vtDone}`}>
+                <div className={styles.vtDot}></div>
+                <div className={styles.vtContent}>
+                  <strong>Solicitação enviada</strong>
+                  <span>Por Breno Marques</span>
+                  <small>22/05/2024 às 14:00</small>
+                </div>
+              </div>
+              <div className={`${styles.vtItem} ${approved !== null ? styles.vtDone : styles.vtCurrent}`}>
+                <div className={styles.vtDot}></div>
+                <div className={styles.vtContent}>
+                  <strong>{approved === true ? "Aprovada pelo Gestor" : approved === false ? "Rejeitada pelo Gestor" : "Aguardando assinatura"}</strong>
+                  <span>Mariana Costa (Gestão Geral)</span>
+                  {approved !== null && <small>{new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</small>}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* ANEXOS */}
+          <Card className={styles.sideCard}>
+            <h4>Arquivos e Termos Técnicos</h4>
+            <div className={styles.fileRow}>
+              <Icon name="file-01" />
+              <div className={styles.fileInfo}>
+                <strong>Especificacao_Tecnica_Diesel.pdf</strong>
+                <small>PDF • 245 KB</small>
+              </div>
+              <button className={styles.downloadIconBtn} title="Baixar anexo">
+                <Icon name="download-01" />
+              </button>
+            </div>
+          </Card>
+
         </div>
       </div>
     </div>
