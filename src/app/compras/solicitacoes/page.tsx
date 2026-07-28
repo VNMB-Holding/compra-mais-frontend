@@ -88,9 +88,19 @@ export default function SolicitacoesPage() {
     { label: "Urgente", value: "Urgente" },
   ];
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const filtered = solicitacoes.filter((s) => {
     if (categoria !== "Todas" && s.categoria !== categoria) return false;
     if (prioridade !== "Todos" && s.prioridade !== prioridade) return false;
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      const matchCodigo = s.codigo.toLowerCase().includes(q);
+      const matchDesc = s.descricao.toLowerCase().includes(q);
+      const matchSolicitante = s.solicitante.toLowerCase().includes(q);
+      const matchCategoria = (s.categoria || "").toLowerCase().includes(q);
+      if (!matchCodigo && !matchDesc && !matchSolicitante && !matchCategoria) return false;
+    }
     return true;
   });
 
@@ -153,7 +163,12 @@ export default function SolicitacoesPage() {
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
             <Icon name="search-md" />
-            <input type="text" placeholder="Buscar solicitação..." />
+            <input 
+              type="text" 
+              placeholder="Buscar solicitação por código, descrição..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
           <div className={styles.filtersGroup}>
             <Select
