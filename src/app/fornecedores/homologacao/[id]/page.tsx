@@ -1,18 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Card, Button, Badge, Icon } from "@/components/ui";
+import { Card, Button, Badge, Icon, Loading } from "@/components/ui";
+import { useToast } from "@/contexts/ToastContext";
 import styles from "./homologacao-detail.module.css";
+import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 
 export default function HomologacaoDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const supplierId = params.id as string;
+  const { toast } = useToast();
+
   const [activeTab, setActiveTab] = useState("visao-geral");
+  const [supplier, setSupplier] = useState<Supplier | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchSupplier() {
+      try {
+        const data = await suppliersApi.getById(supplierId);
+        setSupplier(data);
+      } catch (err) {
+        console.error(err);
+        toast({ variant: "error", title: "Erro", message: "Falha ao carregar fornecedor." });
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSupplier();
+  }, [supplierId, toast]);
+
+  if (loading) return <Loading variant="fullscreen" message="Carregando Análise..." />;
+  if (!supplier) return <div style={{padding:40}}>Fornecedor não encontrado.</div>;
+
+  const getInitials = (name: string) => name?.substring(0,2).toUpperCase() || "FR";
 
   return (
     <div className={styles.pageContainer}>
-      {/* 1. NAVEGAÇÃO E CABEÇALHO */}
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/homologacao")}>
           <Icon name="arrow-left" size={16} /> Voltar para a lista
@@ -26,21 +52,19 @@ export default function HomologacaoDetailPage() {
         </div>
       </div>
 
-      {/* 2. CARD SUPERIOR TRIPLO (DASHBOARD SUMMARY) */}
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
           
-          {/* Coluna 1: Info Base */}
           <div className={styles.summaryColBase}>
-            <div className={styles.avatarBig}>FB</div>
+            <div className={styles.avatarBig}>{getInitials(supplier.corporateName)}</div>
             <div className={styles.baseInfo}>
               <div className={styles.titleRow}>
-                <h2>Fornecedor Bravo LTDA</h2>
+                <h2>{supplier.corporateName}</h2>
                 <Badge variant="success" className={styles.badgeVerificado}>CNPJ verificado</Badge>
               </div>
-              <p className={styles.docInfo}>CNPJ: 22.333.444/0001-82 <span className={styles.divider}>|</span> Combustíveis</p>
+              <p className={styles.docInfo}>CNPJ: {supplier.cnpj} <span className={styles.divider}>|</span> {supplier.segment}</p>
               <div className={styles.updateInfo}>
-                <span>Última análise: 22/05/2024 às 14:32</span>
+                <span>Última análise: {new Date(supplier.updatedAt).toLocaleDateString("pt-BR")}</span>
                 <button className={styles.btnRefresh}>
                   <Icon name="refresh-cw-01" size={16} /> Atualizar dados
                 </button>
@@ -48,195 +72,93 @@ export default function HomologacaoDetailPage() {
             </div>
           </div>
 
-          {/* Coluna 2: Score */}
           <div className={styles.summaryColScore}>
-            <div className={styles.scoreHeader}>
-              <span>Score de risco</span>
-              <Icon name="info-circle" size={16} />
-            </div>
-            <div className={styles.scoreValue}>
-              <strong className={styles.textGreen}>18</strong>
-              <small>/100</small>
-            </div>
-            <Badge variant="success" className={styles.badgeScore}>Baixo risco</Badge>
+             <div className={styles.scoreBlock}>
+                <span className={styles.scoreLabel}>Score de Risco</span>
+                <div className={styles.scoreValueGroup}>
+                  <span className={styles.scoreNumberSuccess}>Baixo</span>
+                  <div className={styles.scoreTrendPos}><Icon name="trend-up-01" size={14}/> Seguro</div>
+                </div>
+             </div>
           </div>
 
-          {/* Coluna 3: Status e Stepper */}
-          <div className={styles.summaryColStatus}>
-            <div className={styles.statusRow}>
-              <span>Status da homologação</span>
-              <Badge variant="warning" className={styles.badgeEmAnalise}>Em análise</Badge>
-            </div>
-            <p className={styles.etapaText}>Etapa atual: Análise de dados públicos</p>
-            
-            <div className={styles.stepperWrapper}>
-              <div className={`${styles.stepDot} ${styles.stepDone}`}></div>
-              <div className={`${styles.stepLine} ${styles.lineDone}`}></div>
-              <div className={`${styles.stepDot} ${styles.stepDone}`}></div>
-              <div className={`${styles.stepLine} ${styles.lineDone}`}></div>
-              <div className={`${styles.stepDot} ${styles.stepCurrent}`}></div>
-              <div className={styles.stepLine}></div>
-              <div className={styles.stepDot}></div>
-              <div className={styles.stepLine}></div>
-              <div className={styles.stepDot}></div>
+          <div className={styles.summaryColAction}>
+            <p className={styles.actionDesc}>De acordo com a política de compliance, este fornecedor está apto a operar.</p>
+            <div className={styles.actionButtons}>
+              <Button variant="danger" disabled><Icon name="x-circle"/> Bloquear</Button>
+              <Button variant="success"><Icon name="check-verified-01"/> Aprovar Homologação</Button>
             </div>
           </div>
 
         </div>
       </Card>
-      {/* 4. CONTEÚDO PRINCIPAL (2 COLUNAS) */}
-      <div className={styles.contentGrid}>
-        
-        {/* COLUNA ESQUERDA */}
-        <div className={styles.leftColumn}>
-          
-          <Card className={styles.contentCard}>
-            <h3 className={styles.cardTitle}>Resumo da análise automática</h3>
-            <div className={styles.analysisList}>
-              
-              <div className={styles.analysisItem}>
-                <div className={styles.aiLeft}>
-                  <Icon name="building-01" size={20} />
-                  <div>
-                    <strong>Situação Cadastral</strong>
-                    <p>Consulta à Receita Federal</p>
-                  </div>
-                </div>
-                <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Regular</div>
-                  <span>22/05/2024</span>
-                </div>
-              </div>
 
-              <div className={styles.analysisItem}>
-                <div className={styles.aiLeft}>
-                  <Icon name="scales-01" size={20} />
-                  <div>
-                    <strong>Restrições e Sanções</strong>
-                    <p>Consulta a listas OFAC, CEIS, CNJ, TCU e Portal da Transparência</p>
-                  </div>
-                </div>
-                <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Nada encontrado</div>
-                  <span>22/05/2024</span>
-                </div>
-              </div>
-
-              <div className={styles.analysisItem}>
-                <div className={styles.aiLeft}>
-                  <Icon name="bank-note-01" size={20} />
-                  <div>
-                    <strong>Saúde Financeira</strong>
-                    <p>Análise de indicadores financeiros</p>
-                  </div>
-                </div>
-                <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Boa</div>
-                  <span>22/05/2024</span>
-                </div>
-              </div>
-
-              <div className={styles.analysisItem}>
-                <div className={styles.aiLeft}>
-                  <Icon name="file-01" size={20} />
-                  <div>
-                    <strong>Notícias e Reputação</strong>
-                    <p>Monitoramento de notícias e mídias</p>
-                  </div>
-                </div>
-                <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Sem ocorrências relevantes</div>
-                  <span>22/05/2024</span>
-                </div>
-              </div>
-
-              <div className={styles.analysisItem}>
-                <div className={styles.aiLeft}>
-                  <Icon name="bar-chart-01" size={20} />
-                  <div>
-                    <strong>Comportamento Comercial</strong>
-                    <p>Histórico em órgãos públicos e parceiros</p>
-                  </div>
-                </div>
-                <div className={styles.aiRight}>
-                  <div className={styles.badgeSuccessOutline}><Icon name="check-circle" size={16} /> Positivo</div>
-                  <span>22/05/2024</span>
-                </div>
-              </div>
-
-            </div>
-          </Card>
-
+      <div className={styles.tabsContainer}>
+        <div className={styles.tabsList}>
+          <button className={`${styles.tabBtn} ${activeTab === "visao-geral" ? styles.activeTab : ""}`} onClick={() => setActiveTab("visao-geral")}>
+            Visão Geral
+          </button>
+          <button className={`${styles.tabBtn} ${activeTab === "financeiro" ? styles.activeTab : ""}`} onClick={() => setActiveTab("financeiro")}>
+            Saúde Financeira
+          </button>
+          <button className={`${styles.tabBtn} ${activeTab === "certidoes" ? styles.activeTab : ""}`} onClick={() => setActiveTab("certidoes")}>
+            Certidões e Docs
+          </button>
+          <button className={`${styles.tabBtn} ${activeTab === "socios" ? styles.activeTab : ""}`} onClick={() => setActiveTab("socios")}>
+            Quadro Societário
+          </button>
         </div>
+      </div>
 
-        {/* COLUNA DIREITA */}
-        <div className={styles.rightColumn}>
-          <Card className={styles.contentCard}>
-            <div className={styles.cardHeaderFlex}>
-              <h3 className={styles.cardTitle}>Últimas notícias identificadas <Icon name="info-circle" size={16} style={{ marginLeft: 6 }} /></h3>
-              <button className={styles.linkAction}>Ver todas</button>
-            </div>
-            
-            <div className={styles.newsItem}>
-              <div className={styles.newsLogo}>exame.</div>
-              <div className={styles.newsContent}>
-                <div className={styles.newsSource}>EXAME <span>22/05/2024 • 10:15</span></div>
-                <strong>Setor de combustíveis apresenta crescimento de 8,2% no primeiro trimestre</strong>
-                <p>Análise do mercado indica recuperação consistente do setor...</p>
-              </div>
-              <div className={styles.badgeNeutral}>Neutra</div>
-            </div>
+      <div className={styles.tabContentArea}>
+        {activeTab === "visao-geral" && (
+          <div className={styles.visaoGeralGrid}>
+             <Card className={styles.dataCard}>
+               <div className={styles.cardHeaderSmall}><Icon name="building-02" size={18}/> <h3>Dados Cadastrais</h3></div>
+               <div className={styles.dataList}>
+                 <div className={styles.dataItem}><span>Razão Social</span><strong>{supplier.corporateName}</strong></div>
+                 <div className={styles.dataItem}><span>Nome Fantasia</span><strong>{supplier.tradeName}</strong></div>
+                 <div className={styles.dataItem}><span>CNPJ</span><strong>{supplier.cnpj}</strong></div>
+                 <div className={styles.dataItem}><span>Situação Cadastral (RFB)</span><Badge variant="success">Ativa</Badge></div>
+               </div>
+             </Card>
+
+             <Card className={styles.dataCard}>
+               <div className={styles.cardHeaderSmall}><Icon name="marker-pin-01" size={18}/> <h3>Localização e Contato</h3></div>
+               <div className={styles.dataList}>
+                 <div className={styles.dataItem}><span>Endereço Principal</span><strong>{supplier.address}</strong></div>
+                 <div className={styles.dataItem}><span>CEP</span><strong>{supplier.zipCode}</strong></div>
+                 <div className={styles.dataItem}><span>E-mail</span><strong>{supplier.contactEmail}</strong></div>
+                 <div className={styles.dataItem}><span>Telefone</span><strong>{supplier.contactPhone}</strong></div>
+               </div>
+             </Card>
+             
+             <Card className={styles.dataCard} style={{ gridColumn: "1 / -1" }}>
+               <div className={styles.cardHeaderSmall}><Icon name="alert-triangle" size={18}/> <h3>Apontamentos Restritivos (Mock)</h3></div>
+               <table className={styles.apontamentosTable}>
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Data Ocorrência</th>
+                      <th>Valor</th>
+                      <th>Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colSpan={4} style={{textAlign: "center", color: "var(--gray-500)", padding: 24}}>Nenhum apontamento restritivo encontrado.</td></tr>
+                  </tbody>
+               </table>
+             </Card>
+          </div>
+        )}
+
+        {activeTab !== "visao-geral" && (
+          <Card className={styles.placeholderCard}>
+            <Icon name="tools" size={48} color="var(--gray-300)" />
+            <h3>Aba em Construção</h3>
+            <p>Os detalhes aprofundados para esta seção serão exibidos aqui.</p>
           </Card>
-
-          <Card className={styles.contentCard}>
-            <h3 className={styles.cardTitle}>Fontes consultadas <Icon name="info-circle" size={16} style={{ marginLeft: 6 }} /></h3>
-            
-            <div className={styles.sourcesGrid}>
-              <div className={styles.sourceBox}>
-                <div className={styles.sourceIconBox}>
-                  <Icon name="bank" size={20} />
-                </div>
-                <span>Receita Federal</span>
-              </div>
-              
-              <div className={styles.sourceBox}>
-                <div className={styles.sourceIconBox}>
-                  <Icon name="building-01" size={20} />
-                </div>
-                <span>Portal da Transparência</span>
-              </div>
-              
-              <div className={styles.sourceBox}>
-                <div className={styles.sourceIconBox}>
-                  <Icon name="bank" size={20} />
-                </div>
-                <span>CEIS</span>
-              </div>
-              
-              <div className={styles.sourceBox}>
-                <div className={styles.sourceIconBox}>
-                  <strong>CNJ</strong>
-                </div>
-                <span>CNJ</span>
-              </div>
-              
-              <div className={styles.sourceBox}>
-                <div className={styles.sourceIconBox}>
-                  <strong>TCU</strong>
-                </div>
-                <span>TCU</span>
-              </div>
-              
-              <div className={styles.sourceBox}>
-                <div className={styles.sourceIconBox}>
-                  <strong>+12</strong>
-                </div>
-                <span>Outras fontes</span>
-              </div>
-            </div>
-          </Card>
-
-        </div>
+        )}
       </div>
 
     </div>
