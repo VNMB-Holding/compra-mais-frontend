@@ -15,6 +15,7 @@ export interface PurchaseOrder {
   supplier?: {
     id: string;
     tradeName: string;
+    corporateName: string;
     cnpj: string;
   };
   items?: OrderItem[];

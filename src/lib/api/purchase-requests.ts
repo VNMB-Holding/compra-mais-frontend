@@ -17,6 +17,17 @@ export interface PurchaseRequest {
   createdAt: string;
   updatedAt: string;
   items?: RequestItem[];
+  approvalHistories?: {
+    id: string;
+    action: string;
+    comments?: string;
+    actionDate: string;
+    approverId: string;
+  }[];
+  rfqs?: {
+    id: string;
+    code: string;
+  }[];
 }
 
 export interface RequestItem {

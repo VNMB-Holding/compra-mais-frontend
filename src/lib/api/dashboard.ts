@@ -27,4 +27,8 @@ export const dashboardApi = {
   getCategories: () => apiClient.get<CategoryBreakdown[]>("/api/dashboard/categories"),
   
   getMonthlyEconomy: () => apiClient.get<MonthlyEconomy[]>("/api/dashboard/monthly-economy"),
+
+  getSpendAnalytics: () => apiClient.get<any>('/api/dashboard/analytics/spend'),
+  getEconomyAnalytics: () => apiClient.get<any>('/api/dashboard/analytics/economia'),
 };
+

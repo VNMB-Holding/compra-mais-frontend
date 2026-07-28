@@ -15,7 +15,36 @@ export interface Rfq {
     code: string;
     description: string;
     category: string;
+    items?: { id: string; description: string; quantity: number; unit: string }[];
   };
+  rfqSuppliers?: {
+    id: string;
+    supplierId: string;
+    supplier: {
+      id: string;
+      corporateName: string;
+      cnpj: string;
+    };
+  }[];
+  proposals?: {
+    id: string;
+    supplierId: string;
+    status: "Draft" | "Submitted" | "Declined";
+    isWinner: boolean;
+    totalValue?: number;
+    paymentTerms?: string;
+    deliveryTime?: number;
+    supplier: {
+      id: string;
+      corporateName: string;
+      cnpj: string;
+    };
+    items?: {
+      id: string;
+      unitPrice: number;
+      freightCost: number;
+    }[];
+  }[];
 }
 
 export interface RfqKpis {
