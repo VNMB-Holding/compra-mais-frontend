@@ -377,7 +377,7 @@ export default function RfqDetailPage() {
                            {vencedorId === p.id ? (
                              <Badge variant="success" icon="check">Selecionada</Badge>
                            ) : (
-                              <Button variant="secondary" onClick={() => {
+                             <Button variant="secondary" onClick={() => {
                                setPendingVencedorId(p.id);
                                setDialog("selecionar");
                              }}>

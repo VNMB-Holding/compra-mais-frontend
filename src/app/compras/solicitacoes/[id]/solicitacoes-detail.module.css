@@ -1,307 +1,71 @@
-/* ================================================
-   Layout principal
-   ================================================ */
-.pageContainer {
-  display: flex;
-  flex-direction: column;
-  padding: 28px 32px;
-  gap: 0;
-  max-width: 1400px;
-}
+.detailContainer { display: flex; flex-direction: column; gap: 24px; }
+.backBtn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: var(--primary, #007d79); font-size: 14px; font-weight: 600; cursor: pointer; align-self: flex-start; padding: 0; }
+.titleRow { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+.titleRow h1 { font-size: 28px; font-weight: 700; color: #0f172a; margin: 0; }
+.subtitleLarge { font-size: 18px; font-weight: 600; color: #334155; margin: 0 0 12px 0; }
+.pageHeader { display: flex; justify-content: space-between; align-items: flex-start; }
+.metadataTags { display: flex; gap: 12px; margin-top: 14px; }
+.infoTag { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 13px; color: #475569; display: inline-flex; align-items: center; gap: 6px; }
+.infoTag span { font-size: 18px; color: #64748b; }
+.tagHigh { background: #fee2e2; color: #b91c1c; border-color: transparent; font-weight: 600; }
+.tagHigh span { color: #b91c1c; }
+.headerActions { display: flex; gap: 12px; }
 
-.backBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: var(--primary, #007d79);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  align-self: flex-start;
-  padding: 0;
-  margin-bottom: 20px;
-}
+/* GRID LAYOUT DE DUAS COLUNAS */
+.layout2Col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+.colMain, .colSide { display: flex; flex-direction: column; gap: 24px; }
 
-/* ================================================
-   Header
-   ================================================ */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 24px;
-}
+/* STEPPER */
+.flowCard h4, .infoCard h4, .sideCard h4 { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 20px 0; }
+.stepLine { }
 
-.headerContent {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-}
+/* FICHA TÉCNICA */
+.infoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+.infoItem { display: flex; flex-direction: column; gap: 4px; }
+.infoItem label { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+.infoItem span { font-size: 14px; color: #334155; }
+.infoItem strong { font-size: 16px; color: #0f172a; }
+.span2 { grid-column: span 2; }
+.textPrimary { color: #007d79; }
 
-.headerLeft {
-  flex: 1;
-}
-
-.titleSection h1 {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 6px;
-}
-
-.subtitleLarge {
-  font-size: 14px;
-  color: #475569;
-  margin: 0;
-}
-
-.headerActions {
-  display: flex;
-  gap: 12px;
-  flex-shrink: 0;
-  align-items: flex-start;
-  padding-left: 24px;
-}
-
-/* ================================================
-   Main layout — two columns
-   ================================================ */
-.mainLayout {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  align-items: start;
-}
-
-.colMain {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.colSide {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ================================================
-   Cards
-   ================================================ */
-.cardIconHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.cardIconHeader h4 {
-  font-size: 15px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-}
-
-.infoCard {
-  padding: 20px;
-}
-
-.sideCard {
-  padding: 20px;
-}
-
-/* ================================================
-   Info list
-   ================================================ */
-.infoList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.infoList li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
-}
-
-.infoList li:last-child {
-  border-bottom: none;
-}
-
-.infoList li span {
-  color: #64748b;
-}
-
-.infoList li strong {
-  color: #1e293b;
-  font-weight: 600;
-  text-align: right;
-  max-width: 60%;
-}
-
-/* ================================================
-   Info grid for two-column layout inside card
-   ================================================ */
-.infoGridGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-/* ================================================
-   Items / History table
-   ================================================ */
-.tableHeaderSection {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.tableHeaderSection h4 {
-  font-size: 15px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-}
-
-.tableWrapper {
-  overflow: hidden;
-}
-
-.scrollableTable {
-  overflow-x: auto;
-}
-
-.itemsTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.itemsTable thead th {
-  background: #f8fafc;
-  padding: 10px 14px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #64748b;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-.itemsTable tbody td {
-  padding: 12px 14px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
-}
-
-.itemsTable tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.unBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 8px;
-  background: #f1f5f9;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #475569;
-}
-
-/* ================================================
-   Empty state / Histórico
-   ================================================ */
-.emptyHist {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  gap: 8px;
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-/* ================================================
-   Vertical timeline (histórico lateral)
-   ================================================ */
-.verticalTimeline {
-  display: flex;
-  flex-direction: column;
-  padding-left: 8px;
-  position: relative;
-}
-
-.verticalTimeline::before {
-  content: '';
-  position: absolute;
-  left: 12.5px;
-  top: 4px;
-  bottom: 4px;
-  width: 2px;
-  background: #e2e8f0;
-}
-
-.vtItem {
-  display: flex;
-  gap: 16px;
-  padding-bottom: 24px;
-  position: relative;
-}
-
+/* TIMELINE VERTICAL LATERAL */
+.verticalTimeline { display: flex; flex-direction: column; padding-left: 8px; position: relative; }
+.verticalTimeline::before { content: ''; position: absolute; left: 12.5px; top: 4px; bottom: 4px; width: 2px; background: #e2e8f0; }
+.vtItem { display: flex; gap: 16px; padding-bottom: 24px; position: relative; }
 .vtItem:last-child { padding-bottom: 0; }
-
-.vtDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid #cbd5e1;
-  z-index: 2;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-
-.vtContent {
-  display: flex;
-  flex-direction: column;
-  font-size: 13px;
-}
-
+.vtDot { width: 10px; height: 10px; border-radius: 50%; background: white; border: 2px solid #cbd5e1; z-index: 2; margin-top: 4px; }
+.vtContent { display: flex; flex-direction: column; font-size: 13px; }
 .vtContent strong { color: #0f172a; }
 .vtContent p { margin: 2px 0; color: #475569; }
 .vtContent small { color: #94a3b8; font-size: 11px; }
+.vtDone .vtDot { border-color: #007d79; background: #007d79; }
+.vtCurrent .vtDot { border-color: #d97706; border-width: 3px; }
 
-.vtDone .vtDot {
-  border-color: #007d79;
-  background: #007d79;
+/* ANEXOS */
+.fileRow { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+.fileRow span { color: #b91c1c; font-size: 28px; }
+.fileInfo { flex-grow: 1; display: flex; flex-direction: column; font-size: 13px; }
+.fileInfo strong { color: #0f172a; }
+.fileInfo small { color: #64748b; }
+.downloadIconBtn { background: none; border: none; color: #64748b; cursor: pointer; padding: 4px; border-radius: 4px; }
+.downloadIconBtn:hover { background: #e2e8f0; color: #0f172a; }
+.downloadIconBtn span { font-size: 20px; }
+
+/* RESULT BANNER */
+.resultBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  animation: bannerIn 0.3s ease;
 }
 
-/* ================================================
-   Responsive
-   ================================================ */
-@media (max-width: 1024px) {
-  .mainLayout {
-    grid-template-columns: 1fr;
-  }
-  .infoGridGrid {
-    grid-template-columns: 1fr;
-  }
+@keyframes bannerIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+

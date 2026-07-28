@@ -1,12 +1,7 @@
-/* ================================================
-   Layout principal
-   ================================================ */
-.pageContainer {
+.detailContainer {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 28px 32px;
-  max-width: 1400px;
+  gap: 24px;
 }
 
 .backBtn {
@@ -21,198 +16,172 @@
   cursor: pointer;
   align-self: flex-start;
   padding: 0;
-  margin-bottom: 20px;
 }
 
-/* ================================================
-   Header
-   ================================================ */
-.header {
+.pageHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 0;
 }
 
-.headerContent {
+.headerTitles { flex: 1; }
+
+.eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #007d79;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.titleRow {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 4px;
 }
 
-.headerLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.titleSection h1 {
-  font-size: 22px;
+.titleRow h1 {
+  font-size: 28px;
   font-weight: 800;
   color: #0f172a;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
-.metaRow {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  font-size: 13px;
-  color: #64748b;
-}
-
-.metaHighlight {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.subtitleLarge {
+  font-size: 16px;
   font-weight: 600;
-  color: #475569;
+  color: #334155;
+  margin: 0;
 }
 
 .headerActions {
   display: flex;
   gap: 12px;
   flex-shrink: 0;
-  align-items: flex-start;
-  padding-left: 24px;
 }
 
-/* ================================================
-   Progress bar
-   ================================================ */
-.progressBarWrapper {
-  height: 4px;
-  background: #e2e8f0;
-  border-radius: 2px;
-  margin: 20px 0 8px;
-  position: relative;
+.scopeBtn {
+  background: white !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
-.progressBarFill {
-  height: 100%;
-  background: linear-gradient(90deg, #007d79 0%, #00a39e 100%);
-  border-radius: 2px;
-  transition: width 0.4s ease;
-}
-
-.progressMarkers {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  margin-bottom: 20px;
-}
-
-.marker {
-  font-size: 12px;
-  font-weight: 600;
-  color: #94a3b8;
-  transition: color 0.3s;
-}
-
-.markerActive {
-  color: #007d79;
-  font-weight: 800;
-}
-
-/* ================================================
-   Main layout — two columns
-   ================================================ */
-.mainLayout {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.leftCol {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.rightCol {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ================================================
-   Section titles
-   ================================================ */
-.sectionTitle h3,
-.sectionTitleRow h3 {
-  font-size: 15px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-}
-
-.sectionTitleRow {
+/* ============================
+   Trilha de estágios
+   ============================ */
+.estagioPista {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 24px 32px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  gap: 16px;
 }
 
-.propostasCount {
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 600;
+.estsgioItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  flex: 1;
 }
 
-/* ================================================
-   Items table
-   ================================================ */
-.itensCard {
-  padding: 0 !important;
-  overflow: hidden;
+.estsgioItem > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.itensTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.itensTable thead th {
-  background: #f8fafc;
-  padding: 12px 16px;
-  font-size: 11px;
+.estsgioItem strong {
+  font-size: 15px;
   font-weight: 700;
-  text-transform: uppercase;
   color: #64748b;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid #e2e8f0;
+  display: block;
 }
 
-.itensTable tbody td {
-  padding: 13px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
+.estsgioItem span {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
-.itensTable tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.unBadge {
-  display: inline-flex;
+.estsgioIcone {
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 8px;
-  background: #f1f5f9;
-  border-radius: 6px;
-  font-size: 11px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 16px;
   font-weight: 700;
-  color: #475569;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
-/* ================================================
+.estsgioAtivo .estsgioIcone {
+  background: #f0fdf9;
+  color: #007d79;
+  border-color: #007d79;
+}
+
+.estsgioAtivo strong { color: #0f172a; }
+.estsgioAtivo span { color: #475569; }
+
+.estagioConcluido .estsgioIcone {
+  background: #007d79;
+  color: #ffffff;
+  border-color: #007d79;
+}
+
+.estagioConcluido strong { color: #0f172a; }
+.estagioConcluido span { color: #475569; }
+
+.estsgioInativo .estsgioIcone {
+  background: #f8fafc;
+  color: #cbd5e1;
+  border-color: #f1f5f9;
+}
+
+.estagioConetor {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 16px;
+  border-radius: 2px;
+}
+
+.estsgioConectorAtivo {
+  background: #007d79;
+}
+
+/* ============================
+   Coleta Header
+   ============================ */
+.coletaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.coletaTitulo {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* ============================
    Proposta Card
-   ================================================ */
+   ============================ */
 .propostasList {
   display: flex;
   flex-direction: column;
@@ -314,6 +283,18 @@
   border-radius: 999px;
   background: #fef3c7;
   color: #92400e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badgeDeclinada {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
   font-size: 12px;
   font-weight: 700;
 }
@@ -440,143 +421,268 @@
   cursor: pointer;
 }
 
-/* ================================================
-   Quadro comparativo (análise)
-   ================================================ */
-.analiseCard {
-  padding: 24px !important;
+/* ============================
+   Estágio 2 — Métricas e Matriz
+   ============================ */
+.rfqMetricsGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  gap: 20px;
 }
 
-.analiseCard h4 {
-  font-size: 15px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 16px;
-}
-
-.quadroList {
+.metricCard {
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: center;
+  min-height: 110px;
 }
 
-.quadroItem {
+.metricCard .label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.metricCard h3 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.metricCard .sub {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.darkCard { background-color: #004d4a !important; border: none; }
+.darkCardContent { color: white; }
+.darkCardContent h3 { color: white !important; margin-top: 4px; }
+
+.metricTop {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  gap: 16px;
-  transition: border-color 0.2s;
+  color: #cce5e5;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
-.quadroWinner {
-  background: #f0fdf9;
-  border-color: #007d79;
+.subTextDark { font-size: 12px; color: #cce5e5; margin-top: 4px; }
+.textPrimary { color: #007d79 !important; }
+
+.compareCard { background: white; border: 1px solid #e2e8f0; }
+
+.cardHeaderFlex {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px; border-bottom: 1px solid #e2e8f0;
 }
 
-.quadroMain {
+.cardHeaderFlex h4 { font-size: 16px; font-weight: 800; color: #0f172a; margin: 0; }
+.cardHeaderFlex p { margin: 4px 0 0; font-size: 13px; color: #64748b; }
+
+.btnVoltarColeta {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border: 1px solid #dbe4ef; border-radius: 8px;
+  background: #fff; color: #475569; font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+}
+
+.compareTableWrapper { overflow-x: auto; width: 100%; }
+
+.compareTable { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.compareTable th, .compareTable td { padding: 14px 20px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
+.compareTable th:last-child, .compareTable td:last-child { border-right: none; }
+.compareTable thead th { background: #f8fafc; font-weight: 700; color: #475569; }
+
+.rowHeader { background: #f8fafc; font-weight: 700; color: #1e293b !important; width: 220px; }
+.mutedCellText { color: #334155 !important; font-weight: 500; }
+
+.winnerHeaderCol {
+  position: relative; background: #e6f5f4 !important;
+  color: #007d79 !important; font-weight: 700 !important;
+}
+
+.winnerBadgeTip {
+  position: absolute; top: 0; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #007d79; color: white;
+  font-size: 9px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px;
+}
+
+.winnerCellSuccess { background: #e6f5f4; color: #15803d !important; font-weight: 700; }
+.winnerCellNormal { background: #f4fbfb; color: #334155 !important; }
+
+.totalRow { background: #f8fafc; }
+.rowHeaderTotal { background: #f1f5f9; font-weight: 800; color: #0f172a !important; border-top: 2px solid #cbd5e1; }
+.totalMutedText { color: #0f172a !important; font-weight: 700; border-top: 2px solid #cbd5e1; }
+.winnerCellTotal { background: #d9eeee; color: #115e59 !important; font-weight: 900; font-size: 15px; border-top: 2px solid #cbd5e1; }
+
+.selectCell { padding: 12px 16px !important; }
+
+.btnSelecionarVencedor {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 16px; border: none; border-radius: 8px;
+  background: #007d79; color: #fff; font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; width: 100%;
+}
+
+.btnSelecionarSecundario {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 9px 16px; border: 1px solid #dbe4ef; border-radius: 8px;
+  background: #fff; color: #475569; font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; width: 100%;
+}
+
+/* ============================
+   Estágio 3 — Aprovação (Redesign)
+   ============================ */
+.aprovacaoContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.aprovacaoBanner {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex: 1;
+  gap: 16px;
+  padding: 24px 32px;
+  background: linear-gradient(135deg, #007d79 0%, #004d4a 100%);
+  border-radius: 12px;
+  color: white;
 }
 
-.quadroRank {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  color: #475569;
+.aprovacaoBannerIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-.quadroWinner .quadroRank {
-  background: #007d79;
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  font-size: 24px;
   color: #fff;
 }
 
-.quadroDetails {
-  display: flex;
-  gap: 10px;
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 3px;
-}
-
-.quadroRight {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.quadroTotal {
-  font-size: 18px;
-  font-weight: 900;
-  color: #0f172a;
-}
-
-.quadroDiff {
-  font-size: 12px;
-  color: #dc2626;
-  font-weight: 700;
-}
-
-/* ================================================
-   Aprovação card
-   ================================================ */
-.aprovacaoCard {
-  padding: 28px !important;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: linear-gradient(135deg, #f0fdf9 0%, #e6f5f4 100%);
-  border: 1px solid #99f6e4 !important;
-}
-
-.aprovIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: rgba(0, 125, 121, 0.1);
-  color: #007d79;
-  flex-shrink: 0;
-}
-
-.aprovContent h4 {
-  font-size: 18px;
+.aprovacaoBannerText h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 8px;
+  color: #fff;
 }
 
-.aprovContent p {
+.aprovacaoBannerText p {
   margin: 0;
   font-size: 14px;
-  color: #475569;
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-/* ================================================
-   Responsive
-   ================================================ */
-@media (max-width: 1024px) {
-  .mainLayout {
-    grid-template-columns: 1fr;
-  }
-  .propostaFormGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.aprovacaoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.aprovacaoBox {
+  padding: 24px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.aprovacaoBox h3 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aprovacaoBox h3 i {
+  color: #007d79;
+}
+
+.aprovacaoDataRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aprovacaoDataRow span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.aprovacaoDataRow strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.aprovacaoTotalHighlight {
+  background: #f0fdf9;
+  border: 1px solid #99f6e4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 40px;
+  border-radius: 12px;
+}
+
+.aprovacaoTotalLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aprovacaoTotalLeft span {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f766e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.aprovacaoTotalLeft p {
+  margin: 0;
+  font-size: 14px;
+  color: #14b8a6;
+}
+
+.aprovacaoTotalValue {
+  font-size: 42px;
+  font-weight: 900;
+  color: #007d79;
+}
+
+.aprovacaoFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 8px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btnVoltarAnalise {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 8px;
+  background: #fff; color: #475569; font: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer;
+}
+
+.btnGerarPO {
+  background-color: #007d79 !important;
+  font-size: 14px !important;
+  padding: 10px 24px !important;
 }
