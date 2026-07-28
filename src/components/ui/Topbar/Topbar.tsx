@@ -320,11 +320,11 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                 </div>
               </div>
               <div className={styles.dropdownDivider} />
-              <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/administracao"); }}>
-                <Icon name="user" /> Meu Perfil & Permissões
+              <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/perfil"); }}>
+                <Icon name="user" /> Meu Perfil
               </div>
               <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/administracao"); }}>
-                <Icon name="settings-01" /> Configurações do Sistema
+                <Icon name="settings-01" /> Administração & Permissões
               </div>
               <div className={styles.dropdownDivider} />
               <div className={styles.dropdownItem} onClick={handleLogout} style={{ color: "#ef4444" }}>
