@@ -141,7 +141,6 @@ export default function PedidoDetailPage() {
                   { label: "Faturamento", description: "XML da NFe", status: order.status === "AwaitingSignature" ? "active" : "completed" },
                   { label: "Entrega", description: "Conferência Física", status: recebimentoConfirmado ? "completed" : "pending" },
                 ]}
-                activeStep={recebimentoConfirmado ? 3 : order.status === "AwaitingSignature" ? 1 : 2}
               />
             </Card>
 
