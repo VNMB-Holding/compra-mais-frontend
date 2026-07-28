@@ -54,7 +54,7 @@ export const purchaseRequestsApi = {
   
   getKpis: () => apiClient.get<PurchaseRequestKpis>("/api/purchase-requests/kpis"),
   
-  create: (data: Partial<PurchaseRequest> & { items?: Partial<RequestItem>[] }) =>
+  create: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
     apiClient.post<PurchaseRequest>("/api/purchase-requests", data),
   
   updateStatus: (id: string, status: PurchaseRequest["status"]) =>

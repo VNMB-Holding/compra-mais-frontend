@@ -68,7 +68,7 @@ export default function SolicitacaoDetailPage() {
   return (
     <div className={styles.pageContainer}>
       
-      <ConfirmDialog open={dialog === "approve"} variant="primary" icon="check-circle" title="Aprovar Solicitação?"
+      <ConfirmDialog open={dialog === "approve"} variant="success" icon="check-circle" title="Aprovar Solicitação?"
         message={<>Você está aprovando esta solicitação de compra. Ela será liberada para cotação (RFQ).</>}
         confirmLabel="Aprovar" onConfirm={handleApprove} onCancel={() => setDialog(null)} />
 
