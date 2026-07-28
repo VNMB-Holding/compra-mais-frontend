@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { categoriesApi, Category } from "@/lib/api/categories";
+import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
@@ -11,6 +12,7 @@ import styles from "./solicitacoes-new.module.css";
 // ---------------------------------------------------------------------------
 function ApprovalModal({
   title,
+  code,
   totalValue,
   priority,
   onOpenRfq,
@@ -18,6 +20,7 @@ function ApprovalModal({
   onClose,
 }: {
   title: string;
+  code: string;
   totalValue: number;
   priority: string;
   onOpenRfq: () => void;
@@ -44,7 +47,7 @@ function ApprovalModal({
         <div className={styles.modalSummary}>
           <div className={styles.modalSummaryRow}>
             <span>Solicitação</span>
-            <strong>SOL-000457</strong>
+            <strong>{code}</strong>
           </div>
           <div className={styles.modalSummaryRow}>
             <span>Título</span>
@@ -107,6 +110,9 @@ export default function NovaSolicitacaoPage() {
   const router = useRouter();
 
   const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [createdCode, setCreatedCode] = useState("");
+  const [createdReqId, setCreatedReqId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
@@ -191,24 +197,43 @@ export default function NovaSolicitacaoPage() {
   const formatCurrency = (value: number) =>
     value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const handleSubmit = () => {
-    setShowApprovalModal(true);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const data = await purchaseRequestsApi.create({
+        description: title,
+        requesterId: requester,
+        costCenter: department,
+        category: categoryId,
+        justification: justification,
+        estimatedBudget: totalEstimated,
+        deliveryLocation: deliveryLocation,
+        deadline: new Date().toISOString(),
+        priority: priority === "Critica" ? "Urgent" : priority === "Alta" ? "High" : priority === "Media" ? "Medium" : "Low",
+        status: "Approved",
+        items: items.map(i => ({
+           description: i.description,
+           quantity: Number(i.quantity),
+           unit: i.unit,
+           estimatedUnitPrice: Number(i.unitPrice)
+        }))
+      });
+      setCreatedCode(data.code);
+      setCreatedReqId(data.id);
+      setShowApprovalModal(true);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao criar solicitação.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOpenRfq = () => {
     const params = new URLSearchParams({
-      sol: "SOL-000457",
-      titulo: title,
-      valor: String(totalEstimated),
-      prioridade: priority,
-      area: department,
-      solicitante: requester,
+      solicitacao: createdReqId
     });
     router.push(`/compras/rfqs/nova?${params.toString()}`);
-  };
-
-  const handleGoToList = () => {
-    router.push("/compras/solicitacoes");
   };
 
   return (
@@ -216,10 +241,11 @@ export default function NovaSolicitacaoPage() {
       {showApprovalModal && (
         <ApprovalModal
           title={title}
+          code={createdCode}
           totalValue={totalEstimated}
           priority={priority}
           onOpenRfq={handleOpenRfq}
-          onGoToList={handleGoToList}
+          onGoToList={() => router.push("/compras/solicitacoes")}
           onClose={() => setShowApprovalModal(false)}
         />
       )}
@@ -634,7 +660,7 @@ export default function NovaSolicitacaoPage() {
                   <button type="button" className={styles.secondaryAction} onClick={() => router.push("/compras/solicitacoes")}>
                     <Icon name="save-01" /> Salvar rascunho
                   </button>
-                  <Button variant="primary" className={styles.btnSubmit} onClick={handleSubmit}>
+                  <Button variant="primary" className={styles.btnSubmit} onClick={handleSubmit} disabled={isSubmitting}>
                     <Icon name="send-01" /> Enviar para aprovação
                   </Button>
                 </>
