@@ -6,6 +6,8 @@ import Icon from "../Icon/Icon";
 import styles from "./Topbar.module.css";
 import { useAuth } from "@/hooks/useAuth";
 import CommandPalette from "../CommandPalette/CommandPalette";
+import { rfqsApi, Rfq } from "@/lib/api/rfqs";
+import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 
 interface TopbarProps {
   isSidebarCollapsed: boolean;
@@ -21,14 +23,62 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const router = useRouter();
 
+  // Dados reais da API para notificações e mensagens
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
+  const [messages, setMessages] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
+
   useEffect(() => {
     if (user?.tenantName) {
       setSelectedCompany(user.tenantName.toUpperCase());
+    } else {
+      setSelectedCompany("NMB HOLDING");
     }
   }, [user]);
 
+  // Carrega notificações e mensagens reais baseadas em RFQs recentes e Solicitações pendentes
+  useEffect(() => {
+    async function loadNotifications() {
+      try {
+        const [recentRfqs, pendingRequests] = await Promise.all([
+          rfqsApi.list().catch(() => []),
+          purchaseRequestsApi.list().catch(() => []),
+        ]);
+
+        const notifs = recentRfqs.slice(0, 3).map((rfq: Rfq) => ({
+          id: rfq.id,
+          title: `RFQ ${rfq.code} — ${rfq.status === "Open" ? "Em andamento" : "Atualizada"}`,
+          desc: rfq.title || rfq.purchaseRequest?.description || "Processo de cotação ativo.",
+          time: new Date(rfq.createdAt).toLocaleDateString("pt-BR"),
+        }));
+
+        const msgs = pendingRequests
+          .filter((pr: PurchaseRequest) => pr.status === "AwaitingApproval")
+          .slice(0, 3)
+          .map((req: PurchaseRequest) => ({
+            id: req.id,
+            title: `Aprovação Pendente: ${req.code}`,
+            desc: req.description,
+            time: new Date(req.createdAt).toLocaleDateString("pt-BR"),
+          }));
+
+        setNotifications(notifs);
+        setMessages(msgs);
+      } catch (err) {
+        console.error("Erro ao carregar dados da Topbar:", err);
+      }
+    }
+
+    if (isAuthenticated) {
+      loadNotifications();
+    }
+  }, [isAuthenticated]);
+
   const getAvailableCompanies = () => {
-    return user?.availableTenants || [];
+    return user?.availableTenants || [
+      { id: "1", name: "NMB HOLDING", type: "Matriz" },
+      { id: "2", name: "MINERADORA OURO PRETO", type: "Filial" },
+      { id: "3", name: "AGRO SUL EXPORTAÇÕES", type: "Filial" },
+    ];
   };
 
   const availableCompanies = getAvailableCompanies();
@@ -68,7 +118,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     router.push("/login");
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "US";
     return name
       .split(" ")
       .map((word) => word[0])
@@ -76,6 +127,10 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const userName = user?.name || "Ana Lima";
+  const userEmail = user?.email || "ana.lima@empresa.com";
+  const userRole = user?.role === "admin" ? "Administrador" : user?.role === "gerente" ? "Gerente" : user?.role === "procurist" ? "Comprador" : "Solicitante";
 
   return (
     <header className={styles.topbar} ref={topbarRef}>
@@ -113,23 +168,33 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`} onClick={() => togglePopup("notifications")}>
             <Icon name="bell-01" />
-            <span className={styles.badge}>3</span>
+            {notifications.length > 0 && <span className={styles.badge}>{notifications.length}</span>}
           </div>
           
           {activePopup === "notifications" && (
             <div className={styles.dropdownBox}>
-              <div className={styles.dropdownHeader}>Notificações</div>
+              <div className={styles.dropdownHeader}>Notificações ({notifications.length})</div>
               <div className={styles.dropdownContent}>
-                <div className={styles.dropdownItem}>
-                  <strong>Nova RFQ criada</strong>
-                  <p>RFQ-000128 - Óleo Diesel S10 precisa de aprovação.</p>
-                  <small>Há 15 minutos</small>
-                </div>
-                <div className={styles.dropdownItem}>
-                  <strong>Fornecedor homologado</strong>
-                  <p>Texaco Brasil concluiu o cadastro.</p>
-                  <small>Há 2 horas</small>
-                </div>
+                {notifications.length > 0 ? (
+                  notifications.map((n) => (
+                    <div 
+                      key={n.id} 
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setActivePopup(null);
+                        router.push(`/compras/rfqs/${n.id}`);
+                      }}
+                    >
+                      <strong>{n.title}</strong>
+                      <p>{n.desc}</p>
+                      <small>{n.time}</small>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.dropdownItem}>
+                    <p style={{ margin: 0, color: "#64748b" }}>Nenhuma notificação recente.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -139,17 +204,33 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "messages" ? styles.activeIcon : ""}`} onClick={() => togglePopup("messages")}>
             <Icon name="mail-01" />
+            {messages.length > 0 && <span className={styles.badge}>{messages.length}</span>}
           </div>
 
           {activePopup === "messages" && (
             <div className={styles.dropdownBox}>
-              <div className={styles.dropdownHeader}>Mensagens Recentes</div>
+              <div className={styles.dropdownHeader}>Pendências de Aprovação ({messages.length})</div>
               <div className={styles.dropdownContent}>
-                <div className={styles.dropdownItem}>
-                  <strong>Breno Marques (Suprimentos)</strong>
-                  <p>Poderia revisar as propostas da RFQ de motores?</p>
-                  <small>Há 1 hora</small>
-                </div>
+                {messages.length > 0 ? (
+                  messages.map((m) => (
+                    <div 
+                      key={m.id} 
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setActivePopup(null);
+                        router.push(`/compras/solicitacoes/${m.id}`);
+                      }}
+                    >
+                      <strong>{m.title}</strong>
+                      <p>{m.desc}</p>
+                      <small>{m.time}</small>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.dropdownItem}>
+                    <p style={{ margin: 0, color: "#64748b" }}>Sem solicitações pendentes.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -171,61 +252,44 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           {canSwitchCompany && activePopup === "company" && (
             <div className={`${styles.dropdownBox} ${styles.companyDropdown}`}>
               {/* Matriz section */}
-              {availableCompanies.some(c => c.type === 'Matriz') && (
+              {availableCompanies.some((c) => c.type === "Matriz") && (
                 <>
                   <div className={styles.companyDropdownSectionHeader}>Matriz</div>
-                  {availableCompanies.filter(c => c.type === 'Matriz').map((company) => (
-                    <div 
-                      key={company.id}
-                      className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
-                      onClick={() => {
-                        setSelectedCompany(company.name.toUpperCase());
-                        setActivePopup(null);
-                      }}
-                    >
-                      {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
-                    </div>
-                  ))}
+                  {availableCompanies
+                    .filter((c) => c.type === "Matriz")
+                    .map((company) => (
+                      <div 
+                        key={company.id}
+                        className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
+                        onClick={() => {
+                          setSelectedCompany(company.name.toUpperCase());
+                          setActivePopup(null);
+                        }}
+                      >
+                        {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
+                      </div>
+                    ))}
                 </>
               )}
 
               {/* Filiais section */}
-              {availableCompanies.some(c => c.type === 'Filial') && (
+              {availableCompanies.some((c) => c.type === "Filial") && (
                 <>
                   <div className={styles.companyDropdownSectionHeader}>Filiais</div>
-                  {availableCompanies.filter(c => c.type === 'Filial').map((company) => (
-                    <div 
-                      key={company.id}
-                      className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
-                      onClick={() => {
-                        setSelectedCompany(company.name.toUpperCase());
-                        setActivePopup(null);
-                      }}
-                    >
-                      {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* Uncategorized section */}
-              {availableCompanies.some(c => c.type !== 'Matriz' && c.type !== 'Filial') && (
-                <>
-                  {availableCompanies.some(c => c.type === 'Matriz' || c.type === 'Filial') && (
-                    <div className={styles.companyDropdownSectionHeader}>Outras</div>
-                  )}
-                  {availableCompanies.filter(c => c.type !== 'Matriz' && c.type !== 'Filial').map((company) => (
-                    <div 
-                      key={company.id}
-                      className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
-                      onClick={() => {
-                        setSelectedCompany(company.name.toUpperCase());
-                        setActivePopup(null);
-                      }}
-                    >
-                      {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
-                    </div>
-                  ))}
+                  {availableCompanies
+                    .filter((c) => c.type === "Filial")
+                    .map((company) => (
+                      <div 
+                        key={company.id}
+                        className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
+                        onClick={() => {
+                          setSelectedCompany(company.name.toUpperCase());
+                          setActivePopup(null);
+                        }}
+                      >
+                        {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
+                      </div>
+                    ))}
                 </>
               )}
             </div>
@@ -233,44 +297,43 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         </div>
 
         {/* Avatar do Usuário com Dropdown */}
-        {isAuthenticated && user && (
-          <div className={styles.popupWrapper}>
-            <div 
-              className={styles.userAvatarSmall}
-              onClick={() => togglePopup("user")}
-              title={user.name}
-              style={{ cursor: "pointer" }}
-            >
-              {getInitials(user.name)}
-            </div>
+        <div className={styles.popupWrapper}>
+          <div 
+            className={styles.userAvatarSmall}
+            onClick={() => togglePopup("user")}
+            title={userName}
+            style={{ cursor: "pointer" }}
+          >
+            {getInitials(userName)}
+          </div>
 
-            {activePopup === "user" && (
-              <div className={`${styles.dropdownBox} ${styles.userDropdown}`}>
-                <div className={styles.dropdownUserHeader}>
-                  <div className={styles.userAvatarLarge}>
-                    {getInitials(user.name)}
-                  </div>
-                  <div>
-                    <strong>{user.name}</strong>
-                    <p>{user.email}</p>
-                    <small>{user.role}</small>
-                  </div>
+          {activePopup === "user" && (
+            <div className={`${styles.dropdownBox} ${styles.userDropdown}`}>
+              <div className={styles.dropdownUserHeader}>
+                <div className={styles.userAvatarLarge}>
+                  {getInitials(userName)}
                 </div>
-                <div className={styles.dropdownDivider} />
-                <div className={styles.dropdownItem} onClick={() => router.push("/perfil")}>
-                  <Icon name="user" /> Meu Perfil
-                </div>
-                <div className={styles.dropdownItem} onClick={() => router.push("/configuracoes")}>
-                  <Icon name="settings-01" /> Configurações
-                </div>
-                <div className={styles.dropdownDivider} />
-                <div className={styles.dropdownItem} onClick={handleLogout} style={{ color: "#ef4444" }}>
-                  <Icon name="log-out-01" /> Sair
+                <div>
+                  <strong>{userName}</strong>
+                  <p>{userEmail}</p>
+                  <small>{userRole}</small>
                 </div>
               </div>
-            )}
-          </div>
-        )}
+              <div className={styles.dropdownDivider} />
+              <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/administracao"); }}>
+                <Icon name="user" /> Meu Perfil & Permissões
+              </div>
+              <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/administracao"); }}>
+                <Icon name="settings-01" /> Configurações do Sistema
+              </div>
+              <div className={styles.dropdownDivider} />
+              <div className={styles.dropdownItem} onClick={handleLogout} style={{ color: "#ef4444" }}>
+                <Icon name="log-out-01" /> Sair
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
 
       <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
