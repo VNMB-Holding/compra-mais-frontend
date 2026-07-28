@@ -2,6 +2,9 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
+import { suppliersApi, Supplier } from "@/lib/api/suppliers";
+import { rfqsApi } from "@/lib/api/rfqs";
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./rfq-new.module.css";
 
@@ -9,87 +12,15 @@ import styles from "./rfq-new.module.css";
 // Types
 // ---------------------------------------------------------------------------
 
-interface Solicitacao {
-  id: string;
-  titulo: string;
-  area: string;
-  solicitante: string;
-  prioridade: string;
-  valorEstimado: number;
-  itens: ItemCotacao[];
-  incoterm: string;
-  condicaoPagamento: string;
-  observacoes: string;
-}
-
 interface ItemCotacao {
-  id: number;
+  id: number | string;
   descricao: string;
   qtd: number;
   unidade: string;
 }
 
-interface FornecedorConvidado {
-  id: string;
-  nome: string;
-  cnpj: string;
-  selecionado: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// Mock data — solicitacoes aprovadas disponiveis
-// ---------------------------------------------------------------------------
-
-const SOLICITACOES_DISPONIVEIS: Solicitacao[] = [
-  {
-    id: "SOL-000456",
-    titulo: "Abastecimento emergencial de oleo diesel S10",
-    area: "Operacoes",
-    solicitante: "Breno Marques",
-    prioridade: "Alta",
-    valorEstimado: 2900000,
-    itens: [
-      { id: 1, descricao: "Oleo Diesel S10", qtd: 500000, unidade: "L" },
-      { id: 2, descricao: "Aditivo ARLA 32", qtd: 12000, unidade: "L" },
-    ],
-    incoterm: "CIF",
-    condicaoPagamento: "30 dias DDL",
-    observacoes:
-      "O fornecedor deve possuir certificacao ANP active e atender as normas ambientais vigentes de transporte.",
-  },
-  {
-    id: "SOL-000441",
-    titulo: "Reposicao de insumos de limpeza industrial",
-    area: "Facilities",
-    solicitante: "Carla Oliveira",
-    prioridade: "Media",
-    valorEstimado: 48500,
-    itens: [
-      { id: 1, descricao: "Desinfetante industrial 5L", qtd: 200, unidade: "UN" },
-      { id: 2, descricao: "Detergente concentrado galao 20L", qtd: 50, unidade: "UN" },
-    ],
-    incoterm: "CIF",
-    condicaoPagamento: "28 dias DDL",
-    observacoes: "Produtos devem possuir registro na ANVISA e ficha FISPQ atualizada.",
-  },
-];
-
-const FORNECEDORES_BASE: FornecedorConvidado[] = [
-  { id: "1", nome: "Fornecedor Alfa S.A.", cnpj: "11.222.333/0001-81", selecionado: false },
-  { id: "2", nome: "Petrolog Distribuidora LTDA", cnpj: "22.333.444/0001-82", selecionado: false },
-  { id: "3", nome: "Combustiveis Sul LTDA", cnpj: "33.444.555/0001-83", selecionado: false },
-  { id: "4", nome: "CleanPro Suprimentos LTDA", cnpj: "44.555.666/0001-84", selecionado: false },
-];
-
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-const PRIORITY_CLASS: Record<string, string> = {
-  Alta: styles.priorityAlta,
-  Critica: styles.priorityCritica,
-  Media: styles.priorityMedia,
-  Baixa: styles.priorityBaixa,
-};
 
 const PRIORITY_BADGE_CONFIG: Record<string, { variant: "gray" | "warning" | "danger" | "dark"; icon: string }> = {
   Critica: { variant: "dark", icon: "zap" },
@@ -106,100 +37,61 @@ export default function NewRfqPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Params vindos do modal de aprovacao de SOL
-  const paramSol = searchParams.get("sol") ?? "";
-  const paramTitulo = searchParams.get("titulo") ?? "";
-  const paramValor = searchParams.get("valor") ?? "";
-  const paramPrioridade = searchParams.get("prioridade") ?? "";
-  const paramArea = searchParams.get("area") ?? "";
-  const paramSolicitante = searchParams.get("solicitante") ?? "";
+  const [availableRequests, setAvailableRequests] = useState<PurchaseRequest[]>([]);
+  const [availableSuppliers, setAvailableSuppliers] = useState<Supplier[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // "portao": null = nenhuma selecionada, string = id selecionado mas nao confirmado
-  const [solicitacaoSelecionada, setSolicitacaoSelecionada] = useState<string>("");
-  // solicitacaoConfirmada = portao aberto, formulario visivel
-  const [solicitacaoConfirmada, setSolicitacaoConfirmada] = useState<Solicitacao | null>(null);
+  useEffect(() => {
+    purchaseRequestsApi.list().then(res => setAvailableRequests(res.filter(r => r.status === "Approved"))).catch(console.error);
+    suppliersApi.list().then(res => setAvailableSuppliers(res.filter(s => s.status === "Active"))).catch(console.error);
+  }, []);
 
-  const [currentStep, setCurrentStep] = useState(1); // 1, 2, 3, 4
-  const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
+  const [currentStep, setCurrentStep] = useState(1);
+  const paramSol = searchParams.get("solicitacao");
 
-  // Form fields — so existem apos confirmacao
+  // Step 1
+  const [solicitacaoSelecionada, setSolicitacaoSelecionada] = useState(paramSol || "");
+  const [solicitacaoConfirmada, setSolicitacaoConfirmada] = useState<PurchaseRequest | null>(null);
   const [tituloRfq, setTituloRfq] = useState("");
-  const [estrategia, setEstrategia] = useState("Menor Preco Equalizado");
+  const [estrategia, setEstrategia] = useState("Menor Preço Global");
   const [dataEncerramento, setDataEncerramento] = useState("");
+
+  // Step 2
+  const [itens, setItens] = useState<ItemCotacao[]>([]);
+  const [expandedItemId, setExpandedItemId] = useState<number | string | null>(null);
+
+  // Step 3
+  const [fornecedoresSelecionados, setFornecedoresSelecionados] = useState<string[]>([]);
+  const [buscaFornecedor, setBuscaFornecedor] = useState("");
+
+  // Step 4
   const [incoterm, setIncoterm] = useState("CIF");
   const [condicaoPagamento, setCondicaoPagamento] = useState("30 dias DDL");
   const [moeda, setMoeda] = useState("BRL");
   const [observacoes, setObservacoes] = useState("");
-  const [itens, setItens] = useState<ItemCotacao[]>([]);
-  const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
-
-  // -------------------------------------------------------------------------
-  // Auto-confirmar solicitacao quando vem de URL params (modal de aprovacao)
-  // -------------------------------------------------------------------------
 
   useEffect(() => {
-    if (!paramSol) return;
-
-    // Tenta encontrar nos mocks existentes primeiro
-    const solExistente = SOLICITACOES_DISPONIVEIS.find((s) => s.id === paramSol);
-
-    if (solExistente) {
-      setSolicitacaoConfirmada(solExistente);
-      setSolicitacaoSelecionada(solExistente.id);
-      setTituloRfq(`RFQ — ${solExistente.titulo}`);
-      setIncoterm(solExistente.incoterm);
-      setCondicaoPagamento(solExistente.condicaoPagamento);
-      setObservacoes(solExistente.observacoes);
-      setItens(solExistente.itens.map((i) => ({ ...i })));
-      if (solExistente.itens.length > 0) {
-        setExpandedItemId(solExistente.itens[0].id);
+    if (paramSol && availableRequests.length > 0) {
+      const solExistente = availableRequests.find((s) => s.id === paramSol);
+      if (solExistente) {
+        setSolicitacaoConfirmada(solExistente);
+        setTituloRfq(`RFQ - ${solExistente.description}`);
+        if(solExistente.items) {
+           setItens(solExistente.items.map((i, index) => ({ id: i.id || index, descricao: i.description, qtd: i.quantity, unidade: i.unit })));
+        }
       }
-    } else {
-      // SOL nova (vem do fluxo de criacao) — monta um objeto dinamico
-      const solDinamica: Solicitacao = {
-        id: paramSol,
-        titulo: paramTitulo || "Solicitação de compra",
-        area: paramArea || "Operacoes",
-        solicitante: paramSolicitante || "—",
-        prioridade: paramPrioridade || "Alta",
-        valorEstimado: Number(paramValor) || 0,
-        itens: [
-          { id: 1, descricao: paramTitulo || "Item principal", qtd: 1, unidade: "UN" },
-        ],
-        incoterm: "CIF",
-        condicaoPagamento: "30 dias DDL",
-        observacoes: "",
-      };
-      setSolicitacaoConfirmada(solDinamica);
-      setSolicitacaoSelecionada(paramSol);
-      setTituloRfq(`RFQ — ${solDinamica.titulo}`);
-      setIncoterm(solDinamica.incoterm);
-      setCondicaoPagamento(solDinamica.condicaoPagamento);
-      setItens(solDinamica.itens.map((i) => ({ ...i })));
-      setExpandedItemId(1);
     }
-    setCurrentStep(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paramSol]);
-
-  // -------------------------------------------------------------------------
-  // Handlers
-  // -------------------------------------------------------------------------
+  }, [paramSol, availableRequests]);
 
   const handleConfirmarSolicitacao = () => {
-    const sol = SOLICITACOES_DISPONIVEIS.find((s) => s.id === solicitacaoSelecionada);
+    const sol = availableRequests.find((s) => s.id === solicitacaoSelecionada);
     if (!sol) return;
     setSolicitacaoConfirmada(sol);
-    // Pre-preenche formulario com dados da solicitacao
-    setTituloRfq(`RFQ — ${sol.titulo}`);
-    setIncoterm(sol.incoterm);
-    setCondicaoPagamento(sol.condicaoPagamento);
-    setObservacoes(sol.observacoes);
-    setItens(sol.itens.map((i) => ({ ...i })));
-    setCurrentStep(1);
-    if (sol.itens.length > 0) {
-      setExpandedItemId(sol.itens[0].id);
+    setTituloRfq(`RFQ - ${sol.description}`);
+    if(sol.items) {
+       setItens(sol.items.map((i, index) => ({ id: i.id || index, descricao: i.description, qtd: i.quantity, unidade: i.unit })));
     }
+    setCurrentStep(1);
   };
 
   const handleDesvincular = () => {
@@ -207,47 +99,30 @@ export default function NewRfqPage() {
     setSolicitacaoSelecionada("");
     setTituloRfq("");
     setItens([]);
-    setObservacoes("");
-    setFornecedores(FORNECEDORES_BASE);
     setCurrentStep(1);
   };
 
   const toggleFornecedor = (id: string) => {
-    setFornecedores((cur) =>
-      cur.map((f) => (f.id === id ? { ...f, selecionado: !f.selecionado } : f))
+    setFornecedoresSelecionados(prev => 
+      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
   };
 
   const addItem = () => {
-    const nextId = Math.max(...itens.map((i) => i.id), 0) + 1;
+    const nextId = Date.now();
     setItens((cur) => [...cur, { id: nextId, descricao: "", qtd: 1, unidade: "UN" }]);
     setExpandedItemId(nextId);
   };
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: number | string) => {
     setItens((cur) => cur.filter((i) => i.id !== id));
   };
 
-  const updateItem = <K extends keyof ItemCotacao>(id: number, field: K, value: ItemCotacao[K]) => {
+  const updateItem = <K extends keyof ItemCotacao>(id: number | string, field: K, value: ItemCotacao[K]) => {
     setItens((cur) => cur.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
   };
 
-  // -------------------------------------------------------------------------
-  // Derived state
-  // -------------------------------------------------------------------------
-
-  const fornecedoresSelecionados = useMemo(
-    () => fornecedores.filter((f) => f.selecionado),
-    [fornecedores]
-  );
-
-
-
-  const solicitacaoPreview = SOLICITACOES_DISPONIVEIS.find((s) => s.id === solicitacaoSelecionada);
-
-  // =========================================================================
-  // RENDER — PORTAO (sem solicitacao confirmada)
-  // =========================================================================
+  const solicitacaoPreview = availableRequests.find((s) => s.id === solicitacaoSelecionada);
 
   if (!solicitacaoConfirmada) {
     return (
@@ -257,466 +132,103 @@ export default function NewRfqPage() {
         </button>
 
         <div className={styles.pageHeader}>
-          <div>
-            <span className={styles.eyebrow}>Compras externas</span>
-            <h1>Nova Cotação (RFQ)</h1>
-            <p>
-              Uma cotação sempre parte de uma demanda interna aprovada. Selecione a solicitação de
-              compra que origina este processo de mercado.
-            </p>
-          </div>
+          <h1>Nova Cotação (RFQ)</h1>
         </div>
 
-        {/* Gate card */}
         <div className={styles.gateWrapper}>
           <Card className={styles.gateCard}>
-            <div className={styles.gateIconWrap}>
-              <Icon name="file-search-02" />
-            </div>
-            <h2 className={styles.gateTitle}>Vincular solicitação aprovada</h2>
-            <p className={styles.gateSubtitle}>
-              Selecione abaixo qual solicitação de compra (já aprovada internamente) será a origem
-              desta cotação. Os dados de escopo, itens e condições comerciais serão importados
-              automaticamente.
-            </p>
-
             <div className={styles.gateSelectGroup}>
-              <label className={styles.gateLabel}>Solicitação de Compra Aprovada <span className="required-asterisk">*</span></label>
-              <Select
-                options={SOLICITACOES_DISPONIVEIS.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
-                value={solicitacaoSelecionada}
-                onChange={setSolicitacaoSelecionada}
-                placeholder="Selecione uma solicitação..."
-              />
+              <label>Solicitação de Compra Aprovada <span className="required-asterisk">*</span></label>
+                <Select
+                  options={availableRequests.map((s) => ({ label: `${s.code} - ${s.description}`, value: s.id }))}
+                  value={solicitacaoSelecionada}
+                  onChange={setSolicitacaoSelecionada}
+                  placeholder="Selecione uma solicitação..."
+                />
             </div>
-
-            {/* Preview da solicitacao selecionada */}
             {solicitacaoPreview && (
               <div className={styles.gatePreview}>
-                <div className={styles.gatePreviewHeader}>
-                  <span className={styles.gatePreviewId}>{solicitacaoPreview.id}</span>
-                  <Badge
-                    variant={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"}
-                    icon={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.icon ?? "info-circle"}
-                  >
-                    {solicitacaoPreview.prioridade}
-                  </Badge>
-                </div>
-                <p className={styles.gatePreviewTitle}>{solicitacaoPreview.titulo}</p>
-                <dl className={styles.gatePreviewMeta}>
-                  <div>
-                    <dt>Área</dt>
-                    <dd>{solicitacaoPreview.area}</dd>
-                  </div>
-                  <div>
-                    <dt>Solicitante</dt>
-                    <dd>{solicitacaoPreview.solicitante}</dd>
-                  </div>
-                  <div>
-                    <dt>Itens</dt>
-                    <dd>{solicitacaoPreview.itens.length} item(s)</dd>
-                  </div>
-                  <div>
-                    <dt>Valor estimado</dt>
-                    <dd>{formatCurrency(solicitacaoPreview.valorEstimado)}</dd>
-                  </div>
-                </dl>
-                <ul className={styles.gatePreviewItens}>
-                  {solicitacaoPreview.itens.map((item) => (
-                    <li key={item.id}>
-                      <Icon name="package" size={14} />
-                      {item.descricao} — {item.qtd.toLocaleString("pt-BR")} {item.unidade}
-                    </li>
-                  ))}
-                </ul>
+                <p>{solicitacaoPreview.description}</p>
               </div>
             )}
-
             <div className={styles.gateActions}>
-              <button
-                className={styles.btnCancel}
-                onClick={() => router.push("/compras/rfqs")}
-              >
-                Cancelar
-              </button>
               <Button
                 variant="primary"
-                className={styles.btnSubmit}
                 onClick={handleConfirmarSolicitacao}
                 disabled={!solicitacaoSelecionada}
               >
-                <Icon name="arrow-right" /> Continuar com esta solicitação
+                Continuar com esta solicitação
               </Button>
             </div>
           </Card>
-
-          <div className={styles.gateInfo}>
-            <div className={styles.gateInfoItem}>
-              <div className={styles.gateInfoIcon}><Icon name="shield-tick" /></div>
-              <div>
-                <strong>Rastreabilidade garantida</strong>
-                <span>Toda cotação fica vinculada a uma demanda aprovada, garantindo auditoria completa do processo.</span>
-              </div>
-            </div>
-            <div className={styles.gateInfoItem}>
-              <div className={styles.gateInfoIcon}><Icon name="zap-fast" /></div>
-              <div>
-                <strong>Pré-preenchimento automático</strong>
-                <span>Itens, quantidades, condições e notas técnicas da solicitação são importados sem retrabalho.</span>
-              </div>
-            </div>
-            <div className={styles.gateInfoItem}>
-              <div className={styles.gateInfoIcon}><Icon name="check-verified-02" /></div>
-              <div>
-                <strong>Apenas demandas aprovadas</strong>
-                <span>Somente solicitações já aprovadas pela chefia aparecem aqui, eliminando cotações sem autorização.</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );
   }
 
-  // =========================================================================
-  // RENDER — FORMULARIO COMPLETO (solicitacao confirmada)
-  // =========================================================================
-
   return (
     <div className={styles.formContainer}>
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
-        <Icon name="chevron-left" /> Voltar para Cotações
+        <Icon name="chevron-left" /> Voltar
       </button>
-
-      <div className={styles.pageHeader}>
-        <div>
-          <span className={styles.eyebrow}>Compras externas</span>
-          <h1>Nova Cotação (RFQ)</h1>
-          <p>
-            Configure o processo de cotação, selecione fornecedores e defina os parâmetros de
-            compliance para equalizar propostas.
-          </p>
-        </div>
-      </div>
-
-      {/* STEPPER PROGRESS BAR */}
-      <div className={styles.stepperNav}>
-        <div 
-          className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
-          onClick={() => setCurrentStep(1)}
-        >
-          <div className={styles.stepNumber}>
-            {currentStep > 1 ? <Icon name="check" size={16} /> : "1"}
-          </div>
-          <span className={styles.stepLabel}>Parâmetros</span>
-        </div>
-        <div className={styles.stepConnectorLine} />
-        <div 
-          className={`${styles.stepIndicator} ${currentStep === 2 ? styles.stepActive : currentStep > 2 ? styles.stepCompleted : ""} ${currentStep < 2 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 2 ? setCurrentStep(2) : undefined}
-        >
-          <div className={styles.stepNumber}>
-            {currentStep > 2 ? <Icon name="check" size={16} /> : "2"}
-          </div>
-          <span className={styles.stepLabel}>Itens</span>
-        </div>
-        <div className={styles.stepConnectorLine} />
-        <div 
-          className={`${styles.stepIndicator} ${currentStep === 3 ? styles.stepActive : currentStep > 3 ? styles.stepCompleted : ""} ${currentStep < 3 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 3 ? setCurrentStep(3) : undefined}
-        >
-          <div className={styles.stepNumber}>
-            {currentStep > 3 ? <Icon name="check" size={16} /> : "3"}
-          </div>
-          <span className={styles.stepLabel}>Fornecedores</span>
-        </div>
-        <div className={styles.stepConnectorLine} />
-        <div 
-          className={`${styles.stepIndicator} ${currentStep === 4 ? styles.stepActive : ""} ${currentStep < 4 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 4 ? setCurrentStep(4) : undefined}
-        >
-          <div className={styles.stepNumber}>4</div>
-          <span className={styles.stepLabel}>Compliance</span>
-        </div>
-      </div>
 
       <div className={styles.workspaceGrid}>
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
-
-            {/* ETAPA 1: PARÂMETROS GERAIS */}
             {currentStep === 1 && (
               <>
-                {/* Seção 0 — Solicitação vinculada (somente leitura) */}
                 <section className={styles.formSection}>
-                  <div className={styles.sectionHeader}>
-                    <div className={styles.sectionIcon}><Icon name="link-01" /></div>
-                    <div>
-                      <h2>Origem da cotação</h2>
-                      <p>Solicitação de compra aprovada que origina este processo de mercado.</p>
-                    </div>
-                  </div>
-
                   <div className={styles.origemBox}>
                     <div className={styles.origemLeft}>
-                      <div className={styles.origemId}>{solicitacaoConfirmada.id}</div>
-                      <div className={styles.origemTitulo}>{solicitacaoConfirmada.titulo}</div>
-                      <div className={styles.origemMeta}>
-                        <span>{solicitacaoConfirmada.area}</span>
-                        <span>·</span>
-                        <span>{solicitacaoConfirmada.solicitante}</span>
-                        <span>·</span>
-                        <span>{formatCurrency(solicitacaoConfirmada.valorEstimado || 0)} estimado</span>
-                      </div>
+                      <div className={styles.origemId}>{solicitacaoConfirmada.code}</div>
+                      <div className={styles.origemTitulo}>{solicitacaoConfirmada.description}</div>
                     </div>
                     <div className={styles.origemRight}>
-                      <Badge
-                        variant={PRIORITY_BADGE_CONFIG[solicitacaoConfirmada.prioridade]?.variant ?? "gray"}
-                        icon={PRIORITY_BADGE_CONFIG[solicitacaoConfirmada.prioridade]?.icon ?? "info-circle"}
-                      >
-                        {solicitacaoConfirmada.prioridade}
-                      </Badge>
                       <button className={styles.desvincularBtn} onClick={handleDesvincular}>
                         <Icon name="switch-horizontal-01" size={14} /> Trocar
                       </button>
                     </div>
                   </div>
                 </section>
-
                 <section className={styles.formSection}>
-                  <div className={styles.sectionHeader}>
-                    <div className={styles.sectionIcon}><Icon name="settings-01" /></div>
-                    <div>
-                      <h2>1. Parâmetros gerais da cotação</h2>
-                      <p>Título, estratégia de compra e prazo de encerramento do processo.</p>
-                    </div>
-                  </div>
-
-                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <label>Título da RFQ <span className="required-asterisk">*</span></label>
-                    <input
-                      className={styles.formControl}
-                      value={tituloRfq}
-                      onChange={(e) => setTituloRfq(e.target.value)}
-                      placeholder="Ex: Fornecimento Anual de Combustíveis Geral"
-                    />
-                  </div>
-
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label>Estratégia de compra</label>
-                      <Select
-                        options={[
-                          { label: "Menor Preço Equalizado", value: "Menor Preco Equalizado" },
-                          { label: "Técnica e Preço", value: "Tecnica e Preco" },
-                          { label: "Melhor Valor Total", value: "Melhor Valor Total" }
-                        ]}
-                        value={estrategia}
-                        onChange={setEstrategia}
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Data/Hora Limite de Encerramento</label>
-                      <input
-                        type="datetime-local"
-                        className={styles.formControl}
-                        value={dataEncerramento}
-                        onChange={(e) => setDataEncerramento(e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  <input value={tituloRfq} onChange={(e) => setTituloRfq(e.target.value)} />
                 </section>
               </>
             )}
 
-            {/* ETAPA 2: ITENS DA COTAÇÃO (ACCORDION) */}
             {currentStep === 2 && (
               <section className={styles.formSection}>
-                <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
-                  <div>
-                    <h2>2. Itens e quantidades solicitadas</h2>
-                    <p>
-                      Importados da solicitação <strong>{solicitacaoConfirmada.id}</strong>. Você pode
-                      adicionar itens complementares ao escopo.
-                    </p>
+                {itens.map((item, index) => (
+                  <div key={item.id}>
+                    <input value={item.descricao} onChange={(e) => updateItem(item.id, "descricao", e.target.value)} />
+                    <button onClick={() => removeItem(item.id)}>X</button>
                   </div>
-                </div>
-
-                <div className={styles.itemsList}>
-                  {itens.map((item, index) => {
-                    const isFromSol = solicitacaoConfirmada.itens.some((si) => si.id === item.id);
-                    const isExpanded = expandedItemId === item.id;
-
-                    return (
-                      <div className={styles.itemPanel} key={item.id}>
-                        
-                        {/* Collapsed State Header Row */}
-                        <div 
-                          className={styles.itemSummaryRow} 
-                          onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
-                        >
-                          <div className={styles.itemSummaryLeft}>
-                            <span className={styles.itemSummaryBadge}>Item {index + 1}</span>
-                            <div className={styles.itemSummaryText}>
-                              <span className={styles.itemSummaryTitle}>
-                                {item.descricao || "Novo item complementar sem descrição"}
-                              </span>
-                              <span className={styles.itemSummaryMeta}>
-                                Qtd: {item.qtd.toLocaleString("pt-BR")} {item.unidade} {isFromSol && "• Origem: Solicitação"}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className={styles.itemSummaryRight}>
-                            {isFromSol && (
-                              <span className={styles.itemOrigemTag} style={{ marginRight: "8px" }}>
-                                <Icon name="lock-01" size={12} /> Da solicitação
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              className={styles.actionIconBtn}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedItemId(isExpanded ? null : item.id);
-                              }}
-                              title={isExpanded ? "Recolher detalhes" : "Editar detalhes"}
-                            >
-                              <Icon 
-                                name="chevron-down" 
-                                size={18} 
-                                className={`${styles.chevronRotate} ${isExpanded ? styles.chevronRotateActive : ""}`} 
-                              />
-                            </button>
-                            <button
-                              type="button"
-                              className={`${styles.actionIconBtn} ${styles.actionDeleteBtn}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeItem(item.id);
-                              }}
-                              disabled={isFromSol}
-                              title={isFromSol ? "Item importado da solicitação não pode ser removido" : "Remover item"}
-                            >
-                              <Icon name="x-close" size={18} />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Expanded Form Fields */}
-                        {isExpanded && (
-                          <div className={styles.accordionExpandable}>
-                            <div className={styles.gridCol12}>
-                              <div className={`${styles.formGroup} ${styles.col6}`}>
-                                <label>Descrição do item / serviço <span className="required-asterisk">*</span></label>
-                                <input
-                                  className={styles.formControl}
-                                  value={item.descricao}
-                                  onChange={(e) => updateItem(item.id, "descricao", e.target.value)}
-                                  readOnly={isFromSol}
-                                  placeholder="Ex: Óleo Diesel S10"
-                                />
-                              </div>
-                              <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Quantidade</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  className={styles.formControl}
-                                  value={item.qtd}
-                                  onChange={(e) => updateItem(item.id, "qtd", Number(e.target.value))}
-                                  readOnly={isFromSol}
-                                />
-                              </div>
-                              <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Unidade</label>
-                                <Select
-                                  options={[
-                                    { label: "L", value: "L" },
-                                    { label: "UN", value: "UN" },
-                                    { label: "KG", value: "KG" },
-                                    { label: "M", value: "M" },
-                                    { label: "H", value: "H" },
-                                    { label: "Pacote", value: "Pacote" }
-                                  ]}
-                                  value={item.unidade}
-                                  onChange={(value) => updateItem(item.id, "unidade", value)}
-                                  disabled={isFromSol}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <button type="button" className={styles.addItemButton} onClick={addItem}>
-                  <Icon name="plus" /> Adicionar item complementar
-                </button>
+                ))}
+                <button onClick={addItem}>Adicionar item</button>
               </section>
             )}
 
-            {/* ETAPA 3: FORNECEDORES CONVIDADOS */}
             {currentStep === 3 && (
               <section className={styles.formSection}>
-                <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="building-07" /></div>
-                  <div>
-                    <h2>3. Fornecedores convidados</h2>
-                    <p>Selecione os fornecedores homologados que receberão o convite para cotação.</p>
-                  </div>
-                </div>
-
-                <div className={styles.fornecedoresList}>
-                  {fornecedores.map((f) => (
-                    <label
-                      key={f.id}
-                      className={`${styles.fornecedorRow} ${f.selecionado ? styles.fornecedorSelecionado : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={f.selecionado}
-                        onChange={() => toggleFornecedor(f.id)}
-                        className={styles.fornecedorCheck}
-                      />
-                      <div className={styles.fornecedorInfo}>
-                        <strong>{f.nome}</strong>
-                        <span>{f.cnpj}</span>
-                      </div>
-                      {f.selecionado && (
-                        <span className={styles.fornecedorBadge}>Convidado</span>
-                      )}
-                    </label>
-                  ))}
+                <input placeholder="Buscar fornecedor..." value={buscaFornecedor} onChange={(e) => setBuscaFornecedor(e.target.value)} />
+                <div className={styles.suppliersGrid}>
+                  {availableSuppliers
+                    .filter((f) => f.corporateName.toLowerCase().includes(buscaFornecedor.toLowerCase()) || f.segment.toLowerCase().includes(buscaFornecedor.toLowerCase()))
+                    .map((forn) => {
+                      const isSelected = fornecedoresSelecionados.includes(forn.id);
+                      return (
+                        <div key={forn.id} onClick={() => toggleFornecedor(forn.id)}>
+                          <strong>{forn.corporateName}</strong>
+                          {isSelected && <Badge variant="primary" icon="check">Selecionado</Badge>}
+                        </div>
+                      );
+                  })}
                 </div>
               </section>
             )}
 
-            {/* ETAPA 4: COMPLIANCE E LOGÍSTICA */}
             {currentStep === 4 && (
               <section className={styles.formSection}>
-                <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="truck-01" /></div>
-                  <div>
-                    <h2>4. Compliance e logística</h2>
-                    <p>Parâmetros comerciais que equalizam as propostas recebidas.</p>
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Incoterm (Frete)</label>
-                    <Select
-                      options={[
-                        { label: "CIF — Custos e frete pagos pelo fornecedor", value: "CIF" },
-                        { label: "FOB — Frete por conta da VNMB", value: "FOB" },
-                        { label: "EXW — Retirada na planta do fornecedor", value: "EXW" }
-                      ]}
-                      value={incoterm}
-                      onChange={setIncoterm}
                     />
                   </div>
                   <div className={styles.formGroup}>
@@ -841,7 +353,23 @@ export default function NewRfqPage() {
                   <Button
                     variant="primary"
                     className={styles.btnSubmit}
-                    onClick={() => router.push("/compras/rfqs/RFQ-2026-004")}
+                    disabled={isSubmitting}
+                    onClick={async () => {
+                      setIsSubmitting(true);
+                      try {
+                        const newRfq = await rfqsApi.create({
+                          title: tituloRfq,
+                          closesAt: dataEncerramento,
+                          requestId: solicitacaoConfirmada?.id as string,
+                          supplierIds: fornecedoresSelecionados
+                        });
+                        router.push(`/compras/rfqs/${newRfq.id}`);
+                      } catch (err) {
+                        alert("Erro ao publicar RFQ");
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
                   >
                     <Icon name="rocket-01" /> Publicar e enviar cotação
                   </Button>
@@ -872,7 +400,7 @@ export default function NewRfqPage() {
             </div>
 
             <dl className={styles.summaryList}>
-              <div><dt>Origem</dt><dd>{solicitacaoConfirmada.id}</dd></div>
+              {solicitacaoConfirmada && <div><dt>Origem</dt><dd>{solicitacaoConfirmada.code}</dd></div>}
               <div><dt>Estratégia</dt><dd>{estrategia || "—"}</dd></div>
               <div><dt>Incoterm</dt><dd>{incoterm || "—"}</dd></div>
               <div><dt>Pagamento</dt><dd>{condicaoPagamento || "—"}</dd></div>
