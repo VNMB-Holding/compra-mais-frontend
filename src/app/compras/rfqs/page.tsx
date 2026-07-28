@@ -31,11 +31,17 @@ function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
 }
 
 function mapToRow(rfq: Rfq): RFQRow {
+  const categoryName = rfq.purchaseRequest?.category
+    ? typeof rfq.purchaseRequest.category === "object"
+      ? (rfq.purchaseRequest.category as any).name || "Sem Categoria"
+      : rfq.purchaseRequest.category
+    : "Sem Categoria";
+
   return {
     id: rfq.id,
     codigo: rfq.code,
     descricao: rfq.title || rfq.purchaseRequest?.description || "",
-    categoria: rfq.purchaseRequest?.category || "",
+    categoria: categoryName,
     dataAbertura: new Date(rfq.createdAt).toLocaleDateString("pt-BR"),
     dataEncerramento: new Date(rfq.closesAt).toLocaleDateString("pt-BR"),
     tipoSegmento: "Menor Preço",
@@ -84,9 +90,18 @@ export default function RfqsPage() {
     { label: "Encerrada", value: "Encerrada" },
   ];
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const filtered = rfqs.filter((r) => {
     if (categoria !== "Todas" && r.categoria !== categoria) return false;
     if (status !== "Todos" && r.status !== status) return false;
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      const matchCodigo = r.codigo.toLowerCase().includes(q);
+      const matchDesc = r.descricao.toLowerCase().includes(q);
+      const matchCategoria = r.categoria.toLowerCase().includes(q);
+      if (!matchCodigo && !matchDesc && !matchCategoria) return false;
+    }
     return true;
   });
 
@@ -143,7 +158,12 @@ export default function RfqsPage() {
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
             <Icon name="search-md" />
-            <input type="text" placeholder="Buscar RFQ..." />
+            <input 
+              type="text" 
+              placeholder="Buscar RFQ por código, descrição..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
           <div className={styles.filtersGroup}>
             <Select
