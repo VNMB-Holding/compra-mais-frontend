@@ -20,7 +20,7 @@ interface RFQRow {
 }
 
 function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
-  if (rfq.status === "Closed" || rfq.status === "Cancelled") return "Encerrada";
+  if (rfq.status === "Closed" || rfq.status === "Cancelled" || (rfq.status as string) === "Finished") return "Encerrada";
   
   const closes = new Date(rfq.closesAt);
   const now = new Date();
