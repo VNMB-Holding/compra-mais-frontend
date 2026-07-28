@@ -229,6 +229,18 @@ export default function NewRfqPage() {
 
             {currentStep === 4 && (
               <section className={styles.formSection}>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Incoterm</label>
+                    <Select
+                      options={[
+                        { label: "CIF — Cost, Insurance & Freight", value: "CIF" },
+                        { label: "FOB — Free on Board", value: "FOB" },
+                        { label: "EXW — Ex Works", value: "EXW" },
+                        { label: "DDP — Delivered Duty Paid", value: "DDP" },
+                      ]}
+                      value={incoterm}
+                      onChange={setIncoterm}
                     />
                   </div>
                   <div className={styles.formGroup}>

@@ -248,7 +248,7 @@ export default function RfqDetailPage() {
         message={<>Fornecedores que ainda não enviaram propostas não poderão mais enviá-las. Deseja continuar?</>}
         confirmLabel="Sim, encerrar" onConfirm={encerrarCotacao} onCancel={() => setDialog(null)} />
 
-      <ConfirmDialog open={dialog === "selecionar"} variant="primary" icon="check-circle" title="Confirmar Vencedor?"
+      <ConfirmDialog open={dialog === "selecionar"} variant="success" icon="check-circle" title="Confirmar Vencedor?"
         message={<>Você está selecionando esta proposta como a vencedora da cotação.</>}
         confirmLabel="Confirmar" onConfirm={confirmarVencedor} onCancel={() => setDialog(null)} />
 
@@ -286,7 +286,7 @@ export default function RfqDetailPage() {
                 </Button>
              )}
              {estagio === "aprovacao" && (
-                <Button variant="success" onClick={() => setDialog("gerar")}>
+                <Button variant="primary" onClick={() => setDialog("gerar")}>
                   <Icon name="file-plus-02" /> Gerar Pedido de Compra
                 </Button>
              )}
@@ -342,7 +342,7 @@ export default function RfqDetailPage() {
             {propostas.map((prop) => (
               <PropostaCard
                 key={prop.id}
-                proposta={prop}
+                proposal={prop}
                 rfqItems={rfq.purchaseRequest?.items || []}
                 isWinner={vencedorId === prop.id || melhorProposta?.id === prop.id && estagio === "analise"}
                 onSalvar={handleSalvarProposta}
@@ -377,7 +377,7 @@ export default function RfqDetailPage() {
                            {vencedorId === p.id ? (
                              <Badge variant="success" icon="check">Selecionada</Badge>
                            ) : (
-                             <Button variant="secondary" size="sm" onClick={() => {
+                              <Button variant="secondary" onClick={() => {
                                setPendingVencedorId(p.id);
                                setDialog("selecionar");
                              }}>
