@@ -49,7 +49,7 @@ function mapToRow(pr: PurchaseRequest): SolicitationRow {
 export default function SolicitacoesPage() {
   const router = useRouter();
 
-  const [categoria, setCategoria] = useState("Todas");
+  const [statusFilter, setStatusFilter] = useState("Todos");
   const [prioridade, setPrioridade] = useState("Todos");
   const [solicitacoes, setSolicitacoes] = useState<SolicitationRow[]>([]);
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
@@ -73,11 +73,12 @@ export default function SolicitacoesPage() {
     fetchData();
   }, []);
 
-  const categoriasOptions = [
-    { label: "Todas as categorias", value: "Todas" },
-    ...Array.from(new Set(solicitacoes.map((s) => s.categoria)))
-      .filter(Boolean)
-      .map((c) => ({ label: c, value: c })),
+  const statusOptions = [
+    { label: "Status: Todos", value: "Todos" },
+    { label: "Rascunho", value: "Rascunho" },
+    { label: "Aguardando aprovação", value: "Aguardando aprovação" },
+    { label: "Aprovada", value: "Aprovada" },
+    { label: "Rejeitada", value: "Rejeitada" },
   ];
 
   const prioridadesOptions = [
@@ -91,7 +92,7 @@ export default function SolicitacoesPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = solicitacoes.filter((s) => {
-    if (categoria !== "Todas" && s.categoria !== categoria) return false;
+    if (statusFilter !== "Todos" && s.status !== statusFilter) return false;
     if (prioridade !== "Todos" && s.prioridade !== prioridade) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
@@ -172,9 +173,9 @@ export default function SolicitacoesPage() {
           </div>
           <div className={styles.filtersGroup}>
             <Select
-              options={categoriasOptions}
-              value={categoria}
-              onChange={setCategoria}
+              options={statusOptions}
+              value={statusFilter}
+              onChange={setStatusFilter}
               icon="filter-lines"
               className={styles.customSelectFilter}
             />
