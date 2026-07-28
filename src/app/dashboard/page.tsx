@@ -85,7 +85,7 @@ export default function DashboardPage() {
           id: rfq.id,
           codigo: rfq.code,
           descricao: rfq.title || rfq.purchaseRequest?.description || "",
-          categoria: rfq.purchaseRequest?.category || "",
+          categoria: (rfq.purchaseRequest as any)?.category?.name || "Sem Categoria",
           dataAbertura: formatDate(rfq.createdAt),
           dataEncerramento: formatDate(rfq.closesAt),
           tipoSegmento: "Menor Preço",
