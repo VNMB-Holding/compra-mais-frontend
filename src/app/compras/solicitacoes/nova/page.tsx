@@ -477,13 +477,7 @@ export default function NovaSolicitacaoPage() {
                               <div className={`${styles.formGroup} ${styles.col4}`}>
                                 <label>Categoria</label>
                                 <Select
-                                  options={[
-                                    { label: "Combustíveis", value: "Combustiveis" },
-                                    { label: "Insumos operacionais", value: "Insumos operacionais" },
-                                    { label: "MRO / Peças", value: "MRO / Pecas" },
-                                    { label: "Serviços técnicos", value: "Servicos tecnicos" },
-                                    { label: "Facilities", value: "Facilities" }
-                                  ]}
+                                  options={categories.map((c) => ({ label: c.name, value: c.name }))}
                                   value={item.category}
                                   onChange={(value) => updateItem(item.id, "category", value)}
                                 />
@@ -613,23 +607,23 @@ export default function NovaSolicitacaoPage() {
                   <button type="button" className={styles.btnCancel} onClick={() => router.push("/compras/solicitacoes")}>
                     Cancelar
                   </button>
-                  <Button 
-                    variant="primary" 
-                    type="button" 
-                    className={styles.btnSubmit} 
+                  <Button
+                    variant="primary"
+                    type="button"
+                    className={styles.btnSubmit}
                     onClick={() => {
                       if (!title.trim()) {
-                        alert("Por favor, preencha o título da solicitação");
+                        alert("Por favor, preencha o título da solicitação.");
                         return;
                       }
                       if (!justification.trim()) {
-                        alert("Por favor, preencha a justificativa da solicitação");
+                        alert("Por favor, informe a justificativa de negócio.");
                         return;
                       }
                       setCurrentStep(2);
                     }}
                   >
-                    Avançar <Icon name="chevron-right" />
+                    Avançar para Itens <Icon name="chevron-right" />
                   </Button>
                 </>
               )}
