@@ -146,27 +146,39 @@ export default function RfqsPage() {
     }
   ];
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRows = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
   return (
     <div className={styles.pageContainer}>
 
       <div className={styles.pageHeader}>
         <div>
-          <h1>RFQs / Cotações</h1>
-          <p>Gerencie os processos de cotação e negociação com fornecedores.</p>
+          <h1>Processos de Cotação (RFQs)</h1>
+          <p>Gerencie cotações com fornecedores, equalização de propostas e rodadas de negociação.</p>
         </div>
-        <div className={styles.headerActions}>
-          <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
-          <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/rfqs/nova")}>
-            <Icon name="plus" /> Nova RFQ
-          </Button>
-        </div>
+        <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/rfqs/nova")}>
+          <Icon name="plus" /> Nova RFQ
+        </Button>
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs abertas" value={loading ? "..." : String(kpis?.open || 0)} icon="receipt-check" description="Aguardando propostas" />
-        <KpiCard title="Encerrando hoje" value={loading ? "..." : String(kpis?.closingToday || 0)} icon="clock" description="Atenção necessária" />
-        <KpiCard title="Propostas recebidas" value={loading ? "..." : String(kpis?.proposalCount || 0)} icon="mail-01" description="Nesta rodada" />
-        <KpiCard title="Total de RFQs" value={loading ? "..." : String(kpis?.total || 0)} icon="clipboard-check" />
+        <KpiCard title="RFQs Abertas" value={loading ? "..." : String(kpis?.open || 0)} icon="hourglass-01" description="Em andamento" />
+        <KpiCard title="Propostas Recebidas" value={loading ? "..." : String(kpis?.proposalCount || 0)} icon="file-01" description="Aguardando análise" />
+        <KpiCard title="Finalizadas" value={loading ? "..." : String(kpis?.total || 0)} icon="check-circle" description="Concluídas" />
+        <KpiCard title="Em Negociação" value={loading ? "..." : String(kpis?.total || 0)} icon="users-01" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -176,36 +188,63 @@ export default function RfqsPage() {
             <Icon name="search-md" />
             <input 
               type="text" 
-              placeholder="Buscar RFQ por código, descrição..." 
+              placeholder="Buscar RFQ por código, título..." 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <div className={styles.filtersGroup}>
             <Select
               options={categoriasOptions}
               value={categoria}
-              onChange={setCategoria}
+              onChange={(val) => {
+                setCategoria(val);
+                setCurrentPage(1);
+              }}
               icon="filter-lines"
               className={styles.customSelectFilter}
             />
             <Select
               options={statusOptions}
               value={status}
-              onChange={setStatus}
+              onChange={(val) => {
+                setStatus(val);
+                setCurrentPage(1);
+              }}
               className={styles.customSelectFilter}
             />
           </div>
         </div>
 
-        <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
+        <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
 
         <div className={styles.tableFooter}>
-          <span>Mostrando {filtered.length} de {rfqs.length} RFQs</span>
+          <span>
+            Mostrando {filtered.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} RFQs
+          </span>
           <div className={styles.paginationControls}>
-            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
-            <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
+            <button
+              className={styles.pageBtn}
+              onClick={handlePrevPage}
+              disabled={currentPage <= 1}
+              style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+            >
+              <Icon name="chevron-left" />
+            </button>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#475569", padding: "0 8px" }}>
+              Página {currentPage} de {totalPages}
+            </span>
+            <button
+              className={styles.pageBtn}
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages}
+              style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+            >
+              <Icon name="chevron-right" />
+            </button>
           </div>
         </div>
 
