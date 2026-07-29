@@ -323,14 +323,6 @@ export default function NovaSolicitacaoPage() {
                     <input className={styles.formControl} value={requester} onChange={(event) => setRequester(event.target.value)} />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Categoria do Pedido <span className="required-asterisk">*</span></label>
-                    <Select
-                      options={categories.map(c => ({ label: c.name, value: c.id }))}
-                      value={categoryId}
-                      onChange={setCategoryId}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
                     <label>Área requisitante</label>
                     <Select
                       options={[
