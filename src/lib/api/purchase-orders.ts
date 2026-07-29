@@ -9,7 +9,8 @@ export interface PurchaseOrder {
   totalValue: number;
   paymentTerms: string;
   estimatedDeliveryDate: string;
-  status: "AwaitingSignature" | "Signed" | "Delivered" | "Cancelled";
+  shippingType?: "CIF" | "FOB" | "EXW" | "DDP";
+  status: "AwaitingSignature" | "Signed" | "InTransit" | "Delivered" | "Cancelled" | "Sent" | "Processing";
   createdAt: string;
   updatedAt: string;
   supplier?: {

@@ -13,7 +13,7 @@ export interface Supplier {
   contactEmail: string;
   contactPhone: string;
   contactName?: string;
-  status: "Active" | "Inactive" | "UnderCertification";
+  status: "Active" | "Inactive" | "UnderCertification" | "Suspended" | "Pending";
   performanceScore?: number;
   createdAt: string;
   updatedAt: string;

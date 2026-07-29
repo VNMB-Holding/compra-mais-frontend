@@ -7,7 +7,7 @@ export interface Rfq {
   requestId: string;
   title: string;
   closesAt: string;
-  status: "Draft" | "Open" | "Closed" | "Cancelled";
+  status: "Draft" | "Open" | "UnderAnalysis" | "Finished" | "Closed" | "Cancelled" | "Pending" | "InQuote";
   createdAt: string;
   updatedAt: string;
   purchaseRequest?: {

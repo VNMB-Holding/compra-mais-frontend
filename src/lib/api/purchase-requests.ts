@@ -12,8 +12,8 @@ export interface PurchaseRequest {
   estimatedBudget: number;
   deliveryLocation: string;
   deadline: string;
-  priority: "Low" | "Medium" | "High" | "Urgent";
-  status: "Draft" | "AwaitingApproval" | "Approved" | "Rejected";
+  priority: "Low" | "Medium" | "High" | "Urgent" | "Critical";
+  status: "Draft" | "AwaitingApproval" | "Approved" | "Rejected" | "InQuote" | "Finished" | "Pending" | "UnderAnalysis" | "Cancelled";
   createdAt: string;
   updatedAt: string;
   items?: RequestItem[];
