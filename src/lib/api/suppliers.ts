@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { CategoryType } from "@/lib/utils/category-icon";
 
 export interface Supplier {
   id: string;
@@ -7,6 +8,7 @@ export interface Supplier {
   tradeName: string;
   cnpj: string;
   segment: string;
+  categoryType?: CategoryType | string;
   stateRegistration?: string;
   zipCode: string;
   address: string;
