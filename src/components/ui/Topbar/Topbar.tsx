@@ -31,7 +31,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     if (user?.tenantName) {
       setSelectedCompany(user.tenantName.toUpperCase());
     } else {
-      setSelectedCompany("NMB HOLDING");
+      setSelectedCompany("VNMB HOLDING");
     }
   }, [user]);
 
@@ -75,9 +75,10 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
   const getAvailableCompanies = () => {
     return user?.availableTenants || [
-      { id: "1", name: "NMB HOLDING", type: "Matriz" },
-      { id: "2", name: "MINERADORA OURO PRETO", type: "Filial" },
-      { id: "3", name: "AGRO SUL EXPORTAÇÕES", type: "Filial" },
+      { id: "1", name: "VNMB HOLDING", type: "Matriz" as const },
+      { id: "2", name: "VB AGROEXPORT", type: "Filial" as const },
+      { id: "3", name: "VB AGRO - PAULÍNIA", type: "Filial" as const },
+      { id: "4", name: "MINERADORA OURO PRETO", type: "Filial" as const },
     ];
   };
 
