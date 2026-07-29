@@ -4,6 +4,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { categoriesApi, Category } from "@/lib/api/categories";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
@@ -117,47 +118,42 @@ export default function NovaSolicitacaoPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
 
-  const [title, setTitle] = useState("Abastecimento emergencial de oleo diesel S10");
-  const [requester, setRequester] = useState("Breno Marques");
-  const [department, setDepartment] = useState("Operacoes");
-  const [priority, setPriority] = useState<Priority>("Alta");
+  const { user } = useAuth();
+
+  const [title, setTitle] = useState("");
+  const [requester, setRequester] = useState(user?.name || "");
+  const [department, setDepartment] = useState(user?.department || "");
+  const [priority, setPriority] = useState<Priority>("Media");
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     categoriesApi.list().then(setCategories).catch(console.error);
   }, []);
-  const [purchaseType, setPurchaseType] = useState("Material recorrente");
-  const [justification, setJustification] = useState(
-    "Reposicao preventiva para manter a frota operacional e evitar indisponibilidade nas rotas contratadas."
-  );
-  const [deliveryLocation, setDeliveryLocation] = useState("Base Operacional - Paulinia/SP");
-  const [deliveryWindow, setDeliveryWindow] = useState("Horario comercial com agendamento");
-  const [paymentTerms, setPaymentTerms] = useState("30 dias DDL");
-  const [preferredSupplier, setPreferredSupplier] = useState("Sem fornecedor preferencial");
-  const [notes, setNotes] = useState(
-    "Fornecedor deve apresentar documentacao regulatoria vigente, disponibilidade de entrega fracionada e contato operacional para janela de recebimento."
-  );
+
+  useEffect(() => {
+    if (user?.name) setRequester(user.name);
+    if (user?.department) setDepartment(user.department);
+  }, [user]);
+
+  const [purchaseType, setPurchaseType] = useState("Material");
+  const [justification, setJustification] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [deliveryWindow, setDeliveryWindow] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("");
+  const [preferredSupplier, setPreferredSupplier] = useState("");
+  const [notes, setNotes] = useState("");
+
   const [items, setItems] = useState<RequestItem[]>([
     {
       id: 1,
-      description: "Oleo Diesel S10",
-      category: "Combustiveis",
-      quantity: 500000,
-      unit: "L",
-      unitPrice: 5.72,
-      costCenter: "OP-104 Frota",
-      requiredDate: "2026-07-02",
-    },
-    {
-      id: 2,
-      description: "Aditivo ARLA 32",
-      category: "Insumos operacionais",
-      quantity: 12000,
-      unit: "L",
-      unitPrice: 3.15,
-      costCenter: "OP-104 Frota",
-      requiredDate: "2026-07-05",
+      description: "",
+      category: "",
+      quantity: 1,
+      unit: "UN",
+      unitPrice: 0,
+      costCenter: "",
+      requiredDate: "",
     },
   ]);
 
@@ -197,33 +193,41 @@ export default function NovaSolicitacaoPage() {
   const formatCurrency = (value: number) =>
     value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (asDraft = false) => {
     setIsSubmitting(true);
     try {
       const data = await purchaseRequestsApi.create({
-        description: title,
-        requesterId: requester,
-        costCenter: department,
+        description: title || "Rascunho de Solicitação",
+        requesterId: requester || user?.name || "Solicitante",
+        costCenter: department || "Geral",
         categoryId: categoryId || (categories[0]?.id ?? undefined),
-        justification: justification,
+        justification: justification || "Rascunho",
         estimatedBudget: totalEstimated,
-        deliveryLocation: deliveryLocation,
+        deliveryLocation: deliveryLocation || "A definir",
         deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         priority: priority === "Critica" ? "Critical" : priority === "Alta" ? "High" : priority === "Media" ? "Medium" : "Low",
-        status: "AwaitingApproval",
-        items: items.map(i => ({
-           description: i.description,
-           quantity: Number(i.quantity),
-           unit: i.unit,
-           estimatedUnitPrice: Number(i.unitPrice)
-        }))
+        status: asDraft ? "Draft" : "AwaitingApproval",
+        items: items
+          .filter((i) => i.description.trim())
+          .map((i) => ({
+            description: i.description,
+            quantity: Number(i.quantity) || 1,
+            unit: i.unit || "UN",
+            estimatedUnitPrice: Number(i.unitPrice) || 0,
+          })),
       } as any);
-      setCreatedCode(data.code);
-      setCreatedReqId(data.id);
-      setShowApprovalModal(true);
+
+      if (asDraft) {
+        alert(`Rascunho ${data.code} salvo com sucesso!`);
+        router.push("/compras/solicitacoes");
+      } else {
+        setCreatedCode(data.code);
+        setCreatedReqId(data.id);
+        setShowApprovalModal(true);
+      }
     } catch (err) {
       console.error(err);
-      alert("Falha ao registrar a solicitação de compra. Tente novamente.");
+      alert("Falha ao salvar a solicitação de compra. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -657,10 +661,15 @@ export default function NovaSolicitacaoPage() {
                   <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(2)}>
                     <Icon name="chevron-left" /> Voltar
                   </button>
-                  <button type="button" className={styles.secondaryAction} onClick={() => router.push("/compras/solicitacoes")}>
+                  <button
+                    type="button"
+                    className={styles.secondaryAction}
+                    onClick={() => handleSubmit(true)}
+                    disabled={isSubmitting}
+                  >
                     <Icon name="save-01" /> Salvar rascunho
                   </button>
-                  <Button variant="primary" className={styles.btnSubmit} onClick={handleSubmit} disabled={isSubmitting}>
+                  <Button variant="primary" className={styles.btnSubmit} onClick={() => handleSubmit(false)} disabled={isSubmitting}>
                     <Icon name="send-01" /> Enviar para aprovação
                   </Button>
                 </>
