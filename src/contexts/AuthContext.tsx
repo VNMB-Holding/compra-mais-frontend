@@ -83,14 +83,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const tenantsData = await getTenantsApi();
         if (tenantsData && tenantsData.length > 0) {
-          availableTenants = tenantsData.map((t) => ({
-            id: t.id,
-            name: t.name,
-            type: t.type,
-          }));
+          // Identifica o tenant principal do usuário logado
+          const currentTenant = tenantsData.find((t) => t.id === tenantId);
+          const isVnmbAdmin = currentTenant
+            ? currentTenant.name.toUpperCase().includes("VNMB")
+            : loginData.user.email.toLowerCase().includes("vnmb");
+
+          // Se for usuário da VNMB (Matriz Holding Suprema), tem acesso a TODAS as empresas do grupo.
+          // Caso contrário, tem acesso apenas à sua empresa/tenant específica.
+          if (isVnmbAdmin) {
+            availableTenants = tenantsData.map((t) => ({
+              id: t.id,
+              name: t.name,
+              type: t.type,
+            }));
+          } else if (currentTenant) {
+            availableTenants = [
+              {
+                id: currentTenant.id,
+                name: currentTenant.name,
+                type: currentTenant.type,
+              },
+            ];
+          }
         }
       } catch {
-        // Se a API /api/tenants falhar ou precisar de permissão admin, fallback para tenant único
+        // Se a API /api/tenants falhar
       }
 
       const role = mapApiRole(meRoles);
