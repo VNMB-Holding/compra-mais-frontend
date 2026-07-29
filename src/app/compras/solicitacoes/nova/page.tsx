@@ -214,6 +214,7 @@ export default function NovaSolicitacaoPage() {
             quantity: Number(i.quantity) || 1,
             unit: i.unit || "UN",
             estimatedUnitPrice: Number(i.unitPrice) || 0,
+            category: i.category || "Geral",
           })),
       } as any);
 

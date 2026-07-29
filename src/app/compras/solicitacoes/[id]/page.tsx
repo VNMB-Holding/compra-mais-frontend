@@ -6,6 +6,7 @@ import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
+import { getCategoryIcon } from "@/lib/utils/category-icon";
 
 type DialogType = "approve" | "reject" | null;
 
@@ -86,6 +87,18 @@ export default function SolicitacaoDetailPage() {
     });
   };
 
+  // Categoria calculada dinamicamente dos itens (se houver categorias diferentes, torna-se Mista)
+  const itemCategories = sol?.items?.map((i: any) => i.category).filter(Boolean) || [];
+  const uniqueCategories = Array.from(new Set(itemCategories));
+  const categoryName =
+    uniqueCategories.length > 1
+      ? "Mista"
+      : uniqueCategories.length === 1
+      ? uniqueCategories[0]
+      : typeof sol?.category === "object"
+      ? (sol.category as any).name || "Geral"
+      : sol?.category || "Geral";
+
   return (
     <div className={styles.detailContainer}>
 
@@ -97,7 +110,7 @@ export default function SolicitacaoDetailPage() {
         title="Aprovar esta solicitação?"
         message={
           <>
-            A solicitação <strong>{solId || "SOL-000456"}</strong> será aprovada e liberada para abertura de RFQ.
+            A solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> será aprovada e liberada para abertura de RFQ.
             Esta ação ficará registrada no histórico de aprovações.
           </>
         }
@@ -114,7 +127,7 @@ export default function SolicitacaoDetailPage() {
         title="Rejeitar esta solicitação?"
         message={
           <>
-            A solicitação <strong>{solId || "SOL-000456"}</strong> será rejeitada e o solicitante será notificado.
+            A solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> será rejeitada e o solicitante será notificado.
             Esta ação não pode ser desfeita.
           </>
         }
@@ -130,12 +143,12 @@ export default function SolicitacaoDetailPage() {
       {/* Feedback de resultado */}
       {approved === true && (
         <div className={styles.resultBanner} style={{ background: "#d1fae5", borderColor: "#6ee7b7", color: "#065f46" }}>
-          <Icon name="check-circle" /> Solicitação <strong>{solId || "SOL-000456"}</strong> aprovada com sucesso. Agora você pode abrir uma RFQ.
+          <Icon name="check-circle" /> Solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> aprovada com sucesso. Agora você pode abrir uma RFQ.
         </div>
       )}
       {approved === false && (
         <div className={styles.resultBanner} style={{ background: "#fee2e2", borderColor: "#fca5a5", color: "#991b1b" }}>
-          <Icon name="x-circle" /> Solicitação <strong>{solId || "SOL-000456"}</strong> rejeitada.
+          <Icon name="x-circle" /> Solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> rejeitada.
         </div>
       )}
 
@@ -151,7 +164,7 @@ export default function SolicitacaoDetailPage() {
           <p className={styles.subtitleLarge}>{sol?.description || "Óleo Diesel S10"}</p>
           <div className={styles.metadataTags}>
             <span className={styles.infoTag}><Icon name="building-01" /> Centro de custo: {sol?.costCenter || "Operações"}</span>
-            <span className={styles.infoTag}><Icon name="folder" /> Categoria: {typeof sol?.category === "object" ? (sol.category as any).name : sol?.category || "Combustíveis"}</span>
+            <span className={styles.infoTag}><Icon name={getCategoryIcon(categoryName)} /> Categoria: {categoryName}</span>
             <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: {sol?.priority || "Alta"}</span>
           </div>
         </div>
@@ -222,6 +235,41 @@ export default function SolicitacaoDetailPage() {
             </div>
           </Card>
 
+          {/* LISTA COMPLETA DE ITENS SOLICITADOS */}
+          {sol?.items && sol.items.length > 0 && (
+            <Card className={styles.infoCard} style={{ marginBottom: 20 }}>
+              <h4>Itens Solicitados ({sol.items.length})</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+                {sol.items.map((item: any, idx: number) => (
+                  <div
+                    key={item.id || idx}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "12px 16px",
+                      background: "#f8fafc",
+                      borderRadius: 8,
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div>
+                      <strong style={{ fontSize: 14, color: "#0f172a" }}>{item.description}</strong>
+                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                        Quantidade: <strong>{item.quantity} {item.unit}</strong> {item.category ? `• Categoria: ${item.category}` : ""}
+                      </div>
+                    </div>
+                    {item.estimatedUnitPrice ? (
+                      <strong style={{ fontSize: 14, color: "#007d79" }}>
+                        {(Number(item.quantity) * Number(item.estimatedUnitPrice)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </strong>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* FICHA TÉCNICA INFORMATIVA */}
           <Card className={styles.infoCard}>
             <h4>Ficha de Informações Técnicas</h4>
@@ -236,7 +284,7 @@ export default function SolicitacaoDetailPage() {
               </div>
               <div className={styles.infoItem}>
                 <label>Volume Estimado</label>
-                <strong>{sol?.items && sol.items.length > 0 ? `${sol.items[0].quantity} ${sol.items[0].unit}` : "500.000 L"}</strong>
+                <strong>{sol?.items && sol.items.length > 0 ? `${sol.items.reduce((acc: number, i: any) => acc + Number(i.quantity), 0)} UN` : "500.000 L"}</strong>
               </div>
               <div className={styles.infoItem}>
                 <label>Orçamento Previsto</label>
