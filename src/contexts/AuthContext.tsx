@@ -3,7 +3,7 @@
 import React, { createContext, useState, useCallback, useEffect } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
-import { loginApi, getMeApi, logoutApi } from "@/lib/auth/api";
+import { loginApi, getMeApi, getTenantsApi, logoutApi } from "@/lib/auth/api";
 import { setTokenProvider } from "@/lib/api-client";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -78,6 +78,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fallback default roles
       }
 
+      // 3. Busca a lista oficial de Tenants/Empresas cadastradas na API do vnmb-identity
+      let availableTenants: { id: string; name: string; type?: "Matriz" | "Filial" }[] = [];
+      try {
+        const tenantsData = await getTenantsApi();
+        if (tenantsData && tenantsData.length > 0) {
+          availableTenants = tenantsData.map((t) => ({
+            id: t.id,
+            name: t.name,
+            type: t.type,
+          }));
+        }
+      } catch {
+        // Se a API /api/tenants falhar ou precisar de permissão admin, fallback para tenant único
+      }
+
       const role = mapApiRole(meRoles);
 
       const loggedInUser: User = {
@@ -88,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         roles: meRoles,
         scopes: meScopes,
         tenantId,
+        availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
         accessToken: loginData.access_token,
         refreshToken: loginData.refresh_token,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(loginData.user.name)}`,

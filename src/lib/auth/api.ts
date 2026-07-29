@@ -36,6 +36,20 @@ export async function getMeApi(): Promise<IdentityMeResponse> {
   return apiClient.get<IdentityMeResponse>("/api/auth/me", { auth: true });
 }
 
+export interface IdentityTenant {
+  id: string;
+  name: string;
+  slug: string;
+  document_number: string;
+  status: "Active" | "Inactive";
+  type: "Matriz" | "Filial";
+  parent_tenant_id?: string;
+}
+
+export async function getTenantsApi(): Promise<IdentityTenant[]> {
+  return apiClient.get<IdentityTenant[]>("/api/tenants", { auth: true });
+}
+
 export async function logoutApi(refreshToken: string): Promise<void> {
   return apiClient.post<void>(
     "/api/auth/logout",
