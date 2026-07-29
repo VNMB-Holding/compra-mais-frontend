@@ -198,7 +198,7 @@ export default function NovaSolicitacaoPage() {
     try {
       const data = await purchaseRequestsApi.create({
         description: title || "Rascunho de Solicitação",
-        requesterId: requester || user?.name || "Solicitante",
+        requesterId: user?.id,
         costCenter: department || "Geral",
         categoryId: categoryId || (categories[0]?.id ?? undefined),
         justification: justification || "Rascunho",
