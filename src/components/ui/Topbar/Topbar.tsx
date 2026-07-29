@@ -109,8 +109,21 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [hasUnreadNotifs, setHasUnreadNotifs] = useState(true);
+  const [hasUnreadMsgs, setHasUnreadMsgs] = useState(true);
+
   const togglePopup = (popup: "notifications" | "messages" | "company" | "user") => {
-    setActivePopup(activePopup === popup ? null : popup);
+    if (activePopup === popup) {
+      setActivePopup(null);
+    } else {
+      setActivePopup(popup);
+      if (popup === "notifications") {
+        setHasUnreadNotifs(false);
+      }
+      if (popup === "messages") {
+        setHasUnreadMsgs(false);
+      }
+    }
   };
 
   const handleLogout = () => {
@@ -168,7 +181,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`} onClick={() => togglePopup("notifications")}>
             <Icon name="bell-01" />
-            {notifications.length > 0 && <span className={styles.badge}>{notifications.length}</span>}
+            {hasUnreadNotifs && notifications.length > 0 && <span className={styles.badge}>{notifications.length}</span>}
           </div>
           
           {activePopup === "notifications" && (
@@ -204,7 +217,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "messages" ? styles.activeIcon : ""}`} onClick={() => togglePopup("messages")}>
             <Icon name="mail-01" />
-            {messages.length > 0 && <span className={styles.badge}>{messages.length}</span>}
+            {hasUnreadMsgs && messages.length > 0 && <span className={styles.badge}>{messages.length}</span>}
           </div>
 
           {activePopup === "messages" && (
