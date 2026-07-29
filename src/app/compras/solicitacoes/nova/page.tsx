@@ -204,26 +204,26 @@ export default function NovaSolicitacaoPage() {
         description: title,
         requesterId: requester,
         costCenter: department,
-        category: categoryId,
+        categoryId: categoryId || (categories[0]?.id ?? undefined),
         justification: justification,
         estimatedBudget: totalEstimated,
         deliveryLocation: deliveryLocation,
-        deadline: new Date().toISOString(),
-        priority: priority === "Critica" ? "Urgent" : priority === "Alta" ? "High" : priority === "Media" ? "Medium" : "Low",
-        status: "Approved",
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        priority: priority === "Critica" ? "Critical" : priority === "Alta" ? "High" : priority === "Media" ? "Medium" : "Low",
+        status: "AwaitingApproval",
         items: items.map(i => ({
            description: i.description,
            quantity: Number(i.quantity),
            unit: i.unit,
            estimatedUnitPrice: Number(i.unitPrice)
         }))
-      });
+      } as any);
       setCreatedCode(data.code);
       setCreatedReqId(data.id);
       setShowApprovalModal(true);
     } catch (err) {
       console.error(err);
-      alert("Erro ao criar solicitação.");
+      alert("Falha ao registrar a solicitação de compra. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
