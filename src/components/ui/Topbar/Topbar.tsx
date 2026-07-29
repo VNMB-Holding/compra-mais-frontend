@@ -74,12 +74,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   }, [isAuthenticated]);
 
   const getAvailableCompanies = () => {
-    return user?.availableTenants || [
-      { id: "1", name: "VNMB HOLDING", type: "Matriz" as const },
-      { id: "2", name: "VB AGROEXPORT", type: "Filial" as const },
-      { id: "3", name: "VB AGRO - PAULÍNIA", type: "Filial" as const },
-      { id: "4", name: "MINERADORA OURO PRETO", type: "Filial" as const },
-    ];
+    return user?.availableTenants || [];
   };
 
   const availableCompanies = getAvailableCompanies();
