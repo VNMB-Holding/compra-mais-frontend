@@ -7,6 +7,7 @@ import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
 import { rfqsApi, Rfq, RfqKpis } from "@/lib/api/rfqs";
+import { getCategoryIcon } from "@/lib/utils/category-icon";
 
 interface RFQRow {
   id: string;
@@ -115,7 +116,15 @@ export default function RfqsPage() {
   const columns: ColumnDef<RFQRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
-    { header: "Categoria", accessorKey: "categoria" },
+    {
+      header: "Categoria",
+      cell: (row) => (
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#334155" }}>
+          <Icon name={getCategoryIcon(row.categoria)} size={16} />
+          <span>{row.categoria}</span>
+        </div>
+      )
+    },
     { header: "Abertura", accessorKey: "dataAbertura" },
     { header: "Encerramento", accessorKey: "dataEncerramento" },
     {

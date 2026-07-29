@@ -7,6 +7,7 @@ import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
+import { getCategoryIcon } from "@/lib/utils/category-icon";
 
 interface FornecedorRow {
   id: string;
@@ -24,15 +25,6 @@ interface FornecedorRow {
   cor: "green" | "orange";
 }
 
-const SEGMENT_ICON_MAP: Record<string, string> = {
-  "Serviços": "briefcase-01",
-  "Combustíveis": "drop",
-  "TI": "monitor-01",
-  "MRO": "tool-01",
-  "Matérias-Primas": "box",
-  "Logística": "truck-01",
-};
-
 function mapSupplierToRow(s: Supplier): FornecedorRow {
   const isActive = s.status === "Active";
   const score = s.performanceScore ? Number(s.performanceScore) : null;
@@ -44,7 +36,7 @@ function mapSupplierToRow(s: Supplier): FornecedorRow {
     nome: s.corporateName,
     cnpj: s.cnpj,
     categoria: s.segment,
-    catIcon: SEGMENT_ICON_MAP[s.segment] || "briefcase-01",
+    catIcon: getCategoryIcon(s.segment),
     status: isActive ? "Homologado" : s.status === "UnderCertification" ? "Em homologação" : "Inativo",
     statusSub: s.createdAt ? `desde ${new Date(s.createdAt).toLocaleDateString("pt-BR")}` : "",
     nota: score ? score.toFixed(1).replace(".", ",") : "-",

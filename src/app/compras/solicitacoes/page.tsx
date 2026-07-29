@@ -7,6 +7,7 @@ import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
 import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib/api/purchase-requests";
+import { getCategoryIcon } from "@/lib/utils/category-icon";
 
 interface SolicitationRow {
   id: string;
@@ -108,6 +109,15 @@ export default function SolicitacoesPage() {
   const columns: ColumnDef<SolicitationRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
+    {
+      header: "Categoria",
+      cell: (row) => (
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#334155" }}>
+          <Icon name={getCategoryIcon(row.categoria)} size={16} />
+          <span>{row.categoria || "Geral"}</span>
+        </div>
+      )
+    },
     { header: "Data", accessorKey: "data" },
     {
       header: "Prioridade",
