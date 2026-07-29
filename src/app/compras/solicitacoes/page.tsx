@@ -41,11 +41,18 @@ const PRIORITY_MAP: Record<string, string> = {
 };
 
 function mapToRow(pr: PurchaseRequest): SolicitationRow {
-  const categoryName = pr.category
-    ? typeof pr.category === "object"
-      ? (pr.category as any).name || "Geral"
-      : pr.category
-    : "Geral";
+  // Coleta as categorias dos itens da solicitação
+  const itemCategories = pr.items?.map((i: any) => i.category).filter(Boolean) || [];
+  const uniqueCategories = Array.from(new Set(itemCategories));
+
+  let finalCategory = "Geral";
+  if (uniqueCategories.length > 1) {
+    finalCategory = "Mista";
+  } else if (uniqueCategories.length === 1) {
+    finalCategory = uniqueCategories[0];
+  } else if (pr.category) {
+    finalCategory = typeof pr.category === "object" ? (pr.category as any).name || "Geral" : pr.category;
+  }
 
   return {
     id: pr.id,
@@ -55,7 +62,7 @@ function mapToRow(pr: PurchaseRequest): SolicitationRow {
     data: new Date(pr.createdAt).toLocaleDateString("pt-BR"),
     status: STATUS_MAP[pr.status] || pr.status,
     prioridade: PRIORITY_MAP[pr.priority] || pr.priority,
-    categoria: categoryName,
+    categoria: finalCategory,
   };
 }
 
