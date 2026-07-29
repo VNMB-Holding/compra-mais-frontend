@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon, Select } from "@/components/ui";
+import { Card, Button, Icon, Select, Loading } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
@@ -192,10 +192,10 @@ export default function FornecedoresListPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Fornecedores homologados" value={loading ? "..." : String(kpis?.active || 0)} icon="users-01" description="Ativos" />
-        <KpiCard title="Em homologação" value={loading ? "..." : String(kpis?.underCertification || 0)} icon="clock" description="Pendente" />
-        <KpiCard title="Nota média de performance" value={loading ? "..." : (kpis?.avgPerformanceScore || "-")} icon="star-01" description="Entre homologados" />
-        <KpiCard title="Categorias cobertas" value={loading ? "..." : String(kpis?.segmentCount || 0)} icon="shield-01" />
+        <KpiCard title="Fornecedores homologados" value={loading ? "—" : String(kpis?.active || 0)} icon="users-01" description="Ativos" />
+        <KpiCard title="Em homologação" value={loading ? "—" : String(kpis?.underCertification || 0)} icon="clock" description="Pendente" />
+        <KpiCard title="Nota média de performance" value={loading ? "—" : (kpis?.avgPerformanceScore || "-")} icon="star-01" description="Entre homologados" />
+        <KpiCard title="Categorias cobertas" value={loading ? "—" : String(kpis?.segmentCount || 0)} icon="shield-01" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -222,16 +222,22 @@ export default function FornecedoresListPage() {
           </div>
         </div>
 
-        <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/fornecedores/${row.id}`)} />
+        {loading ? (
+          <Loading variant="inline" message="Carregando fornecedores..." size="medium" />
+        ) : (
+          <>
+            <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/fornecedores/${row.id}`)} />
 
-        <div className={styles.tableFooter}>
-          <span>Mostrando {filtered.length} de {fornecedores.length} fornecedores</span>
-          <div className={styles.paginationControls}>
-            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
-            <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
-          </div>
-        </div>
+            <div className={styles.tableFooter}>
+              <span>Mostrando {filtered.length} de {fornecedores.length} fornecedores</span>
+              <div className={styles.paginationControls}>
+                <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
+                <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
+                <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
+              </div>
+            </div>
+          </>
+        )}
 
       </Card>
     </div>

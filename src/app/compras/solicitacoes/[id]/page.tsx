@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Loading } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
@@ -140,7 +140,11 @@ export default function SolicitacaoDetailPage() {
         <Icon name="chevron-left" /> Voltar para Solicitações
       </button>
 
-      {/* Feedback de resultado */}
+      {loading ? (
+        <Loading variant="inline" message="Carregando solicitação..." size="large" />
+      ) : (
+        <>
+        {/* Feedback de resultado */}
       {approved === true && (
         <div className={styles.resultBanner} style={{ background: "#d1fae5", borderColor: "#6ee7b7", color: "#065f46" }}>
           <Icon name="check-circle" /> Solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> aprovada com sucesso. Agora você pode abrir uma RFQ.
@@ -349,6 +353,8 @@ export default function SolicitacaoDetailPage() {
 
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select } from "@/components/ui";
+import { Card, Icon, Select, Loading } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./pedidos.module.css";
@@ -136,10 +136,10 @@ export default function PedidosPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de pedidos" value={loading ? "..." : String(pedidos.length)} icon="shopping-cart-01" description="Este mês" />
-        <KpiCard title="Pendentes" value={loading ? "..." : String(pendentCount)} icon="clock" description="Aguardando entrega" />
-        <KpiCard title="Entregues" value={loading ? "..." : String(entregueCount)} icon="check-circle" description="Finalizados" />
-        <KpiCard title="Valor total" value={loading ? "..." : formatCurrency(totalValue)} icon="currency-dollar-circle" description="Em pedidos" />
+        <KpiCard title="Total de pedidos" value={loading ? "—" : String(pedidos.length)} icon="shopping-cart-01" description="Este mês" />
+        <KpiCard title="Pendentes" value={loading ? "—" : String(pendentCount)} icon="clock" description="Aguardando entrega" />
+        <KpiCard title="Entregues" value={loading ? "—" : String(entregueCount)} icon="check-circle" description="Finalizados" />
+        <KpiCard title="Valor total" value={loading ? "—" : formatCurrency(totalValue)} icon="currency-dollar-circle" description="Em pedidos" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -166,16 +166,22 @@ export default function PedidosPage() {
           </div>
         </div>
 
-        <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />
+        {loading ? (
+          <Loading variant="inline" message="Carregando pedidos..." size="medium" />
+        ) : (
+          <>
+            <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />
 
-        <div className={styles.tableFooter}>
-          <span>Mostrando {filtered.length} de {pedidos.length} pedidos</span>
-          <div className={styles.paginationControls}>
-            <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
-            <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-            <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
-          </div>
-        </div>
+            <div className={styles.tableFooter}>
+              <span>Mostrando {filtered.length} de {pedidos.length} pedidos</span>
+              <div className={styles.paginationControls}>
+                <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
+                <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
+                <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
+              </div>
+            </div>
+          </>
+        )}
 
       </Card>
     </div>

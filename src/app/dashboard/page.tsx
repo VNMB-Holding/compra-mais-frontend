@@ -12,7 +12,8 @@ import {
   LineChart, 
   PieChart,
   UrgentQuoteCard,
-  Icon
+  Icon,
+  Loading
 } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import { useAuth } from "@/hooks/useAuth";
@@ -161,16 +162,16 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs em andamento" value={loading ? "..." : String(kpis?.rfqsInProgress || 0)} icon="receipt-check" linkLabel="Ver todas" />
-        <KpiCard title="Aprovações pendentes" value={loading ? "..." : String(kpis?.approvalsPending || 0)} icon="shield-01" linkLabel="Ver todas" />
+        <KpiCard title="RFQs em andamento" value={loading ? "—" : String(kpis?.rfqsInProgress || 0)} icon="receipt-check" linkLabel="Ver todas" />
+        <KpiCard title="Aprovações pendentes" value={loading ? "—" : String(kpis?.approvalsPending || 0)} icon="shield-01" linkLabel="Ver todas" />
         <KpiCard 
           title="Economia acumulada" 
-          value={loading ? "..." : formatCurrency(kpis?.economy || 0)} 
+          value={loading ? "—" : formatCurrency(kpis?.economy || 0)} 
           icon="trend-up-01" 
           linkLabel="Ver detalhes" 
         />
-        <KpiCard title="Pedidos emitidos" value={loading ? "..." : String(kpis?.ordersEmitted || 0)} icon="box" linkLabel="Ver todos" />
-        <KpiCard title="Fornecedores ativos" value={loading ? "..." : String(kpis?.suppliersActive || 0)} icon="users-01" linkLabel="Ver todos" />
+        <KpiCard title="Pedidos emitidos" value={loading ? "—" : String(kpis?.ordersEmitted || 0)} icon="box" linkLabel="Ver todos" />
+        <KpiCard title="Fornecedores ativos" value={loading ? "—" : String(kpis?.suppliersActive || 0)} icon="users-01" linkLabel="Ver todos" />
       </div>
 
       <div className={styles.middleGrid}>
@@ -238,7 +239,11 @@ export default function DashboardPage() {
           <Button variant="secondary">Filtrar Avançado</Button>
         </div>
 
-        <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.codigo}`)} />
+        {loading ? (
+          <Loading variant="inline" message="Carregando dados..." size="medium" />
+        ) : (
+          <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.codigo}`)} />
+        )}
       </Card>
     </div>
   );

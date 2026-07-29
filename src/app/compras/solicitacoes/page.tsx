@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select } from "@/components/ui";
+import { Button, Card, Icon, Select, Loading } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
@@ -223,10 +223,10 @@ export default function SolicitacoesPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de solicitações" value={loading ? "..." : String(kpis?.total || 0)} icon="clipboard" description="Neste mês" />
-        <KpiCard title="Aguardando aprovação" value={loading ? "..." : String(kpis?.awaitingApproval || 0)} icon="hourglass-01" description="Pendente" />
-        <KpiCard title="Aprovadas" value={loading ? "..." : String(kpis?.approved || 0)} icon="check-circle" description="Prontas para cotar" />
-        <KpiCard title="Categorias" value={loading ? "..." : String(kpis?.categoryCount || 0)} icon="folder" />
+        <KpiCard title="Total de solicitações" value={loading ? "—" : String(kpis?.total || 0)} icon="clipboard" description="Neste mês" />
+        <KpiCard title="Aguardando aprovação" value={loading ? "—" : String(kpis?.awaitingApproval || 0)} icon="hourglass-01" description="Pendente" />
+        <KpiCard title="Aprovadas" value={loading ? "—" : String(kpis?.approved || 0)} icon="check-circle" description="Prontas para cotar" />
+        <KpiCard title="Categorias" value={loading ? "—" : String(kpis?.categoryCount || 0)} icon="folder" />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -267,34 +267,40 @@ export default function SolicitacoesPage() {
           </div>
         </div>
 
-        <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/solicitacoes/${row.id}`)} />
+        {loading ? (
+          <Loading variant="inline" message="Carregando solicitações..." size="medium" />
+        ) : (
+          <>
+            <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/solicitacoes/${row.id}`)} />
 
-        <div className={styles.tableFooter}>
-          <span>
-            Mostrando {filtered.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} solicitações
-          </span>
-          <div className={styles.paginationControls}>
-            <button
-              className={styles.pageBtn}
-              onClick={handlePrevPage}
-              disabled={currentPage <= 1}
-              style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
-            >
-              <Icon name="chevron-left" />
-            </button>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#475569", padding: "0 8px" }}>
-              Página {currentPage} de {totalPages}
-            </span>
-            <button
-              className={styles.pageBtn}
-              onClick={handleNextPage}
-              disabled={currentPage >= totalPages}
-              style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
-            >
-              <Icon name="chevron-right" />
-            </button>
-          </div>
-        </div>
+            <div className={styles.tableFooter}>
+              <span>
+                Mostrando {filtered.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} solicitações
+              </span>
+              <div className={styles.paginationControls}>
+                <button
+                  className={styles.pageBtn}
+                  onClick={handlePrevPage}
+                  disabled={currentPage <= 1}
+                  style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+                >
+                  <Icon name="chevron-left" />
+                </button>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#475569", padding: "0 8px" }}>
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  className={styles.pageBtn}
+                  onClick={handleNextPage}
+                  disabled={currentPage >= totalPages}
+                  style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+                >
+                  <Icon name="chevron-right" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
       </Card>
     </div>
