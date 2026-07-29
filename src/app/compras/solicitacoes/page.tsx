@@ -25,6 +25,11 @@ const STATUS_MAP: Record<string, string> = {
   AwaitingApproval: "Aguardando aprovação",
   Approved: "Aprovada",
   Rejected: "Rejeitada",
+  InQuote: "Em Cotação",
+  Finished: "Atendida",
+  Pending: "Pendente",
+  UnderAnalysis: "Em Análise",
+  Cancelled: "Cancelada",
 };
 
 const PRIORITY_MAP: Record<string, string> = {
@@ -32,6 +37,7 @@ const PRIORITY_MAP: Record<string, string> = {
   Medium: "Média",
   High: "Alta",
   Urgent: "Urgente",
+  Critical: "Crítica",
 };
 
 function mapToRow(pr: PurchaseRequest): SolicitationRow {
@@ -85,7 +91,10 @@ export default function SolicitacoesPage() {
     { label: "Rascunho", value: "Rascunho" },
     { label: "Aguardando aprovação", value: "Aguardando aprovação" },
     { label: "Aprovada", value: "Aprovada" },
+    { label: "Em Cotação", value: "Em Cotação" },
+    { label: "Atendida", value: "Atendida" },
     { label: "Rejeitada", value: "Rejeitada" },
+    { label: "Cancelada", value: "Cancelada" },
   ];
 
   const prioridadesOptions = [
@@ -127,19 +136,42 @@ export default function SolicitacoesPage() {
     { header: "Data", accessorKey: "data" },
     {
       header: "Prioridade",
-      cell: (row) => (
-        <span className={`${styles.statusBadge} ${row.prioridade === "Alta" || row.prioridade === "Urgente" ? styles.badgeRed : row.prioridade === "Média" ? styles.badgeYellow : styles.badgeGray}`}>
-          {row.prioridade}
-        </span>
-      )
+      cell: (row) => {
+        const pClass =
+          row.prioridade === "Urgente" || row.prioridade === "Crítica"
+            ? styles.prioUrgent
+            : row.prioridade === "Alta"
+            ? styles.prioHigh
+            : row.prioridade === "Média"
+            ? styles.prioMedium
+            : styles.prioLow;
+        return (
+          <span className={`${styles.statusBadge} ${pClass}`}>
+            {row.prioridade}
+          </span>
+        );
+      }
     },
     {
       header: "Status",
-      cell: (row) => (
-        <span className={`${styles.statusBadge} ${row.status === "Aprovada" ? styles.badgeGreen : row.status === "Aguardando aprovação" ? styles.badgeYellow : row.status === "Rejeitada" ? styles.badgeRed : styles.badgeGray}`}>
-          {row.status}
-        </span>
-      )
+      cell: (row) => {
+        const sClass =
+          row.status === "Aprovada" || row.status === "Atendida"
+            ? styles.badgeGreen
+            : row.status === "Aguardando aprovação" || row.status === "Em Análise"
+            ? styles.badgeYellow
+            : row.status === "Em Cotação"
+            ? styles.badgeBlue
+            : row.status === "Rejeitada" || row.status === "Cancelada"
+            ? styles.badgeRed
+            : styles.badgeGray;
+
+        return (
+          <span className={`${styles.statusBadge} ${sClass}`}>
+            {row.status}
+          </span>
+        );
+      }
     },
     {
       header: "",
