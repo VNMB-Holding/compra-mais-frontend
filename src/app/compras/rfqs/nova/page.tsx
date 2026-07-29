@@ -106,8 +106,8 @@ export default function NewRfqPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Params vindos do modal de aprovacao de SOL
-  const paramSol = searchParams.get("sol") ?? "";
+  // Params vindos do modal de aprovacao de SOL ou da tela de detalhes da solicitacao
+  const paramSol = searchParams.get("sol") || searchParams.get("solicitacao") || "";
   const paramTitulo = searchParams.get("titulo") ?? "";
   const paramValor = searchParams.get("valor") ?? "";
   const paramPrioridade = searchParams.get("prioridade") ?? "";
