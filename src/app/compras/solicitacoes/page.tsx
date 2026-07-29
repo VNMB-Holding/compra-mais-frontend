@@ -35,6 +35,12 @@ const PRIORITY_MAP: Record<string, string> = {
 };
 
 function mapToRow(pr: PurchaseRequest): SolicitationRow {
+  const categoryName = pr.category
+    ? typeof pr.category === "object"
+      ? (pr.category as any).name || "Geral"
+      : pr.category
+    : "Geral";
+
   return {
     id: pr.id,
     codigo: pr.code,
@@ -43,7 +49,7 @@ function mapToRow(pr: PurchaseRequest): SolicitationRow {
     data: new Date(pr.createdAt).toLocaleDateString("pt-BR"),
     status: STATUS_MAP[pr.status] || pr.status,
     prioridade: PRIORITY_MAP[pr.priority] || pr.priority,
-    categoria: pr.category,
+    categoria: categoryName,
   };
 }
 
