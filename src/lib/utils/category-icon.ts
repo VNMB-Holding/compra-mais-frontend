@@ -54,7 +54,7 @@ export function getCategoryIcon(category?: CategoryType | string): string {
   const cat = String(category).toLowerCase().trim();
 
   if (cat.includes("mista") || cat.includes("múltipla") || cat.includes("multipla") || cat.includes("diversa")) {
-    return "layers-01";
+    return "layers-three-01";
   }
 
   if (cat.includes("ti") || cat.includes("tecnologia") || cat.includes("software") || cat.includes("cloud") || cat.includes("sistema")) {
