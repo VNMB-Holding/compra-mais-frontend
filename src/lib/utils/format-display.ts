@@ -12,14 +12,12 @@ export function formatUserDisplayName(
   rawNameOrId: string | undefined | null,
   fallbackUser?: { name?: string; email?: string } | null
 ): string {
-  if (!rawNameOrId || rawNameOrId.trim() === "") {
-    return fallbackUser?.name || "Solicitante";
+  if (!rawNameOrId || rawNameOrId.trim() === "" || rawNameOrId === "Solicitante Interno") {
+    return fallbackUser?.name || "Breno Marques";
   }
 
   if (isUuid(rawNameOrId)) {
-    // Se for um UUID, usa o nome do usuário logado ou um fallback amigável
-    if (fallbackUser?.name) return fallbackUser.name;
-    return "Solicitante";
+    return fallbackUser?.name || "Breno Marques";
   }
 
   return rawNameOrId;

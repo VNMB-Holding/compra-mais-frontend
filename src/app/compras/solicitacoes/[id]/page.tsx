@@ -304,31 +304,35 @@ export default function SolicitacaoDetailPage() {
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
                 <label>Descrição do Item</label>
-                <span>{sol?.description || "Óleo Diesel S10"}</span>
+                <span>{sol?.description || "—"}</span>
               </div>
               <div className={`${styles.infoItem} ${styles.span2}`}>
                 <label>Justificativa de Aquisição</label>
-                <span>{sol?.justification || "Reabastecimento estratégico da frota logística e continuidade operacional de distribuição."}</span>
+                <span>{sol?.justification || "—"}</span>
               </div>
               <div className={styles.infoItem}>
                 <label>Volume Estimado</label>
-                <strong>{sol?.items && sol.items.length > 0 ? `${sol.items.reduce((acc: number, i: any) => acc + Number(i.quantity), 0)} UN` : "500.000 L"}</strong>
+                <strong>
+                  {sol?.items && sol.items.length > 0
+                    ? `${sol.items.reduce((acc: number, i: any) => acc + Number(i.quantity), 0)} ${sol.items[0]?.unit || "UN"}`
+                    : "—"}
+                </strong>
               </div>
               <div className={styles.infoItem}>
                 <label>Orçamento Previsto</label>
                 <strong className={styles.textPrimary}>
                   {sol?.estimatedBudget
                     ? Number(sol.estimatedBudget).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-                    : "R$ 3.250.000,00"}
+                    : "—"}
                 </strong>
               </div>
               <div className={styles.infoItem}>
                 <label>Local de Entrega</label>
-                <span>{sol?.deliveryLocation || "Base Operacional - Paulínia/SP"}</span>
+                <span>{sol?.deliveryLocation || "—"}</span>
               </div>
               <div className={styles.infoItem}>
                 <label>Data Limite Desejada</label>
-                <span>{sol?.deadline ? new Date(sol.deadline).toLocaleDateString("pt-BR") : "05/06/2024"}</span>
+                <span>{sol?.deadline ? new Date(sol.deadline).toLocaleDateString("pt-BR") : "—"}</span>
               </div>
             </div>
           </Card>
@@ -337,26 +341,74 @@ export default function SolicitacaoDetailPage() {
         {/* Coluna Lateral (Direita) */}
         <div className={styles.colSide}>
 
-          {/* TIMELINE VERTICAL */}
+          {/* TIMELINE VERTICAL REAIS DE RASTREABILIDADE */}
           <Card className={styles.sideCard}>
             <h4>Rastreabilidade</h4>
             <div className={styles.verticalTimeline}>
+              
+              {/* Evento 1: Criação / Envio */}
               <div className={`${styles.vtItem} ${styles.vtDone}`}>
                 <div className={styles.vtDot}></div>
                 <div className={styles.vtContent}>
                   <strong>Solicitação enviada</strong>
-                  <span>Por Breno Marques</span>
-                  <small>22/05/2024 às 14:00</small>
+                  <span>Por {sol?.requesterName || formatUserDisplayName(sol?.requesterId, user)}</span>
+                  <small>
+                    {sol?.createdAt
+                      ? `${new Date(sol.createdAt).toLocaleDateString("pt-BR")} às ${new Date(sol.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                      : "—"}
+                  </small>
                 </div>
               </div>
-              <div className={`${styles.vtItem} ${approved !== null ? styles.vtDone : styles.vtCurrent}`}>
-                <div className={styles.vtDot}></div>
-                <div className={styles.vtContent}>
-                  <strong>{approved === true ? "Aprovada pelo Gestor" : approved === false ? "Rejeitada pelo Gestor" : "Aguardando assinatura"}</strong>
-                  <span>Mariana Costa (Gestão Geral)</span>
-                  {approved !== null && <small>{new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</small>}
+
+              {/* Eventos da API se existirem */}
+              {sol?.approvalHistories && sol.approvalHistories.length > 0 ? (
+                sol.approvalHistories.map((hist: any, index: number) => (
+                  <div key={hist.id || index} className={`${styles.vtItem} ${styles.vtDone}`}>
+                    <div className={styles.vtDot}></div>
+                    <div className={styles.vtContent}>
+                      <strong>{hist.action === "Approved" ? "Aprovado na alçada" : hist.action === "Rejected" ? "Rejeitado na alçada" : hist.action}</strong>
+                      <span>{hist.comments || "Gestão da área"}</span>
+                      <small>
+                        {hist.actionDate
+                          ? `${new Date(hist.actionDate).toLocaleDateString("pt-BR")} às ${new Date(hist.actionDate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                          : "—"}
+                      </small>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                /* Evento de Status Atual (se ainda não tem histórico explícito) */
+                <div className={`${styles.vtItem} ${isFullyApproved || isRejected ? styles.vtDone : styles.vtCurrent}`}>
+                  <div className={styles.vtDot}></div>
+                  <div className={styles.vtContent}>
+                    <strong>
+                      {isFullyApproved
+                        ? "Aprovada na Alçada"
+                        : isRejected
+                        ? "Rejeitada na Alçada"
+                        : "Aguardando aprovação"}
+                    </strong>
+                    <span>{isFullyApproved ? "Liberada para cotação" : isRejected ? "Solicitação encerrada" : "Análise pendente"}</span>
+                    {(isFullyApproved || isRejected) && (
+                      <small>
+                        {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </small>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Evento 3: RFQ (se aplicável) */}
+              {(isFullyApproved || sol?.status === "InQuote") && (
+                <div className={`${styles.vtItem} ${sol?.status === "InQuote" ? styles.vtDone : styles.vtCurrent}`}>
+                  <div className={styles.vtDot}></div>
+                  <div className={styles.vtContent}>
+                    <strong>{sol?.status === "InQuote" ? "Processo de Cotação Aberto" : "Pronta para Cotação"}</strong>
+                    <span>Módulo de Mercado (RFQ)</span>
+                  </div>
+                </div>
+              )}
+
             </div>
           </Card>
 
