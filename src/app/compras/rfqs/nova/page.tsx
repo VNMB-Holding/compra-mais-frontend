@@ -3,6 +3,9 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
+import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
+import { suppliersApi, Supplier } from "@/lib/api/suppliers";
+import { rfqsApi } from "@/lib/api/rfqs";
 import styles from "./rfq-new.module.css";
 
 // ---------------------------------------------------------------------------
@@ -133,6 +136,61 @@ export default function NewRfqPage() {
   const [itens, setItens] = useState<ItemCotacao[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
 
+  const [solicidadoesApi, setSolicitacoesApi] = useState<Solicitacao[]>(SOLICITACOES_DISPONIVEIS);
+  const [loadingData, setLoadingData] = useState(true);
+
+  // Carrega solicitações aprovadas e fornecedores ativos da API
+  useEffect(() => {
+    async function loadApiData() {
+      try {
+        const [reqs, sups] = await Promise.all([
+          purchaseRequestsApi.list().catch(() => []),
+          suppliersApi.list().catch(() => []),
+        ]);
+
+        if (reqs && reqs.length > 0) {
+          const mappedReqs: Solicitacao[] = reqs.map((r) => ({
+            id: r.id,
+            titulo: r.description,
+            area: r.costCenter || "Operações",
+            solicitante: r.requesterId || "Usuário",
+            prioridade: r.priority === "Critical" ? "Critica" : r.priority === "High" ? "Alta" : r.priority === "Medium" ? "Media" : "Baixa",
+            valorEstimado: Number(r.estimatedBudget) || 0,
+            itens: (r.items || []).map((it, idx) => ({
+              id: idx + 1,
+              descricao: it.description,
+              qtd: Number(it.quantity) || 1,
+              unidade: it.unit || "UN",
+            })),
+            incoterm: "CIF",
+            condicaoPagamento: "30 dias DDL",
+            observacoes: r.justification || "",
+          }));
+
+          // Se houver dados reais, combina com os mocks para não perder referências de testes
+          const existingIds = new Set(mappedReqs.map((s) => s.id));
+          const combined = [...mappedReqs, ...SOLICITACOES_DISPONIVEIS.filter((s) => !existingIds.has(s.id))];
+          setSolicitacoesApi(combined);
+        }
+
+        if (sups && sups.length > 0) {
+          const mappedSups: FornecedorConvidado[] = sups.map((s) => ({
+            id: s.id,
+            nome: s.corporateName,
+            cnpj: s.cnpj,
+            selecionado: false,
+          }));
+          setFornecedores(mappedSups);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar dados da API na Nova RFQ:", e);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+    loadApiData();
+  }, []);
+
   // -------------------------------------------------------------------------
   // Auto-confirmar solicitacao quando vem de URL params (modal de aprovacao)
   // -------------------------------------------------------------------------
@@ -140,8 +198,8 @@ export default function NewRfqPage() {
   useEffect(() => {
     if (!paramSol) return;
 
-    // Tenta encontrar nos mocks existentes primeiro
-    const solExistente = SOLICITACOES_DISPONIVEIS.find((s) => s.id === paramSol);
+    // Tenta encontrar nas solicitações carregadas
+    const solExistente = solicidadoesApi.find((s) => s.id === paramSol || (s as any).code === paramSol);
 
     if (solExistente) {
       setSolicitacaoConfirmada(solExistente);
@@ -180,14 +238,14 @@ export default function NewRfqPage() {
     }
     setCurrentStep(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paramSol]);
+  }, [paramSol, solicidadoesApi]);
 
   // -------------------------------------------------------------------------
   // Handlers
   // -------------------------------------------------------------------------
 
   const handleConfirmarSolicitacao = () => {
-    const sol = SOLICITACOES_DISPONIVEIS.find((s) => s.id === solicitacaoSelecionada);
+    const sol = solicidadoesApi.find((s) => s.id === solicitacaoSelecionada);
     if (!sol) return;
     setSolicitacaoConfirmada(sol);
     // Pre-preenche formulario com dados da solicitacao
@@ -841,7 +899,26 @@ export default function NewRfqPage() {
                   <Button
                     variant="primary"
                     className={styles.btnSubmit}
-                    onClick={() => router.push("/compras/rfqs/RFQ-2026-004")}
+                    onClick={async () => {
+                      try {
+                        const selectedSupplierIds = fornecedoresSelecionados.map((f) => f.id);
+                        const endClosesAt = dataEncerramento
+                          ? new Date(dataEncerramento).toISOString()
+                          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+                        const createdRfq = await rfqsApi.create({
+                          requestId: solicitacaoConfirmada?.id || paramSol,
+                          title: tituloRfq || "Cotação de Compra",
+                          closesAt: endClosesAt,
+                          supplierIds: selectedSupplierIds,
+                        });
+
+                        router.push(`/compras/rfqs/${createdRfq.id}`);
+                      } catch (err) {
+                        console.error("Erro ao criar RFQ:", err);
+                        alert("Falha ao publicar cotação. Tente novamente.");
+                      }
+                    }}
                   >
                     <Icon name="rocket-01" /> Publicar e enviar cotação
                   </Button>
