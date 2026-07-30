@@ -395,6 +395,7 @@ export default function NovaSolicitacaoPage() {
                       ]}
                       value={department}
                       onChange={setDepartment}
+                      placeholder="Selecione a área requisitante..."
                     />
                   </div>
                 </div>
@@ -579,7 +580,7 @@ export default function NovaSolicitacaoPage() {
 
                               <div className={`${styles.formGroup} ${styles.col6}`}>
                                 <label>Centro de custo <span className="required-asterisk">*</span></label>
-                                <input className={styles.formControl} value={item.costCenter} onChange={(event) => updateItem(item.id, "costCenter", event.target.value)} required />
+                                <input className={styles.formControl} value={item.costCenter} onChange={(event) => updateItem(item.id, "costCenter", event.target.value)} placeholder="Ex: Administrativo, Operacional..." required />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col6}`}>
                                 <label>Necessário até <span className="required-asterisk">*</span></label>
@@ -617,8 +618,8 @@ export default function NovaSolicitacaoPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup} style={{ flex: 2 }}>
-                    <label>Local de entrega <span className="required-asterisk">*</span></label>
-                    <div style={{ position: "relative", zIndex: 10 }}>
+                    <label>Local de entrega / Planta <span className="required-asterisk">*</span> (obrigatório selecionar na lista)</label>
+                    <div className="geoapify-autocomplete-wrapper" style={{ position: "relative", zIndex: 10 }}>
                       <GeoapifyContext apiKey="2259d519a04e42bcbf5003b9366404a0">
                         <GeoapifyGeocoderAutocomplete
                           placeholder="Digite o local de entrega..."
