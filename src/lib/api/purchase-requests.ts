@@ -43,6 +43,8 @@ export interface RequestItem {
   quantity: number;
   unit: string;
   estimatedUnitPrice?: number;
+  costCenter?: string;
+  requiredDate?: string;
 }
 
 export interface PurchaseRequestKpis {

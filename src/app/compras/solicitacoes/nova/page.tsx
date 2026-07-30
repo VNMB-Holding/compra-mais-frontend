@@ -218,6 +218,14 @@ export default function NovaSolicitacaoPage() {
   const handleSubmit = async (asDraft = false) => {
     setIsSubmitting(true);
     try {
+      const validDates = items
+        .map(i => (i.requiredDate ? new Date(i.requiredDate).getTime() : 0))
+        .filter(t => t > 0 && !isNaN(t));
+      
+      const derivedDeadline = validDates.length > 0
+        ? new Date(Math.min(...validDates)).toISOString()
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
       const data = await purchaseRequestsApi.create({
         tenantId: targetTenantId || user?.tenantId,
         description: title || "Rascunho de Solicitação",
@@ -227,12 +235,12 @@ export default function NovaSolicitacaoPage() {
         purchaseType: purchaseType || "Material recorrente",
         paymentTerms: paymentTerms || undefined,
         preferredSupplier: preferredSupplier || undefined,
-        notes: notes || undefined,
+        notes: (notes || "") + (deliveryWindow ? `\nJanela de recebimento: ${deliveryWindow}` : ""),
         categoryId: categoryId || (categories[0]?.id ?? undefined),
         justification: justification || "Rascunho",
         estimatedBudget: totalEstimated,
         deliveryLocation: deliveryLocation || "A definir",
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        deadline: derivedDeadline,
         priority: priority === "Critica" ? "Critical" : priority === "Alta" ? "High" : priority === "Media" ? "Medium" : "Low",
         status: asDraft ? "Draft" : "AwaitingApproval",
         items: items
@@ -243,6 +251,8 @@ export default function NovaSolicitacaoPage() {
             unit: i.unit || "UN",
             estimatedUnitPrice: Number(i.unitPrice) || 0,
             category: i.category || "Geral",
+            costCenter: i.costCenter || undefined,
+            requiredDate: i.requiredDate || undefined,
           })),
       } as any);
 
