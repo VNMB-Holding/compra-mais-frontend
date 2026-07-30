@@ -129,7 +129,11 @@ export default function SolicitacaoDetailPage() {
   const isRejected = approved === false || sol?.status === "Rejected";
 
   const budget = Number(sol?.estimatedBudget || 0);
-  const chain = getApprovalChainForRequest("VB AGRO", budget);
+  const companyName =
+    user?.availableTenants?.find((t) => t.id === sol?.tenantId)?.name ||
+    sol?.costCenter ||
+    "VB AGRO";
+  const chain = getApprovalChainForRequest(companyName, budget);
 
   // Identifica quem é o próximo aprovador pendente na cadeia de alçadas
   const pendingHistoryCount = sol?.approvalHistories?.length || 0;
