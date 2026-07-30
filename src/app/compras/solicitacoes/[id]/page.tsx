@@ -206,25 +206,27 @@ export default function SolicitacaoDetailPage() {
         {/* Coluna Principal (Esquerda) */}
         <div className={styles.colMain}>
 
-          {/* STEPPER DE APROVAÇÃO HORIZONTAL */}
+          {/* STEPPER DE APROVAÇÃO HORIZONTAL COM ALÇADAS DETALHADAS */}
           <Card className={styles.flowCard}>
             <h4>Fluxo de Alçadas de Aprovação</h4>
             <div className={styles.stepperContainer}>
 
+              {/* Etapa 1: Emissão pelo Solicitante */}
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-01" />
                   <div className={styles.checkBadge}><Icon name="check" /></div>
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>Solicitante</strong>
+                  <strong>1. Solicitante</strong>
                   <span>{sol?.requesterName || formatUserDisplayName(sol?.requesterId, user)}</span>
-                  <small>{sol?.createdAt ? new Date(sol.createdAt).toLocaleDateString("pt-BR") : "22/05/2024"}</small>
+                  <small>{sol?.createdAt ? new Date(sol.createdAt).toLocaleDateString("pt-BR") : "—"}</small>
                 </div>
               </div>
 
-              <div className={`${styles.stepLine} ${isFullyApproved || isRejected ? styles.lineActive : ""}`}></div>
+              <div className={`${styles.stepLine} ${isFullyApproved || isRejected || sol?.status === "AwaitingApproval" ? styles.lineActive : ""}`}></div>
 
+              {/* Etapa 2: Alçada do Gestor de Área */}
               <div className={`${styles.step} ${isFullyApproved ? styles.completed : isRejected ? styles.pending : styles.active}`}>
                 <div className={styles.stepIcon}>
                   {isFullyApproved
@@ -235,18 +237,31 @@ export default function SolicitacaoDetailPage() {
                   }
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>Gestão / Alçada de Aprovação</strong>
-                  <span>{isFullyApproved ? "Aprovado" : isRejected ? "Rejeitado" : "Aguardando aprovação"}</span>
+                  <strong>2. Gestor da Área</strong>
+                  <span>
+                    {isFullyApproved
+                      ? (sol?.approvalHistories && sol.approvalHistories[0]?.approverId
+                          ? formatUserDisplayName(sol.approvalHistories[0].approverId, null)
+                          : "Aprovado pela Gestão")
+                      : isRejected
+                      ? "Rejeitado na Alçada"
+                      : "Pendente de Aprovação"}
+                  </span>
                   {!isFullyApproved && !isRejected ? (
-                    <span className={styles.warningBadgeHint}>Pendente</span>
+                    <span className={styles.warningBadgeHint}>Falta aprovar</span>
                   ) : (
-                    <small>{new Date().toLocaleDateString("pt-BR")}</small>
+                    <small>
+                      {sol?.approvalHistories && sol.approvalHistories[0]?.actionDate
+                        ? new Date(sol.approvalHistories[0].actionDate).toLocaleDateString("pt-BR")
+                        : new Date().toLocaleDateString("pt-BR")}
+                    </small>
                   )}
                 </div>
               </div>
 
               <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`}></div>
 
+              {/* Etapa 3: Alçada de Diretoria / Cotação */}
               <div className={`${styles.step} ${isFullyApproved ? styles.completed : styles.pending}`}>
                 <div className={styles.stepIcon}>
                   {isFullyApproved
@@ -255,8 +270,9 @@ export default function SolicitacaoDetailPage() {
                   }
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>Liberado para Cotação (RFQ)</strong>
-                  <span>{isFullyApproved ? "Concluído" : "Pendente"}</span>
+                  <strong>3. Liberação para RFQ</strong>
+                  <span>{isFullyApproved ? "Pronto para cotação" : "Aguardando etapas anteriores"}</span>
+                  {!isFullyApproved && <small style={{ color: "#94a3b8" }}>Pendente</small>}
                 </div>
               </div>
 
