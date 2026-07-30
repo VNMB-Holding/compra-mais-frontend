@@ -382,7 +382,7 @@ export default function NovaSolicitacaoPage() {
                     <input className={styles.formControl} value={requester} onChange={(event) => setRequester(event.target.value)} />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Área requisitante</label>
+                    <label>Área requisitante <span className="required-asterisk">*</span></label>
                     <Select
                       options={[
                         { label: "Operações", value: "Operacoes" },
@@ -414,7 +414,7 @@ export default function NovaSolicitacaoPage() {
                     </div>
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Tipo de compra</label>
+                    <label>Tipo de compra <span className="required-asterisk">*</span></label>
                     <Select
                       options={[
                         { label: "Material recorrente", value: "Material recorrente" },
@@ -526,7 +526,7 @@ export default function NovaSolicitacaoPage() {
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col4}`}>
-                                <label>Categoria</label>
+                                <label>Categoria <span className="required-asterisk">*</span></label>
                                 <Select
                                   options={categories.map((c) => ({ label: c.name, value: c.name }))}
                                   value={item.category}
@@ -535,7 +535,7 @@ export default function NovaSolicitacaoPage() {
                               </div>
 
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Quantidade</label>
+                                <label>Quantidade <span className="required-asterisk">*</span></label>
                                 <input
                                   type="number"
                                   min="0"
@@ -545,7 +545,7 @@ export default function NovaSolicitacaoPage() {
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Unidade</label>
+                                <label>Unidade <span className="required-asterisk">*</span></label>
                                 <Select
                                   options={[
                                     { label: "L", value: "L" },
@@ -580,7 +580,7 @@ export default function NovaSolicitacaoPage() {
                                 <input className={styles.formControl} value={item.costCenter} onChange={(event) => updateItem(item.id, "costCenter", event.target.value)} required />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col6}`}>
-                                <label>Necessário até</label>
+                                <label>Necessário até <span className="required-asterisk">*</span></label>
                                 <input
                                   type="date"
                                   className={styles.formControl}
@@ -615,7 +615,7 @@ export default function NovaSolicitacaoPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Local de entrega</label>
+                    <label>Local de entrega <span className="required-asterisk">*</span></label>
                     <Select
                       options={[
                         { label: "Base Operacional - Paulínia/SP", value: "Base Operacional - Paulinia/SP" },
@@ -667,6 +667,18 @@ export default function NovaSolicitacaoPage() {
                         toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha o título da solicitação." });
                         return;
                       }
+                      if (tenantOptions.length > 0 && !targetTenantId) {
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione a empresa destino." });
+                        return;
+                      }
+                      if (!department.trim()) {
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione a área requisitante." });
+                        return;
+                      }
+                      if (!purchaseType.trim()) {
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione o tipo de compra." });
+                        return;
+                      }
                       if (!justification.trim()) {
                         toast({ variant: "warning", title: "Atenção", message: "Por favor, informe a justificativa de negócio." });
                         return;
@@ -689,9 +701,15 @@ export default function NovaSolicitacaoPage() {
                     type="button" 
                     className={styles.btnSubmit} 
                     onClick={() => {
-                      if (items.some((item) => !item.description.trim())) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a descrição de todos os itens" });
+                      if (items.length === 0) {
+                        toast({ variant: "warning", title: "Atenção", message: "A solicitação precisa de pelo menos 1 item." });
                         return;
+                      }
+                      for (const item of items) {
+                        if (!item.description.trim() || !item.category || item.quantity <= 0 || !item.unit || !item.costCenter.trim() || !item.requiredDate) {
+                          toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha todos os campos obrigatórios de todos os itens." });
+                          return;
+                        }
                       }
                       setCurrentStep(3);
                     }}
@@ -714,7 +732,13 @@ export default function NovaSolicitacaoPage() {
                   >
                     <Icon name="save-01" /> Salvar rascunho
                   </button>
-                  <Button variant="primary" className={styles.btnSubmit} onClick={() => handleSubmit(false)} disabled={isSubmitting}>
+                  <Button variant="primary" className={styles.btnSubmit} onClick={() => {
+                    if (!deliveryLocation) {
+                      toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione o local de entrega." });
+                      return;
+                    }
+                    handleSubmit(false);
+                  }} disabled={isSubmitting}>
                     <Icon name="send-01" /> Enviar para aprovação
                   </Button>
                 </>
