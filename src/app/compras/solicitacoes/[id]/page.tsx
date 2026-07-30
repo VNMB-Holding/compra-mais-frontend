@@ -370,13 +370,17 @@ export default function SolicitacaoDetailPage() {
           <Card className={styles.infoCard}>
             <h4>Ficha de Informações Técnicas</h4>
             <div className={styles.infoGrid}>
-              <div className={styles.infoItem}>
-                <label>Descrição do Item</label>
+              <div className={`${styles.infoItem} ${styles.span2}`}>
+                <label>Descrição da Demanda</label>
                 <span>{sol?.description || "—"}</span>
               </div>
               <div className={`${styles.infoItem} ${styles.span2}`}>
                 <label>Justificativa de Aquisição</label>
                 <span>{sol?.justification || "—"}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <label>Tipo de Compra</label>
+                <span>{sol?.purchaseType || "—"}</span>
               </div>
               <div className={styles.infoItem}>
                 <label>Volume Estimado</label>
@@ -401,6 +405,18 @@ export default function SolicitacaoDetailPage() {
               <div className={styles.infoItem}>
                 <label>Data Limite Desejada</label>
                 <span>{sol?.deadline ? new Date(sol.deadline).toLocaleDateString("pt-BR") : "—"}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <label>Condição de Pagamento</label>
+                <span>{sol?.paymentTerms || "—"}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <label>Fornecedor Preferencial</label>
+                <span>{sol?.preferredSupplier || "—"}</span>
+              </div>
+              <div className={`${styles.infoItem} ${styles.span2}`}>
+                <label>Observações Adicionais</label>
+                <span style={{ whiteSpace: "pre-wrap" }}>{sol?.notes || "—"}</span>
               </div>
             </div>
           </Card>
