@@ -8,6 +8,7 @@ import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
+import { getApprovalChainForRequest } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 
 const PRIORITY_MAP: Record<string, string> = {
@@ -127,6 +128,9 @@ export default function SolicitacaoDetailPage() {
   const isFullyApproved = approved === true || sol?.status === "Approved" || sol?.status === "InQuote" || sol?.status === "Finished";
   const isRejected = approved === false || sol?.status === "Rejected";
 
+  const budget = Number(sol?.estimatedBudget || 0);
+  const chain = getApprovalChainForRequest("VB AGRO", budget);
+
   return (
     <div className={styles.detailContainer}>
 
@@ -206,9 +210,9 @@ export default function SolicitacaoDetailPage() {
         {/* Coluna Principal (Esquerda) */}
         <div className={styles.colMain}>
 
-          {/* STEPPER DE APROVAÇÃO HORIZONTAL COM ALÇADAS DETALHADAS */}
+          {/* STEPPER DE APROVAÇÃO HORIZONTAL COM ALÇADAS DINÂMICAS DE GOVERNANÇA */}
           <Card className={styles.flowCard}>
-            <h4>Fluxo de Alçadas de Aprovação</h4>
+            <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length > 1 ? "s" : ""})</h4>
             <div className={styles.stepperContainer}>
 
               {/* Etapa 1: Emissão pelo Solicitante */}
@@ -218,61 +222,83 @@ export default function SolicitacaoDetailPage() {
                   <div className={styles.checkBadge}><Icon name="check" /></div>
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>1. Solicitante</strong>
+                  <strong>Solicitante</strong>
                   <span>{sol?.requesterName || formatUserDisplayName(sol?.requesterId, user)}</span>
                   <small>{sol?.createdAt ? new Date(sol.createdAt).toLocaleDateString("pt-BR") : "—"}</small>
                 </div>
               </div>
 
-              <div className={`${styles.stepLine} ${isFullyApproved || isRejected || sol?.status === "AwaitingApproval" ? styles.lineActive : ""}`}></div>
+              {/* Renderiza dinamicamente cada nível da alçada (ex: Henrique -> Celso -> Vanessa -> JAB -> Andressa) */}
+              {chain.map((lvl, index) => {
+                // Verifica se este nível já tem um histórico de aprovação correspondente
+                const historyMatch = sol?.approvalHistories && sol.approvalHistories[index];
+                const isLevelDone = isFullyApproved || !!historyMatch;
+                const isLevelActive = !isLevelDone && !isRejected && (index === 0 || !!(sol?.approvalHistories && sol.approvalHistories[index - 1]));
 
-              {/* Etapa 2: Alçada do Gestor de Área */}
-              <div className={`${styles.step} ${isFullyApproved ? styles.completed : isRejected ? styles.pending : styles.active}`}>
-                <div className={styles.stepIcon}>
-                  {isFullyApproved
-                    ? <><Icon name="users-01" /><div className={styles.checkBadge}><Icon name="check" /></div></>
-                    : isRejected
-                    ? <><Icon name="x-close" /></>
-                    : <Icon name="users-01" />
-                  }
-                </div>
-                <div className={styles.stepInfo}>
-                  <strong>2. Gestor da Área</strong>
-                  <span>
-                    {isFullyApproved
-                      ? (sol?.approvalHistories && sol.approvalHistories[0]?.approverId
-                          ? formatUserDisplayName(sol.approvalHistories[0].approverId, null)
-                          : "Aprovado pela Gestão")
-                      : isRejected
-                      ? "Rejeitado na Alçada"
-                      : "Pendente de Aprovação"}
-                  </span>
-                  {!isFullyApproved && !isRejected ? (
-                    <span className={styles.warningBadgeHint}>Falta aprovar</span>
-                  ) : (
-                    <small>
-                      {sol?.approvalHistories && sol.approvalHistories[0]?.actionDate
-                        ? new Date(sol.approvalHistories[0].actionDate).toLocaleDateString("pt-BR")
-                        : new Date().toLocaleDateString("pt-BR")}
-                    </small>
-                  )}
-                </div>
-              </div>
+                return (
+                  <React.Fragment key={lvl.level}>
+                    <div className={`${styles.stepLine} ${isLevelDone || isLevelActive ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`}></div>
+                    <div className={`${styles.step} ${isLevelDone ? styles.completed : isRejected ? styles.pending : isLevelActive ? styles.active : styles.pending}`}>
+                      <div className={styles.stepIcon}>
+                        {isLevelDone ? (
+                          <>
+                            <Icon name="users-01" />
+                            <div className={styles.checkBadge}><Icon name="check" /></div>
+                          </>
+                        ) : isRejected && isLevelActive ? (
+                          <Icon name="x-close" />
+                        ) : (
+                          <Icon name="users-01" />
+                        )}
+                      </div>
+                      <div className={styles.stepInfo}>
+                        <strong>Alçada {lvl.level}: {lvl.roleOrName}</strong>
+                        <span>
+                          {isLevelDone
+                            ? historyMatch?.approverId
+                              ? formatUserDisplayName(historyMatch.approverId, null)
+                              : `Aprovado por ${lvl.roleOrName}`
+                            : isRejected && isLevelActive
+                            ? `Rejeitado por ${lvl.roleOrName}`
+                            : isLevelActive
+                            ? `Aguardando ${lvl.roleOrName}`
+                            : `Pendente (${lvl.roleOrName})`}
+                        </span>
+                        {isLevelActive && !isLevelDone && !isRejected ? (
+                          <span className={styles.warningBadgeHint}>Falta aprovar</span>
+                        ) : isLevelDone ? (
+                          <small>
+                            {historyMatch?.actionDate
+                              ? new Date(historyMatch.actionDate).toLocaleDateString("pt-BR")
+                              : new Date().toLocaleDateString("pt-BR")}
+                          </small>
+                        ) : (
+                          <small style={{ color: "#94a3b8" }}>Pendente</small>
+                        )}
+                      </div>
+                    </div>
+                  </React.Fragment>
+                );
+              })}
 
-              {/* Etapa 3: Alçada de Diretoria / Cotação */}
+              <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`} />
+
+              {/* Etapa Final: Liberação para RFQ */}
               <div className={`${styles.step} ${isFullyApproved ? styles.completed : styles.pending}`}>
                 <div className={styles.stepIcon}>
-                  {isFullyApproved
-                    ? <><Icon name="check-circle" /><div className={styles.checkBadge}><Icon name="check" /></div></>
-                    : <Icon name="user-01" />
-                  }
+                  {isFullyApproved ? (
+                    <>
+                      <Icon name="check-circle" />
+                      <div className={styles.checkBadge}><Icon name="check" /></div>
+                    </>
+                  ) : (
+                    <Icon name="rocket-01" />
+                  )}
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>3. Liberação para RFQ</strong>
-                  <span>{isFullyApproved ? "Pronto para cotação" : "Aguardando etapas anteriores"}</span>
-                  {!isFullyApproved && <small style={{ color: "#94a3b8" }}>Pendente</small>}
+                  <strong>Liberação para RFQ</strong>
+                  <span>{isFullyApproved ? "Pronto para cotação" : "Aguardando aprovação"}</span>
                 </div>
               </div>
 
