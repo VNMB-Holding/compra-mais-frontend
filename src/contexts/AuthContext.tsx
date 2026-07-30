@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
-import React, { createContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useState, useCallback, useEffect, useRef } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
 import { loginApi, getMeApi, getTenantsApi, logoutApi } from "@/lib/auth/api";
-import { setTokenProvider } from "@/lib/api-client";
+import { setTokenProvider, setUnauthorizedHandler } from "@/lib/api-client";
+import { logError } from "@/lib/utils/error";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -29,9 +30,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Keep the token provider in sync so every api-client request gets a fresh token.
   useEffect(() => {
     setTokenProvider(() => accessToken);
   }, [accessToken]);
+
+  // Use a ref to the logout function so the 401 handler never captures a stale closure.
+  const logoutRef = useRef<() => void>(() => {});
+
+  // Register a global 401 handler once on mount.
+  // When any API request returns 401, we log the user out and redirect.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      logoutRef.current();
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.href = "/login?reason=session_expired";
+      }
+    });
+  }, []);
 
   useEffect(() => {
     function restore() {
@@ -130,13 +146,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     if (refreshToken) {
-      logoutApi(refreshToken).catch(console.error);
+      logoutApi(refreshToken).catch((err) => logError("logout", err));
     }
     setAccessToken(null);
     setRefreshToken(null);
     setUser(null);
     clearSession();
   }, [refreshToken]);
+
+  // Keep the ref in sync so the 401 handler always calls the latest logout.
+  useEffect(() => {
+    logoutRef.current = logout;
+  }, [logout]);
 
   const value: AuthContextType = {
     user,

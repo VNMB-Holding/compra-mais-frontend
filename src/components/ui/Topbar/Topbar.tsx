@@ -1,13 +1,15 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "../Icon/Icon";
 import styles from "./Topbar.module.css";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/contexts/ToastContext";
 import CommandPalette from "../CommandPalette/CommandPalette";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
+import { logError } from "@/lib/utils/error";
 
 interface TopbarProps {
   isSidebarCollapsed: boolean;
@@ -19,6 +21,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const [isHovered, setIsHovered] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const router = useRouter();
 
@@ -37,8 +40,16 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     async function loadNotifications() {
       try {
         const [recentRfqs, pendingRequests] = await Promise.all([
-          rfqsApi.list().catch(() => []),
-          purchaseRequestsApi.list().catch(() => []),
+          rfqsApi.list().catch((err) => { 
+            logError("Topbar/rfqsApi.list", err); 
+            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar as notificações de cotações." });
+            return [] as Rfq[]; 
+          }),
+          purchaseRequestsApi.list().catch((err) => { 
+            logError("Topbar/purchaseRequestsApi.list", err); 
+            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar as aprovações pendentes." });
+            return [] as PurchaseRequest[]; 
+          }),
         ]);
 
         const notifs = recentRfqs.slice(0, 3).map((rfq: Rfq) => ({
@@ -61,7 +72,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         setNotifications(notifs);
         setMessages(msgs);
       } catch (err) {
-        console.error("Erro ao carregar dados da Topbar:", err);
+        // Unexpected error not caught by individual handlers — log and degrade gracefully
+        logError("Topbar/loadNotifications", err);
       }
     }
 

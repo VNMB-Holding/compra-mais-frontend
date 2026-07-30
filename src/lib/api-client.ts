@@ -1,4 +1,4 @@
-﻿const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://vnmb-identity-api.onrender.com";
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://vnmb-identity-api.onrender.com";
 const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
@@ -19,9 +19,21 @@ class ApiError extends Error {
 }
 
 let tokenProvider: (() => string | null) | null = null;
+let unauthorizedHandler: (() => void) | null = null;
+let lastUnauthorizedTime = 0;
+const UNAUTHORIZED_DEBOUNCE_MS = 2000;
 
 export function setTokenProvider(provider: () => string | null) {
   tokenProvider = provider;
+}
+
+/**
+ * Register a global callback to be invoked whenever any API request
+ * returns HTTP 401 (session expired / invalid token).
+ * AuthContext uses this to trigger logout + redirect automatically.
+ */
+export function setUnauthorizedHandler(handler: () => void) {
+  unauthorizedHandler = handler;
 }
 
 function getStoredToken(): string | null {
@@ -63,8 +75,13 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const response = await fetch(`${baseUrl}${cleanEndpoint}`, config);
 
   if (response.status === 401 && !auth) {
-    if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-      console.warn("401 Unauthorized received from API:", cleanEndpoint);
+    // Invoke the global handler with a debounce so AuthContext can
+    // logout + redirect without each page needing to handle 401 itself,
+    // avoiding multiple redirects if multiple parallel requests fail.
+    const now = Date.now();
+    if (unauthorizedHandler && now - lastUnauthorizedTime > UNAUTHORIZED_DEBOUNCE_MS) {
+      lastUnauthorizedTime = now;
+      unauthorizedHandler();
     }
     throw new ApiError("Sessão expirada. Faça login novamente.", 401);
   }
