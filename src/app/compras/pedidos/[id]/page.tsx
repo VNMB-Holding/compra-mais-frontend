@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -21,7 +21,6 @@ export default function PedidoDetailPage() {
   const pedidoId = (params.id as string) || "PED-000234";
   const isNewFlow = pedidoId === "PED-NOVO";
 
-  // Lê os dados do fornecedor vencedor vindos da RFQ
   const fornecedorNome = searchParams.get("fornecedor") || "Fornecedor Alfa S.A.";
   const fornecedorCnpj = searchParams.get("cnpj") || "11.222.333/0001-81";
   const precoUnit = Number(searchParams.get("precoUnit") || 5.95);
@@ -34,17 +33,14 @@ export default function PedidoDetailPage() {
 
   const valorTotal = (precoUnit + frete) * qtdTotal;
 
-  // Data de entrega prevista (hoje + prazo)
   const dataEntrega = new Date();
   dataEntrega.setDate(dataEntrega.getDate() + prazo);
   const dataEntregaFormatada = dataEntrega.toLocaleDateString("pt-BR");
 
-  // Vencimento do pagamento (30 dias úteis simplificado)
   const dataVencimento = new Date();
   dataVencimento.setDate(dataVencimento.getDate() + 30);
   const dataVencimentoFormatada = dataVencimento.toLocaleDateString("pt-BR");
 
-  // Código exibido
   const displayId = isNewFlow
     ? `PED-${String(Date.now()).slice(-6)}`
     : pedidoId;

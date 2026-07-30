@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -111,7 +111,6 @@ export default function SolicitacaoDetailPage() {
     });
   };
 
-  // Categoria calculada dinamicamente dos itens (se houver categorias diferentes, torna-se Mista)
   const itemCategories = sol?.items?.map((i: any) => i.category).filter(Boolean) || [];
   const uniqueCategories = Array.from(new Set(itemCategories));
   const categoryName =
@@ -135,12 +134,10 @@ export default function SolicitacaoDetailPage() {
     "VB AGRO";
   const chain = getApprovalChainForRequest(companyName, budget);
 
-  // Identifica quem é o próximo aprovador pendente na cadeia de alçadas
   const pendingHistoryCount = sol?.approvalHistories?.length || 0;
   const currentPendingLevel = chain[pendingHistoryCount];
   const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
 
-  // Verifica se o usuário logado possui permissão para aprovar nesta etapa
   const loggedUserName = user?.name || "";
   const isUserAdmin = user?.role === "admin" || user?.roles?.includes("Admin");
   const canUserApproveCurrentLevel =
@@ -152,7 +149,7 @@ export default function SolicitacaoDetailPage() {
   return (
     <div className={styles.detailContainer}>
 
-      {/* Dialog — Aprovar */}
+      
       <ConfirmDialog
         open={dialog === "approve"}
         variant="success"
@@ -168,7 +165,7 @@ export default function SolicitacaoDetailPage() {
         onCancel={() => setDialog(null)}
       />
 
-      {/* Dialog — Rejeitar */}
+      
       <ConfirmDialog
         open={dialog === "reject"}
         variant="danger"
@@ -192,7 +189,7 @@ export default function SolicitacaoDetailPage() {
         <Loading variant="inline" message="Carregando solicitação..." size="large" />
       ) : (
         <>
-      {/* Cabeçalho */}
+      
       <div className={styles.pageHeader}>
         <div>
           <div className={styles.titleRow}>
@@ -230,18 +227,18 @@ export default function SolicitacaoDetailPage() {
         )}
       </div>
 
-      {/* Layout de Duas Colunas */}
+      
       <div className={styles.layout2Col}>
 
-        {/* Coluna Principal (Esquerda) */}
+        
         <div className={styles.colMain}>
 
-          {/* STEPPER DE APROVAÇÃO HORIZONTAL COM ALÇADAS DINÂMICAS DE GOVERNANÇA */}
+          
           <Card className={styles.flowCard}>
             <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length > 1 ? "s" : ""})</h4>
             <div className={styles.stepperContainer}>
 
-              {/* Etapa 1: Emissão pelo Solicitante */}
+              
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-01" />
@@ -254,9 +251,8 @@ export default function SolicitacaoDetailPage() {
                 </div>
               </div>
 
-              {/* Renderiza dinamicamente cada nível da alçada (ex: Henrique -> Celso -> Vanessa -> JAB -> Andressa) */}
+              
               {chain.map((lvl, index) => {
-                // Verifica se este nível já tem um histórico de aprovação correspondente
                 const historyMatch = sol?.approvalHistories && sol.approvalHistories[index];
                 const isLevelDone = isFullyApproved || !!historyMatch;
                 const isLevelActive = !isLevelDone && !isRejected && (index === 0 || !!(sol?.approvalHistories && sol.approvalHistories[index - 1]));
@@ -310,7 +306,7 @@ export default function SolicitacaoDetailPage() {
 
               <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`} />
 
-              {/* Etapa Final: Liberação para RFQ */}
+              
               <div className={`${styles.step} ${isFullyApproved ? styles.completed : styles.pending}`}>
                 <div className={styles.stepIcon}>
                   {isFullyApproved ? (
@@ -331,7 +327,7 @@ export default function SolicitacaoDetailPage() {
             </div>
           </Card>
 
-          {/* LISTA COMPLETA DE ITENS SOLICITADOS */}
+          
           {sol?.items && sol.items.length > 0 && (
             <Card className={styles.infoCard} style={{ marginBottom: 20 }}>
               <h4>Itens Solicitados ({sol.items.length})</h4>
@@ -366,7 +362,7 @@ export default function SolicitacaoDetailPage() {
             </Card>
           )}
 
-          {/* FICHA TÉCNICA INFORMATIVA */}
+          
           <Card className={styles.infoCard}>
             <h4>Ficha de Informações Técnicas</h4>
             <div className={styles.infoGrid}>
@@ -426,15 +422,15 @@ export default function SolicitacaoDetailPage() {
           </Card>
         </div>
 
-        {/* Coluna Lateral (Direita) */}
+        
         <div className={styles.colSide}>
 
-          {/* TIMELINE VERTICAL REAIS DE RASTREABILIDADE */}
+          
           <Card className={styles.sideCard}>
             <h4>Rastreabilidade</h4>
             <div className={styles.verticalTimeline}>
               
-              {/* Evento 1: Criação / Envio */}
+              
               <div className={`${styles.vtItem} ${styles.vtDone}`}>
                 <div className={styles.vtDot}></div>
                 <div className={styles.vtContent}>
@@ -448,7 +444,7 @@ export default function SolicitacaoDetailPage() {
                 </div>
               </div>
 
-              {/* Eventos da API se existirem */}
+              
               {sol?.approvalHistories && sol.approvalHistories.length > 0 ? (
                 sol.approvalHistories.map((hist: any, index: number) => (
                   <div key={hist.id || index} className={`${styles.vtItem} ${styles.vtDone}`}>
@@ -465,7 +461,7 @@ export default function SolicitacaoDetailPage() {
                   </div>
                 ))
               ) : (
-                /* Evento de Status Atual (se ainda não tem histórico explícito) */
+                
                 <div className={`${styles.vtItem} ${isFullyApproved || isRejected ? styles.vtDone : styles.vtCurrent}`}>
                   <div className={styles.vtDot}></div>
                   <div className={styles.vtContent}>
@@ -486,7 +482,7 @@ export default function SolicitacaoDetailPage() {
                 </div>
               )}
 
-              {/* Evento 3: RFQ (se aplicável) */}
+              
               {(isFullyApproved || sol?.status === "InQuote") && (
                 <div className={`${styles.vtItem} ${sol?.status === "InQuote" ? styles.vtDone : styles.vtCurrent}`}>
                   <div className={styles.vtDot}></div>
@@ -500,7 +496,7 @@ export default function SolicitacaoDetailPage() {
             </div>
           </Card>
 
-          {/* ANEXOS */}
+          
           <Card className={styles.sideCard}>
             <h4>Arquivos e Termos Técnicos</h4>
             <div className={styles.fileRow}>

@@ -1,4 +1,4 @@
-.detailContainer {
+﻿.detailContainer {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -69,9 +69,7 @@
   border: 1px solid #e2e8f0 !important;
 }
 
-/* ============================
-   Trilha de estágios
-   ============================ */
+
 .estagioPista {
   display: flex;
   align-items: center;
@@ -162,9 +160,7 @@
   background: #007d79;
 }
 
-/* ============================
-   Coleta Header
-   ============================ */
+
 .coletaHeader {
   display: flex;
   align-items: center;
@@ -179,9 +175,7 @@
   color: #0f172a;
 }
 
-/* ============================
-   Proposta Card
-   ============================ */
+
 .propostasList {
   display: flex;
   flex-direction: column;
@@ -421,9 +415,7 @@
   cursor: pointer;
 }
 
-/* ============================
-   Estágio 2 — Métricas e Matriz
-   ============================ */
+
 .rfqMetricsGrid {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr 1fr;
@@ -539,9 +531,7 @@
   cursor: pointer; width: 100%;
 }
 
-/* ============================
-   Estágio 3 — Aprovação (Redesign)
-   ============================ */
+
 .aprovacaoContainer {
   display: flex;
   flex-direction: column;

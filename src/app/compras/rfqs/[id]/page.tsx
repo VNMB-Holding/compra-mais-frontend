@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -7,9 +7,6 @@ import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 type Estagio = "proposta" | "analise" | "aprovacao";
 
 interface PropostaLocal {
@@ -27,18 +24,13 @@ interface PropostaLocal {
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-// ---------------------------------------------------------------------------
-// Maps a raw API RFQ to local Proposta list
-// ---------------------------------------------------------------------------
 function mapPropostas(rfq: Rfq): PropostaLocal[] {
-  // First, build a set of invited suppliers
   const invited = (rfq.rfqSuppliers ?? []).map((rs) => ({
     fornecedorId: rs.supplierId,
     nome: rs.supplier.corporateName,
     cnpj: rs.supplier.cnpj,
   }));
 
-  // Merge proposals into invited suppliers
   return invited.map((inv) => {
     const proposal = (rfq.proposals ?? []).find(
       (p) => p.supplierId === inv.fornecedorId
@@ -49,7 +41,6 @@ function mapPropostas(rfq: Rfq): PropostaLocal[] {
     if (proposal.status === "Declined") {
       return { ...inv, status: "declinada" };
     }
-    // Submitted — calculate totals from items if available
     const unitPrice =
       proposal.items && proposal.items.length > 0
         ? proposal.items[0].unitPrice
@@ -77,9 +68,6 @@ function getEstagio(rfq: Rfq): Estagio {
   return "proposta";
 }
 
-// ---------------------------------------------------------------------------
-// Sub-component: PropostaCard
-// ---------------------------------------------------------------------------
 function PropostaCard({
   proposta,
   isWinner,
@@ -224,9 +212,6 @@ function PropostaCard({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main Page
-// ---------------------------------------------------------------------------
 export default function RfqDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -252,7 +237,6 @@ export default function RfqDetailPage() {
         setRfq(data);
         setPropostas(mapPropostas(data));
         setEstagio(getEstagio(data));
-        // Pre-select winner if any proposal is marked as winner
         const winner = (data.proposals ?? []).find((p) => p.isWinner);
         if (winner) setVencedorId(winner.supplierId);
       } catch (err) {
@@ -273,7 +257,6 @@ export default function RfqDetailPage() {
   );
   const melhorProposta = propostasRankeadas[0];
 
-  // Total quantity from purchase request items
   const totalQtd =
     rfq?.purchaseRequest?.items?.reduce(
       (s: number, i: { quantity: number }) => s + Number(i.quantity),
@@ -290,7 +273,6 @@ export default function RfqDetailPage() {
     ? new Date(rfq.closesAt).toLocaleDateString("pt-BR")
     : "—";
 
-  // Status badge variant
   const badgeVariant =
     estagio === "aprovacao" ? "warning" : estagio === "analise" ? "primary" : "success";
   const badgeLabel =
@@ -302,7 +284,7 @@ export default function RfqDetailPage() {
 
   const Header = () => (
     <>
-      {/* Confirm — Encerrar coleta */}
+      
       <ConfirmDialog
         open={dialog === "encerrar"}
         variant="warning"
@@ -327,7 +309,7 @@ export default function RfqDetailPage() {
         onCancel={() => setDialog(null)}
       />
 
-      {/* Confirm — Selecionar vencedor */}
+      
       <ConfirmDialog
         open={dialog === "selecionar"}
         variant="success"
@@ -360,7 +342,7 @@ export default function RfqDetailPage() {
         }}
       />
 
-      {/* Confirm — Gerar Pedido de Compra */}
+      
       <ConfirmDialog
         open={dialog === "gerar"}
         variant="info"
@@ -428,7 +410,7 @@ export default function RfqDetailPage() {
         </div>
       </div>
 
-      {/* Stepper de estágios */}
+      
       <div className={styles.estagioPista}>
         <div
           className={`${styles.estsgioItem} ${
@@ -487,7 +469,6 @@ export default function RfqDetailPage() {
     </>
   );
 
-  // ---- Loading state ----
   if (loading) {
     return (
       <div className={styles.detailContainer}>
@@ -499,13 +480,12 @@ export default function RfqDetailPage() {
     );
   }
 
-  // ---- Estágio: Coleta de Propostas ----
   if (estagio === "proposta") {
     return (
       <div className={styles.detailContainer}>
         <Header />
 
-        {/* Itens da Solicitação */}
+        
         {rfq?.purchaseRequest?.items && rfq.purchaseRequest.items.length > 0 && (
           <Card className={styles.flowCard} style={{ marginBottom: 20 }}>
             <h4>Itens solicitados ({rfq.purchaseRequest.items.length})</h4>
@@ -571,7 +551,6 @@ export default function RfqDetailPage() {
     );
   }
 
-  // ---- Estágio: Análise ----
   if (estagio === "analise") {
     return (
       <div className={styles.detailContainer}>
@@ -744,7 +723,6 @@ export default function RfqDetailPage() {
     );
   }
 
-  // ---- Estágio: Aprovação e PO ----
   return (
     <div className={styles.detailContainer}>
       <Header />

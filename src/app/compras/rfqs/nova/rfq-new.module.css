@@ -1,6 +1,4 @@
-/* ============================
-   Container & Back button
-   ============================ */
+﻿
 .formContainer {
   display: flex;
   flex-direction: column;
@@ -23,9 +21,7 @@
   cursor: pointer;
 }
 
-/* ============================
-   Page header
-   ============================ */
+
 .pageHeader {
   display: flex;
   align-items: flex-end;
@@ -59,9 +55,7 @@
   line-height: 1.55;
 }
 
-/* ============================
-   Action buttons
-   ============================ */
+
 .headerActions,
 .formActions {
   display: flex;
@@ -108,9 +102,7 @@
   background-color: #007d79 !important;
 }
 
-/* ============================
-   Workspace grid (main + side)
-   ============================ */
+
 .workspaceGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
@@ -131,9 +123,7 @@
   gap: 16px;
 }
 
-/* ============================
-   Form card
-   ============================ */
+
 .formCard {
   padding: 0 !important;
   border: 1px solid #e2e8f0;
@@ -184,9 +174,7 @@
   line-height: 1.45;
 }
 
-/* ============================
-   Form controls
-   ============================ */
+
 .formRow {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -240,12 +228,8 @@ textarea.formControl {
   color: #475569;
 }
 
-/* ============================
-   Summary box (vinculada)
-   ============================ */
-/* ============================
-   Gate (portao de entrada)
-   ============================ */
+
+
 .gateWrapper {
   display: grid;
   grid-template-columns: 1fr 340px;
@@ -304,7 +288,7 @@ textarea.formControl {
   font-weight: 800;
 }
 
-/* Preview da solicitacao selecionada */
+
 .gatePreview {
   width: 100%;
   padding: 20px;
@@ -397,7 +381,7 @@ textarea.formControl {
   width: 100%;
 }
 
-/* Info cards laterais do gate */
+
 .gateInfo {
   display: flex;
   flex-direction: column;
@@ -440,9 +424,7 @@ textarea.formControl {
   line-height: 1.5;
 }
 
-/* ============================
-   Origem box (formulario)
-   ============================ */
+
 .origemBox {
   display: flex;
   align-items: flex-start;
@@ -516,9 +498,7 @@ textarea.formControl {
   color: #0f172a;
 }
 
-/* ============================
-   Item origin tag
-   ============================ */
+
 .itemHeaderLeft {
   display: flex;
   align-items: center;
@@ -537,9 +517,7 @@ textarea.formControl {
   font-weight: 800;
 }
 
-/* ============================
-   Priority pills
-   ============================ */
+
 .priorityPill {
   display: inline-flex;
   align-items: center;
@@ -556,9 +534,7 @@ textarea.formControl {
 .priorityAlta  { background: #fee2e2; color: #b91c1c; }
 .priorityCritica { background: #0f172a; color: #fff; }
 
-/* ============================
-   Legacy summaryBox (kept for compat)
-   ============================ */
+
 .summaryBox {
   display: flex;
   gap: 12px;
@@ -585,9 +561,7 @@ textarea.formControl {
   margin-top: 2px;
 }
 
-/* ============================
-   Items list
-   ============================ */
+
 .itemsList {
   display: flex;
   flex-direction: column;
@@ -642,7 +616,7 @@ textarea.formControl {
 }
 
 .rfqItemDesc {
-  /* ocupa a primeira coluna */
+  
 }
 
 .addItemButton {
@@ -653,9 +627,7 @@ textarea.formControl {
   color: #007d79;
 }
 
-/* ============================
-   Fornecedores
-   ============================ */
+
 .fornecedoresList {
   display: flex;
   flex-direction: column;
@@ -723,18 +695,14 @@ textarea.formControl {
   white-space: nowrap;
 }
 
-/* ============================
-   Form actions footer
-   ============================ */
+
 .formActions {
   padding: 22px 32px;
   border-top: 1px solid #edf2f7;
   background: #fbfdff;
 }
 
-/* ============================
-   Sidebar — Summary card
-   ============================ */
+
 .summaryCard,
 .checklistCard {
   padding: 20px !important;
@@ -823,9 +791,7 @@ textarea.formControl {
   line-height: 1.35;
 }
 
-/* ============================
-   Sidebar — Checklist card
-   ============================ */
+
 .sideTitle {
   display: flex;
   align-items: center;
@@ -884,9 +850,7 @@ textarea.formControl {
   box-shadow: inset 0 0 0 4px #fff;
 }
 
-/* ============================
-   Responsive
-   ============================ */
+
 @media (max-width: 1180px) {
   .workspaceGrid,
   .gateWrapper {
@@ -953,9 +917,7 @@ textarea.formControl {
   }
 }
 
-/* =========================================================
-   STEPPER NAVIGATION REDESIGN
-   ========================================================= */
+
 
 .stepperNav {
   display: flex;
@@ -1014,7 +976,7 @@ textarea.formControl {
   border-radius: 1px;
 }
 
-/* Stepper States */
+
 .stepActive .stepNumber {
   border-color: #007d79;
   background: #e6f5f4;
@@ -1045,9 +1007,7 @@ textarea.formControl {
 }
 
 
-/* =========================================================
-   12-COLUMN GRID UTILITIES
-   ========================================================= */
+
 
 .gridCol12 {
   display: grid;
@@ -1070,9 +1030,7 @@ textarea.formControl {
 .col1 { grid-column: span 1; }
 
 
-/* =========================================================
-   COLLAPSIBLE ACCORDION PANEL STYLES
-   ========================================================= */
+
 
 .itemSummaryRow {
   display: flex;
@@ -1168,7 +1126,7 @@ textarea.formControl {
   color: #cbd5e1;
 }
 
-/* Accordion expand transitions */
+
 .accordionExpandable {
   border-top: 1px solid #e2e8f0;
   background: #ffffff;

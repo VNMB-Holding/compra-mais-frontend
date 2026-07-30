@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -46,7 +46,6 @@ const PRIORITY_MAP: Record<string, string> = {
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 
 function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationRow {
-  // Coleta as categorias dos itens da solicitação
   const itemCategories = pr.items?.map((i: any) => i.category).filter(Boolean) || [];
   const uniqueCategories = Array.from(new Set(itemCategories));
 

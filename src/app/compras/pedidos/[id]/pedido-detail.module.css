@@ -1,4 +1,4 @@
-.detailContainer {
+﻿.detailContainer {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -254,9 +254,7 @@
   color: #0f172a;
 }
 
-/* ============================
-   Trilha de estágios (Horizontal)
-   ============================ */
+
 .estagioPista {
   display: flex;
   align-items: center;
@@ -388,9 +386,7 @@
 .darkCardContent h3 { color: white !important; }
 .textPrimary { color: #007d79 !important; }
 
-/* =========================================================
-   ORIGIN TAGS (rastreabilidade no cabeçalho)
-   ========================================================= */
+
 
 .originTags {
   display: flex;
@@ -412,9 +408,7 @@
   font-weight: 700;
 }
 
-/* =========================================================
-   SUPPLIER WINNER CARD
-   ========================================================= */
+
 
 .supplierCard {
   padding: 24px !important;

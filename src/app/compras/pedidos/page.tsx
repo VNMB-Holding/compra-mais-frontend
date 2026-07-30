@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -62,7 +62,6 @@ export default function PedidosPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Purchase orders use the existing purchase-order controller path
         const data = await apiClient.get<PurchaseOrder[]>("/api/purchase-orders");
         const rows = data.map(mapToRow);
         setPedidos(rows);

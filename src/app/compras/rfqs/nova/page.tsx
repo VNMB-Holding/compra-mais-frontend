@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,9 +11,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-new.module.css";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 interface Solicitacao {
   id: string;
@@ -62,9 +59,6 @@ const PRIORITY_BADGE_CONFIG: Record<string, { variant: "gray" | "warning" | "dan
   Baixa: { variant: "gray", icon: "info-circle" },
 };
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export default function NewRfqPage() {
   const router = useRouter();
@@ -72,7 +66,6 @@ export default function NewRfqPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Params vindos do modal de aprovacao de SOL
   const paramSol = searchParams.get("sol") ?? "";
   const paramTitulo = searchParams.get("titulo") ?? "";
   const paramValor = searchParams.get("valor") ?? "";
@@ -80,15 +73,12 @@ export default function NewRfqPage() {
   const paramArea = searchParams.get("area") ?? "";
   const paramSolicitante = searchParams.get("solicitante") ?? "";
 
-  // "portao": null = nenhuma selecionada, string = id selecionado mas nao confirmado
   const [solicitacaoSelecionada, setSolicitacaoSelecionada] = useState<string>("");
-  // solicitacaoConfirmada = portao aberto, formulario visivel
   const [solicitacaoConfirmada, setSolicitacaoConfirmada] = useState<Solicitacao | null>(null);
 
-  const [currentStep, setCurrentStep] = useState(1); // 1, 2, 3, 4
+  const [currentStep, setCurrentStep] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
 
-  // Form fields — so existem apos confirmacao
   const [tituloRfq, setTituloRfq] = useState("");
   const [estrategia, setEstrategia] = useState("Menor Preco Equalizado");
   const [dataEncerramento, setDataEncerramento] = useState("");
@@ -102,7 +92,6 @@ export default function NewRfqPage() {
   const [solicidadoesApi, setSolicitacoesApi] = useState<Solicitacao[]>(SOLICITACOES_DISPONIVEIS);
   const [loadingData, setLoadingData] = useState(true);
 
-  // Carrega solicitações aprovadas e fornecedores ativos da API
   useEffect(() => {
     async function loadApiData() {
       try {
@@ -112,7 +101,6 @@ export default function NewRfqPage() {
         ]);
 
         if (reqs && reqs.length > 0) {
-          // Filtra solicitações que já não tenham RFQ vinculada (ex: status InQuote, Finished)
           const eligibleReqs = reqs.filter(
             (r) => r.status !== "InQuote" && r.status !== "Finished" && (!r.rfqs || r.rfqs.length === 0)
           );
@@ -160,14 +148,10 @@ export default function NewRfqPage() {
     loadApiData();
   }, []);
 
-  // -------------------------------------------------------------------------
-  // Auto-confirmar solicitacao quando vem de URL params (modal de aprovacao)
-  // -------------------------------------------------------------------------
 
   useEffect(() => {
     if (!paramSol) return;
 
-    // Tenta encontrar nas solicitações carregadas
     const solExistente = solicidadoesApi.find((s) => s.id === paramSol || (s as any).code === paramSol);
 
     if (solExistente) {
@@ -182,7 +166,6 @@ export default function NewRfqPage() {
         setExpandedItemId(solExistente.itens[0].id);
       }
     } else {
-      // SOL nova (vem do fluxo de criacao) — monta um objeto dinamico
       const solDinamica: Solicitacao = {
         id: paramSol,
         titulo: paramTitulo || "Solicitação de compra",
@@ -206,18 +189,13 @@ export default function NewRfqPage() {
       setExpandedItemId(1);
     }
     setCurrentStep(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramSol, solicidadoesApi]);
 
-  // -------------------------------------------------------------------------
-  // Handlers
-  // -------------------------------------------------------------------------
 
   const handleConfirmarSolicitacao = () => {
     const sol = solicidadoesApi.find((s) => s.id === solicitacaoSelecionada);
     if (!sol) return;
     setSolicitacaoConfirmada(sol);
-    // Pre-preenche formulario com dados da solicitacao
     setTituloRfq(`RFQ — ${sol.titulo}`);
     setIncoterm(sol.incoterm);
     setCondicaoPagamento(sol.condicaoPagamento);
@@ -259,9 +237,6 @@ export default function NewRfqPage() {
     setItens((cur) => cur.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
   };
 
-  // -------------------------------------------------------------------------
-  // Derived state
-  // -------------------------------------------------------------------------
 
   const fornecedoresSelecionados = useMemo(
     () => fornecedores.filter((f) => f.selecionado),
@@ -272,9 +247,6 @@ export default function NewRfqPage() {
 
   const solicitacaoPreview = solicidadoesApi.find((s) => s.id === solicitacaoSelecionada);
 
-  // =========================================================================
-  // RENDER — PORTAO (sem solicitacao confirmada)
-  // =========================================================================
 
   if (!solicitacaoConfirmada) {
     return (
@@ -294,7 +266,7 @@ export default function NewRfqPage() {
           </div>
         </div>
 
-        {/* Gate card */}
+        
         <div className={styles.gateWrapper}>
           <Card className={styles.gateCard}>
             <div className={styles.gateIconWrap}>
@@ -317,7 +289,7 @@ export default function NewRfqPage() {
               />
             </div>
 
-            {/* Preview da solicitacao selecionada */}
+            
             {solicitacaoPreview && (
               <div className={styles.gatePreview}>
                 <div className={styles.gatePreviewHeader}>
@@ -405,9 +377,6 @@ export default function NewRfqPage() {
     );
   }
 
-  // =========================================================================
-  // RENDER — FORMULARIO COMPLETO (solicitacao confirmada)
-  // =========================================================================
 
   return (
     <div className={styles.formContainer}>
@@ -426,7 +395,7 @@ export default function NewRfqPage() {
         </div>
       </div>
 
-      {/* STEPPER PROGRESS BAR */}
+      
       <div className={styles.stepperNav}>
         <div 
           className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
@@ -471,10 +440,10 @@ export default function NewRfqPage() {
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
 
-            {/* ETAPA 1: PARÂMETROS GERAIS */}
+            
             {currentStep === 1 && (
               <>
-                {/* Seção 0 — Solicitação vinculada (somente leitura) */}
+                
                 <section className={styles.formSection}>
                   <div className={styles.sectionHeader}>
                     <div className={styles.sectionIcon}><Icon name="link-01" /></div>
@@ -556,7 +525,7 @@ export default function NewRfqPage() {
               </>
             )}
 
-            {/* ETAPA 2: ITENS DA COTAÇÃO (ACCORDION) */}
+            
             {currentStep === 2 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -578,7 +547,7 @@ export default function NewRfqPage() {
                     return (
                       <div className={styles.itemPanel} key={item.id}>
                         
-                        {/* Collapsed State Header Row */}
+                        
                         <div 
                           className={styles.itemSummaryRow} 
                           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
@@ -631,7 +600,7 @@ export default function NewRfqPage() {
                           </div>
                         </div>
 
-                        {/* Expanded Form Fields */}
+                        
                         {isExpanded && (
                           <div className={styles.accordionExpandable}>
                             <div className={styles.gridCol12}>
@@ -686,7 +655,7 @@ export default function NewRfqPage() {
               </section>
             )}
 
-            {/* ETAPA 3: FORNECEDORES CONVIDADOS */}
+            
             {currentStep === 3 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -728,7 +697,7 @@ export default function NewRfqPage() {
               </section>
             )}
 
-            {/* ETAPA 4: COMPLIANCE E LOGÍSTICA */}
+            
             {currentStep === 4 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -791,7 +760,7 @@ export default function NewRfqPage() {
               </section>
             )}
 
-            {/* STEP BUTTONS */}
+            
             <div className={styles.formActions}>
               {currentStep === 1 && (
                 <>
@@ -916,7 +885,7 @@ export default function NewRfqPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
+        
         <aside className={styles.sideColumn}>
           <Card className={styles.summaryCard}>
             <div className={styles.summaryHeader}>

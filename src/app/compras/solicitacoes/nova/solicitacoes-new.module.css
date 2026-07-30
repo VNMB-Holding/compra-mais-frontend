@@ -1,4 +1,4 @@
-.formContainer {
+﻿.formContainer {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -583,9 +583,7 @@ textarea.formControl {
   }
 }
 
-/* =========================================================
-   MODAL DE APROVAÇÃO
-   ========================================================= */
+
 
 .modalOverlay {
   position: fixed;
@@ -762,9 +760,7 @@ textarea.formControl {
   }
 }
 
-/* =========================================================
-   STEPPER NAVIGATION REDESIGN
-   ========================================================= */
+
 
 .stepperNav {
   display: flex;
@@ -823,7 +819,7 @@ textarea.formControl {
   border-radius: 1px;
 }
 
-/* Stepper States */
+
 .stepActive .stepNumber {
   border-color: #007d79;
   background: #e6f5f4;
@@ -854,9 +850,7 @@ textarea.formControl {
 }
 
 
-/* =========================================================
-   12-COLUMN GRID UTILITIES
-   ========================================================= */
+
 
 .gridCol12 {
   display: grid;
@@ -879,9 +873,7 @@ textarea.formControl {
 .col1 { grid-column: span 1; }
 
 
-/* =========================================================
-   COLLAPSIBLE ACCORDION PANEL STYLES
-   ========================================================= */
+
 
 .itemSummaryRow {
   display: flex;
@@ -977,7 +969,7 @@ textarea.formControl {
   color: #cbd5e1;
 }
 
-/* Accordion expand transitions */
+
 .accordionExpandable {
   border-top: 1px solid #e2e8f0;
   background: #ffffff;

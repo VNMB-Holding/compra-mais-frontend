@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -11,9 +11,6 @@ import '@geoapify/geocoder-autocomplete/styles/minimal.css';
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
-// ---------------------------------------------------------------------------
-// Modal de confirmação de envio para aprovação
-// ---------------------------------------------------------------------------
 function ApprovalModal({
   title,
   code,
@@ -37,7 +34,7 @@ function ApprovalModal({
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-        {/* Ícone de sucesso */}
+        
         <div className={styles.modalSuccessIcon}>
           <Icon name="check-circle" />
         </div>
@@ -47,7 +44,7 @@ function ApprovalModal({
           <p>Sua demanda foi registrada e está aguardando alçada. O que deseja fazer agora?</p>
         </div>
 
-        {/* Resumo da SOL */}
+        
         <div className={styles.modalSummary}>
           <div className={styles.modalSummaryRow}>
             <span>Solicitação</span>
@@ -67,7 +64,7 @@ function ApprovalModal({
           </div>
         </div>
 
-        {/* Ações */}
+        
         <div className={styles.modalActions}>
           <button className={styles.modalBtnSecondary} onClick={onGoToList}>
             <Icon name="list" />
@@ -142,7 +139,6 @@ export default function NovaSolicitacaoPage() {
 
   const [targetTenantId, setTargetTenantId] = useState<string>(user?.tenantId || "");
 
-  // Atualiza targetTenantId quando o usuário carrega
   useEffect(() => {
     if (user?.tenantId && !targetTenantId) {
       setTargetTenantId(user.tenantId);
@@ -314,7 +310,7 @@ export default function NovaSolicitacaoPage() {
         </div>
       </div>
 
-      {/* STEPPER PROGRESS BAR */}
+      
       <div className={styles.stepperNav}>
         <div 
           className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
@@ -349,7 +345,7 @@ export default function NovaSolicitacaoPage() {
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
             
-            {/* ETAPA 1: IDENTIFICAÇÃO */}
+            
             {currentStep === 1 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -445,7 +441,7 @@ export default function NovaSolicitacaoPage() {
               </section>
             )}
 
-            {/* ETAPA 2: ITENS DA DEMANDA (ACCORDION) */}
+            
             {currentStep === 2 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -464,7 +460,7 @@ export default function NovaSolicitacaoPage() {
                     return (
                       <div className={styles.itemPanel} key={item.id}>
                         
-                        {/* Collapsed State Header Row */}
+                        
                         <div 
                           className={styles.itemSummaryRow} 
                           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
@@ -515,7 +511,7 @@ export default function NovaSolicitacaoPage() {
                           </div>
                         </div>
 
-                        {/* Expanded State Form Fields (12-Column Grid Alignment) */}
+                        
                         {isExpanded && (
                           <div className={styles.accordionExpandable}>
                             <div className={styles.gridCol12}>
@@ -605,7 +601,7 @@ export default function NovaSolicitacaoPage() {
               </section>
             )}
 
-            {/* ETAPA 3: ENTREGA E CONDIÇÕES */}
+            
             {currentStep === 3 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -668,7 +664,7 @@ export default function NovaSolicitacaoPage() {
               </section>
             )}
 
-            {/* STEP BUTTONS */}
+            
             <div className={styles.formActions}>
               {currentStep === 1 && (
                 <>

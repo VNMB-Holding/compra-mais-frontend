@@ -1,4 +1,4 @@
-.detailContainer { display: flex; flex-direction: column; gap: 24px; }
+﻿.detailContainer { display: flex; flex-direction: column; gap: 24px; }
 .backBtn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: var(--primary, #007d79); font-size: 14px; font-weight: 600; cursor: pointer; align-self: flex-start; padding: 0; }
 .titleRow { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
 .titleRow h1 { font-size: 28px; font-weight: 700; color: #0f172a; margin: 0; }
@@ -11,11 +11,11 @@
 .tagHigh span { color: #b91c1c; }
 .headerActions { display: flex; gap: 12px; }
 
-/* GRID LAYOUT DE DUAS COLUNAS */
+
 .layout2Col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
 .colMain, .colSide { display: flex; flex-direction: column; gap: 24px; }
 
-/* STEPPER */
+
 .flowCard h4, .infoCard h4, .sideCard h4 { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 20px 0; }
 .stepperContainer { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
 .step { display: flex; flex-direction: column; align-items: center; text-align: center; width: 120px; gap: 8px; }
@@ -36,7 +36,7 @@
 .stepLine { flex: 1; height: 2px; background: #e2e8f0; margin: 0 -10px; transform: translateY(-30px); }
 .lineActive { background: #007d79; }
 
-/* FICHA TÉCNICA */
+
 .infoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
 .infoItem { display: flex; flex-direction: column; gap: 4px; }
 .infoItem label { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; }
@@ -45,7 +45,7 @@
 .span2 { grid-column: span 2; }
 .textPrimary { color: #007d79; }
 
-/* TIMELINE VERTICAL LATERAL */
+
 .verticalTimeline { display: flex; flex-direction: column; padding-left: 8px; position: relative; }
 .verticalTimeline::before { content: ''; position: absolute; left: 12.5px; top: 4px; bottom: 4px; width: 2px; background: #e2e8f0; }
 .vtItem { display: flex; gap: 16px; padding-bottom: 24px; position: relative; }
@@ -58,7 +58,7 @@
 .vtDone .vtDot { border-color: #007d79; background: #007d79; }
 .vtCurrent .vtDot { border-color: #d97706; border-width: 3px; }
 
-/* ANEXOS */
+
 .fileRow { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
 .fileRow span { color: #b91c1c; font-size: 28px; }
 .fileInfo { flex-grow: 1; display: flex; flex-direction: column; font-size: 13px; }
@@ -68,7 +68,7 @@
 .downloadIconBtn:hover { background: #e2e8f0; color: #0f172a; }
 .downloadIconBtn span { font-size: 20px; }
 
-/* RESULT BANNER */
+
 .resultBanner {
   display: flex;
   align-items: center;

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,6 @@ function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
   const closes = new Date(rfq.closesAt);
   const now = new Date();
   
-  // Se a data de encerramento já passou, está Encerrada
   if (closes < now && closes.toDateString() !== now.toDateString()) {
     return "Encerrada";
   }
