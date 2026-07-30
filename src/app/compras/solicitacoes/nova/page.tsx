@@ -136,7 +136,28 @@ export default function NovaSolicitacaoPage() {
     if (user?.department) setDepartment(user.department);
   }, [user]);
 
-  const [purchaseType, setPurchaseType] = useState("Material");
+  const [targetTenantId, setTargetTenantId] = useState<string>(user?.tenantId || "");
+
+  // Atualiza targetTenantId quando o usuário carrega
+  useEffect(() => {
+    if (user?.tenantId && !targetTenantId) {
+      setTargetTenantId(user.tenantId);
+    }
+  }, [user, targetTenantId]);
+
+  const tenantOptions = useMemo(() => {
+    if (!user?.availableTenants || user.availableTenants.length === 0) return [];
+    return user.availableTenants.map((t) => ({
+      label: t.name,
+      value: t.id,
+    }));
+  }, [user]);
+
+  const selectedTenantName = useMemo(() => {
+    return user?.availableTenants?.find((t) => t.id === targetTenantId)?.name || "Empresa Logada";
+  }, [user, targetTenantId]);
+
+  const [purchaseType, setPurchaseType] = useState("Material recorrente");
   const [justification, setJustification] = useState("");
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [deliveryWindow, setDeliveryWindow] = useState("");
@@ -197,6 +218,7 @@ export default function NovaSolicitacaoPage() {
     setIsSubmitting(true);
     try {
       const data = await purchaseRequestsApi.create({
+        tenantId: targetTenantId || user?.tenantId,
         description: title || "Rascunho de Solicitação",
         requesterId: user?.id,
         costCenter: department || "Geral",
@@ -317,6 +339,19 @@ export default function NovaSolicitacaoPage() {
                   <label>Título da solicitação <span className="required-asterisk">*</span></label>
                   <input className={styles.formControl} value={title} onChange={(event) => setTitle(event.target.value)} />
                 </div>
+
+                {tenantOptions.length > 0 && (
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                    <label>Empresa / Unidade Destino <span className="required-asterisk">*</span></label>
+                    <Select
+                      options={tenantOptions}
+                      value={targetTenantId}
+                      onChange={setTargetTenantId}
+                      icon="building-01"
+                      placeholder="Selecione a empresa para a qual a compra se destina..."
+                    />
+                  </div>
+                )}
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
@@ -682,6 +717,7 @@ export default function NovaSolicitacaoPage() {
               <strong>{formatCurrency(totalEstimated)}</strong>
             </div>
             <dl className={styles.summaryList}>
+              <div><dt>Empresa</dt><dd><strong>{selectedTenantName}</strong></dd></div>
               <div><dt>Área</dt><dd>{department}</dd></div>
               <div><dt>Solicitante</dt><dd>{requester}</dd></div>
               <div><dt>Tipo</dt><dd>{purchaseType}</dd></div>
