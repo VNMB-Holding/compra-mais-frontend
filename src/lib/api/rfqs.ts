@@ -56,11 +56,21 @@ export interface RfqKpis {
 }
 
 export const rfqsApi = {
-  list: () => apiClient.get<Rfq[]>("/api/rfqs"),
+  list: (tenantId?: string) => {
+    const params = new URLSearchParams();
+    if (tenantId) params.append("tenantId", tenantId);
+    const qs = params.toString();
+    return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ''}`);
+  },
   
   getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
   
-  getKpis: () => apiClient.get<RfqKpis>("/api/rfqs/kpis"),
+  getKpis: (tenantId?: string) => {
+    const params = new URLSearchParams();
+    if (tenantId) params.append("tenantId", tenantId);
+    const qs = params.toString();
+    return apiClient.get<RfqKpis>(`/api/rfqs/kpis${qs ? `?${qs}` : ''}`);
+  },
   
   create: (data: { requestId: string; title: string; closesAt: string; supplierIds?: string[] }) =>
     apiClient.post<Rfq>("/api/rfqs", data),

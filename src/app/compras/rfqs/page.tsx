@@ -84,9 +84,10 @@ export default function RfqsPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true);
         const [list, kpisData] = await Promise.all([
-          rfqsApi.list(),
-          rfqsApi.getKpis(),
+          rfqsApi.list(user?.tenantId),
+          rfqsApi.getKpis(user?.tenantId),
         ]);
         setRfqs(list.map(rfq => mapToRow(rfq, user)));
         setKpis(kpisData);
@@ -98,7 +99,7 @@ export default function RfqsPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [user?.tenantId]);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },

@@ -55,11 +55,21 @@ export interface PurchaseRequestKpis {
 }
 
 export const purchaseRequestsApi = {
-  list: () => apiClient.get<PurchaseRequest[]>("/api/purchase-requests"),
+  list: (tenantId?: string) => {
+    const params = new URLSearchParams();
+    if (tenantId) params.append("tenantId", tenantId);
+    const qs = params.toString();
+    return apiClient.get<PurchaseRequest[]>(`/api/purchase-requests${qs ? `?${qs}` : ''}`);
+  },
   
   getById: (id: string) => apiClient.get<PurchaseRequest>(`/api/purchase-requests/${id}`),
   
-  getKpis: () => apiClient.get<PurchaseRequestKpis>("/api/purchase-requests/kpis"),
+  getKpis: (tenantId?: string) => {
+    const params = new URLSearchParams();
+    if (tenantId) params.append("tenantId", tenantId);
+    const qs = params.toString();
+    return apiClient.get<PurchaseRequestKpis>(`/api/purchase-requests/kpis${qs ? `?${qs}` : ''}`);
+  },
   
   create: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
     apiClient.post<PurchaseRequest>("/api/purchase-requests", data),

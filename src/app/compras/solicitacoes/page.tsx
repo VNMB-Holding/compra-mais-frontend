@@ -96,9 +96,10 @@ export default function SolicitacoesPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true);
         const [list, kpisData] = await Promise.all([
-          purchaseRequestsApi.list(),
-          purchaseRequestsApi.getKpis(),
+          purchaseRequestsApi.list(user?.tenantId),
+          purchaseRequestsApi.getKpis(user?.tenantId),
         ]);
         setSolicitacoes(list.map((pr) => mapToRow(pr, user)));
         setKpis(kpisData);
@@ -110,7 +111,7 @@ export default function SolicitacoesPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [user?.tenantId]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
