@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { ProtectedLayout } from "@/components/ProtectedLayout";
@@ -26,7 +26,7 @@ import AdminEmpresaModal, {
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./administracao.module.css";
 
-/* ─── Types ────────────────────────────────────────────────────── */
+
 
 interface UserRow {
   id: string;
@@ -63,7 +63,7 @@ interface AlcadaRow {
   aprovadorNome: string;
 }
 
-/* ─── Mock Data ─────────────────────────────────────────────────── */
+
 
 const INITIAL_USERS: UserRow[] = [
   {
@@ -192,7 +192,7 @@ const INITIAL_ALCADAS: AlcadaRow[] = [
   },
 ];
 
-/* ─── Role helpers ──────────────────────────────────────────────── */
+
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
@@ -222,7 +222,7 @@ const getInitials = (name: string) =>
 const fmt = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-/* ─── Permissions config ────────────────────────────────────────── */
+
 
 const PROFILE_CONFIGS = [
   {
@@ -287,14 +287,13 @@ const PROFILE_CONFIGS = [
   },
 ];
 
-/* ─── Page ──────────────────────────────────────────────────────── */
+
 
 export default function AdministracaoPage() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("usuarios");
 
-  // Users state
   const [users, setUsers] = useState<UserRow[]>(INITIAL_USERS);
   const [userSearch, setUserSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("Todos");
@@ -304,14 +303,12 @@ export default function AdministracaoPage() {
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [deactivateDialog, setDeactivateDialog] = useState<UserRow | null>(null);
 
-  // Alcadas state
   const [alcadas, setAlcadas] = useState<AlcadaRow[]>(INITIAL_ALCADAS);
   const [alcadaModalOpen, setAlcadaModalOpen] = useState(false);
   const [alcadaModalMode, setAlcadaModalMode] = useState<"create" | "edit">("create");
   const [editingAlcada, setEditingAlcada] = useState<AlcadaRow | null>(null);
   const [deleteAlcadaDialog, setDeleteAlcadaDialog] = useState<AlcadaRow | null>(null);
 
-  // Empresas state
   const [empresas, setEmpresas] = useState<EmpresaRow[]>(INITIAL_EMPRESAS);
   const [empresaSearch, setEmpresaSearch] = useState("");
   const [empresaModalOpen, setEmpresaModalOpen] = useState(false);
@@ -319,7 +316,7 @@ export default function AdministracaoPage() {
   const [editingEmpresa, setEditingEmpresa] = useState<EmpresaRow | null>(null);
   const [deleteEmpresaDialog, setDeleteEmpresaDialog] = useState<EmpresaRow | null>(null);
 
-  /* ── Tabs ── */
+  
   const tabItems = [
     { id: "usuarios", label: "Usuários", count: users.length },
     { id: "perfis", label: "Tipos de Acesso" },
@@ -327,7 +324,7 @@ export default function AdministracaoPage() {
     { id: "empresas", label: "Empresas", count: empresas.length },
   ];
 
-  /* ── Filters ── */
+  
   const roleOptions = [
     { label: "Todos os tipos", value: "Todos" },
     { label: "Administrador", value: "admin" },
@@ -351,7 +348,7 @@ export default function AdministracaoPage() {
     return matchSearch && matchRole && matchStatus;
   });
 
-  /* ── User actions ── */
+  
   const openCreateUser = () => {
     setUserModalMode("create");
     setEditingUser(null);
@@ -423,7 +420,7 @@ export default function AdministracaoPage() {
     setDeactivateDialog(null);
   };
 
-  /* ── Alçada actions ── */
+  
   const openCreateAlcada = () => {
     setAlcadaModalMode("create");
     setEditingAlcada(null);
@@ -481,7 +478,7 @@ export default function AdministracaoPage() {
     setDeleteAlcadaDialog(null);
   };
 
-  /* ── Empresa actions ── */
+  
   const openCreateEmpresa = () => {
     setEmpresaModalMode("create");
     setEditingEmpresa(null);
@@ -523,7 +520,7 @@ export default function AdministracaoPage() {
     setDeleteEmpresaDialog(null);
   };
 
-  /* ── User columns ── */
+  
   const userColumns: ColumnDef<UserRow>[] = [
     {
       header: "Usuário",
@@ -605,7 +602,7 @@ export default function AdministracaoPage() {
     },
   ];
 
-  /* ── Alçada columns ── */
+  
   const alcadaColumns: ColumnDef<AlcadaRow>[] = [
     {
       header: "Nível",
@@ -688,12 +685,12 @@ export default function AdministracaoPage() {
     },
   ];
 
-  /* ── KPI counts ── */
+  
   const activeCount = users.filter((u) => u.status === "Ativo").length;
   const adminCount = users.filter((u) => u.role === "admin").length;
   const inactiveCount = users.filter((u) => u.status === "Inativo").length;
 
-  /* ── Empresa columns ── */
+  
   const empresaColumns: ColumnDef<EmpresaRow>[] = [
     {
       header: "Empresa",
@@ -770,7 +767,7 @@ export default function AdministracaoPage() {
   return (
     <ProtectedLayout allowedRoles={["admin"]}>
       <div className={styles.pageContainer}>
-        {/* Header */}
+        
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h1>Administração</h1>
@@ -781,12 +778,12 @@ export default function AdministracaoPage() {
           </div>
         </div>
 
-        {/* Tabs */}
+        
         <div className={styles.tabsContainer}>
           <Tabs tabs={tabItems} activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* ── ABA: USUÁRIOS ─────────────────────────────── */}
+        
         {activeTab === "usuarios" && (
           <>
             <div className={styles.kpiGrid}>
@@ -872,7 +869,7 @@ export default function AdministracaoPage() {
           </>
         )}
 
-        {/* ── ABA: PERFIS ───────────────────────────────── */}
+        
         {activeTab === "perfis" && (
           <div className={styles.perfisGrid}>
             {PROFILE_CONFIGS.map((profile) => {
@@ -936,10 +933,10 @@ export default function AdministracaoPage() {
           </div>
         )}
 
-        {/* ── ABA: ALÇADAS ──────────────────────────────── */}
+        
         {activeTab === "alcadas" && (
           <>
-            {/* Fluxo visual */}
+            
             <div className={styles.fluxoVisual}>
               {alcadas.map((a, idx) => (
                 <React.Fragment key={a.id}>
@@ -986,7 +983,7 @@ export default function AdministracaoPage() {
             </Card>
           </>
         )}
-        {/* ── ABA: EMPRESAS ─────────────────────────────── */}
+        
         {activeTab === "empresas" && (
           <>
             <div className={styles.kpiGrid}>
@@ -1044,7 +1041,7 @@ export default function AdministracaoPage() {
         )}
       </div>
 
-      {/* ── Modals ── */}
+      
       <AdminUserModal
         open={userModalOpen}
         mode={userModalMode}

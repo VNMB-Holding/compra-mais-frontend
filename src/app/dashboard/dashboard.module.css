@@ -1,4 +1,4 @@
-.viewDashboard {
+﻿.viewDashboard {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -142,7 +142,7 @@
 .cardLink:hover { gap: 10px; }
 .cardLink span { font-size: 16px; }
 
-/* CARD URGENTE */
+
 .urgentCardWrapper {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -194,13 +194,13 @@
 
 .uqImage {
   height: 140px;
-  background-image: url('/images/bg-hero-card.png'); /* Ou a imagem do container/indústria */
+  background-image: url('/images/bg-hero-card.png'); 
   background-size: cover;
   background-position: center;
   margin-top: auto;
 }
 
-/* DONUT CHART */
+
 .donutChartContainer {
   display: flex;
   align-items: center;
@@ -212,8 +212,8 @@
 .donutGraphicBox {
   flex: 1;
   max-width: 130px;
-  height: 140px; /* ALTERE AQUI: Mude de max-height para height fixa */
-  position: relative; /* Ajuda o Recharts a se posicionar */
+  height: 140px; 
+  position: relative; 
 }
 
 .donutLegend {
@@ -252,7 +252,7 @@
   margin-left: 8px;
 }
 
-/* TABELA CARD */
+
 .tableCard {
   overflow: hidden;
 }

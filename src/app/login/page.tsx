@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,7 +37,6 @@ export default function LoginPage() {
       const requested = params.get("redirect");
       const targetUrl = requested || "/dashboard";
 
-      // Redirecionamento completo do navegador para atualizar os cookies no middleware
       window.location.href = targetUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao fazer login");

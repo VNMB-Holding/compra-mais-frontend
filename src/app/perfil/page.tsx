@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { ProtectedLayout } from "@/components/ProtectedLayout";
@@ -26,7 +26,6 @@ export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState("dados-pessoais");
   const [loading, setLoading] = useState(false);
 
-  // Profile data state
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -34,7 +33,6 @@ export default function PerfilPage() {
     department: user?.department || "Operações e Suprimentos",
   });
 
-  // UI preferences state
   const [prefs, setPrefs] = useState({
     lang: "pt",
     tz: "GMT-3",
@@ -45,7 +43,6 @@ export default function PerfilPage() {
     notifyWeeklySummary: false,
   });
 
-  // Password fields state
   const [passData, setPassData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -132,13 +129,13 @@ export default function PerfilPage() {
     <ProtectedLayout allowedRoles={["procurist", "solicitante", "gerente", "admin"]}>
       <div className={styles.pageContainer}>
         
-        {/* Header */}
+        
         <div className={styles.pageHeader}>
           <h1>Configurações de Perfil</h1>
           <p>Gerencie seus dados de acesso, preferências do sistema e opções de notificação.</p>
         </div>
 
-        {/* Profile Card Header */}
+        
         <Card className={styles.profileSummaryCard}>
           <div className={styles.avatarWrapper}>
             <div className={styles.avatarBig}>
@@ -157,12 +154,12 @@ export default function PerfilPage() {
           </div>
         </Card>
 
-        {/* Tab Selection */}
+        
         <div className={styles.tabsContainer}>
           <Tabs tabs={tabItems} activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* Dynamic content cards */}
+        
         {activeTab === "dados-pessoais" && (
           <Card className={styles.contentCard}>
             <h3 className={styles.sectionTitle}>
@@ -342,7 +339,7 @@ export default function PerfilPage() {
         {activeTab === "seguranca" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             
-            {/* Alterar Senha */}
+            
             <Card className={styles.contentCard}>
               <h3 className={styles.sectionTitle}>
                 <Icon name="lock-01" /> Alterar Senha de Acesso
@@ -399,7 +396,7 @@ export default function PerfilPage() {
               </form>
             </Card>
 
-            {/* Sessões do sistema */}
+            
             <Card className={styles.contentCard}>
               <h3 className={styles.sectionTitle}>
                 <Icon name="monitor-01" /> Sessões do Sistema

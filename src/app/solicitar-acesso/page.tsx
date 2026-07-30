@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui";
 import styles from "./solicitar-acesso.module.css";
 
-// Mock das empresas cadastradas (em produção viria da API)
 const EMPRESAS_DISPONIVEIS = [
   { id: "1", razaoSocial: "NMB Holdings S.A.", cnpj: "12.345.678/0001-90" },
   { id: "2", razaoSocial: "Mineradora Ouro Preto Ltda", cnpj: "98.765.432/0001-10" },
@@ -51,7 +50,6 @@ export default function SolicitarAcessoPage() {
     }
     setLoading(true);
 
-    // TODO: Conectar com API para enviar solicitação
     await new Promise((r) => setTimeout(r, 1000));
     setLoading(false);
     setSubmitted(true);
