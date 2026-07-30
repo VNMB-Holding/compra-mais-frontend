@@ -123,6 +123,7 @@ export default function NovaSolicitacaoPage() {
   const [title, setTitle] = useState("");
   const [requester, setRequester] = useState(user?.name || "");
   const [department, setDepartment] = useState(user?.department || "");
+  const [costCenter, setCostCenter] = useState("");
   const [priority, setPriority] = useState<Priority>("Media");
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -221,7 +222,7 @@ export default function NovaSolicitacaoPage() {
         tenantId: targetTenantId || user?.tenantId,
         description: title || "Rascunho de Solicitação",
         requesterId: user?.id,
-        costCenter: department || "Geral",
+        costCenter: costCenter || department || "Geral",
         department: department || "Geral",
         purchaseType: purchaseType || "Material recorrente",
         paymentTerms: paymentTerms || undefined,
@@ -376,6 +377,10 @@ export default function NovaSolicitacaoPage() {
                       value={department}
                       onChange={setDepartment}
                     />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Centro de custo <span className="required-asterisk">*</span></label>
+                    <input className={styles.formControl} value={costCenter} onChange={(event) => setCostCenter(event.target.value)} placeholder="Ex: CC-001" required />
                   </div>
                 </div>
 
