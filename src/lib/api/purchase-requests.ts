@@ -7,7 +7,6 @@ export interface PurchaseRequest {
   description: string;
   requesterId: string;
   requesterName?: string;
-  costCenter: string;
   department?: string;
   purchaseType?: string;
   paymentTerms?: string;

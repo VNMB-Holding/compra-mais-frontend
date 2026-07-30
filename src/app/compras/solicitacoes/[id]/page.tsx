@@ -131,7 +131,7 @@ export default function SolicitacaoDetailPage() {
   const budget = Number(sol?.estimatedBudget || 0);
   const companyName =
     user?.availableTenants?.find((t) => t.id === sol?.tenantId)?.name ||
-    sol?.costCenter ||
+    sol?.department ||
     "VB AGRO";
   const chain = getApprovalChainForRequest(companyName, budget);
 
@@ -203,7 +203,7 @@ export default function SolicitacaoDetailPage() {
           </div>
           <p className={styles.subtitleLarge}>{sol?.description || "Solicitação de Compra"}</p>
           <div className={styles.metadataTags}>
-            <span className={styles.infoTag}><Icon name="building-01" /> Centro de custo: {sol?.costCenter || "Operações"}</span>
+            <span className={styles.infoTag}><Icon name="building-01" /> Área: {sol?.department || "Operações"}</span>
             <span className={styles.infoTag}><Icon name={getCategoryIcon(categoryName)} /> Categoria: {categoryName}</span>
             <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: {priorityLabel}</span>
           </div>

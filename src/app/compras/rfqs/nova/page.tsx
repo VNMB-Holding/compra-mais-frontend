@@ -118,7 +118,7 @@ export default function NewRfqPage() {
           const mappedReqs: Solicitacao[] = (eligibleReqs.length > 0 ? eligibleReqs : reqs).map((r) => ({
             id: r.id,
             titulo: r.description,
-            area: r.costCenter || "Operações",
+            area: r.department || "Operações",
             solicitante: r.requesterName || formatUserDisplayName(r.requesterId, user),
             prioridade: r.priority === "Critical" ? "Critica" : r.priority === "High" ? "Alta" : r.priority === "Medium" ? "Media" : "Baixa",
             valorEstimado: Number(r.estimatedBudget) || 0,
