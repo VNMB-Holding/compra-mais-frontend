@@ -77,6 +77,7 @@ export default function SolicitacoesPage() {
   const [solicitacoes, setSolicitacoes] = useState<SolicitationRow[]>([]);
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const { user } = useAuth();
 
@@ -91,6 +92,7 @@ export default function SolicitacoesPage() {
         setKpis(kpisData);
       } catch (err) {
         console.error("Erro ao carregar solicitações:", err);
+        setError("Não foi possível carregar os dados. Verifique sua conexão e tente novamente.");
       } finally {
         setLoading(false);
       }
@@ -274,6 +276,24 @@ export default function SolicitacoesPage() {
 
         {loading ? (
           <Loading variant="inline" message="Carregando solicitações..." size="medium" />
+        ) : error ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon} style={{ background: "#fee2e2", color: "#ef4444" }}>
+              <Icon name="alert-triangle" size={32} />
+            </div>
+            <h4>Erro ao carregar dados</h4>
+            <p>{error}</p>
+            <Button variant="secondary" onClick={() => window.location.reload()}>Tentar Novamente</Button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <Icon name="search-md" size={32} />
+            </div>
+            <h4>Nenhuma solicitação encontrada</h4>
+            <p>Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente.</p>
+            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatusFilter("Todos"); setPrioridade("Todos"); }}>Limpar Filtros</Button>
+          </div>
         ) : (
           <>
             <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/solicitacoes/${row.id}`)} />

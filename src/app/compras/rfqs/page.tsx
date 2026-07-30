@@ -65,6 +65,7 @@ export default function RfqsPage() {
   const [rfqs, setRfqs] = useState<RFQRow[]>([]);
   const [kpis, setKpis] = useState<RfqKpis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -77,6 +78,7 @@ export default function RfqsPage() {
         setKpis(kpisData);
       } catch (err) {
         console.error("Erro ao carregar RFQs:", err);
+        setError("Não foi possível carregar os dados. Verifique sua conexão e tente novamente.");
       } finally {
         setLoading(false);
       }
@@ -221,6 +223,24 @@ export default function RfqsPage() {
 
         {loading ? (
           <Loading variant="inline" message="Carregando RFQs..." size="medium" />
+        ) : error ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon} style={{ background: "#fee2e2", color: "#ef4444" }}>
+              <Icon name="alert-triangle" size={32} />
+            </div>
+            <h4>Erro ao carregar dados</h4>
+            <p>{error}</p>
+            <Button variant="secondary" onClick={() => window.location.reload()}>Tentar Novamente</Button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <Icon name="search-md" size={32} />
+            </div>
+            <h4>Nenhuma cotação encontrada</h4>
+            <p>Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente.</p>
+            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatus("Todos"); setCategoria("Todas"); }}>Limpar Filtros</Button>
+          </div>
         ) : (
           <>
             <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
