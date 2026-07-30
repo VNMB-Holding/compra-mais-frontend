@@ -6,6 +6,8 @@ import { categoriesApi, Category } from "@/lib/api/categories";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
+import { GeoapifyGeocoderAutocomplete, GeoapifyContext } from '@geoapify/react-geocoder-autocomplete';
+import '@geoapify/geocoder-autocomplete/styles/minimal.css';
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
@@ -614,18 +616,33 @@ export default function NovaSolicitacaoPage() {
                 </div>
 
                 <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
+                  <div className={styles.formGroup} style={{ flex: 2 }}>
                     <label>Local de entrega <span className="required-asterisk">*</span></label>
-                    <Select
-                      options={[
-                        { label: "Base Operacional - Paulínia/SP", value: "Base Operacional - Paulinia/SP" },
-                        { label: "Matriz - São Paulo/SP", value: "Matriz - Sao Paulo/SP" },
-                        { label: "Filial - Campinas/SP", value: "Filial - Campinas/SP" },
-                        { label: "Obra / campo operacional", value: "Obra / campo operacional" }
-                      ]}
-                      value={deliveryLocation}
-                      onChange={setDeliveryLocation}
-                    />
+                    <div style={{ position: "relative", zIndex: 10 }}>
+                      <GeoapifyContext apiKey="2259d519a04e42bcbf5003b9366404a0">
+                        <GeoapifyGeocoderAutocomplete
+                          placeholder="Digite o local de entrega..."
+                          lang="pt"
+                          filterByCountryCode={['br']}
+                          value={deliveryLocation}
+                          placeSelect={(place) => {
+                            if (place && place.properties) {
+                              const rua = place.properties.street || '';
+                              const numero = place.properties.housenumber || '';
+                              const bairro = place.properties.suburb || '';
+                              const cidade = place.properties.city || '';
+                              const estado = place.properties.state || '';
+                              const cep = place.properties.postcode || '';
+                              
+                              const end = `${rua}${numero ? `, ${numero}` : ''}${bairro ? ` - ${bairro}` : ''}, ${cidade} / ${estado} ${cep ? `- ${cep}` : ''}`;
+                              setDeliveryLocation(end.trim());
+                            } else {
+                              setDeliveryLocation("");
+                            }
+                          }}
+                        />
+                      </GeoapifyContext>
+                    </div>
                   </div>
                   <div className={styles.formGroup}>
                     <label>Janela de recebimento</label>
