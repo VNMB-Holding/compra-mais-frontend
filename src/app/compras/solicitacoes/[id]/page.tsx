@@ -7,6 +7,8 @@ import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
+import { formatUserDisplayName } from "@/lib/utils/format-display";
+import { useAuth } from "@/hooks/useAuth";
 
 type DialogType = "approve" | "reject" | null;
 
@@ -20,6 +22,7 @@ export default function SolicitacaoDetailPage() {
   const [dialog, setDialog] = useState<DialogType>(null);
   const [approved, setApproved] = useState<boolean | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function loadDetail() {
@@ -202,7 +205,7 @@ export default function SolicitacaoDetailPage() {
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Solicitante</strong>
-                  <span>{sol?.requesterId || "Breno Marques"}</span>
+                  <span>{formatUserDisplayName(sol?.requesterId, user)}</span>
                   <small>{sol?.createdAt ? new Date(sol.createdAt).toLocaleDateString("pt-BR") : "22/05/2024 14:00"}</small>
                 </div>
               </div>

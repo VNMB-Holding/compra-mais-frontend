@@ -6,6 +6,8 @@ import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 import { rfqsApi } from "@/lib/api/rfqs";
+import { formatUserDisplayName } from "@/lib/utils/format-display";
+import { useAuth } from "@/hooks/useAuth";
 import styles from "./rfq-new.module.css";
 
 // ---------------------------------------------------------------------------
@@ -66,6 +68,7 @@ const PRIORITY_BADGE_CONFIG: Record<string, { variant: "gray" | "warning" | "dan
 export default function NewRfqPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   // Params vindos do modal de aprovacao de SOL
   const paramSol = searchParams.get("sol") ?? "";
@@ -111,7 +114,7 @@ export default function NewRfqPage() {
             id: r.id,
             titulo: r.description,
             area: r.costCenter || "Operações",
-            solicitante: r.requesterId || "Usuário",
+            solicitante: formatUserDisplayName(r.requesterId, user),
             prioridade: r.priority === "Critical" ? "Critica" : r.priority === "High" ? "Alta" : r.priority === "Medium" ? "Media" : "Baixa",
             valorEstimado: Number(r.estimatedBudget) || 0,
             itens: (r.items || []).map((it, idx) => ({

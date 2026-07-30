@@ -8,6 +8,7 @@ import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
 import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib/api/purchase-requests";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SolicitationRow {
   id: string;
@@ -40,7 +41,9 @@ const PRIORITY_MAP: Record<string, string> = {
   Critical: "Crítica",
 };
 
-function mapToRow(pr: PurchaseRequest): SolicitationRow {
+import { formatUserDisplayName } from "@/lib/utils/format-display";
+
+function mapToRow(pr: PurchaseRequest, currentUser?: { name?: string } | null): SolicitationRow {
   // Coleta as categorias dos itens da solicitação
   const itemCategories = pr.items?.map((i: any) => i.category).filter(Boolean) || [];
   const uniqueCategories = Array.from(new Set(itemCategories));
@@ -58,7 +61,7 @@ function mapToRow(pr: PurchaseRequest): SolicitationRow {
     id: pr.id,
     codigo: pr.code,
     descricao: pr.description,
-    solicitante: pr.requesterId,
+    solicitante: formatUserDisplayName(pr.requesterId, currentUser),
     data: new Date(pr.createdAt).toLocaleDateString("pt-BR"),
     status: STATUS_MAP[pr.status] || pr.status,
     prioridade: PRIORITY_MAP[pr.priority] || pr.priority,
@@ -75,6 +78,8 @@ export default function SolicitacoesPage() {
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const { user } = useAuth();
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -82,7 +87,7 @@ export default function SolicitacoesPage() {
           purchaseRequestsApi.list(),
           purchaseRequestsApi.getKpis(),
         ]);
-        setSolicitacoes(list.map(mapToRow));
+        setSolicitacoes(list.map((pr) => mapToRow(pr, user)));
         setKpis(kpisData);
       } catch (err) {
         console.error("Erro ao carregar solicitações:", err);
