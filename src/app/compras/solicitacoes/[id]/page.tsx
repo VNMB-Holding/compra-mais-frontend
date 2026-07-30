@@ -131,6 +131,20 @@ export default function SolicitacaoDetailPage() {
   const budget = Number(sol?.estimatedBudget || 0);
   const chain = getApprovalChainForRequest("VB AGRO", budget);
 
+  // Identifica quem é o próximo aprovador pendente na cadeia de alçadas
+  const pendingHistoryCount = sol?.approvalHistories?.length || 0;
+  const currentPendingLevel = chain[pendingHistoryCount];
+  const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
+
+  // Verifica se o usuário logado possui permissão para aprovar nesta etapa
+  const loggedUserName = user?.name || "";
+  const isUserAdmin = user?.role === "admin" || user?.roles?.includes("Admin");
+  const canUserApproveCurrentLevel =
+    isUserAdmin ||
+    (loggedUserName &&
+      currentApproverName &&
+      loggedUserName.toLowerCase().includes(currentApproverName.toLowerCase()));
+
   return (
     <div className={styles.detailContainer}>
 
@@ -142,8 +156,7 @@ export default function SolicitacaoDetailPage() {
         title="Aprovar esta solicitação?"
         message={
           <>
-            A solicitação <strong>{sol?.code || solId}</strong> será aprovada e liberada para abertura de RFQ.
-            Esta ação ficará registrada no histórico de aprovações.
+            A solicitação <strong>{sol?.code || solId}</strong> será aprovada como <strong>{currentApproverName}</strong> na alçada de governança.
           </>
         }
         confirmLabel="Sim, aprovar"
@@ -159,8 +172,7 @@ export default function SolicitacaoDetailPage() {
         title="Rejeitar esta solicitação?"
         message={
           <>
-            A solicitação <strong>{sol?.code || solId}</strong> será rejeitada e o solicitante será notificado.
-            Esta ação não pode ser desfeita.
+            A solicitação <strong>{sol?.code || solId}</strong> será rejeitada na alçada de <strong>{currentApproverName}</strong>.
           </>
         }
         confirmLabel="Sim, rejeitar"
@@ -194,12 +206,22 @@ export default function SolicitacaoDetailPage() {
         </div>
         {!isFullyApproved && !isRejected && (
           <div className={styles.headerActions}>
-            <Button variant="secondary" onClick={() => setDialog("reject")}>
-              <Icon name="x-close" /> Rejeitar Demanda
-            </Button>
-            <Button variant="primary" onClick={() => setDialog("approve")}>
-              <Icon name="check" /> Aprovar Solicitação
-            </Button>
+            {canUserApproveCurrentLevel ? (
+              <>
+                <Button variant="secondary" onClick={() => setDialog("reject")}>
+                  <Icon name="x-close" /> Rejeitar Demanda
+                </Button>
+                <Button variant="primary" onClick={() => setDialog("approve")}>
+                  <Icon name="check" /> Aprovar como {currentApproverName}
+                </Button>
+              </>
+            ) : (
+              <div style={{ textAlign: "right", fontSize: 13, color: "#64748b" }}>
+                <span className={styles.warningBadgeHint} style={{ background: "#fef3c7", color: "#92400e", padding: "6px 12px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="clock" size={14} /> Aguardando aprovação de <strong>{currentApproverName}</strong>
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
