@@ -270,11 +270,11 @@ export default function NovaSolicitacaoPage() {
         setCreatedReqId(data.id);
         setShowApprovalModal(true);
       }
-    } catch (err) {
+    } catch (err: any) {
       toast({
         variant: "error",
         title: "Erro",
-        message: "Falha ao salvar a solicitação de compra. Tente novamente.",
+        message: err.message || "Falha ao salvar a solicitação de compra. Tente novamente.",
       });
     } finally {
       setIsSubmitting(false);

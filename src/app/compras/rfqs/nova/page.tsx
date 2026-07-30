@@ -899,11 +899,11 @@ export default function NewRfqPage() {
                         });
 
                         router.push(`/compras/rfqs/${createdRfq.id}`);
-                      } catch (err) {
+                      } catch (err: any) {
                         toast({
                           variant: "error",
                           title: "Erro",
-                          message: "Falha ao publicar cotação. Tente novamente.",
+                          message: err.message || "Falha ao publicar cotação. Tente novamente.",
                         });
                       }
                     }}
