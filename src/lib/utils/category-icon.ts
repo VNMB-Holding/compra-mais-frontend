@@ -1,6 +1,4 @@
-/**
- * Enum oficial de Categorias do Sistema (conforme enum CategoryType no PostgreSQL / Prisma)
- */
+﻿
 export enum CategoryType {
   IT_SOFTWARE = "IT_SOFTWARE",
   FUEL_LUBRICANTS = "FUEL_LUBRICANTS",
@@ -12,9 +10,7 @@ export enum CategoryType {
   GENERAL = "GENERAL",
 }
 
-/**
- * Mapeamento oficial e estrito de ícones por Enum de Categoria
- */
+
 export const CATEGORY_ICON_MAP: Record<CategoryType | string, string> = {
   [CategoryType.IT_SOFTWARE]: "monitor-01",
   [CategoryType.FUEL_LUBRICANTS]: "drop",
@@ -26,9 +22,7 @@ export const CATEGORY_ICON_MAP: Record<CategoryType | string, string> = {
   [CategoryType.GENERAL]: "folder",
 };
 
-/**
- * Rótulos formatados (Labels) por Enum
- */
+
 export const CATEGORY_LABEL_MAP: Record<CategoryType | string, string> = {
   [CategoryType.IT_SOFTWARE]: "TI & Software",
   [CategoryType.FUEL_LUBRICANTS]: "Combustíveis & Lubrificantes",
@@ -40,13 +34,10 @@ export const CATEGORY_LABEL_MAP: Record<CategoryType | string, string> = {
   [CategoryType.GENERAL]: "Geral / Outros",
 };
 
-/**
- * Função utilitária para obter o ícone com suporte tanto a valores Enum quanto string/fallback
- */
+
 export function getCategoryIcon(category?: CategoryType | string): string {
   if (!category) return CATEGORY_ICON_MAP[CategoryType.GENERAL];
 
-  // Se já for uma chave direta do Enum
   if (CATEGORY_ICON_MAP[category]) {
     return CATEGORY_ICON_MAP[category];
   }

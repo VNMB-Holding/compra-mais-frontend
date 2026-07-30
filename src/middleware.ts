@@ -1,16 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/unauthorized", "/solicitar-acesso"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip public paths
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();
   }
 
-  // Check for login flag cookie
   const loggedIn = request.cookies.get("compra_logged_in");
 
   if (!loggedIn) {

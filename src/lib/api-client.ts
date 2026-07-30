@@ -1,4 +1,4 @@
-const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://vnmb-identity-api.onrender.com";
+﻿const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://vnmb-identity-api.onrender.com";
 const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
@@ -63,7 +63,6 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const response = await fetch(`${baseUrl}${cleanEndpoint}`, config);
 
   if (response.status === 401 && !auth) {
-    // Only redirect if on client side and not already on /login
     if (typeof window !== "undefined" && window.location.pathname !== "/login") {
       console.warn("401 Unauthorized received from API:", cleanEndpoint);
     }
@@ -75,7 +74,6 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     try {
       errorData = await response.json();
     } catch {
-      // Body is not JSON
     }
     const message =
       (errorData as { message?: string; error?: string })?.message ||

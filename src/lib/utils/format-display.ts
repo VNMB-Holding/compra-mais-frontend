@@ -1,6 +1,4 @@
-// Helper utilitário para formatar nomes de usuários e fornecedores
-// evitando a exibição de UUIDs brutos na interface do usuário.
-
+﻿
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 export function isUuid(val: string | undefined | null): boolean {

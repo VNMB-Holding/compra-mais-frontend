@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, {
   createContext,
@@ -8,9 +8,6 @@ import React, {
   useState,
 } from "react";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
@@ -19,7 +16,7 @@ export interface ToastItem {
   variant: ToastVariant;
   title: string;
   message?: string;
-  duration?: number; // ms — padrão 4000
+  duration?: number;
 }
 
 interface ToastContextValue {
@@ -28,15 +25,9 @@ interface ToastContextValue {
   dismiss: (id: string) => void;
 }
 
-// ---------------------------------------------------------------------------
-// Context
-// ---------------------------------------------------------------------------
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-// ---------------------------------------------------------------------------
-// Provider
-// ---------------------------------------------------------------------------
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -53,7 +44,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
       setToasts((prev) => [...prev, { ...item, id, duration }]);
 
-      // Auto-dismiss
       if (duration > 0) {
         setTimeout(() => dismiss(id), duration);
       }
@@ -70,9 +60,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);

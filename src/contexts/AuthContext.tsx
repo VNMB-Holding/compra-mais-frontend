@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { createContext, useState, useCallback, useEffect } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
@@ -29,12 +29,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Provide token dynamically to apiClient
   useEffect(() => {
     setTokenProvider(() => accessToken);
   }, [accessToken]);
 
-  // Restauração da sessão no mount
   useEffect(() => {
     function restore() {
       try {
@@ -59,12 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // 1. Chama vnmb-identity diretamente
       const loginData = await loginApi(email, password);
 
       setTokenProvider(() => loginData.access_token);
 
-      // 2. Busca os detalhes da identidade/roles na vnmb-identity
       let meRoles: string[] = ["Admin"];
       let meScopes: string[] = ["read", "write", "admin"];
       let tenantId: string | undefined = undefined;
@@ -75,22 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (meData.scopes && meData.scopes.length > 0) meScopes = meData.scopes;
         if (meData.tenant_id) tenantId = meData.tenant_id;
       } catch {
-        // Fallback default roles
       }
 
-      // 3. Busca a lista oficial de Tenants/Empresas cadastradas na API do vnmb-identity
       let availableTenants: { id: string; name: string; type?: "Matriz" | "Filial" }[] = [];
       try {
         const tenantsData = await getTenantsApi();
         if (tenantsData && tenantsData.length > 0) {
-          // Identifica o tenant principal do usuário logado
           const currentTenant = tenantsData.find((t) => t.id === tenantId);
           const isVnmbAdmin = currentTenant
             ? currentTenant.name.toUpperCase().includes("VNMB")
             : loginData.user.email.toLowerCase().includes("vnmb");
 
-          // Se for usuário da VNMB (Matriz Holding Suprema), tem acesso a TODAS as empresas do grupo.
-          // Caso contrário, tem acesso apenas à sua empresa/tenant específica.
           if (isVnmbAdmin) {
             availableTenants = tenantsData.map((t) => ({
               id: t.id,
@@ -108,7 +99,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch {
-        // Se a API /api/tenants falhar
       }
 
       const role = mapApiRole(meRoles);
