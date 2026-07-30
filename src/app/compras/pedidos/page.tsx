@@ -1,12 +1,13 @@
-﻿"use client";
+"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, Loading } from "@/components/ui";
+import { Card, Icon, Select, Loading, ErrorState } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./pedidos.module.css";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage, logError } from "@/lib/utils/error";
 
 interface PurchaseOrder {
   id: string;
@@ -58,23 +59,28 @@ export default function PedidosPage() {
   const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const data = await apiClient.get<PurchaseOrder[]>("/api/purchase-orders");
+      const rows = data.map(mapToRow);
+      setPedidos(rows);
+      setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
+    } catch (err) {
+      logError("pedidos/fetchData", err);
+      setError(getErrorMessage(err));
+      setPedidos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await apiClient.get<PurchaseOrder[]>("/api/purchase-orders");
-        const rows = data.map(mapToRow);
-        setPedidos(rows);
-        setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
-      } catch (err) {
-        console.error("Erro ao carregar pedidos:", err);
-        setPedidos([]);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const fornecedoresOptions = [
     { label: "Todos os fornecedores", value: "Todas" },
@@ -167,6 +173,8 @@ export default function PedidosPage() {
 
         {loading ? (
           <Loading variant="inline" message="Carregando pedidos..." size="medium" />
+        ) : error ? (
+          <ErrorState message={error} onRetry={fetchData} />
         ) : (
           <>
             <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />

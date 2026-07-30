@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading } from "@/components/ui";
+import { Button, Card, Icon, Select, Loading, ErrorState } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
@@ -10,6 +10,7 @@ import { rfqsApi, Rfq, RfqKpis } from "@/lib/api/rfqs";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
+import { getErrorMessage, logError } from "@/lib/utils/error";
 
 interface RFQRow {
   id: string;
@@ -91,8 +92,8 @@ export default function RfqsPage() {
         setRfqs(list.map(rfq => mapToRow(rfq, user)));
         setKpis(kpisData);
       } catch (err) {
-        console.error("Erro ao carregar RFQs:", err);
-        setError("Não foi possível carregar os dados. Verifique sua conexão e tente novamente.");
+        logError("rfqs/list", err);
+        setError(getErrorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -239,14 +240,7 @@ export default function RfqsPage() {
         {loading ? (
           <Loading variant="inline" message="Carregando RFQs..." size="medium" />
         ) : error ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon} style={{ background: "#fee2e2", color: "#ef4444" }}>
-              <Icon name="alert-triangle" size={32} />
-            </div>
-            <h4>Erro ao carregar dados</h4>
-            <p>{error}</p>
-            <Button variant="secondary" onClick={() => window.location.reload()}>Tentar Novamente</Button>
-          </div>
+          <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : filtered.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>

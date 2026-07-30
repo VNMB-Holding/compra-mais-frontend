@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,6 +10,7 @@ import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-new.module.css";
+import { logError, getErrorMessage } from "@/lib/utils/error";
 
 
 interface Solicitacao {
@@ -78,6 +79,7 @@ export default function NewRfqPage() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [tituloRfq, setTituloRfq] = useState("");
   const [estrategia, setEstrategia] = useState("Menor Preco Equalizado");
@@ -96,8 +98,16 @@ export default function NewRfqPage() {
     async function loadApiData() {
       try {
         const [reqs, sups] = await Promise.all([
-          purchaseRequestsApi.list().catch(() => []),
-          suppliersApi.list().catch(() => []),
+          purchaseRequestsApi.list().catch((err) => { 
+            logError("rfqs/nova/purchaseRequests", err); 
+            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar as solicitações aprovadas." });
+            return [] as PurchaseRequest[]; 
+          }),
+          suppliersApi.list().catch((err) => { 
+            logError("rfqs/nova/suppliers", err); 
+            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar a lista de fornecedores." });
+            return [] as Supplier[]; 
+          }),
         ]);
 
         if (reqs && reqs.length > 0) {
@@ -140,7 +150,13 @@ export default function NewRfqPage() {
           setFornecedores([]);
         }
       } catch (e) {
-        console.error("Erro ao carregar dados da API na Nova RFQ:", e);
+        // Should not normally reach here since each call has its own catch above.
+        logError("rfqs/nova/loadApiData", e);
+        toast({
+          variant: "warning",
+          title: "Aviso",
+          message: "Não foi possível carregar todos os dados. Algumas opções podem estar indisponíveis.",
+        });
       } finally {
         setLoadingData(false);
       }
@@ -848,12 +864,14 @@ export default function NewRfqPage() {
                   <Button
                     variant="primary"
                     className={styles.btnSubmit}
+                    disabled={isSubmitting}
                     onClick={async () => {
                       if (!incoterm || !condicaoPagamento.trim() || !moeda) {
                         toast({ variant: "warning", title: "Atenção", message: "Preencha os dados de compliance obrigatórios (Incoterm, Condição e Moeda)" });
                         return;
                       }
                       
+                      setIsSubmitting(true);
                       try {
                         const selectedSupplierIds = fornecedoresSelecionados.map((f) => f.id);
                         const endClosesAt = dataEncerramento
@@ -868,16 +886,19 @@ export default function NewRfqPage() {
                         });
 
                         router.push(`/compras/rfqs/${createdRfq.id}`);
-                      } catch (err: any) {
+                      } catch (err) {
+                        logError("rfqs/nova/create", err);
                         toast({
                           variant: "error",
                           title: "Erro",
-                          message: err.message || "Falha ao publicar cotação. Tente novamente.",
+                          message: getErrorMessage(err),
                         });
+                      } finally {
+                        setIsSubmitting(false);
                       }
                     }}
                   >
-                    <Icon name="rocket-01" /> Publicar e enviar cotação
+                    Publicar Cotação <Icon name="check-circle" />
                   </Button>
                 </>
               )}

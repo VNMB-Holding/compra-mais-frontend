@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { getApprovalChainForRequest } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
+import { logError, getErrorMessage } from "@/lib/utils/error";
 
 const PRIORITY_MAP: Record<string, string> = {
   Low: "Baixa",
@@ -69,7 +70,12 @@ export default function SolicitacaoDetailPage() {
           if (data.status === "Rejected") setApproved(false);
         }
       } catch (err) {
-        console.error(err);
+        logError("solicitacoes/[id]/load", err);
+        toast({
+          variant: "error",
+          title: "Erro ao carregar solicitação",
+          message: getErrorMessage(err),
+        });
       } finally {
         setLoading(false);
       }
@@ -82,7 +88,9 @@ export default function SolicitacaoDetailPage() {
       try {
         await purchaseRequestsApi.updateStatus(sol.id, "Approved");
       } catch (e) {
-        console.error(e);
+        logError("solicitacoes/[id]/approve", e);
+        toast({ variant: "error", title: "Erro ao aprovar", message: getErrorMessage(e) });
+        return;
       }
     }
     setApproved(true);
@@ -99,7 +107,9 @@ export default function SolicitacaoDetailPage() {
       try {
         await purchaseRequestsApi.updateStatus(sol.id, "Rejected");
       } catch (e) {
-        console.error(e);
+        logError("solicitacoes/[id]/reject", e);
+        toast({ variant: "error", title: "Erro ao rejeitar", message: getErrorMessage(e) });
+        return;
       }
     }
     setApproved(false);

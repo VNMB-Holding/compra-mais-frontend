@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -6,6 +6,7 @@ import { Card, Button, Badge, Icon, ConfirmDialog, Loading } from "@/components/
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
+import { logError, getErrorMessage } from "@/lib/utils/error";
 
 type Estagio = "proposta" | "analise" | "aprovacao";
 
@@ -240,7 +241,12 @@ export default function RfqDetailPage() {
         const winner = (data.proposals ?? []).find((p) => p.isWinner);
         if (winner) setVencedorId(winner.supplierId);
       } catch (err) {
-        console.error("Erro ao carregar RFQ:", err);
+        logError("rfqs/[id]/load", err);
+        toast({
+          variant: "error",
+          title: "Erro ao carregar cotação",
+          message: getErrorMessage(err),
+        });
       } finally {
         setLoading(false);
       }
@@ -296,7 +302,8 @@ export default function RfqDetailPage() {
           try {
             await rfqsApi.updateStatus(rfqId, "UnderAnalysis");
           } catch (e) {
-            console.error(e);
+            logError("rfqs/[id]/encerrar", e);
+            toast({ variant: "error", title: "Erro ao encerrar", message: getErrorMessage(e) });
           }
           setEstagio("analise");
           setDialog(null);

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { GeoapifyGeocoderAutocomplete, GeoapifyContext } from '@geoapify/react-g
 import '@geoapify/geocoder-autocomplete/styles/minimal.css';
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
+import { logError, getErrorMessage } from "@/lib/utils/error";
 
 function ApprovalModal({
   title,
@@ -129,7 +130,9 @@ export default function NovaSolicitacaoPage() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    categoriesApi.list().then(setCategories).catch(console.error);
+    categoriesApi.list()
+      .then(setCategories)
+      .catch((err) => logError("solicitacoes/nova/categories", err));
   }, []);
 
   useEffect(() => {
@@ -266,11 +269,12 @@ export default function NovaSolicitacaoPage() {
         setCreatedReqId(data.id);
         setShowApprovalModal(true);
       }
-    } catch (err: any) {
+    } catch (err) {
+      logError("solicitacoes/nova/create", err);
       toast({
         variant: "error",
         title: "Erro",
-        message: err.message || "Falha ao salvar a solicitação de compra. Tente novamente.",
+        message: getErrorMessage(err),
       });
     } finally {
       setIsSubmitting(false);
