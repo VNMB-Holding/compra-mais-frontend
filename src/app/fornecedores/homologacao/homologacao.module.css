@@ -1,11 +1,11 @@
-.pageContainer {
+﻿.pageContainer {
   display: flex;
   flex-direction: column;
   gap: 24px;
   width: 100%;
 }
 
-/* --- HEADER --- */
+
 .pageHeader {
   display: flex;
   justify-content: space-between;
@@ -58,14 +58,14 @@
   gap: 4px;
 }
 
-/* --- KPIS GRID (6 COLUMNS FOR HOMOLOGACAO) --- */
+
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 16px;
 }
 
-/* --- MAIN LIST CARD & TOOLBAR --- */
+
 .mainListCard {
   background: white;
   border: 1px solid #e2e8f0;
@@ -153,7 +153,7 @@
   cursor: pointer;
 }
 
-/* --- TABLE CUSTOM CELL STYLES --- */
+
 .fornecedorCell {
   display: flex;
   align-items: center;
@@ -262,7 +262,7 @@
   color: #dc2626;
 }
 
-/* --- FOOTER PAGINATION --- */
+
 .tableFooter {
   display: flex;
   justify-content: space-between;

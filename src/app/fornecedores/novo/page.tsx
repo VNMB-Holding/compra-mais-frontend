@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -83,12 +83,10 @@ export default function NovoFornecedorPage() {
     condicaoPagamento: "30 dias DDL",
   });
 
-  // Masks
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 14) value = value.slice(0, 14);
 
-    // mask XX.XXX.XXX/XXXX-XX
     if (value.length > 12) {
       value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5");
     } else if (value.length > 8) {
@@ -106,7 +104,6 @@ export default function NovoFornecedorPage() {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
 
-    // mask (XX) XXXXX-XXXX or (XX) XXXX-XXXX
     if (value.length > 10) {
       value = value.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
     } else if (value.length > 6) {
@@ -124,7 +121,6 @@ export default function NovoFornecedorPage() {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 8) value = value.slice(0, 8);
 
-    // mask XXXXX-XXX
     if (value.length > 5) {
       value = value.replace(/^(\d{5})(\d{3})/, "$1-$2");
     }
@@ -141,7 +137,6 @@ export default function NovoFornecedorPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Helper for Initials
   const getInitials = () => {
     const name = formData.nomeFantasia.trim() || formData.razaoSocial.trim();
     if (!name) return "NF";
@@ -152,7 +147,6 @@ export default function NovoFornecedorPage() {
     return name.slice(0, 2).toUpperCase();
   };
 
-  // Checklist Validation Checks
   const isBasicInfoDone = formData.razaoSocial.trim() !== "" && formData.cnpj.length === 18;
   const isCategoryDone = formData.categoria !== "";
   const isContactDone = formData.contatoEmail.includes("@") && formData.contatoTelefone.length >= 14;
@@ -182,7 +176,6 @@ export default function NovoFornecedorPage() {
 
     setLoading(true);
 
-    // Simulate Server Connection
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     setLoading(false);
@@ -226,7 +219,7 @@ export default function NovoFornecedorPage() {
           <Card className={styles.formCard}>
             <form onSubmit={handleSubmit}>
               
-              {/* Section 1: Dados Básicos */}
+              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -303,7 +296,7 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              {/* Section 2: Contatos */}
+              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -369,7 +362,7 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              {/* Section 3: Endereço */}
+              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -470,7 +463,7 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              {/* Section 4: Financeiro */}
+              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -545,7 +538,7 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              {/* Form Actions */}
+              
               <div className={styles.formActions}>
                 <button
                   type="button"
@@ -570,10 +563,10 @@ export default function NovoFornecedorPage() {
           </Card>
         </div>
 
-        {/* Side Panel: Preview and Checklist */}
+        
         <aside className={styles.sideColumn}>
           
-          {/* Real-time Preview Card */}
+          
           <Card className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Pré-visualização</span>
@@ -635,7 +628,7 @@ export default function NovoFornecedorPage() {
             </div>
           </Card>
 
-          {/* Checklist Completeness Card */}
+          
           <Card className={styles.checklistCard}>
             <div className={styles.sideTitle}>
               <Icon name="info-circle" />

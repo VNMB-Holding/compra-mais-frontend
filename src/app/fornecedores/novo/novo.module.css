@@ -1,4 +1,4 @@
-.formContainer {
+﻿.formContainer {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -232,7 +232,7 @@
   cursor: not-allowed;
 }
 
-/* --- PREVIEW CARD & ASIDE --- */
+
 .summaryCard {
   border: 1px solid #e2e8f0;
   background: #fff;
@@ -379,7 +379,7 @@
   word-break: break-all;
 }
 
-/* --- CHECKLIST CARD --- */
+
 .checklistCard {
   border: 1px solid #e2e8f0;
   background: #fff;

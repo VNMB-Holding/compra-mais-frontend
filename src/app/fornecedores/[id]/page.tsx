@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -43,7 +43,7 @@ export default function FornecedorDetailPage() {
   return (
     <div className={styles.pageContainer}>
       
-      {/* 1. NAVEGAÇÃO E CABEÇALHO */}
+      
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório
@@ -68,11 +68,11 @@ export default function FornecedorDetailPage() {
         </div>
       </div>
 
-      {/* 2. CARD SUPERIOR TRIPLO (DASHBOARD SUMMARY) */}
+      
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
           
-          {/* Coluna 1: Info Base */}
+          
           <div className={styles.summaryColBase}>
             <div className={`${styles.avatarBig} ${styles.avatarGreen}`}>FB</div>
             <div className={styles.baseInfo}>
@@ -90,7 +90,7 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-          {/* Coluna 2: Performance (Score & Stars) */}
+          
           <div className={styles.summaryColScore}>
             <div className={styles.scoreHeader}>
               <span>Nota de Performance</span>
@@ -106,7 +106,7 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-          {/* Coluna 3: Status da Homologação */}
+          
           <div className={styles.summaryColStatus}>
             <div className={styles.statusRow}>
               <span>Situação Cadastral</span>
@@ -119,18 +119,18 @@ export default function FornecedorDetailPage() {
         </div>
       </Card>
 
-      {/* 3. SISTEMA DE ABAS */}
+      
       <div className={styles.tabsContainer}>
         <button className={activeTab === "visao-geral" ? styles.tabActive : ""} onClick={() => setActiveTab("visao-geral")}>Visão geral</button>
         <button className={activeTab === "dados-cadastrais" ? styles.tabActive : ""} onClick={() => setActiveTab("dados-cadastrais")}>Dados cadastrais</button>
       </div>
 
-      {/* 4. CONTEÚDO DAS ABAS */}
+      
       <div className={styles.tabContent}>
         
         {activeTab === "visao-geral" && (
           <>
-            {/* KPIs */}
+            
             <div className={styles.kpiGrid}>
               <KpiCard title="OTIF" value="94%" icon="truck-01" description="Entregas no prazo" />
               <KpiCard title="Qualidade" value="98%" icon="award-01" description="Conformidade dos itens" />
@@ -138,7 +138,7 @@ export default function FornecedorDetailPage() {
               <KpiCard title="Pedidos atendidos (12m)" value="128" icon="shopping-cart-01" />
             </div>
 
-            {/* Histórico de Atividades Estilizado como a itemsTable */}
+            
             <div className={styles.itemsCard}>
               <div className={styles.itemsCardHeader}>
                 <h3><Icon name="clock-refresh" size={18} /> Histórico de atividades com o fornecedor</h3>

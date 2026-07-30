@@ -1,11 +1,11 @@
-.pageContainer {
+﻿.pageContainer {
   display: flex;
   flex-direction: column;
   gap: 24px;
   width: 100%;
 }
 
-/* 1. HEADER */
+
 .topSection {
   display: flex;
   flex-direction: column;
@@ -81,7 +81,7 @@
   font-weight: 600 !important;
 }
 
-/* 2. TOP SUMMARY CARD */
+
 .topSummaryCard {
   background: white;
   border: 1px solid #e2e8f0;
@@ -276,7 +276,7 @@
   color: #64748b;
 }
 
-/* 3. TABS */
+
 .tabsContainer {
   display: flex;
   gap: 24px;
@@ -313,7 +313,7 @@
   background-color: #007d79;
 }
 
-/* 4. CONTENT LAYOUTS */
+
 .tabContent {
   display: flex;
   flex-direction: column;
@@ -326,7 +326,7 @@
   gap: 16px;
 }
 
-/* INFORMAÇÕES DO FORNECEDOR GRID */
+
 .infoCard {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
@@ -384,7 +384,7 @@
   border-top: 1px solid #f1f5f9;
 }
 
-/* HISTÓRICO */
+
 .historicoBadge {
   display: inline-block;
   padding: 3px 10px;
@@ -408,7 +408,7 @@
   color: #d97706;
 }
 
-/* STAR PERFORMANCE */
+
 .starRow {
   display: flex;
   gap: 2px;
@@ -423,7 +423,7 @@
   color: #e2e8f0;
 }
 
-/* TABLE STYLING COMPATIBLE WITH OTHER DETAIL PAGES */
+
 .itemsCard {
   background: white;
   border: 1px solid #e2e8f0;
