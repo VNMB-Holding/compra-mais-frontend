@@ -260,7 +260,7 @@ export default function NewRfqPage() {
 
 
 
-  const solicitacaoPreview = SOLICITACOES_DISPONIVEIS.find((s) => s.id === solicitacaoSelecionada);
+  const solicitacaoPreview = solicidadoesApi.find((s) => s.id === solicitacaoSelecionada);
 
   // =========================================================================
   // RENDER — PORTAO (sem solicitacao confirmada)
@@ -300,10 +300,10 @@ export default function NewRfqPage() {
             <div className={styles.gateSelectGroup}>
               <label className={styles.gateLabel}>Solicitação de Compra Aprovada <span className="required-asterisk">*</span></label>
               <Select
-                options={SOLICITACOES_DISPONIVEIS.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
+                options={solicidadoesApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
                 value={solicitacaoSelecionada}
                 onChange={setSolicitacaoSelecionada}
-                placeholder="Selecione uma solicitação..."
+                placeholder={loadingData ? "Carregando solicitações..." : "Selecione uma solicitação..."}
               />
             </div>
 
