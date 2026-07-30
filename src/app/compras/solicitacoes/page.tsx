@@ -9,6 +9,7 @@ import styles from "./solicitacoes.module.css";
 import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib/api/purchase-requests";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
+import { User } from "@/types/auth";
 
 interface SolicitationRow {
   id: string;
@@ -19,6 +20,7 @@ interface SolicitationRow {
   status: string;
   prioridade: string;
   categoria: string;
+  empresa: string;
 }
 
 const STATUS_MAP: Record<string, string> = {
@@ -43,7 +45,7 @@ const PRIORITY_MAP: Record<string, string> = {
 
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 
-function mapToRow(pr: PurchaseRequest, currentUser?: { name?: string } | null): SolicitationRow {
+function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationRow {
   // Coleta as categorias dos itens da solicitação
   const itemCategories = pr.items?.map((i: any) => i.category).filter(Boolean) || [];
   const uniqueCategories = Array.from(new Set(itemCategories));
@@ -57,6 +59,15 @@ function mapToRow(pr: PurchaseRequest, currentUser?: { name?: string } | null): 
     finalCategory = typeof pr.category === "object" ? (pr.category as any).name || "Geral" : pr.category;
   }
 
+  const isVnmbHolding = currentUser?.tenantName?.toLowerCase().includes("vnmb") || currentUser?.availableTenants?.some(t => t.name.toLowerCase().includes("vnmb"));
+  
+  let empresaFilial = "";
+  if (isVnmbHolding) {
+    empresaFilial = currentUser?.availableTenants?.find(t => t.id === pr.tenantId)?.name || "—";
+  } else {
+    empresaFilial = pr.department || pr.deliveryLocation || "Sede";
+  }
+
   return {
     id: pr.id,
     codigo: pr.code,
@@ -66,6 +77,7 @@ function mapToRow(pr: PurchaseRequest, currentUser?: { name?: string } | null): 
     status: STATUS_MAP[pr.status] || pr.status,
     prioridade: PRIORITY_MAP[pr.priority] || pr.priority,
     categoria: finalCategory,
+    empresa: empresaFilial,
   };
 }
 
@@ -138,6 +150,7 @@ export default function SolicitacoesPage() {
   const columns: ColumnDef<SolicitationRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
+    { header: "Empresa / Unidade", accessorKey: "empresa" },
     {
       header: "Categoria",
       cell: (row) => (

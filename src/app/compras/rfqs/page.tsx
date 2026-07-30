@@ -8,6 +8,8 @@ import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
 import { rfqsApi, Rfq, RfqKpis } from "@/lib/api/rfqs";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
+import { useAuth } from "@/hooks/useAuth";
+import { User } from "@/types/auth";
 
 interface RFQRow {
   id: string;
@@ -18,6 +20,7 @@ interface RFQRow {
   dataEncerramento: string;
   tipoSegmento: string;
   status: "Aberta" | "Encerrando hoje" | "Encerrada";
+  empresa: string;
 }
 
 function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
@@ -38,12 +41,21 @@ function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
   return "Aberta";
 }
 
-function mapToRow(rfq: Rfq): RFQRow {
+function mapToRow(rfq: Rfq, currentUser?: User | null): RFQRow {
   const categoryName = rfq.purchaseRequest?.category
     ? typeof rfq.purchaseRequest.category === "object"
       ? (rfq.purchaseRequest.category as any).name || "Sem Categoria"
       : rfq.purchaseRequest.category
     : "Sem Categoria";
+
+  const isVnmbHolding = currentUser?.tenantName?.toLowerCase().includes("vnmb") || currentUser?.availableTenants?.some(t => t.name.toLowerCase().includes("vnmb"));
+  
+  let empresaFilial = "";
+  if (isVnmbHolding) {
+    empresaFilial = currentUser?.availableTenants?.find(t => t.id === (rfq.purchaseRequest as any)?.tenantId)?.name || "—";
+  } else {
+    empresaFilial = (rfq.purchaseRequest as any)?.department || (rfq.purchaseRequest as any)?.deliveryLocation || "Sede";
+  }
 
   return {
     id: rfq.id,
@@ -54,11 +66,13 @@ function mapToRow(rfq: Rfq): RFQRow {
     dataEncerramento: new Date(rfq.closesAt).toLocaleDateString("pt-BR"),
     tipoSegmento: "Menor Preço",
     status: mapRfqStatus(rfq),
+    empresa: empresaFilial,
   };
 }
 
 export default function RfqsPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const [categoria, setCategoria] = useState("Todas");
   const [status, setStatus] = useState("Todos");
@@ -74,7 +88,7 @@ export default function RfqsPage() {
           rfqsApi.list(),
           rfqsApi.getKpis(),
         ]);
-        setRfqs(list.map(mapToRow));
+        setRfqs(list.map(rfq => mapToRow(rfq, user)));
         setKpis(kpisData);
       } catch (err) {
         console.error("Erro ao carregar RFQs:", err);
@@ -118,6 +132,7 @@ export default function RfqsPage() {
   const columns: ColumnDef<RFQRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
+    { header: "Empresa / Unidade", accessorKey: "empresa" },
     {
       header: "Categoria",
       cell: (row) => (
