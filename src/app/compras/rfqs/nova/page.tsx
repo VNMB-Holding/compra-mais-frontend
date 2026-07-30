@@ -39,50 +39,8 @@ interface FornecedorConvidado {
   selecionado: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Mock data — solicitacoes aprovadas disponiveis
-// ---------------------------------------------------------------------------
-
-const SOLICITACOES_DISPONIVEIS: Solicitacao[] = [
-  {
-    id: "SOL-000456",
-    titulo: "Abastecimento emergencial de oleo diesel S10",
-    area: "Operacoes",
-    solicitante: "Breno Marques",
-    prioridade: "Alta",
-    valorEstimado: 2900000,
-    itens: [
-      { id: 1, descricao: "Oleo Diesel S10", qtd: 500000, unidade: "L" },
-      { id: 2, descricao: "Aditivo ARLA 32", qtd: 12000, unidade: "L" },
-    ],
-    incoterm: "CIF",
-    condicaoPagamento: "30 dias DDL",
-    observacoes:
-      "O fornecedor deve possuir certificacao ANP active e atender as normas ambientais vigentes de transporte.",
-  },
-  {
-    id: "SOL-000441",
-    titulo: "Reposicao de insumos de limpeza industrial",
-    area: "Facilities",
-    solicitante: "Carla Oliveira",
-    prioridade: "Media",
-    valorEstimado: 48500,
-    itens: [
-      { id: 1, descricao: "Desinfetante industrial 5L", qtd: 200, unidade: "UN" },
-      { id: 2, descricao: "Detergente concentrado galao 20L", qtd: 50, unidade: "UN" },
-    ],
-    incoterm: "CIF",
-    condicaoPagamento: "28 dias DDL",
-    observacoes: "Produtos devem possuir registro na ANVISA e ficha FISPQ atualizada.",
-  },
-];
-
-const FORNECEDORES_BASE: FornecedorConvidado[] = [
-  { id: "1", nome: "Fornecedor Alfa S.A.", cnpj: "11.222.333/0001-81", selecionado: false },
-  { id: "2", nome: "Petrolog Distribuidora LTDA", cnpj: "22.333.444/0001-82", selecionado: false },
-  { id: "3", nome: "Combustiveis Sul LTDA", cnpj: "33.444.555/0001-83", selecionado: false },
-  { id: "4", nome: "CleanPro Suprimentos LTDA", cnpj: "44.555.666/0001-84", selecionado: false },
-];
+const SOLICITACOES_DISPONIVEIS: Solicitacao[] = [];
+const FORNECEDORES_BASE: FornecedorConvidado[] = [];
 
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -167,10 +125,9 @@ export default function NewRfqPage() {
             observacoes: r.justification || "",
           }));
 
-          // Se houver dados reais, combina com os mocks para não perder referências de testes
-          const existingIds = new Set(mappedReqs.map((s) => s.id));
-          const combined = [...mappedReqs, ...SOLICITACOES_DISPONIVEIS.filter((s) => !existingIds.has(s.id))];
-          setSolicitacoesApi(combined);
+          setSolicitacoesApi(mappedReqs);
+        } else {
+          setSolicitacoesApi([]);
         }
 
         if (sups && sups.length > 0) {
@@ -181,6 +138,8 @@ export default function NewRfqPage() {
             selecionado: false,
           }));
           setFornecedores(mappedSups);
+        } else {
+          setFornecedores([]);
         }
       } catch (e) {
         console.error("Erro ao carregar dados da API na Nova RFQ:", e);
