@@ -77,3 +77,63 @@ a {
   font-weight: 600;
   margin-left: 3px;
 }
+
+/* Geoapify Autocomplete Custom Styling */
+.geocoder-container {
+  width: 100%;
+}
+
+.geoapify-autocomplete-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 13px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  color: #0f172a;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: none !important;
+}
+
+.geoapify-autocomplete-input:focus {
+  border-color: #007d79 !important;
+  box-shadow: 0 0 0 3px #dff4f2 !important;
+}
+
+.geoapify-autocomplete-items {
+  border: 1px solid #dbe4ef !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  margin-top: 4px;
+  overflow: hidden;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.geoapify-autocomplete-item {
+  padding: 10px 13px !important;
+  color: #334155 !important;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.geoapify-autocomplete-item:hover,
+.geoapify-autocomplete-item.active {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.geoapify-close-button {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 12px !important;
+  color: #94a3b8 !important;
+}
+
+.geoapify-close-button:hover {
+  color: #475569 !important;
+}
