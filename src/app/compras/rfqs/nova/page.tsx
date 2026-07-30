@@ -531,7 +531,7 @@ export default function NewRfqPage() {
 
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
-                      <label>Estratégia de compra</label>
+                      <label>Estratégia de compra <span className="required-asterisk">*</span></label>
                       <Select
                         options={[
                           { label: "Menor Preço Equalizado", value: "Menor Preco Equalizado" },
@@ -543,7 +543,7 @@ export default function NewRfqPage() {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>Data/Hora Limite de Encerramento</label>
+                      <label>Data/Hora Limite de Encerramento <span className="required-asterisk">*</span></label>
                       <input
                         type="datetime-local"
                         className={styles.formControl}
@@ -646,7 +646,7 @@ export default function NewRfqPage() {
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Quantidade</label>
+                                <label>Quantidade <span className="required-asterisk">*</span></label>
                                 <input
                                   type="number"
                                   min="0"
@@ -657,7 +657,7 @@ export default function NewRfqPage() {
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Unidade</label>
+                                <label>Unidade <span className="required-asterisk">*</span></label>
                                 <Select
                                   options={[
                                     { label: "L", value: "L" },
@@ -735,7 +735,7 @@ export default function NewRfqPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Incoterm (Frete)</label>
+                    <label>Incoterm (Frete) <span className="required-asterisk">*</span></label>
                     <Select
                       options={[
                         { label: "CIF — Custos e frete pagos pelo fornecedor", value: "CIF" },
@@ -747,7 +747,7 @@ export default function NewRfqPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Condição de pagamento</label>
+                    <label>Condição de pagamento <span className="required-asterisk">*</span></label>
                     <input
                       className={styles.formControl}
                       value={condicaoPagamento}
@@ -759,7 +759,7 @@ export default function NewRfqPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Moeda base</label>
+                    <label>Moeda base <span className="required-asterisk">*</span></label>
                     <Select
                       options={[
                         { label: "BRL — Real Brasileiro", value: "BRL" },
@@ -869,6 +869,11 @@ export default function NewRfqPage() {
                     variant="primary"
                     className={styles.btnSubmit}
                     onClick={async () => {
+                      if (!incoterm || !condicaoPagamento.trim() || !moeda) {
+                        toast({ variant: "warning", title: "Atenção", message: "Preencha os dados de compliance obrigatórios (Incoterm, Condição e Moeda)" });
+                        return;
+                      }
+                      
                       try {
                         const selectedSupplierIds = fornecedoresSelecionados.map((f) => f.id);
                         const endClosesAt = dataEncerramento
