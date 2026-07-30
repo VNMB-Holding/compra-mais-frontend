@@ -8,6 +8,11 @@ export interface PurchaseRequest {
   requesterId: string;
   requesterName?: string;
   costCenter: string;
+  department?: string;
+  purchaseType?: string;
+  paymentTerms?: string;
+  preferredSupplier?: string;
+  notes?: string;
   category: string;
   justification: string;
   estimatedBudget: number;
