@@ -692,8 +692,14 @@ export default function NewRfqPage() {
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}><Icon name="building-07" /></div>
                   <div>
-                    <h2>3. Fornecedores convidados</h2>
+                    <h2>3. Fornecedores convidados <span className="required-asterisk">*</span></h2>
                     <p>Selecione os fornecedores homologados que receberão o convite para cotação.</p>
+                    {solicitacaoConfirmada && (
+                      <div style={{ marginTop: 8, padding: "8px 12px", background: "#f1f5f9", borderRadius: 6, fontSize: 13, color: "#334155", borderLeft: "3px solid #007d79" }}>
+                        <Icon name="info-circle" size={14} style={{ marginRight: 6, verticalAlign: "text-bottom" }} />
+                        Com base no valor estimado ({formatCurrency(solicitacaoConfirmada.valorEstimado || 0)}), a política exige no mínimo <strong>{solicitacaoConfirmada.valorEstimado > 5000 ? 3 : solicitacaoConfirmada.valorEstimado > 1000 ? 2 : 1} orçamentos</strong>.
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -845,8 +851,13 @@ export default function NewRfqPage() {
                     type="button" 
                     className={styles.btnSubmit} 
                     onClick={() => {
-                      if (fornecedoresSelecionados.length === 0) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, convide pelo menos um fornecedor" });
+                      const valor = solicitacaoConfirmada?.valorEstimado || 0;
+                      let minSuppliers = 1;
+                      if (valor > 5000) minSuppliers = 3;
+                      else if (valor > 1000) minSuppliers = 2;
+
+                      if (fornecedoresSelecionados.length < minSuppliers) {
+                        toast({ variant: "warning", title: "Política de Compras", message: `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedore(s).` });
                         return;
                       }
                       setCurrentStep(4);
