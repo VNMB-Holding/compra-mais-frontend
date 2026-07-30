@@ -10,6 +10,26 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 
+const PRIORITY_MAP: Record<string, string> = {
+  Low: "Baixa",
+  Medium: "Média",
+  High: "Alta",
+  Urgent: "Urgente",
+  Critical: "Crítica",
+};
+
+const STATUS_LABEL_MAP: Record<string, string> = {
+  Draft: "Rascunho",
+  AwaitingApproval: "Aguardando aprovação",
+  Approved: "Aprovada",
+  Rejected: "Rejeitada",
+  InQuote: "Em Cotação",
+  Finished: "Atendida",
+  Pending: "Pendente",
+  UnderAnalysis: "Em Análise",
+  Cancelled: "Cancelada",
+};
+
 type DialogType = "approve" | "reject" | null;
 
 export default function SolicitacaoDetailPage() {
@@ -33,18 +53,18 @@ export default function SolicitacaoDetailPage() {
           const found = list.find((item) => item.code === solId || item.id === solId);
           if (found) {
             setSol(found);
-            if (found.status === "Approved") setApproved(true);
+            if (found.status === "Approved" || found.status === "InQuote" || found.status === "Finished") setApproved(true);
             if (found.status === "Rejected") setApproved(false);
           } else {
             const data = await purchaseRequestsApi.getById(solId);
             setSol(data);
-            if (data.status === "Approved") setApproved(true);
+            if (data.status === "Approved" || data.status === "InQuote" || data.status === "Finished") setApproved(true);
             if (data.status === "Rejected") setApproved(false);
           }
         } else {
           const data = await purchaseRequestsApi.getById(solId);
           setSol(data);
-          if (data.status === "Approved") setApproved(true);
+          if (data.status === "Approved" || data.status === "InQuote" || data.status === "Finished") setApproved(true);
           if (data.status === "Rejected") setApproved(false);
         }
       } catch (err) {
@@ -69,7 +89,7 @@ export default function SolicitacaoDetailPage() {
     toast({
       variant: "success",
       title: "Solicitação aprovada!",
-      message: `${sol?.code || solId || "SOL-000456"} foi aprovada e está liberada para abertura de RFQ.`,
+      message: `${sol?.code || solId} foi aprovada e está liberada para abertura de RFQ.`,
     });
   };
 
@@ -86,7 +106,7 @@ export default function SolicitacaoDetailPage() {
     toast({
       variant: "error",
       title: "Solicitação rejeitada",
-      message: `${sol?.code || solId || "SOL-000456"} foi rejeitada. O solicitante será notificado.`,
+      message: `${sol?.code || solId} foi rejeitada. O solicitante será notificado.`,
     });
   };
 
@@ -102,6 +122,11 @@ export default function SolicitacaoDetailPage() {
       ? (sol.category as any).name || "Geral"
       : sol?.category || "Geral";
 
+  const priorityLabel = PRIORITY_MAP[sol?.priority || "Medium"] || sol?.priority || "Média";
+  const currentStatus = sol?.status ? (STATUS_LABEL_MAP[sol.status] || sol.status) : "Aguardando aprovação";
+  const isFullyApproved = approved === true || sol?.status === "Approved" || sol?.status === "InQuote" || sol?.status === "Finished";
+  const isRejected = approved === false || sol?.status === "Rejected";
+
   return (
     <div className={styles.detailContainer}>
 
@@ -113,7 +138,7 @@ export default function SolicitacaoDetailPage() {
         title="Aprovar esta solicitação?"
         message={
           <>
-            A solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> será aprovada e liberada para abertura de RFQ.
+            A solicitação <strong>{sol?.code || solId}</strong> será aprovada e liberada para abertura de RFQ.
             Esta ação ficará registrada no histórico de aprovações.
           </>
         }
@@ -130,7 +155,7 @@ export default function SolicitacaoDetailPage() {
         title="Rejeitar esta solicitação?"
         message={
           <>
-            A solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> será rejeitada e o solicitante será notificado.
+            A solicitação <strong>{sol?.code || solId}</strong> será rejeitada e o solicitante será notificado.
             Esta ação não pode ser desfeita.
           </>
         }
@@ -147,35 +172,23 @@ export default function SolicitacaoDetailPage() {
         <Loading variant="inline" message="Carregando solicitação..." size="large" />
       ) : (
         <>
-        {/* Feedback de resultado */}
-      {approved === true && (
-        <div className={styles.resultBanner} style={{ background: "#d1fae5", borderColor: "#6ee7b7", color: "#065f46" }}>
-          <Icon name="check-circle" /> Solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> aprovada com sucesso. Agora você pode abrir uma RFQ.
-        </div>
-      )}
-      {approved === false && (
-        <div className={styles.resultBanner} style={{ background: "#fee2e2", borderColor: "#fca5a5", color: "#991b1b" }}>
-          <Icon name="x-circle" /> Solicitação <strong>{sol?.code || solId || "SOL-000456"}</strong> rejeitada.
-        </div>
-      )}
-
       {/* Cabeçalho */}
       <div className={styles.pageHeader}>
         <div>
           <div className={styles.titleRow}>
             <h1>{sol?.code || solId}</h1>
-            <Badge variant={approved === true ? "success" : approved === false ? "gray" : "warning"}>
-              {approved === true ? "Aprovada" : approved === false ? "Rejeitada" : "Aguardando aprovação"}
+            <Badge variant={isFullyApproved ? "success" : isRejected ? "gray" : "warning"}>
+              {isFullyApproved ? "Aprovada" : isRejected ? "Rejeitada" : currentStatus}
             </Badge>
           </div>
-          <p className={styles.subtitleLarge}>{sol?.description || "Óleo Diesel S10"}</p>
+          <p className={styles.subtitleLarge}>{sol?.description || "Solicitação de Compra"}</p>
           <div className={styles.metadataTags}>
             <span className={styles.infoTag}><Icon name="building-01" /> Centro de custo: {sol?.costCenter || "Operações"}</span>
             <span className={styles.infoTag}><Icon name={getCategoryIcon(categoryName)} /> Categoria: {categoryName}</span>
-            <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: {sol?.priority || "Alta"}</span>
+            <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: {priorityLabel}</span>
           </div>
         </div>
-        {approved === null && (
+        {!isFullyApproved && !isRejected && (
           <div className={styles.headerActions}>
             <Button variant="secondary" onClick={() => setDialog("reject")}>
               <Icon name="x-close" /> Rejeitar Demanda
@@ -206,36 +219,44 @@ export default function SolicitacaoDetailPage() {
                 <div className={styles.stepInfo}>
                   <strong>Solicitante</strong>
                   <span>{sol?.requesterName || formatUserDisplayName(sol?.requesterId, user)}</span>
-                  <small>{sol?.createdAt ? new Date(sol.createdAt).toLocaleDateString("pt-BR") : "22/05/2024 14:00"}</small>
+                  <small>{sol?.createdAt ? new Date(sol.createdAt).toLocaleDateString("pt-BR") : "22/05/2024"}</small>
                 </div>
               </div>
 
-              <div className={`${styles.stepLine} ${styles.lineActive}`}></div>
+              <div className={`${styles.stepLine} ${isFullyApproved || isRejected ? styles.lineActive : ""}`}></div>
 
-              <div className={`${styles.step} ${approved !== null ? styles.completed : styles.active}`}>
+              <div className={`${styles.step} ${isFullyApproved ? styles.completed : isRejected ? styles.pending : styles.active}`}>
                 <div className={styles.stepIcon}>
-                  {approved !== null
+                  {isFullyApproved
                     ? <><Icon name="users-01" /><div className={styles.checkBadge}><Icon name="check" /></div></>
+                    : isRejected
+                    ? <><Icon name="x-close" /></>
                     : <Icon name="users-01" />
                   }
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>Gestor da Área</strong>
-                  <span>Mariana Costa</span>
-                  {approved === null
-                    ? <span className={styles.warningBadgeHint}>Aguardando</span>
-                    : <small>{new Date().toLocaleDateString("pt-BR")}</small>
-                  }
+                  <strong>Gestão / Alçada de Aprovação</strong>
+                  <span>{isFullyApproved ? "Aprovado" : isRejected ? "Rejeitado" : "Aguardando aprovação"}</span>
+                  {!isFullyApproved && !isRejected ? (
+                    <span className={styles.warningBadgeHint}>Pendente</span>
+                  ) : (
+                    <small>{new Date().toLocaleDateString("pt-BR")}</small>
+                  )}
                 </div>
               </div>
 
-              <div className={styles.stepLine}></div>
+              <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`}></div>
 
-              <div className={`${styles.step} ${styles.pending}`}>
-                <div className={styles.stepIcon}><Icon name="user-01" /></div>
+              <div className={`${styles.step} ${isFullyApproved ? styles.completed : styles.pending}`}>
+                <div className={styles.stepIcon}>
+                  {isFullyApproved
+                    ? <><Icon name="check-circle" /><div className={styles.checkBadge}><Icon name="check" /></div></>
+                    : <Icon name="user-01" />
+                  }
+                </div>
                 <div className={styles.stepInfo}>
-                  <strong>Diretoria Executiva</strong>
-                  <span>Pendente</span>
+                  <strong>Liberado para Cotação (RFQ)</strong>
+                  <span>{isFullyApproved ? "Concluído" : "Pendente"}</span>
                 </div>
               </div>
 
