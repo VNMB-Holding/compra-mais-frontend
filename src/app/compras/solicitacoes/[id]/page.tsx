@@ -379,6 +379,10 @@ export default function SolicitacaoDetailPage() {
                 <span>{sol?.justification || "—"}</span>
               </div>
               <div className={styles.infoItem}>
+                <label>Empresa / Unidade</label>
+                <strong>{companyName || "—"}</strong>
+              </div>
+              <div className={styles.infoItem}>
                 <label>Tipo de Compra</label>
                 <span>{sol?.purchaseType || "—"}</span>
               </div>
