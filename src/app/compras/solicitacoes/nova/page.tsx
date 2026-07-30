@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { categoriesApi, Category } from "@/lib/api/categories";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/contexts/ToastContext";
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 
@@ -109,6 +110,7 @@ const PRIORITY_BADGE_CONFIG: Record<Priority, { variant: "gray" | "warning" | "d
 
 export default function NovaSolicitacaoPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [createdCode, setCreatedCode] = useState("");
@@ -255,7 +257,11 @@ export default function NovaSolicitacaoPage() {
       } as any);
 
       if (asDraft) {
-        alert(`Rascunho ${data.code} salvo com sucesso!`);
+        toast({
+          variant: "success",
+          title: "Salvo",
+          message: `Rascunho ${data.code} salvo com sucesso!`,
+        });
         router.push("/compras/solicitacoes");
       } else {
         setCreatedCode(data.code);
@@ -263,8 +269,11 @@ export default function NovaSolicitacaoPage() {
         setShowApprovalModal(true);
       }
     } catch (err) {
-      console.error(err);
-      alert("Falha ao salvar a solicitação de compra. Tente novamente.");
+      toast({
+        variant: "error",
+        title: "Erro",
+        message: "Falha ao salvar a solicitação de compra. Tente novamente.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -655,11 +664,11 @@ export default function NovaSolicitacaoPage() {
                     className={styles.btnSubmit}
                     onClick={() => {
                       if (!title.trim()) {
-                        alert("Por favor, preencha o título da solicitação.");
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha o título da solicitação." });
                         return;
                       }
                       if (!justification.trim()) {
-                        alert("Por favor, informe a justificativa de negócio.");
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, informe a justificativa de negócio." });
                         return;
                       }
                       setCurrentStep(2);
@@ -681,7 +690,7 @@ export default function NovaSolicitacaoPage() {
                     className={styles.btnSubmit} 
                     onClick={() => {
                       if (items.some((item) => !item.description.trim())) {
-                        alert("Por favor, preencha a descrição de todos os itens");
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a descrição de todos os itens" });
                         return;
                       }
                       setCurrentStep(3);

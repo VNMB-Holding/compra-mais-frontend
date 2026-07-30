@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { categoriesApi, Category } from "@/lib/api/categories";
 import { Button, Icon } from "@/components/ui";
+import { useToast } from "@/contexts/ToastContext";
 import styles from "./page.module.css";
 
 export default function CategoriasAdminPage() {
@@ -12,6 +13,7 @@ export default function CategoriasAdminPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const { toast } = useToast();
 
   const fetchCategories = async () => {
     try {
@@ -19,7 +21,11 @@ export default function CategoriasAdminPage() {
       const data = await categoriesApi.list();
       setCategories(data);
     } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
+      toast({
+        variant: "error",
+        title: "Erro",
+        message: "Falha ao buscar categorias. Tente novamente.",
+      });
     } finally {
       setLoading(false);
     }
@@ -39,9 +45,17 @@ export default function CategoriasAdminPage() {
       setName("");
       setDescription("");
       fetchCategories();
+      toast({
+        variant: "success",
+        title: "Sucesso",
+        message: "Categoria criada com sucesso!",
+      });
     } catch (error) {
-      console.error("Erro ao criar categoria", error);
-      alert("Falha ao criar categoria.");
+      toast({
+        variant: "error",
+        title: "Erro",
+        message: "Falha ao criar categoria.",
+      });
     }
   };
 
@@ -50,9 +64,17 @@ export default function CategoriasAdminPage() {
     try {
       await categoriesApi.remove(id);
       fetchCategories();
+      toast({
+        variant: "success",
+        title: "Deletado",
+        message: "Categoria removida com sucesso.",
+      });
     } catch (error) {
-      console.error("Erro ao deletar categoria", error);
-      alert("Falha ao deletar (ela pode estar em uso).");
+      toast({
+        variant: "error",
+        title: "Erro",
+        message: "Falha ao deletar (ela pode estar em uso).",
+      });
     }
   };
 

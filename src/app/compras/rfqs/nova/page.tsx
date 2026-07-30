@@ -8,6 +8,7 @@ import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 import { rfqsApi } from "@/lib/api/rfqs";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-new.module.css";
 
 // ---------------------------------------------------------------------------
@@ -69,6 +70,7 @@ export default function NewRfqPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   // Params vindos do modal de aprovacao de SOL
   const paramSol = searchParams.get("sol") ?? "";
@@ -796,11 +798,11 @@ export default function NewRfqPage() {
                     className={styles.btnSubmit} 
                     onClick={() => {
                       if (!tituloRfq.trim()) {
-                        alert("Por favor, preencha o título da RFQ");
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha o título da RFQ" });
                         return;
                       }
                       if (!dataEncerramento) {
-                        alert("Por favor, preencha a data de encerramento");
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a data de encerramento" });
                         return;
                       }
                       setCurrentStep(2);
@@ -822,7 +824,7 @@ export default function NewRfqPage() {
                     className={styles.btnSubmit} 
                     onClick={() => {
                       if (itens.some((i) => !i.descricao.trim() || i.qtd <= 0)) {
-                        alert("Por favor, preencha a descrição e quantidade de todos os itens");
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a descrição e quantidade de todos os itens" });
                         return;
                       }
                       setCurrentStep(3);
@@ -844,7 +846,7 @@ export default function NewRfqPage() {
                     className={styles.btnSubmit} 
                     onClick={() => {
                       if (fornecedoresSelecionados.length === 0) {
-                        alert("Por favor, convide pelo menos um fornecedor");
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, convide pelo menos um fornecedor" });
                         return;
                       }
                       setCurrentStep(4);
@@ -882,8 +884,11 @@ export default function NewRfqPage() {
 
                         router.push(`/compras/rfqs/${createdRfq.id}`);
                       } catch (err) {
-                        console.error("Erro ao criar RFQ:", err);
-                        alert("Falha ao publicar cotação. Tente novamente.");
+                        toast({
+                          variant: "error",
+                          title: "Erro",
+                          message: "Falha ao publicar cotação. Tente novamente.",
+                        });
                       }
                     }}
                   >
