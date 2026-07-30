@@ -110,7 +110,12 @@ export default function NewRfqPage() {
         ]);
 
         if (reqs && reqs.length > 0) {
-          const mappedReqs: Solicitacao[] = reqs.map((r) => ({
+          // Filtra solicitações que já não tenham RFQ vinculada (ex: status InQuote, Finished)
+          const eligibleReqs = reqs.filter(
+            (r) => r.status !== "InQuote" && r.status !== "Finished" && (!r.rfqs || r.rfqs.length === 0)
+          );
+
+          const mappedReqs: Solicitacao[] = (eligibleReqs.length > 0 ? eligibleReqs : reqs).map((r) => ({
             id: r.id,
             titulo: r.description,
             area: r.costCenter || "Operações",
