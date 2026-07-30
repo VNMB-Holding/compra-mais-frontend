@@ -6,6 +6,7 @@ export interface PurchaseRequest {
   code: string;
   description: string;
   requesterId: string;
+  requesterName?: string;
   costCenter: string;
   category: string;
   justification: string;

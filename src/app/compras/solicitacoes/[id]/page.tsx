@@ -205,7 +205,7 @@ export default function SolicitacaoDetailPage() {
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Solicitante</strong>
-                  <span>{formatUserDisplayName(sol?.requesterId, user)}</span>
+                  <span>{sol?.requesterName || formatUserDisplayName(sol?.requesterId, user)}</span>
                   <small>{sol?.createdAt ? new Date(sol.createdAt).toLocaleDateString("pt-BR") : "22/05/2024 14:00"}</small>
                 </div>
               </div>

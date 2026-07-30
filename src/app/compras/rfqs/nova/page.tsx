@@ -114,7 +114,7 @@ export default function NewRfqPage() {
             id: r.id,
             titulo: r.description,
             area: r.costCenter || "Operações",
-            solicitante: formatUserDisplayName(r.requesterId, user),
+            solicitante: r.requesterName || formatUserDisplayName(r.requesterId, user),
             prioridade: r.priority === "Critical" ? "Critica" : r.priority === "High" ? "Alta" : r.priority === "Medium" ? "Media" : "Baixa",
             valorEstimado: Number(r.estimatedBudget) || 0,
             itens: (r.items || []).map((it, idx) => ({

@@ -61,7 +61,7 @@ function mapToRow(pr: PurchaseRequest, currentUser?: { name?: string } | null): 
     id: pr.id,
     codigo: pr.code,
     descricao: pr.description,
-    solicitante: formatUserDisplayName(pr.requesterId, currentUser),
+    solicitante: pr.requesterName || formatUserDisplayName(pr.requesterId, currentUser),
     data: new Date(pr.createdAt).toLocaleDateString("pt-BR"),
     status: STATUS_MAP[pr.status] || pr.status,
     prioridade: PRIORITY_MAP[pr.priority] || pr.priority,
