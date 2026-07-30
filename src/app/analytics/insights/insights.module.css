@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -39,7 +39,7 @@
   margin: 0;
 }
 
-/* Filter Bar */
+
 .filterCard {
   padding: 20px 24px;
 }
@@ -121,7 +121,7 @@
   margin-top: 16px;
 }
 
-/* Custom Table Styles */
+
 .tableWrapper {
   overflow-x: auto;
   width: 100%;
@@ -158,7 +158,7 @@
   font-weight: 700;
 }
 
-/* AI Insights Panel */
+
 .insightsHeader {
   display: flex;
   justify-content: space-between;

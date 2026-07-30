@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import styles from "./economia.module.css";
@@ -61,7 +61,6 @@ export default function EconomiaPage() {
     }, 1500);
   };
 
-  // Base monthly trends matching the screenshot EXACTLY (ranges from R$ 200k to R$ 600k)
   const baseMonthlyEconomy = useMemo(() => [
     { name: "mai/24", value: 250 },
     { name: "jun/24", value: 300 },
@@ -78,7 +77,6 @@ export default function EconomiaPage() {
     { name: "mai/25", value: 450 }
   ], []);
 
-  // Category values matching screen EXACTLY
   const baseCategories = useMemo<CategoryEconomy[]>(() => [
     { categoria: "Matéria-prima", valor: 620000, pct: 32.7, color: "#007d79" },
     { categoria: "Serviços", valor: 410000, pct: 21.6, color: "#00a39e" },
@@ -88,7 +86,6 @@ export default function EconomiaPage() {
     { categoria: "Outros", valor: 260000, pct: 13.8, color: "#cbd5e1" }
   ], []);
 
-  // Initiative values matching screen EXACTLY
   const baseInitiatives = useMemo<InitiativeEconomy[]>(() => [
     { iniciativa: "Negociação de preço", valor: 950000, pct: 50.1 },
     { iniciativa: "Consolidação de demanda", valor: 420000, pct: 22.2 },
@@ -98,7 +95,6 @@ export default function EconomiaPage() {
     { iniciativa: "Outros", valor: 36000, pct: 1.9 }
   ], []);
 
-  // Top suppliers values matching screen EXACTLY
   const baseSuppliers = useMemo<SupplierEconomy[]>(() => [
     { fornecedor: "Fornecedor Alfa Ltda.", valor: 620000, pct: 32.7, itens: 18 },
     { fornecedor: "Fornecedor Beta S.A.", valor: 410000, pct: 21.6, itens: 12 },
@@ -108,17 +104,15 @@ export default function EconomiaPage() {
     { fornecedor: "Outros (23)", valor: 260000, pct: 13.8, itens: "--" }
   ], []);
 
-  // Details values matching screen EXACTLY
   const baseDetails = useMemo<DetailEconomy[]>(() => [
     { iniciativa: "Negociação anual de preços", categoria: "Matéria-prima", fornecedor: "Fornecedor Alfa Ltda.", valor: 320000, data: "12/05/2025" },
     { iniciativa: "Consolidação de demanda Q2", categoria: "Serviços", fornecedor: "Fornecedor Beta S.A.", valor: 210000, data: "08/05/2025" },
     { iniciativa: "Alternativa de fornecedor", categoria: "Embalagens", fornecedor: "Fornecedor Gama Ltda.", valor: 185000, data: "02/05/2025" },
     { iniciativa: "Padronização de componentes", categoria: "Manutenção", fornecedor: "Fornecedor Delta S.A.", valor: 120000, data: "28/04/2025" },
-    { iniciativa: "Renegociação de contrato", categoria: "TI e Software", fornecedor: "Fornecedor Épsilon Ltda.", valor: 950000, data: "20/04/2025" }, // Note: R$ 95k in description, R$ 966k for others, we will match R$ 95.000 for this row
+    { iniciativa: "Renegociação de contrato", categoria: "TI e Software", fornecedor: "Fornecedor Épsilon Ltda.", valor: 950000, data: "20/04/2025" },
     { iniciativa: "Outros (43)", categoria: "Diversas", fornecedor: "--", valor: 966000, data: "--" }
   ], []);
 
-  // Calculate dynamic scaling factors
   const filterFactor = useMemo(() => {
     let factor = 1.0;
     if (selectedCategory !== "all") factor *= 0.35;
@@ -131,11 +125,9 @@ export default function EconomiaPage() {
     return factor;
   }, [selectedPeriod, selectedCategory, selectedSupplier, selectedUnidade]);
 
-  // Compute stats metrics based on filtered factor
   const kpis = useMemo(() => {
     const isFiltered = filterFactor < 1.0;
     if (!isFiltered) {
-      // EXACT VALUES from the screenshot
       return {
         economiaGerada: "R$ 1.896.000",
         economiaPct: "15,2%",
@@ -167,7 +159,6 @@ export default function EconomiaPage() {
     };
   }, [filterFactor]);
 
-  // Dynamic chart and tables
   const monthlyEconomyData = useMemo(() => {
     return baseMonthlyEconomy.map(item => ({
       ...item,
@@ -202,7 +193,6 @@ export default function EconomiaPage() {
 
   const detailsData = useMemo(() => {
     if (filterFactor === 1.0) {
-      // Fix specific mismatch in screenshot row (row 5: R$ 95.000 instead of 950000 in DB data to match totals)
       return baseDetails.map((item, idx) => idx === 4 ? { ...item, valor: 95000 } : item);
     }
     return baseDetails.map(item => ({
@@ -253,7 +243,7 @@ export default function EconomiaPage() {
         <Loading variant="fullscreen" message={`Gerando relatório de Savings (${exportingType})...`} />
       )}
 
-      {/* Header section with title and export dropdown */}
+      
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <div className={styles.iconBox}>
@@ -269,7 +259,7 @@ export default function EconomiaPage() {
         </div>
       </div>
 
-      {/* Filters Row */}
+      
       <div className={styles.filterRow}>
         <div className={styles.filterInput}>
           <div className={styles.dateRangeBox}>
@@ -327,7 +317,7 @@ export default function EconomiaPage() {
         </button>
       </div>
 
-      {/* Row of 4 KPI cards */}
+      
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
@@ -392,7 +382,7 @@ export default function EconomiaPage() {
         </div>
       </div>
 
-      {/* Middle Row (Area Chart, Donut split category, Initiatives progress bars) */}
+      
       <div className={styles.middleGrid}>
         <div className={styles.chartCard}>
           <div className={styles.cardHeader}>
@@ -482,7 +472,7 @@ export default function EconomiaPage() {
         </div>
       </div>
 
-      {/* Bottom Grid (Top suppliers table and Detailing table) */}
+      
       <div className={styles.bottomGrid}>
         <div className={styles.chartCard}>
           <div className={styles.cardHeader}>
@@ -568,7 +558,7 @@ export default function EconomiaPage() {
         </div>
       </div>
 
-      {/* Footer Refresh Timestamp */}
+      
       <div className={styles.footerRow}>
         <Icon name="refresh-ccw-01" size={14} />
         <span>Dados atualizados em 02/06/2025 às 08:30</span>

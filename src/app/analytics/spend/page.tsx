@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import styles from "./spend.module.css";
@@ -48,7 +48,6 @@ export default function SpendPage() {
     }, 1500);
   };
 
-  // Base datasets matching the screenshot EXACTLY
   const baseMonthlySpend = useMemo(() => [
     { name: "mai/24", value: 720 },
     { name: "jun/24", value: 1100 },
@@ -83,7 +82,6 @@ export default function SpendPage() {
     { nome: "Outros (151)", valor: 5808000, pct: 46.6 }
   ], []);
 
-  // Filter scaling factors to show realistic dynamic dashboard behavior on filters click
   const filterFactor = useMemo(() => {
     let factor = 1.0;
     if (selectedCategory !== "all") factor *= 0.35;
@@ -96,11 +94,9 @@ export default function SpendPage() {
     return factor;
   }, [selectedPeriod, selectedCategory, selectedSupplier, selectedUnidade]);
 
-  // Dynamic KPIs calculations
   const kpis = useMemo(() => {
     const isFiltered = filterFactor < 1.0;
     if (!isFiltered) {
-      // Return the EXACT values from the screenshot
       return {
         spendTotal: "R$ 12.458.000",
         economiaPotencial: "R$ 1.896.000",
@@ -113,7 +109,6 @@ export default function SpendPage() {
       };
     }
 
-    // Proportional simulated values when filtered
     const spendVal = Math.round(12458000 * filterFactor);
     const econVal = Math.round(1896000 * filterFactor);
     const pedidosVal = Math.max(1, Math.round(48 * filterFactor));
@@ -133,7 +128,6 @@ export default function SpendPage() {
     };
   }, [filterFactor]);
 
-  // Dynamic Monthly Spend data
   const monthlySpendData = useMemo(() => {
     return baseMonthlySpend.map(item => ({
       ...item,
@@ -141,11 +135,9 @@ export default function SpendPage() {
     }));
   }, [baseMonthlySpend, filterFactor]);
 
-  // Dynamic Categories spend data
   const categoriesData = useMemo(() => {
     if (filterFactor === 1.0) return baseCategories;
     
-    // Scale totals while keeping percentage shares
     return baseCategories.map(item => ({
       ...item,
       spendTotal: Math.round(item.spendTotal * filterFactor),
@@ -154,7 +146,6 @@ export default function SpendPage() {
     }));
   }, [baseCategories, filterFactor]);
 
-  // Dynamic Suppliers data
   const suppliersData = useMemo(() => {
     if (filterFactor === 1.0) return baseSuppliers;
 
@@ -164,7 +155,6 @@ export default function SpendPage() {
     }));
   }, [baseSuppliers, filterFactor]);
 
-  // Total summary footer helpers
   const totals = useMemo(() => {
     const spendSum = categoriesData.reduce((s, c) => s + c.spendTotal, 0);
     const econSum = categoriesData.reduce((s, c) => s + c.economiaPotencial, 0);
@@ -177,7 +167,6 @@ export default function SpendPage() {
     };
   }, [categoriesData]);
 
-  // Format BRL helpers
   function formatCurrency(val: number) {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -204,7 +193,7 @@ export default function SpendPage() {
         <Loading variant="fullscreen" message={`Gerando relatório de Spend (${exportingType})...`} />
       )}
 
-      {/* Header section with title and buttons */}
+      
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <div className={styles.iconBox}>
@@ -223,7 +212,7 @@ export default function SpendPage() {
         </div>
       </div>
 
-      {/* Filter Row matching screenshot */}
+      
       <div className={styles.filterRow}>
         <div className={styles.filterInput}>
           <div className={styles.dateRangeBox}>
@@ -281,7 +270,7 @@ export default function SpendPage() {
         </button>
       </div>
 
-      {/* Row of 4 KPI cards */}
+      
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
@@ -347,7 +336,7 @@ export default function SpendPage() {
         </div>
       </div>
 
-      {/* Middle Row (Area Chart and Pie Chart with aligned legend table) */}
+      
       <div className={styles.middleGrid}>
         <div className={styles.chartCard}>
           <div className={styles.cardHeader}>
@@ -409,7 +398,7 @@ export default function SpendPage() {
         </div>
       </div>
 
-      {/* Bottom Grid (Progress Bars of Suppliers, and Table of Details) */}
+      
       <div className={styles.bottomGrid}>
         <div className={styles.chartCard}>
           <div className={styles.cardHeader}>
@@ -476,7 +465,7 @@ export default function SpendPage() {
         </div>
       </div>
 
-      {/* Footer timestamp refresh row */}
+      
       <div className={styles.footerRow}>
         <Icon name="refresh-ccw-01" size={14} />
         <span>Dados atualizados em 02/06/2025 às 08:30</span>

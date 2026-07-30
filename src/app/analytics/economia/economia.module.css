@@ -1,11 +1,11 @@
-.container {
+﻿.container {
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
 }
 
-/* Header */
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -68,7 +68,7 @@
   border-color: #94a3b8;
 }
 
-/* Filter Row */
+
 .filterRow {
   display: flex;
   gap: 12px;
@@ -142,7 +142,7 @@
   background-color: #f1f5f9;
 }
 
-/* KPI Row */
+
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -222,7 +222,7 @@
   color: #64748b;
 }
 
-/* Middle Row (3 Columns) */
+
 .middleGrid {
   display: grid;
   grid-template-columns: 1.5fr 1.25fr 1.25fr;
@@ -295,7 +295,7 @@
   width: 100%;
 }
 
-/* Donut Row Legend Layout */
+
 .donutRow {
   display: flex;
   flex-direction: column;
@@ -365,7 +365,7 @@
   color: #0f172a;
 }
 
-/* Initiative Progress Bars */
+
 .initiativeList {
   display: flex;
   flex-direction: column;
@@ -431,7 +431,7 @@
   color: #0f172a;
 }
 
-/* Bottom Grid (2 Columns) */
+
 .bottomGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -457,7 +457,7 @@
   text-decoration: underline;
 }
 
-/* Tables custom layouts */
+
 .customTableWrapper {
   width: 100%;
   overflow-x: auto;
@@ -494,7 +494,7 @@
   padding: 12px 8px;
 }
 
-/* Footer Section */
+
 .footerRow {
   display: flex;
   align-items: center;

@@ -1,11 +1,11 @@
-.container {
+﻿.container {
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
 }
 
-/* Header */
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -68,7 +68,7 @@
   border-color: #94a3b8;
 }
 
-/* Filter Row */
+
 .filterRow {
   display: flex;
   gap: 12px;
@@ -142,7 +142,7 @@
   background-color: #f1f5f9;
 }
 
-/* KPI Row */
+
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -222,7 +222,7 @@
   color: #64748b;
 }
 
-/* Middle Rows (Charts) */
+
 .middleGrid {
   display: grid;
   grid-template-columns: 1.8fr 1.2fr;
@@ -283,7 +283,7 @@
   width: 100%;
 }
 
-/* Donut Split Row Layout */
+
 .donutRow {
   display: flex;
   align-items: center;
@@ -349,7 +349,7 @@
   color: #0f172a;
 }
 
-/* Bottom Grid Layout */
+
 .bottomGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -375,7 +375,7 @@
   text-decoration: underline;
 }
 
-/* Supplier progress bars styling */
+
 .supplierList {
   display: flex;
   flex-direction: column;
@@ -425,7 +425,7 @@
   color: #64748b;
 }
 
-/* Custom table detailing styling */
+
 .customTableWrapper {
   width: 100%;
   overflow-x: auto;
@@ -462,7 +462,7 @@
   padding: 12px 8px;
 }
 
-/* Footer Section */
+
 .footerRow {
   display: flex;
   align-items: center;
