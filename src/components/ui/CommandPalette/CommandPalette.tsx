@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,6 @@ interface SearchItem {
 }
 
 const SEARCH_ITEMS: SearchItem[] = [
-  // Ações
   { id: "action-new-sol", title: "Criar Nova Solicitação de Compra", category: "Ações", description: "Iniciar uma nova demanda de compra interna", url: "/compras/solicitacoes/nova", icon: "shopping-cart-01", shortcut: "↵" },
   { id: "action-new-supplier", title: "Cadastrar Novo Fornecedor", category: "Ações", description: "Cadastrar fornecedor e iniciar homologação", url: "/fornecedores/novo", icon: "plus", shortcut: "↵" },
   { id: "action-new-rfq", title: "Criar Novo Processo de Cotação (RFQ)", category: "Ações", description: "Lançar cotação ao mercado para fornecedores", url: "/compras/rfqs/nova", icon: "send-01", shortcut: "↵" },
@@ -27,7 +26,6 @@ const SEARCH_ITEMS: SearchItem[] = [
   { id: "action-system-help", title: "Suporte & Central de Ajuda", category: "Ações", description: "Falar com nosso time de atendimento ou ler tutoriais", url: "/dashboard", icon: "help-circle" },
   { id: "action-change-subsidiary", title: "Alternar Unidade de Negócio", category: "Ações", description: "Mudar filial de VNMB Holding para VNMB Logística", url: "/dashboard", icon: "refresh-cw-01" },
   
-  // Páginas
   { id: "page-dashboard", title: "Dashboard Principal", category: "Páginas", description: "Visão geral de cotações, solicitações e KPIs", url: "/dashboard", icon: "home-01" },
   { id: "page-suppliers-list", title: "Base de Fornecedores", category: "Páginas", description: "Diretório de parceiros e notas de performance", url: "/fornecedores/diretorio", icon: "users-01" },
   { id: "page-homologation", title: "Fila de Homologação", category: "Páginas", description: "Status de homologação e análise jurídica", url: "/fornecedores/homologacao", icon: "shield-01" },
@@ -53,7 +51,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   const inputRef = useRef<HTMLInputElement>(null);
   const itemsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto focus input on open
   useEffect(() => {
     if (isOpen) {
       setQuery("");
@@ -64,13 +61,11 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     }
   }, [isOpen]);
 
-  // Filter items based on query
   const filteredItems = SEARCH_ITEMS.filter((item) => {
     const searchString = `${item.title} ${item.category} ${item.description}`.toLowerCase();
     return searchString.includes(query.toLowerCase());
   });
 
-  // Group items by category for rendering, but maintain linear array for selectedIndex mapping
   const itemsByCategory = filteredItems.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = [];
@@ -79,7 +74,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     return acc;
   }, {} as Record<string, SearchItem[]>);
 
-  // Flattened array representing the exact visual layout order
   const flatItems = Object.values(itemsByCategory).flat();
 
   useEffect(() => {
@@ -88,7 +82,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     }
   }, [flatItems.length, selectedIndex]);
 
-  // Handle Keyboard Navigation inside palette
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (!isOpen) return;
@@ -114,7 +107,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, flatItems, selectedIndex]);
 
-  // Auto-scroll to selected element inside result list
   useEffect(() => {
     if (itemsContainerRef.current) {
       const activeElement = itemsContainerRef.current.querySelector(
@@ -151,7 +143,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
         ref={containerRef}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Search Input */}
+        
         <div className={styles.searchHeader}>
           <Icon name="search-md" className={styles.searchIcon} />
           <input
@@ -165,7 +157,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           <span className={styles.escShortcut}>ESC</span>
         </div>
 
-        {/* Results List */}
+        
         <div className={styles.resultsList} ref={itemsContainerRef}>
           {flatItems.length === 0 ? (
             <div className={styles.emptyState}>
@@ -178,7 +170,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           )}
         </div>
 
-        {/* Footer shortcuts help bar */}
+        
         <div className={styles.footerHelp}>
           <div className={styles.footerHelpItem}>
             <span className={styles.keyLabel}>↑↓</span> Navegar
@@ -196,7 +188,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   );
 }
 
-// Render helper to correctly map selectedIndex linearly across grouped items
 function letIndexOffsetCounter(
   grouped: Record<string, SearchItem[]>,
   flatList: SearchItem[],

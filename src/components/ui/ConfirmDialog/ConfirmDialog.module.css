@@ -1,6 +1,4 @@
-/* =========================================================
-   CONFIRM DIALOG
-   ========================================================= */
+﻿
 
 .overlay {
   position: fixed;
@@ -31,7 +29,7 @@
   animation: slideUp 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* === Ícone === */
+
 
 .iconWrap {
   display: inline-flex;
@@ -49,13 +47,13 @@
   height: 30px;
 }
 
-/* Variantes de cor do ícone */
+
 .iconBgDanger  { background: #fee2e2; color: #dc2626; }
 .iconBgWarning { background: #fef3c7; color: #d97706; }
 .iconBgSuccess { background: #d1fae5; color: #059669; }
 .iconBgInfo    { background: #e0f2fe; color: #0284c7; }
 
-/* === Corpo === */
+
 
 .body {
   width: 100%;
@@ -78,7 +76,7 @@
   line-height: 1.6;
 }
 
-/* === Ações === */
+
 
 .actions {
   display: flex;
@@ -126,13 +124,13 @@
 .confirmBtn:hover  { opacity: 0.88; }
 .confirmBtn:active { transform: scale(0.98); }
 
-/* Variantes de cor do botão de confirmação */
+
 .confirmDanger  { background: #dc2626; }
 .confirmWarning { background: #d97706; }
 .confirmSuccess { background: #007d79; }
 .confirmInfo    { background: #0284c7; }
 
-/* === Animações === */
+
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -144,7 +142,7 @@
   to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-/* === Responsive === */
+
 
 @media (max-width: 480px) {
   .dialog {

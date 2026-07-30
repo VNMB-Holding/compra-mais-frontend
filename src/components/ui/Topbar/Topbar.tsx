@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,6 @@ interface TopbarProps {
 }
 
 export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarProps) {
-  // Estados para controlar os Popups/Dropdowns
   const [activePopup, setActivePopup] = useState<"notifications" | "messages" | "company" | "user" | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
@@ -23,7 +22,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const router = useRouter();
 
-  // Dados reais da API para notificações e mensagens
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
   const [messages, setMessages] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
 
@@ -35,7 +33,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     }
   }, [user]);
 
-  // Carrega notificações e mensagens reais baseadas em RFQs recentes e Solicitações pendentes
   useEffect(() => {
     async function loadNotifications() {
       try {
@@ -82,7 +79,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
   const topbarRef = useRef<HTMLHeadingElement>(null);
 
-  // Keyboard shortcut Ctrl+K / Cmd+K listener
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -94,7 +90,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, []);
 
-  // Fecha os popups se o usuário clicar fora da Topbar
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (topbarRef.current && !topbarRef.current.contains(event.target as Node)) {
@@ -143,7 +138,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
   return (
     <header className={styles.topbar} ref={topbarRef}>
-      {/* Esquerda: Botão Hambúrguer */}
+      
       <div className={styles.topbarLeft}>
         <button 
           className={styles.toggleSidebarBtn} 
@@ -162,7 +157,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         </button>
       </div>
 
-      {/* Centro: Barra de Busca */}
+      
       <div className={styles.searchBar} onClick={() => setIsPaletteOpen(true)}>
         <Icon name="search-md" />
         <span className={styles.searchPlaceholder}>
@@ -170,10 +165,10 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         </span>
       </div>
 
-      {/* Direita: Ações e Dropdowns */}
+      
       <div className={styles.topbarRight}>
         
-        {/* Notificações */}
+        
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`} onClick={() => togglePopup("notifications")}>
             <Icon name="bell-01" />
@@ -209,7 +204,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        {/* Mensagens / E-mails */}
+        
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "messages" ? styles.activeIcon : ""}`} onClick={() => togglePopup("messages")}>
             <Icon name="mail-01" />
@@ -245,7 +240,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        {/* Seletor de Empresa */}
+        
         <div className={styles.popupWrapper}>
           <div 
             className={styles.companySelector} 
@@ -260,7 +255,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
           {canSwitchCompany && activePopup === "company" && (
             <div className={`${styles.dropdownBox} ${styles.companyDropdown}`}>
-              {/* Matriz section */}
+              
               {availableCompanies.some((c) => c.type === "Matriz") && (
                 <>
                   <div className={styles.companyDropdownSectionHeader}>Matriz</div>
@@ -281,7 +276,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                 </>
               )}
 
-              {/* Filiais section */}
+              
               {availableCompanies.some((c) => c.type === "Filial") && (
                 <>
                   <div className={styles.companyDropdownSectionHeader}>Filiais</div>
@@ -305,7 +300,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        {/* Avatar do Usuário com Dropdown */}
+        
         <div className={styles.popupWrapper}>
           <div 
             className={styles.userAvatarSmall}

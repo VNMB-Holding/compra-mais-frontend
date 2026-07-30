@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -35,7 +35,6 @@ export function ProtectedLayout({ children, allowedRoles, requiredScopes }: Prot
       pathname,
     });
 
-    // Se specified, valida as permissões de acesso
     let isAuthorized = true;
 
     if ((allowedRoles && allowedRoles.length > 0) || (requiredScopes && requiredScopes.length > 0)) {
@@ -52,7 +51,6 @@ export function ProtectedLayout({ children, allowedRoles, requiredScopes }: Prot
         hasScope = !!user.scopes && user.scopes.some(s => requiredScopes.includes(s));
       }
 
-      // Se passou qualquer critério de autorização especificado
       isAuthorized = hasRole || hasScope;
     }
 

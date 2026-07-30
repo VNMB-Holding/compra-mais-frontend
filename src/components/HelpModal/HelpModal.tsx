@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Icon from "@/components/ui/Icon/Icon";
@@ -52,7 +52,6 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  // Filter FAQs based on query
   const filteredFAQs = FAQ_ITEMS.filter(
     (item) =>
       item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,7 +61,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
   return (
     <div className={styles.modalOverlay} onClick={handleOverlayClick}>
       <div className={styles.modalBox}>
-        {/* Header */}
+        
         <div className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalIconWrap}>
@@ -80,10 +79,10 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
           </button>
         </div>
 
-        {/* Body */}
+        
         <div className={styles.modalBody}>
           
-          {/* Support Cards Grid */}
+          
           <div className={styles.supportGrid}>
             <a href="https://wa.me/mock" target="_blank" rel="noopener noreferrer" className={styles.supportCard}>
               <div className={styles.supportCardHeader}>
@@ -121,11 +120,11 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
 
           <hr className={styles.sectionDivider} />
 
-          {/* FAQ Section */}
+          
           <div className={styles.faqSection}>
             <h3 className={styles.sectionTitle}>Perguntas Frequentes (FAQ)</h3>
 
-            {/* Search Input */}
+            
             <div className={styles.searchContainer}>
               <Icon name="search-md" className={styles.searchIcon} />
               <input
@@ -134,13 +133,13 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setExpandedIndex(null); // Reset expand on search
+                  setExpandedIndex(null);
                 }}
                 className={styles.searchInput}
               />
             </div>
 
-            {/* Accordion */}
+            
             <div className={styles.accordion}>
               {filteredFAQs.length > 0 ? (
                 filteredFAQs.map((faq, index) => {
@@ -187,7 +186,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
           </div>
         </div>
 
-        {/* Footer */}
+        
         <div className={styles.modalFooter}>
           <Button variant="secondary" onClick={onClose}>
             Fechar

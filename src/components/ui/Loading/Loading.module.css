@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,7 +46,7 @@
   animation: spin 0.8s linear infinite;
 }
 
-/* Spinner Sizes */
+
 .small {
   width: 20px;
   height: 20px;

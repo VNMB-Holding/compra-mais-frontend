@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Icon from "@/components/ui/Icon/Icon";
 import { Button } from "@/components/ui";
 import styles from "@/app/administracao/administracao.module.css";
@@ -107,7 +107,7 @@ export default function AdminUserModal({
   return (
     <div className={styles.modalOverlay} onClick={handleOverlay}>
       <div className={styles.modalBox}>
-        {/* Header */}
+        
         <div className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalIconWrap}>
@@ -129,7 +129,7 @@ export default function AdminUserModal({
           </button>
         </div>
 
-        {/* Body */}
+        
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
             <p className={styles.sectionSubtitle}>Dados Pessoais</p>
@@ -267,7 +267,7 @@ export default function AdminUserModal({
             </div>
           </div>
 
-          {/* Footer */}
+          
           <div className={styles.modalFooter}>
             <button type="button" className={styles.btnCancel} onClick={onClose}>
               Cancelar

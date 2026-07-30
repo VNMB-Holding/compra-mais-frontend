@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Icon from "../Icon/Icon";
@@ -23,7 +23,6 @@ export default function Stepper({ steps }: StepperProps) {
       {steps.map((step, index) => {
         const isLast = index === steps.length - 1;
 
-        // Determina se a linha após este step é ativa (o próximo step é concluído ou ativo)
         const nextStep = steps[index + 1];
         const isLineActive = nextStep && (nextStep.status === "completed" || nextStep.status === "active");
 

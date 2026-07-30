@@ -1,27 +1,27 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Icon from "../Icon/Icon";
 import styles from "./ConfirmDialog.module.css";
 
 export interface ConfirmDialogProps {
-  /** Se o dialog está visível */
+  
   open: boolean;
-  /** Variante visual — define cor do ícone e botão de confirmação */
+  
   variant?: "danger" | "warning" | "success" | "info";
-  /** Título em destaque */
+  
   title: string;
-  /** Mensagem descritiva (pode ser JSX) */
+  
   message?: React.ReactNode;
-  /** Label do botão de confirmação */
+  
   confirmLabel?: string;
-  /** Label do botão de cancelamento */
+  
   cancelLabel?: string;
-  /** Ícone do header (nome do componente Icon) */
+  
   icon?: string;
-  /** Chamado ao confirmar */
+  
   onConfirm: () => void;
-  /** Chamado ao cancelar ou fechar */
+  
   onCancel: () => void;
 }
 
@@ -77,18 +77,18 @@ export default function ConfirmDialog({
     <div className={styles.overlay} onClick={handleOverlayClick} role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <div className={styles.dialog}>
 
-        {/* Ícone */}
+        
         <div className={`${styles.iconWrap} ${cfg.iconBg}`}>
           <Icon name={iconName} />
         </div>
 
-        {/* Conteúdo */}
+        
         <div className={styles.body}>
           <h2 id="confirm-title" className={styles.title}>{title}</h2>
           {message && <p className={styles.message}>{message}</p>}
         </div>
 
-        {/* Ações */}
+        
         <div className={styles.actions}>
           <button className={styles.cancelBtn} onClick={onCancel}>
             {cancelLabel}

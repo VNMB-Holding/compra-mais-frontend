@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from 'react';
 import { ResponsiveContainer, LineChart as RechartsLine, Line, XAxis, YAxis, Tooltip } from 'recharts';
@@ -38,7 +38,6 @@ export default function LineChart({ data, strokeColor = "#0d9488" }: LineChartPr
           <Tooltip 
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
-                // Convertemos o valor com segurança para o que precisamos exibir
                 const currentValue = payload[0].value;
                 return (
                   <div className={styles.tooltip}>

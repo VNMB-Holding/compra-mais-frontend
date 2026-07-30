@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import Card from '../Card/Card';
 import Button from '../Button/Button';
 import Badge from '../Badge/Badge';
@@ -12,7 +12,7 @@ interface QuoteData {
   category: string;
   type: string;
   timeRemaining: string;
-  imageUrl: string; // Caminho para o arquivo PNG (ex: '/images/diesel-tower.png')
+  imageUrl: string;
 }
 
 interface UrgentQuoteCardProps {
@@ -23,7 +23,7 @@ interface UrgentQuoteCardProps {
 export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProps) {
   return (
     <Card noPadding className={styles.urgentWrapper}>
-      {/* Coluna da Esquerda: Textos e Lógica */}
+      
       <div className={styles.content}>
         <div className={styles.headerRow}>
           <Badge variant="warning">{quote.timeRemaining}</Badge>

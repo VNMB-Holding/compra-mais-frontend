@@ -1,4 +1,4 @@
-.modalOverlay {
+﻿.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -95,7 +95,7 @@
   flex-grow: 1;
 }
 
-/* Support Grid */
+
 .supportGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -188,7 +188,7 @@
   margin: 24px 0;
 }
 
-/* FAQ Section */
+
 .faqSection {
   display: flex;
   flex-direction: column;
@@ -233,7 +233,7 @@
   box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.1);
 }
 
-/* Accordion */
+
 .accordion {
   display: flex;
   flex-direction: column;
@@ -300,7 +300,7 @@
   line-height: 1.6;
 }
 
-/* No Results */
+
 .noResults {
   display: flex;
   flex-direction: column;
@@ -327,7 +327,7 @@
   color: var(--text-muted, #64748b);
 }
 
-/* Footer */
+
 .modalFooter {
   padding: 16px 24px;
   border-top: 1px solid var(--border, #e2e8f0);

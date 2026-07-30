@@ -1,12 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import { ToastItem, ToastVariant, useToast } from "@/contexts/ToastContext";
 import styles from "./Toast.module.css";
 
-// ---------------------------------------------------------------------------
-// Ícones SVG inline por variante
-// ---------------------------------------------------------------------------
 
 const ICONS: Record<ToastVariant, React.ReactNode> = {
   success: (
@@ -34,9 +31,6 @@ const ICONS: Record<ToastVariant, React.ReactNode> = {
   ),
 };
 
-// ---------------------------------------------------------------------------
-// Single Toast
-// ---------------------------------------------------------------------------
 
 function ToastCard({ toast }: { toast: ToastItem }) {
   const { dismiss } = useToast();
@@ -53,18 +47,18 @@ function ToastCard({ toast }: { toast: ToastItem }) {
       role="alert"
       aria-live="polite"
     >
-      {/* Ícone */}
+      
       <div className={`${styles.iconWrap} ${styles[`icon_${toast.variant}`]}`}>
         {ICONS[toast.variant]}
       </div>
 
-      {/* Corpo */}
+      
       <div className={styles.body}>
         <p className={styles.title}>{toast.title}</p>
         {toast.message && <p className={styles.message}>{toast.message}</p>}
       </div>
 
-      {/* Fechar */}
+      
       <button
         className={styles.closeBtn}
         onClick={handleDismiss}
@@ -79,9 +73,6 @@ function ToastCard({ toast }: { toast: ToastItem }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Toast Container
-// ---------------------------------------------------------------------------
 
 export default function ToastContainer() {
   const { toasts } = useToast();
