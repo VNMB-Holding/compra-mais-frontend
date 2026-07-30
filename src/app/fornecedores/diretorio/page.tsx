@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon, Select, Loading } from "@/components/ui";
+import { Card, Button, Icon, Select, Loading, ErrorState } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
+import { getErrorMessage, logError } from "@/lib/utils/error";
 
 interface FornecedorRow {
   id: string;
@@ -60,24 +61,29 @@ export default function FornecedoresListPage() {
   const [fornecedores, setFornecedores] = useState<FornecedorRow[]>([]);
   const [kpis, setKpis] = useState<SupplierKpis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const [suppliers, kpisData] = await Promise.all([
+        suppliersApi.list(),
+        suppliersApi.getKpis(),
+      ]);
+      setFornecedores(suppliers.map(mapSupplierToRow));
+      setKpis(kpisData);
+    } catch (err) {
+      logError("fornecedores/fetchData", err);
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [suppliers, kpisData] = await Promise.all([
-          suppliersApi.list(),
-          suppliersApi.getKpis(),
-        ]);
-        setFornecedores(suppliers.map(mapSupplierToRow));
-        setKpis(kpisData);
-      } catch (err) {
-        console.error("Erro ao carregar fornecedores:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },
@@ -224,6 +230,8 @@ export default function FornecedoresListPage() {
 
         {loading ? (
           <Loading variant="inline" message="Carregando fornecedores..." size="medium" />
+        ) : error ? (
+          <ErrorState message={error} onRetry={fetchData} />
         ) : (
           <>
             <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/fornecedores/${row.id}`)} />

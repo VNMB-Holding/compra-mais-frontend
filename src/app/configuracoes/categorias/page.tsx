@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { categoriesApi, Category } from "@/lib/api/categories";
-import { Button, Icon } from "@/components/ui";
+import { Button, Icon, ErrorState } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./page.module.css";
+import { getErrorMessage, logError } from "@/lib/utils/error";
 
 export default function CategoriasAdminPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [name, setName] = useState("");
@@ -18,14 +20,12 @@ export default function CategoriasAdminPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await categoriesApi.list();
       setCategories(data);
-    } catch (error) {
-      toast({
-        variant: "error",
-        title: "Erro",
-        message: "Falha ao buscar categorias. Tente novamente.",
-      });
+    } catch (err) {
+      logError("configuracoes/categorias/list", err);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -50,11 +50,12 @@ export default function CategoriasAdminPage() {
         title: "Sucesso",
         message: "Categoria criada com sucesso!",
       });
-    } catch (error) {
+    } catch (err) {
+      logError("configuracoes/categorias/create", err);
       toast({
         variant: "error",
         title: "Erro",
-        message: "Falha ao criar categoria.",
+        message: getErrorMessage(err),
       });
     }
   };
@@ -69,11 +70,12 @@ export default function CategoriasAdminPage() {
         title: "Deletado",
         message: "Categoria removida com sucesso.",
       });
-    } catch (error) {
+    } catch (err) {
+      logError("configuracoes/categorias/delete", err);
       toast({
         variant: "error",
         title: "Erro",
-        message: "Falha ao deletar (ela pode estar em uso).",
+        message: getErrorMessage(err),
       });
     }
   };
@@ -103,6 +105,12 @@ export default function CategoriasAdminPage() {
             {loading ? (
               <tr>
                 <td colSpan={3} style={{ textAlign: "center", padding: "32px" }}>Carregando...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={3} style={{ padding: "24px" }}>
+                  <ErrorState message={error} onRetry={fetchCategories} />
+                </td>
               </tr>
             ) : categories.length === 0 ? (
               <tr>

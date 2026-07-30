@@ -6,6 +6,7 @@ import { Card, Button, Badge, Icon, Loading } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./homologacao-detail.module.css";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
+import { logError, getErrorMessage } from "@/lib/utils/error";
 
 export default function HomologacaoDetailPage() {
   const router = useRouter();
@@ -23,8 +24,8 @@ export default function HomologacaoDetailPage() {
         const data = await suppliersApi.getById(supplierId);
         setSupplier(data);
       } catch (err) {
-        console.error(err);
-        toast({ variant: "error", title: "Erro", message: "Falha ao carregar fornecedor." });
+        logError("fornecedores/homologacao/[id]/fetch", err);
+        toast({ variant: "error", title: "Erro ao carregar fornecedor", message: getErrorMessage(err) });
       } finally {
         setLoading(false);
       }

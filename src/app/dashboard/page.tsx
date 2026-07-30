@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
 import { 
@@ -13,12 +13,14 @@ import {
   PieChart,
   UrgentQuoteCard,
   Icon,
-  Loading
+  Loading,
+  ErrorState
 } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, DashboardKpis, CategoryBreakdown, MonthlyEconomy } from "@/lib/api/dashboard";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
+import { getErrorMessage, logError } from "@/lib/utils/error";
 
 interface RFQRow {
   id: string;
@@ -67,40 +69,45 @@ export default function DashboardPage() {
   const [economyData, setEconomyData] = useState<MonthlyEconomy[]>([]);
   const [categories, setCategories] = useState<CategoryBreakdown[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const [kpisData, rfqsData, economyChart, categoriesData] = await Promise.all([
+        dashboardApi.getKpis(),
+        rfqsApi.list(),
+        dashboardApi.getMonthlyEconomy(),
+        dashboardApi.getCategories(),
+      ]);
+
+      setKpis(kpisData);
+      setEconomyData(economyChart);
+      setCategories(categoriesData);
+
+      const mapped: RFQRow[] = rfqsData.map((rfq) => ({
+        id: rfq.id,
+        codigo: rfq.code,
+        descricao: rfq.title || rfq.purchaseRequest?.description || "",
+        categoria: (rfq.purchaseRequest as any)?.category?.name || "Sem Categoria",
+        dataAbertura: formatDate(rfq.createdAt),
+        dataEncerramento: formatDate(rfq.closesAt),
+        tipoSegmento: "Menor Preço",
+        status: mapRfqStatus(rfq),
+      }));
+      setRfqs(mapped);
+    } catch (err) {
+      logError("dashboard/fetchData", err);
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [kpisData, rfqsData, economyChart, categoriesData] = await Promise.all([
-          dashboardApi.getKpis(),
-          rfqsApi.list(),
-          dashboardApi.getMonthlyEconomy(),
-          dashboardApi.getCategories(),
-        ]);
-
-        setKpis(kpisData);
-        setEconomyData(economyChart);
-        setCategories(categoriesData);
-
-        const mapped: RFQRow[] = rfqsData.map((rfq) => ({
-          id: rfq.id,
-          codigo: rfq.code,
-          descricao: rfq.title || rfq.purchaseRequest?.description || "",
-          categoria: (rfq.purchaseRequest as any)?.category?.name || "Sem Categoria",
-          dataAbertura: formatDate(rfq.createdAt),
-          dataEncerramento: formatDate(rfq.closesAt),
-          tipoSegmento: "Menor Preço",
-          status: mapRfqStatus(rfq),
-        }));
-        setRfqs(mapped);
-      } catch (err) {
-        console.error("Erro ao carregar dashboard:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const firstName = user?.name?.split(" ")[0] || "Usuário";
 
@@ -241,6 +248,8 @@ export default function DashboardPage() {
 
         {loading ? (
           <Loading variant="inline" message="Carregando dados..." size="medium" />
+        ) : error ? (
+          <ErrorState message={error} onRetry={fetchData} />
         ) : (
           <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.codigo}`)} />
         )}
