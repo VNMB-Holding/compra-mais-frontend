@@ -255,8 +255,23 @@ export default function RfqDetailPage() {
   }, [rfqId]);
 
   const recebidas = propostas.filter((p) => p.status === "recebida");
-  const handleSalvarProposta = (id: string, dados: Partial<PropostaLocal>) =>
+  const handleSalvarProposta = async (id: string, dados: Partial<PropostaLocal>) => {
     setPropostas((c) => c.map((p) => (p.fornecedorId === id ? { ...p, ...dados } : p)));
+    if (dados.precoUnitario) {
+      try {
+        await rfqsApi.createProposal(rfqId, {
+          supplierId: id,
+          unitPrice: Number(dados.precoUnitario) || 0,
+          freightCost: Number(dados.frete) || 0,
+          paymentTerms: dados.condicaoPagamento || "30 dias DDL",
+          deliveryTime: Number(dados.prazoEntrega) || 5,
+        });
+        toast({ variant: "success", title: "Proposta salva!", message: "A proposta comercial foi salva no servidor com sucesso." });
+      } catch (err) {
+        logError("rfqs/[id]/createProposal", err);
+      }
+    }
+  };
 
   const propostasRankeadas = [...recebidas].sort(
     (a, b) => (a.precoUnitario! + a.frete!) - (b.precoUnitario! + b.frete!)
@@ -301,17 +316,18 @@ export default function RfqDetailPage() {
         onConfirm={async () => {
           try {
             await rfqsApi.updateStatus(rfqId, "UnderAnalysis");
+            setEstagio("analise");
+            toast({
+              variant: "warning",
+              title: "Coleta encerrada",
+              message: `${recebidas.length} proposta${recebidas.length !== 1 ? "s" : ""} recebida${recebidas.length !== 1 ? "s" : ""}. Agora você pode analisar e selecionar o vencedor.`,
+            });
           } catch (e) {
             logError("rfqs/[id]/encerrar", e);
             toast({ variant: "error", title: "Erro ao encerrar", message: getErrorMessage(e) });
+          } finally {
+            setDialog(null);
           }
-          setEstagio("analise");
-          setDialog(null);
-          toast({
-            variant: "warning",
-            title: "Coleta encerrada",
-            message: `${recebidas.length} proposta${recebidas.length !== 1 ? "s" : ""} recebida${recebidas.length !== 1 ? "s" : ""}. Agora você pode analisar e selecionar o vencedor.`,
-          });
         }}
         onCancel={() => setDialog(null)}
       />
@@ -333,15 +349,24 @@ export default function RfqDetailPage() {
           )
         }
         confirmLabel="Confirmar seleção"
-        onConfirm={() => {
-          setVencedorId(pendingVencedorId);
-          setEstagio("aprovacao");
-          setDialog(null);
-          toast({
-            variant: "success",
-            title: "Fornecedor selecionado!",
-            message: `${pendingVencedor?.nome ?? "Fornecedor"} foi declarado vencedor desta RFQ.`,
-          });
+        onConfirm={async () => {
+          if (pendingVencedorId) {
+            try {
+              await rfqsApi.selectWinner(rfqId, pendingVencedorId);
+              setVencedorId(pendingVencedorId);
+              setEstagio("aprovacao");
+              toast({
+                variant: "success",
+                title: "Fornecedor selecionado!",
+                message: `${pendingVencedor?.nome ?? "Fornecedor"} foi declarado vencedor desta RFQ no servidor.`,
+              });
+            } catch (e) {
+              logError("rfqs/[id]/selectWinner", e);
+              toast({ variant: "error", title: "Erro ao selecionar vencedor", message: getErrorMessage(e) });
+            } finally {
+              setDialog(null);
+            }
+          }
         }}
         onCancel={() => {
           setPendingVencedorId(null);
@@ -369,28 +394,22 @@ export default function RfqDetailPage() {
           )
         }
         confirmLabel="Emitir Pedido de Compra"
-        onConfirm={() => {
-          setDialog(null);
-          toast({
-            variant: "success",
-            title: "Pedido de Compra emitido!",
-            message: `PO gerado para ${vencedor?.nome ?? "fornecedor"}. Valor: ${formatCurrency(
-              ((vencedor?.precoUnitario ?? 0) + (vencedor?.frete ?? 0)) * totalQtd
-            )}.`,
-            duration: 6000,
-          });
-          const searchParams = new URLSearchParams({
-            fornecedor: vencedor?.nome ?? "",
-            cnpj: vencedor?.cnpj ?? "",
-            precoUnit: String(vencedor?.precoUnitario ?? 0),
-            frete: String(vencedor?.frete ?? 0),
-            prazo: String(vencedor?.prazoEntrega ?? 0),
-            pagamento: vencedor?.condicaoPagamento ?? "",
-            qtdTotal: String(totalQtd),
-            rfq: rfqCode,
-            origem: originCode,
-          });
-          router.push(`/compras/pedidos/PED-NOVO?${searchParams.toString()}`);
+        onConfirm={async () => {
+          try {
+            const po = await rfqsApi.createPo(rfqId);
+            toast({
+              variant: "success",
+              title: "Pedido de Compra emitido com sucesso!",
+              message: `PO ${(po as any)?.code || ""} gerado para ${vencedor?.nome ?? "fornecedor"}.`,
+              duration: 6000,
+            });
+            router.push(`/compras/pedidos`);
+          } catch (e) {
+            logError("rfqs/[id]/createPo", e);
+            toast({ variant: "error", title: "Erro ao emitir Pedido", message: getErrorMessage(e) });
+          } finally {
+            setDialog(null);
+          }
         }}
         onCancel={() => setDialog(null)}
       />

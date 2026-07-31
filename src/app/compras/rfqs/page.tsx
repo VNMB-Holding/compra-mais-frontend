@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading, ErrorState } from "@/components/ui";
+import { Button, Card, Icon, Select, Loading, ErrorState, Badge } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
@@ -21,7 +21,7 @@ interface RFQRow {
   dataAbertura: string;
   dataEncerramento: string;
   tipoSegmento: string;
-  status: "Aberta" | "Encerrando hoje" | "Encerrada";
+  status: "Aberta" | "Encerrando hoje" | "Em análise" | "Encerrada" | "Cancelada";
   empresa: string;
 }
 
@@ -34,8 +34,10 @@ function formatDate(dateStr: string) {
   });
 }
 
-function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
-  if (rfq.status === "Closed") return "Encerrada";
+function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Em análise" | "Encerrada" | "Cancelada" {
+  if (rfq.status === "Closed" || rfq.status === "Finished") return "Encerrada";
+  if (rfq.status === "Cancelled") return "Cancelada";
+  if (rfq.status === "UnderAnalysis") return "Em análise";
   if (rfq.closesAt) {
     const today = new Date().toISOString().split("T")[0];
     const closes = new Date(rfq.closesAt).toISOString().split("T")[0];
@@ -157,10 +159,22 @@ export default function RfqsPage() {
     {
       header: "Status",
       cell: (row) => (
-        <span className={`${styles.statusBadge} ${row.status === "Aberta" ? styles.badgeGreen : row.status === "Encerrando hoje" ? styles.badgeYellow : styles.badgeGray}`}>
+        <Badge
+          variant={
+            row.status === "Aberta"
+              ? "success"
+              : row.status === "Encerrando hoje"
+              ? "warning"
+              : row.status === "Em análise"
+              ? "primary"
+              : row.status === "Cancelada"
+              ? "danger"
+              : "gray"
+          }
+        >
           {row.status}
-        </span>
-      )
+        </Badge>
+      ),
     },
     {
       header: "",

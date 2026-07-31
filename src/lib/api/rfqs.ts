@@ -76,6 +76,15 @@ export const rfqsApi = {
   create: (data: { requestId: string; title: string; closesAt: string; supplierIds?: string[] }) =>
     apiClient.post<Rfq>("/api/rfqs", data),
   
+  createProposal: (rfqId: string, data: { supplierId: string; unitPrice: number; freightCost?: number; paymentTerms?: string; deliveryTime?: number; notes?: string }) =>
+    apiClient.post(`/api/rfqs/${rfqId}/proposals`, data),
+
+  selectWinner: (rfqId: string, proposalId: string) =>
+    apiClient.patch(`/api/rfqs/${rfqId}/winner`, { proposalId }),
+
+  createPo: (rfqId: string) =>
+    apiClient.post(`/api/rfqs/${rfqId}/create-po`, {}),
+
   updateStatus: (id: string, status: Rfq["status"]) =>
     apiClient.patch<Rfq>(`/api/rfqs/${id}/status`, { status }),
 };
