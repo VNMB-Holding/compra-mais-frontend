@@ -111,8 +111,18 @@ export default function DashboardPage() {
 
   const firstName = user?.name?.split(" ")[0] || "Usuário";
 
-  const topCategoriasData = categories.length > 0
-    ? categories.map((c, i) => ({
+  const aggregatedCategoriesMap = new Map<string, number>();
+  for (const c of categories) {
+    aggregatedCategoriesMap.set(c.name, (aggregatedCategoriesMap.get(c.name) || 0) + (c.value || 0));
+  }
+
+  const aggregatedCategoriesList = Array.from(aggregatedCategoriesMap.entries()).map(([name, value]) => ({
+    name,
+    value,
+  }));
+
+  const topCategoriasData = aggregatedCategoriesList.length > 0
+    ? aggregatedCategoriesList.map((c, i) => ({
         name: c.name,
         value: c.value,
         color: PIE_COLORS[i % PIE_COLORS.length],
