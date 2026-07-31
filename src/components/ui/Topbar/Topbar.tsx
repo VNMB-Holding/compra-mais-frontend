@@ -22,19 +22,11 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [selectedCompany, setSelectedCompany] = useState<string>("");
   const router = useRouter();
+  const companyDisplay = user?.tenantName?.toUpperCase() || user?.availableTenants?.[0]?.name?.toUpperCase() || "VNMB HOLDING";
 
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
   const [messages, setMessages] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
-
-  useEffect(() => {
-    if (user?.tenantName) {
-      setSelectedCompany(user.tenantName.toUpperCase());
-    } else {
-      setSelectedCompany("VNMB HOLDING");
-    }
-  }, [user]);
 
   useEffect(() => {
     async function loadNotifications() {
@@ -252,64 +244,12 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        
+        {/* Display static company name */}
         <div className={styles.popupWrapper}>
-          <div 
-            className={styles.companySelector} 
-            onClick={() => canSwitchCompany && togglePopup("company")}
-            style={{ cursor: canSwitchCompany ? "pointer" : "default" }}
-          >
-            {selectedCompany || "EMPRESA"}
-            {canSwitchCompany && (
-              <Icon name="chevron-down" className={activePopup === "company" ? styles.rotate : ""} />
-            )}
+          <div className={styles.companySelector} style={{ cursor: "default" }}>
+            <Icon name="building-07" />
+            {companyDisplay}
           </div>
-
-          {canSwitchCompany && activePopup === "company" && (
-            <div className={`${styles.dropdownBox} ${styles.companyDropdown}`}>
-              
-              {availableCompanies.some((c) => c.type === "Matriz") && (
-                <>
-                  <div className={styles.companyDropdownSectionHeader}>Matriz</div>
-                  {availableCompanies
-                    .filter((c) => c.type === "Matriz")
-                    .map((company) => (
-                      <div 
-                        key={company.id}
-                        className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
-                        onClick={() => {
-                          setSelectedCompany(company.name.toUpperCase());
-                          setActivePopup(null);
-                        }}
-                      >
-                        {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
-                      </div>
-                    ))}
-                </>
-              )}
-
-              
-              {availableCompanies.some((c) => c.type === "Filial") && (
-                <>
-                  <div className={styles.companyDropdownSectionHeader}>Filiais</div>
-                  {availableCompanies
-                    .filter((c) => c.type === "Filial")
-                    .map((company) => (
-                      <div 
-                        key={company.id}
-                        className={selectedCompany === company.name.toUpperCase() ? styles.dropdownItemActive : styles.dropdownItem}
-                        onClick={() => {
-                          setSelectedCompany(company.name.toUpperCase());
-                          setActivePopup(null);
-                        }}
-                      >
-                        {selectedCompany === company.name.toUpperCase() && <Icon name="check" />} {company.name.toUpperCase()}
-                      </div>
-                    ))}
-                </>
-              )}
-            </div>
-          )}
         </div>
 
         

@@ -11,6 +11,7 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { getCompanyFilterOptions } from "@/lib/utils/tenant";
 
 interface RFQRow {
   id: string;
@@ -24,46 +25,39 @@ interface RFQRow {
   empresa: string;
 }
 
+function formatDate(dateStr: string) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
-  if (rfq.status === "Closed" || rfq.status === "Cancelled" || (rfq.status as string) === "Finished") return "Encerrada";
-  
-  const closes = new Date(rfq.closesAt);
-  const now = new Date();
-  
-  if (closes < now && closes.toDateString() !== now.toDateString()) {
-    return "Encerrada";
+  if (rfq.status === "Closed") return "Encerrada";
+  if (rfq.closesAt) {
+    const today = new Date().toISOString().split("T")[0];
+    const closes = new Date(rfq.closesAt).toISOString().split("T")[0];
+    if (today === closes) return "Encerrando hoje";
   }
-  
-  if (closes.toDateString() === now.toDateString()) {
-    return "Encerrando hoje";
-  }
-  
   return "Aberta";
 }
 
-function mapToRow(rfq: Rfq, currentUser?: User | null): RFQRow {
-  const categoryName = rfq.purchaseRequest?.category
-    ? typeof rfq.purchaseRequest.category === "object"
-      ? (rfq.purchaseRequest.category as any).name || "Sem Categoria"
-      : rfq.purchaseRequest.category
-    : "Sem Categoria";
-
-  const isVnmbHolding = currentUser?.tenantName?.toLowerCase().includes("vnmb") || currentUser?.availableTenants?.some(t => t.name.toLowerCase().includes("vnmb"));
-  
-  let empresaFilial = "";
-  if (isVnmbHolding) {
-    empresaFilial = currentUser?.availableTenants?.find(t => t.id === (rfq.purchaseRequest as any)?.tenantId)?.name || "—";
-  } else {
-    empresaFilial = (rfq.purchaseRequest as any)?.department || (rfq.purchaseRequest as any)?.deliveryLocation || "Sede";
+function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
+  let empresaFilial = "—";
+  const tenantId = rfq.purchaseRequest?.tenantId || rfq.tenantId;
+  if (tenantId) {
+    empresaFilial = currentUser?.availableTenants?.find(t => t.id === tenantId)?.name || "—";
   }
 
   return {
     id: rfq.id,
     codigo: rfq.code,
-    descricao: rfq.title || rfq.purchaseRequest?.description || "",
-    categoria: categoryName,
-    dataAbertura: new Date(rfq.createdAt).toLocaleDateString("pt-BR"),
-    dataEncerramento: new Date(rfq.closesAt).toLocaleDateString("pt-BR"),
+    descricao: rfq.title || rfq.purchaseRequest?.description || "Sem descrição",
+    categoria: (rfq.purchaseRequest as any)?.category?.name || rfq.purchaseRequest?.category || "Geral",
+    dataAbertura: formatDate(rfq.createdAt),
+    dataEncerramento: formatDate(rfq.closesAt),
     tipoSegmento: "Menor Preço",
     status: mapRfqStatus(rfq),
     empresa: empresaFilial,
@@ -73,6 +67,10 @@ function mapToRow(rfq: Rfq, currentUser?: User | null): RFQRow {
 export default function RfqsPage() {
   const router = useRouter();
   const { user } = useAuth();
+
+  const companyOptions = getCompanyFilterOptions(user);
+  const showCompanyFilter = companyOptions.length > 1;
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("TODAS");
 
   const [categoria, setCategoria] = useState("Todas");
   const [status, setStatus] = useState("Todos");
@@ -85,9 +83,10 @@ export default function RfqsPage() {
     async function fetchData() {
       try {
         setLoading(true);
+        const queryTenantId = selectedTenantId !== "TODAS" ? selectedTenantId : undefined;
         const [list, kpisData] = await Promise.all([
-          rfqsApi.list(user?.tenantId),
-          rfqsApi.getKpis(user?.tenantId),
+          rfqsApi.list(queryTenantId),
+          rfqsApi.getKpis(queryTenantId),
         ]);
         setRfqs(list.map(rfq => mapToRow(rfq, user)));
         setKpis(kpisData);
@@ -99,7 +98,7 @@ export default function RfqsPage() {
       }
     }
     fetchData();
-  }, [user?.tenantId]);
+  }, [user, selectedTenantId]);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },
@@ -215,6 +214,21 @@ export default function RfqsPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
+            {showCompanyFilter && (
+              <Select
+                options={[
+                  { label: "Empresas: Todas", value: "TODAS" },
+                  ...companyOptions.map((c) => ({ label: c.name, value: c.id })),
+                ]}
+                value={selectedTenantId}
+                onChange={(val) => {
+                  setSelectedTenantId(val);
+                  setCurrentPage(1);
+                }}
+                icon="building-07"
+                className={styles.customSelectFilter}
+              />
+            )}
             <Select
               options={categoriasOptions}
               value={categoria}

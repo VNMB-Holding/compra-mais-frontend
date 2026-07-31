@@ -11,6 +11,7 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { getCompanyFilterOptions, isVnmbUser } from "@/lib/utils/tenant";
 
 interface SolicitationRow {
   id: string;
@@ -92,14 +93,18 @@ export default function SolicitacoesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { user } = useAuth();
+  const companyOptions = getCompanyFilterOptions(user);
+  const showCompanyFilter = companyOptions.length > 1;
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("TODAS");
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
+        const queryTenantId = selectedTenantId !== "TODAS" ? selectedTenantId : undefined;
         const [list, kpisData] = await Promise.all([
-          purchaseRequestsApi.list(user?.tenantId),
-          purchaseRequestsApi.getKpis(user?.tenantId),
+          purchaseRequestsApi.list(queryTenantId),
+          purchaseRequestsApi.getKpis(queryTenantId),
         ]);
         setSolicitacoes(list.map((pr) => mapToRow(pr, user)));
         setKpis(kpisData);
@@ -111,7 +116,7 @@ export default function SolicitacoesPage() {
       }
     }
     fetchData();
-  }, [user?.tenantId]);
+  }, [user, selectedTenantId]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
@@ -266,6 +271,21 @@ export default function SolicitacoesPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
+            {showCompanyFilter && (
+              <Select
+                options={[
+                  { label: "Empresas: Todas", value: "TODAS" },
+                  ...companyOptions.map((c) => ({ label: c.name, value: c.id })),
+                ]}
+                value={selectedTenantId}
+                onChange={(val) => {
+                  setSelectedTenantId(val);
+                  setCurrentPage(1);
+                }}
+                icon="building-07"
+                className={styles.customSelectFilter}
+              />
+            )}
             <Select
               options={statusOptions}
               value={statusFilter}

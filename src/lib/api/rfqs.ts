@@ -15,6 +15,7 @@ export interface Rfq {
     code: string;
     description: string;
     category: string;
+    tenantId?: string;
     items?: { id: string; description: string; quantity: number; unit: string }[];
   };
   rfqSuppliers?: {
