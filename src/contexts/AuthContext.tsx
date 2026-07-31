@@ -117,6 +117,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {
       }
 
+      const currentTenantObj = availableTenants.find((t) => t.id === tenantId) || availableTenants[0];
+      const tenantName = currentTenantObj?.name;
+
       const role = mapApiRole(meRoles);
 
       const loggedInUser: User = {
@@ -127,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         roles: meRoles,
         scopes: meScopes,
         tenantId,
+        tenantName,
         availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
         accessToken: loginData.access_token,
         refreshToken: loginData.refresh_token,

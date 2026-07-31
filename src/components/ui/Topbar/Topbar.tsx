@@ -23,7 +23,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const { user, logout, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
-  const companyDisplay = user?.tenantName?.toUpperCase() || user?.availableTenants?.[0]?.name?.toUpperCase() || "VNMB HOLDING";
+  const userTenant = user?.availableTenants?.find((t) => t.id === user.tenantId);
+  const companyDisplay = user?.tenantName?.toUpperCase() || userTenant?.name?.toUpperCase() || user?.availableTenants?.[0]?.name?.toUpperCase() || "VNMB HOLDING";
 
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
   const [messages, setMessages] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
