@@ -11,7 +11,7 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCompanyFilterOptions, isVnmbUser } from "@/lib/utils/tenant";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 
 interface SolicitationRow {
   id: string;
@@ -60,14 +60,7 @@ function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationR
     finalCategory = typeof pr.category === "object" ? (pr.category as any).name || "Geral" : pr.category;
   }
 
-  const isVnmbHolding = currentUser?.tenantName?.toLowerCase().includes("vnmb") || currentUser?.availableTenants?.some(t => t.name.toLowerCase().includes("vnmb"));
-  
-  let empresaFilial = "";
-  if (isVnmbHolding) {
-    empresaFilial = currentUser?.availableTenants?.find(t => t.id === pr.tenantId)?.name || "—";
-  } else {
-    empresaFilial = pr.department || pr.deliveryLocation || "Sede";
-  }
+  let empresaFilial = currentUser?.availableTenants?.find((t) => t.id === pr.tenantId)?.name || pr.department || pr.deliveryLocation || "—";
 
   return {
     id: pr.id,
@@ -93,15 +86,26 @@ export default function SolicitacoesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { user } = useAuth();
-  const companyOptions = getCompanyFilterOptions(user);
-  const showCompanyFilter = companyOptions.length > 1;
-  const [selectedTenantId, setSelectedTenantId] = useState<string>("TODAS");
+  const primaryCompanies = getPrimaryCompanyOptions(user);
+  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
+
+  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
+  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
+  const showBranchFilter = branchCompanies.length > 0;
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
-        const queryTenantId = selectedTenantId !== "TODAS" ? selectedTenantId : undefined;
+        // Determina qual tenantId enviar para a API: se houver filial selecionada usa ela, senão usa a empresa principal selecionada
+        let queryTenantId: string | undefined = undefined;
+        if (selectedBranchId !== "TODAS") {
+          queryTenantId = selectedBranchId;
+        } else if (selectedPrimaryCompanyId !== "TODAS") {
+          queryTenantId = selectedPrimaryCompanyId;
+        }
+
         const [list, kpisData] = await Promise.all([
           purchaseRequestsApi.list(queryTenantId),
           purchaseRequestsApi.getKpis(queryTenantId),
@@ -116,7 +120,7 @@ export default function SolicitacoesPage() {
       }
     }
     fetchData();
-  }, [user, selectedTenantId]);
+  }, [user, selectedPrimaryCompanyId, selectedBranchId]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
@@ -271,15 +275,32 @@ export default function SolicitacoesPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
-            {showCompanyFilter && (
+            {showPrimaryCompanyFilter && (
               <Select
                 options={[
                   { label: "Empresas: Todas", value: "TODAS" },
-                  ...companyOptions.map((c) => ({ label: c.name, value: c.id })),
+                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
                 ]}
-                value={selectedTenantId}
+                value={selectedPrimaryCompanyId}
                 onChange={(val) => {
-                  setSelectedTenantId(val);
+                  setSelectedPrimaryCompanyId(val);
+                  setSelectedBranchId("TODAS");
+                  setCurrentPage(1);
+                }}
+                icon="building-07"
+                className={styles.customSelectFilter}
+              />
+            )}
+
+            {showBranchFilter && (
+              <Select
+                options={[
+                  { label: "Filiais: Todas", value: "TODAS" },
+                  ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
+                ]}
+                value={selectedBranchId}
+                onChange={(val) => {
+                  setSelectedBranchId(val);
                   setCurrentPage(1);
                 }}
                 icon="building-07"

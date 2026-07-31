@@ -11,7 +11,7 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCompanyFilterOptions } from "@/lib/utils/tenant";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 
 interface RFQRow {
   id: string;
@@ -68,9 +68,13 @@ export default function RfqsPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const companyOptions = getCompanyFilterOptions(user);
-  const showCompanyFilter = companyOptions.length > 1;
-  const [selectedTenantId, setSelectedTenantId] = useState<string>("TODAS");
+  const primaryCompanies = getPrimaryCompanyOptions(user);
+  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
+
+  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
+  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
+  const showBranchFilter = branchCompanies.length > 0;
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
 
   const [categoria, setCategoria] = useState("Todas");
   const [status, setStatus] = useState("Todos");
@@ -83,7 +87,13 @@ export default function RfqsPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const queryTenantId = selectedTenantId !== "TODAS" ? selectedTenantId : undefined;
+        let queryTenantId: string | undefined = undefined;
+        if (selectedBranchId !== "TODAS") {
+          queryTenantId = selectedBranchId;
+        } else if (selectedPrimaryCompanyId !== "TODAS") {
+          queryTenantId = selectedPrimaryCompanyId;
+        }
+
         const [list, kpisData] = await Promise.all([
           rfqsApi.list(queryTenantId),
           rfqsApi.getKpis(queryTenantId),
@@ -98,7 +108,7 @@ export default function RfqsPage() {
       }
     }
     fetchData();
-  }, [user, selectedTenantId]);
+  }, [user, selectedPrimaryCompanyId, selectedBranchId]);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },
@@ -214,15 +224,32 @@ export default function RfqsPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
-            {showCompanyFilter && (
+            {showPrimaryCompanyFilter && (
               <Select
                 options={[
                   { label: "Empresas: Todas", value: "TODAS" },
-                  ...companyOptions.map((c) => ({ label: c.name, value: c.id })),
+                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
                 ]}
-                value={selectedTenantId}
+                value={selectedPrimaryCompanyId}
                 onChange={(val) => {
-                  setSelectedTenantId(val);
+                  setSelectedPrimaryCompanyId(val);
+                  setSelectedBranchId("TODAS");
+                  setCurrentPage(1);
+                }}
+                icon="building-07"
+                className={styles.customSelectFilter}
+              />
+            )}
+
+            {showBranchFilter && (
+              <Select
+                options={[
+                  { label: "Filiais: Todas", value: "TODAS" },
+                  ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
+                ]}
+                value={selectedBranchId}
+                onChange={(val) => {
+                  setSelectedBranchId(val);
                   setCurrentPage(1);
                 }}
                 icon="building-07"

@@ -30,24 +30,42 @@ export function isVbAgroMatrizUser(user: User | null): boolean {
 }
 
 /**
- * Retorna as opções de filtro por empresa/filial que o usuário tem acesso nas tabelas
+ * Retorna as Empresas Principais (Matrizes / Empresas do grupo)
  */
-export function getCompanyFilterOptions(user: User | null): TenantOption[] {
+export function getPrimaryCompanyOptions(user: User | null): TenantOption[] {
   if (!user || !user.availableTenants) return [];
 
   if (isVnmbUser(user)) {
-    // VNMB vê todas as empresas
-    return user.availableTenants;
+    // Retorna apenas as Matrizes / Empresas Principais
+    const matrizes = user.availableTenants.filter((t) => t.type === "Matriz" || t.name.toUpperCase().includes("MATRIZ") || !t.type);
+    return matrizes.length > 0 ? matrizes : user.availableTenants;
   }
 
-  if (isVbAgroMatrizUser(user)) {
-    // VB AGRO Matriz vê as filiais da VB AGRO
-    return user.availableTenants.filter(
-      (t) => t.name.toUpperCase().includes("VB AGRO")
-    );
+  // Se o usuário é VB Agro Matriz ou outra matriz, retorna sua matriz
+  const currentTenant = user.availableTenants.find((t) => t.id === user.tenantId);
+  if (currentTenant) {
+    if (currentTenant.type === "Matriz" || currentTenant.name.toUpperCase().includes("VB AGRO")) {
+      return [currentTenant];
+    }
   }
 
-  // Outros usuários vêm apenas sua empresa
-  const myTenant = user.availableTenants.find((t) => t.id === user.tenantId);
-  return myTenant ? [myTenant] : [];
+  return user.availableTenants;
+}
+
+/**
+ * Retorna as Filiais de uma determinada empresa selecionada (ex: VB AGRO)
+ */
+export function getBranchCompanyOptions(user: User | null, selectedCompanyId: string): TenantOption[] {
+  if (!user || !user.availableTenants || !selectedCompanyId || selectedCompanyId === "TODAS") return [];
+
+  const selectedTenant = user.availableTenants.find((t) => t.id === selectedCompanyId);
+  if (!selectedTenant) return [];
+
+  // Extrai o nome base (ex: "VB AGRO")
+  const baseName = selectedTenant.name.replace(/\s*(Matriz|Filial.*)$/i, "").trim().toUpperCase();
+
+  // Encontra todas as filiais associadas a essa empresa
+  return user.availableTenants.filter(
+    (t) => t.id !== selectedCompanyId && t.name.toUpperCase().includes(baseName)
+  );
 }
