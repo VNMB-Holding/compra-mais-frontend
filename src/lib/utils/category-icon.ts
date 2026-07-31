@@ -24,7 +24,7 @@ export const CATEGORY_ICON_MAP: Record<CategoryType | string, string> = {
 
 
 export const CATEGORY_LABEL_MAP: Record<CategoryType | string, string> = {
-  [CategoryType.IT_SOFTWARE]: "TI & Software",
+  [CategoryType.IT_SOFTWARE]: "Tecnologia & TI",
   [CategoryType.FUEL_LUBRICANTS]: "Combustíveis & Lubrificantes",
   [CategoryType.SERVICES]: "Serviços & Consultoria",
   [CategoryType.MRO_MAINTENANCE]: "MRO & Manutenção",
@@ -48,7 +48,7 @@ export function getCategoryIcon(category?: CategoryType | string): string {
     return "layers-three-01";
   }
 
-  if (cat.includes("ti") || cat.includes("tecnologia") || cat.includes("software") || cat.includes("cloud") || cat.includes("sistema")) {
+  if (cat.includes("ti") || cat.includes("tecnologia") || cat.includes("hardware") || cat.includes("software") || cat.includes("cloud") || cat.includes("sistema")) {
     return CATEGORY_ICON_MAP[CategoryType.IT_SOFTWARE];
   }
   if (cat.includes("combust") || cat.includes("diesel") || cat.includes("óleo") || cat.includes("lubrificant") || cat.includes("gasolina")) {
