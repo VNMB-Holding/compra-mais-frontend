@@ -86,20 +86,31 @@ export default function SolicitacaoDetailPage() {
   const handleApprove = async () => {
     if (sol) {
       try {
-        await purchaseRequestsApi.updateStatus(sol.id, "Approved");
+        const updated = await purchaseRequestsApi.updateStatus(sol.id, "Approved");
+        const isFinal = updated.status === "Approved" || updated.status === "InQuote" || updated.status === "Finished";
+        setSol(updated);
+
+        if (isFinal) {
+          setApproved(true);
+          toast({
+            variant: "success",
+            title: "Solicitação aprovada!",
+            message: `${sol?.code || solId} foi totalmente aprovada e está liberada para abertura de RFQ.`,
+          });
+        } else {
+          toast({
+            variant: "success",
+            title: "Alçada aprovada!",
+            message: `Sua aprovação foi registrada na alçada atual. A solicitação avançou para o próximo nível.`,
+          });
+        }
       } catch (e) {
         logError("solicitacoes/[id]/approve", e);
         toast({ variant: "error", title: "Erro ao aprovar", message: getErrorMessage(e) });
         return;
       }
     }
-    setApproved(true);
     setDialog(null);
-    toast({
-      variant: "success",
-      title: "Solicitação aprovada!",
-      message: `${sol?.code || solId} foi aprovada e está liberada para abertura de RFQ.`,
-    });
   };
 
   const handleReject = async () => {
