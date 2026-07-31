@@ -1,4 +1,4 @@
-﻿.detailContainer { display: flex; flex-direction: column; gap: 24px; }
+.detailContainer { display: flex; flex-direction: column; gap: 24px; }
 .backBtn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: var(--primary, #007d79); font-size: 14px; font-weight: 600; cursor: pointer; align-self: flex-start; padding: 0; }
 .titleRow { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
 .titleRow h1 { font-size: 28px; font-weight: 700; color: #0f172a; margin: 0; }

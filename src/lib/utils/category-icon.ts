@@ -1,4 +1,4 @@
-﻿
+
 export enum CategoryType {
   IT_SOFTWARE = "IT_SOFTWARE",
   FUEL_LUBRICANTS = "FUEL_LUBRICANTS",

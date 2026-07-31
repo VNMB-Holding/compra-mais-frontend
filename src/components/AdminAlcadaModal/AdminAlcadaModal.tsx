@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import Icon from "@/components/ui/Icon/Icon";
 import { Button } from "@/components/ui";
 import styles from "@/app/administracao/administracao.module.css";

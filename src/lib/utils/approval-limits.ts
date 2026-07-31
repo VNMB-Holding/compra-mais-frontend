@@ -1,4 +1,4 @@
-﻿
+
 export interface ApprovalChainLevel {
   level: number;
   roleOrName: string;

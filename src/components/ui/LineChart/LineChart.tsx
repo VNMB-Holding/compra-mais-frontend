@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from 'react';
 import { ResponsiveContainer, LineChart as RechartsLine, Line, XAxis, YAxis, Tooltip } from 'recharts';
