@@ -149,12 +149,12 @@ export default function SolicitacaoDetailPage() {
   const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
 
   const loggedUserName = user?.name || "";
-  const isUserAdmin = user?.role === "admin" || user?.roles?.includes("Admin");
+  const isUserAdmin = user?.role === "admin" || user?.roles?.includes("Admin") || user?.scopes?.includes("approver") || user?.scopes?.includes("admin");
   const canUserApproveCurrentLevel =
     isUserAdmin ||
-    (loggedUserName &&
-      currentApproverName &&
-      loggedUserName.toLowerCase().includes(currentApproverName.toLowerCase()));
+    (currentPendingLevel &&
+      (user?.roles?.some((r) => r.toLowerCase().includes(currentApproverName.toLowerCase())) ||
+        (loggedUserName && loggedUserName.toLowerCase().includes(currentApproverName.toLowerCase()))));
 
   return (
     <div className={styles.detailContainer}>

@@ -67,7 +67,7 @@ export default function NewRfqPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const paramSol = searchParams.get("sol") ?? "";
+  const paramSol = searchParams.get("sol") ?? searchParams.get("solicitacao") ?? "";
   const paramTitulo = searchParams.get("titulo") ?? "";
   const paramValor = searchParams.get("valor") ?? "";
   const paramPrioridade = searchParams.get("prioridade") ?? "";
@@ -112,10 +112,10 @@ export default function NewRfqPage() {
 
         if (reqs && reqs.length > 0) {
           const eligibleReqs = reqs.filter(
-            (r) => r.status !== "InQuote" && r.status !== "Finished" && (!r.rfqs || r.rfqs.length === 0)
+            (r) => r.status === "Approved" && (!r.rfqs || r.rfqs.length === 0)
           );
 
-          const mappedReqs: Solicitacao[] = (eligibleReqs.length > 0 ? eligibleReqs : reqs).map((r) => ({
+          const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => ({
             id: r.id,
             titulo: r.description,
             area: r.department || "Operações",
