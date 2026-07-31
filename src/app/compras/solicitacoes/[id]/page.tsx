@@ -7,7 +7,7 @@ import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
-import { formatUserDisplayName } from "@/lib/utils/format-display";
+import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
 import { getApprovalChainForRequest } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
@@ -288,9 +288,9 @@ export default function SolicitacaoDetailPage() {
                         <strong>Alçada {lvl.level}: {lvl.roleOrName}</strong>
                         <span>
                           {isLevelDone
-                            ? historyMatch?.approverId
-                              ? formatUserDisplayName(historyMatch.approverId, null)
-                              : `Aprovado por ${lvl.roleOrName}`
+                            ? historyMatch?.approverId && !isUuid(historyMatch.approverId)
+                              ? historyMatch.approverId
+                              : lvl.roleOrName
                             : isRejected && isLevelActive
                             ? `Rejeitado por ${lvl.roleOrName}`
                             : isLevelActive

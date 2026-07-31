@@ -10,12 +10,16 @@ export function formatUserDisplayName(
   rawNameOrId: string | undefined | null,
   fallbackUser?: { name?: string; email?: string } | null
 ): string {
-  if (!rawNameOrId || rawNameOrId.trim() === "" || rawNameOrId === "Solicitante Interno") {
-    return fallbackUser?.name || "Breno Marques";
+  if (fallbackUser?.name) {
+    return fallbackUser.name;
+  }
+
+  if (!rawNameOrId || rawNameOrId.trim() === "") {
+    return "—";
   }
 
   if (isUuid(rawNameOrId)) {
-    return fallbackUser?.name || "Breno Marques";
+    return fallbackUser?.email || "—";
   }
 
   return rawNameOrId;
@@ -26,11 +30,11 @@ export function formatSupplierDisplayName(
   fallbackName?: string
 ): string {
   if (!rawNameOrId || rawNameOrId.trim() === "") {
-    return fallbackName || "Fornecedor";
+    return fallbackName || "—";
   }
 
   if (isUuid(rawNameOrId)) {
-    return fallbackName || "Fornecedor Parceiro";
+    return fallbackName || "—";
   }
 
   return rawNameOrId;
