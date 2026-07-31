@@ -181,28 +181,12 @@ export default function NewRfqPage() {
       if (solExistente.itens.length > 0) {
         setExpandedItemId(solExistente.itens[0].id);
       }
-    } else {
-      const solDinamica: Solicitacao = {
-        id: paramSol,
-        titulo: paramTitulo || "Solicitação de compra",
-        area: paramArea || "Operacoes",
-        solicitante: paramSolicitante || "—",
-        prioridade: paramPrioridade || "Alta",
-        valorEstimado: Number(paramValor) || 0,
-        itens: [
-          { id: 1, descricao: paramTitulo || "Item principal", qtd: 1, unidade: "UN" },
-        ],
-        incoterm: "CIF",
-        condicaoPagamento: "30 dias DDL",
-        observacoes: "",
-      };
-      setSolicitacaoConfirmada(solDinamica);
-      setSolicitacaoSelecionada(paramSol);
-      setTituloRfq(`RFQ — ${solDinamica.titulo}`);
-      setIncoterm(solDinamica.incoterm);
-      setCondicaoPagamento(solDinamica.condicaoPagamento);
-      setItens(solDinamica.itens.map((i) => ({ ...i })));
-      setExpandedItemId(1);
+    } else if (paramSol) {
+      toast({
+        variant: "warning",
+        title: "Solicitação não elegível",
+        message: "A solicitação informada ainda não foi aprovada ou já possui uma cotação aberta.",
+      });
     }
     setCurrentStep(1);
   }, [paramSol, solicidadoesApi]);

@@ -67,13 +67,9 @@ function ApprovalModal({
 
         
         <div className={styles.modalActions}>
-          <button className={styles.modalBtnSecondary} onClick={onGoToList}>
-            <Icon name="list" />
-            Ir para lista de Solicitações
-          </button>
-          <Button variant="primary" className={styles.modalBtnPrimary} onClick={onOpenRfq}>
-            <Icon name="send-03" />
-            Abrir RFQ agora
+          <Button variant="primary" className={styles.modalBtnPrimary} onClick={onGoToList}>
+            <Icon name="check" />
+            Entendido, ir para minhas solicitações
           </Button>
         </div>
       </div>
