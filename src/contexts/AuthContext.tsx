@@ -3,7 +3,7 @@
 import React, { createContext, useState, useCallback, useEffect, useRef } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
-import { loginApi, getMeApi, getTenantsApi, logoutApi } from "@/lib/auth/api";
+import { loginApi, getTenantsApi, logoutApi } from "@/lib/auth/api";
 import { setTokenProvider, setUnauthorizedHandler } from "@/lib/api-client";
 import { logError } from "@/lib/utils/error";
 
@@ -79,15 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       let meRoles: string[] = ["Admin"];
       let meScopes: string[] = ["read", "write", "admin"];
-      let tenantId: string | undefined = undefined;
-
-      try {
-        const meData = await getMeApi();
-        if (meData.roles && meData.roles.length > 0) meRoles = meData.roles;
-        if (meData.scopes && meData.scopes.length > 0) meScopes = meData.scopes;
-        if (meData.tenant_id) tenantId = meData.tenant_id;
-      } catch {
-      }
+      let tenantId: string | undefined = (loginData.user as any)?.tenantId || (loginData.user as any)?.tenant_id;
 
       let availableTenants: { id: string; name: string; type?: "Matriz" | "Filial" }[] = [];
       try {
