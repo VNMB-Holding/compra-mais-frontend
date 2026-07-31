@@ -36,17 +36,17 @@ export function getPrimaryCompanyOptions(user: User | null): TenantOption[] {
   if (!user || !user.availableTenants) return [];
 
   if (isVnmbUser(user)) {
-    // Retorna apenas as Matrizes / Empresas Principais
-    const matrizes = user.availableTenants.filter((t) => t.type === "Matriz" || t.name.toUpperCase().includes("MATRIZ") || !t.type);
-    return matrizes.length > 0 ? matrizes : user.availableTenants;
+    // Retorna todas as Empresas / Matrizes do grupo (excluindo filiais secundárias do primeiro select)
+    const primary = user.availableTenants.filter(
+      (t) => t.type === "Matriz" || !t.type || !t.name.toUpperCase().includes("FILIAL")
+    );
+    return primary.length > 0 ? primary : user.availableTenants;
   }
 
   // Se o usuário é VB Agro Matriz ou outra matriz, retorna sua matriz
   const currentTenant = user.availableTenants.find((t) => t.id === user.tenantId);
   if (currentTenant) {
-    if (currentTenant.type === "Matriz" || currentTenant.name.toUpperCase().includes("VB AGRO")) {
-      return [currentTenant];
-    }
+    return [currentTenant];
   }
 
   return user.availableTenants;
