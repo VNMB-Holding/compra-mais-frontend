@@ -60,7 +60,9 @@ function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationR
     finalCategory = typeof pr.category === "object" ? (pr.category as any).name || "Geral" : pr.category;
   }
 
-  let empresaFilial = currentUser?.availableTenants?.find((t) => t.id === pr.tenantId)?.name || pr.department || pr.deliveryLocation || "—";
+  // Busca estrita do nome do Tenant/Empresa pelo ID cadastrado no banco para este registro
+  const foundTenant = currentUser?.availableTenants?.find((t) => t.id === pr.tenantId);
+  const empresaFilial = foundTenant?.name || "—";
 
   return {
     id: pr.id,

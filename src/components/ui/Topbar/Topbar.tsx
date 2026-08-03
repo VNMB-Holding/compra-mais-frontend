@@ -24,7 +24,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const { toast } = useToast();
   const router = useRouter();
   const userTenant = user?.availableTenants?.find((t) => t.id === user.tenantId);
-  const companyDisplay = user?.tenantName?.toUpperCase() || userTenant?.name?.toUpperCase() || user?.availableTenants?.[0]?.name?.toUpperCase() || "VNMB HOLDING";
+  const companyDisplay = user?.tenantName?.toUpperCase() || userTenant?.name?.toUpperCase() || "NÃO INFORMADO";
 
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
   const [messages, setMessages] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
