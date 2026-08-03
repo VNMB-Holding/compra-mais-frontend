@@ -19,13 +19,13 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', maxWidth: '100%' }}>
+    <div className="flex h-dvh overflow-hidden w-full max-w-full">
       <Sidebar isCollapsed={sidebarCollapsed} onHelpClick={() => setHelpOpen(true)} />
-      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
-        <div style={{ flexShrink: 0 }}>
+      <div className="flex-grow flex flex-col h-dvh overflow-hidden">
+        <div className="flex-shrink-0">
           <Topbar isSidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
         </div>
-        <main style={{ flexGrow: 1, backgroundColor: '#f8fafc', padding: '40px', overflowY: 'auto' }}>
+        <main className="flex-grow bg-slate-50 p-[40px] overflow-y-auto">
           {children}
         </main>
       </div>
