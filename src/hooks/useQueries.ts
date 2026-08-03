@@ -1,15 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
+import { purchaseRequestsApi, PurchaseRequest, RequestItem } from "@/lib/api/purchase-requests";
 import { rfqsApi } from "@/lib/api/rfqs";
 import { suppliersApi } from "@/lib/api/suppliers";
 import { categoriesApi } from "@/lib/api/categories";
 import { dashboardApi } from "@/lib/api/dashboard";
 
 export const QUERY_KEYS = {
-  purchaseRequests: (tenantId?: string) => ["purchase-requests", tenantId] as const,
-  purchaseRequest: (id: string) => ["purchase-requests", id] as const,
-  rfqs: (tenantId?: string) => ["rfqs", tenantId] as const,
-  rfq: (id: string) => ["rfqs", id] as const,
+  purchaseRequests: (tenantId?: string) => ["purchase-requests", "list", tenantId] as const,
+  purchaseRequest: (id: string) => ["purchase-requests", "detail", id] as const,
+  rfqs: (tenantId?: string) => ["rfqs", "list", tenantId] as const,
+  rfq: (id: string) => ["rfqs", "detail", id] as const,
   suppliers: ["suppliers"] as const,
   categories: ["categories"] as const,
   dashboardKpis: ["dashboard-kpis"] as const,
@@ -28,6 +28,18 @@ export function usePurchaseRequest(id: string) {
     queryKey: QUERY_KEYS.purchaseRequest(id),
     queryFn: () => purchaseRequestsApi.getById(id),
     enabled: !!id,
+  });
+}
+
+export function useCreatePurchaseRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
+      purchaseRequestsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-requests"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboardKpis });
+    },
   });
 }
 

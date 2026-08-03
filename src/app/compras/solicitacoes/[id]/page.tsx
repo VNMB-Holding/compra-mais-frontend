@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { getTenantDisplayName } from "@/lib/utils/tenant";
 import { PRIORITY_MAP, PURCHASE_REQUEST_STATUS_MAP as STATUS_LABEL_MAP } from "@/lib/constants/status";
-import { useApprovePurchaseRequest, useRejectPurchaseRequest } from "@/hooks/useQueries";
+import { usePurchaseRequest, useApprovePurchaseRequest, useRejectPurchaseRequest } from "@/hooks/useQueries";
 
 type DialogType = "approve" | "reject" | null;
 
@@ -21,50 +21,64 @@ export default function SolicitacaoDetailPage() {
   const params = useParams();
   const router = useRouter();
   const solId = params.id as string;
+  const isCode = solId.startsWith("SOL-");
 
-  const [sol, setSol] = useState<PurchaseRequest | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: querySol, isLoading: queryLoading, error: queryError } = usePurchaseRequest(isCode ? "" : solId);
+
+  const [solOverride, setSolOverride] = useState<PurchaseRequest | null>(null);
+  const [codeLoading, setCodeLoading] = useState(false);
   const [dialog, setDialog] = useState<DialogType>(null);
   const [approved, setApproved] = useState<boolean | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
-    async function loadDetail() {
-      try {
-        setLoading(true);
-        if (solId.startsWith("SOL-")) {
+    setSolOverride(null);
+    setApproved(null);
+  }, [solId]);
+
+  const sol = solOverride || querySol || null;
+  const loading = isCode ? codeLoading : queryLoading && !solOverride;
+
+  useEffect(() => {
+    if (isCode) {
+      let cancelled = false;
+      setCodeLoading(true);
+      (async () => {
+        try {
           const list = await purchaseRequestsApi.list();
           const found = list.find((item) => item.code === solId || item.id === solId);
-          if (found) {
-            setSol(found);
-            if (found.status === "Approved" || found.status === "InQuote" || found.status === "Finished") setApproved(true);
-            if (found.status === "Rejected") setApproved(false);
-          } else {
-            const data = await purchaseRequestsApi.getById(solId);
-            setSol(data);
-            if (data.status === "Approved" || data.status === "InQuote" || data.status === "Finished") setApproved(true);
-            if (data.status === "Rejected") setApproved(false);
+          if (cancelled) return;
+          setSolOverride(found || null);
+          if (!found) {
+            toast({ variant: "error", title: "Solicitação não encontrada", message: `Não foi possível localizar ${solId}.` });
           }
-        } else {
-          const data = await purchaseRequestsApi.getById(solId);
-          setSol(data);
-          if (data.status === "Approved" || data.status === "InQuote" || data.status === "Finished") setApproved(true);
-          if (data.status === "Rejected") setApproved(false);
+        } catch (err) {
+          logError("solicitacoes/[id]/load", err);
+          if (!cancelled) toast({ variant: "error", title: "Erro ao carregar solicitação", message: getErrorMessage(err) });
+        } finally {
+          if (!cancelled) setCodeLoading(false);
         }
-      } catch (err) {
-        logError("solicitacoes/[id]/load", err);
-        toast({
-          variant: "error",
-          title: "Erro ao carregar solicitação",
-          message: getErrorMessage(err),
-        });
-      } finally {
-        setLoading(false);
-      }
+      })();
+      return () => {
+        cancelled = true;
+      };
     }
-    if (solId) loadDetail();
-  }, [solId]);
+  }, [solId, isCode, toast]);
+
+  useEffect(() => {
+    if (queryError && !querySol) {
+      logError("solicitacoes/[id]/load", queryError);
+      toast({ variant: "error", title: "Erro ao carregar solicitação", message: getErrorMessage(queryError) });
+    }
+  }, [queryError, querySol, toast]);
+
+  useEffect(() => {
+    if (sol) {
+      if (sol.status === "Approved" || sol.status === "InQuote" || sol.status === "Finished") setApproved(true);
+      if (sol.status === "Rejected") setApproved(false);
+    }
+  }, [sol]);
 
   const approveMutation = useApprovePurchaseRequest();
   const rejectMutation = useRejectPurchaseRequest();
@@ -74,7 +88,7 @@ export default function SolicitacaoDetailPage() {
       try {
         await approveMutation.mutateAsync({ id: sol.id });
         const fresh = await purchaseRequestsApi.getById(sol.id);
-        setSol(fresh);
+        setSolOverride(fresh);
 
         const isFinal = fresh.status === "Approved" || fresh.status === "InQuote" || fresh.status === "Finished";
 
@@ -106,7 +120,7 @@ export default function SolicitacaoDetailPage() {
       try {
         await rejectMutation.mutateAsync({ id: sol.id });
         const fresh = await purchaseRequestsApi.getById(sol.id);
-        setSol(fresh);
+        setSolOverride(fresh);
         setApproved(false);
       } catch (e) {
         logError("solicitacoes/[id]/reject", e);
@@ -116,7 +130,7 @@ export default function SolicitacaoDetailPage() {
     }
     setDialog(null);
     toast({
-      variant: "error",
+      variant: "warning",
       title: "Solicitação rejeitada",
       message: `${sol?.code || solId} foi rejeitada. O solicitante será notificado.`,
     });
@@ -133,9 +147,9 @@ export default function SolicitacaoDetailPage() {
       ? (sol.category as any).name || "Geral"
       : sol?.category || "Geral";
 
-  const priorityLabel = PRIORITY_MAP[sol?.priority || "Medium"] || sol?.priority || "Média";
-  const currentStatus = sol?.status ? (STATUS_LABEL_MAP[sol.status] || sol.status) : "Aguardando aprovação";
   const isFullyApproved = approved === true || sol?.status === "Approved" || sol?.status === "InQuote" || sol?.status === "Finished";
+  const currentStatus = STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente";
+  const priorityLabel = PRIORITY_MAP[sol?.priority || ""] || sol?.priority || "Média";
   const isRejected = approved === false || sol?.status === "Rejected";
 
   const budget = Number(sol?.estimatedBudget || 0);
@@ -151,8 +165,8 @@ export default function SolicitacaoDetailPage() {
   const canUserApproveCurrentLevel =
     isUserAdmin ||
     (currentPendingLevel &&
-      (user?.roles?.some((r) => r.toLowerCase().includes(currentApproverName.toLowerCase())) ||
-        (loggedUserName && loggedUserName.toLowerCase().includes(currentApproverName.toLowerCase()))));
+      (user?.roles?.some((r) => r.trim().toLowerCase() === currentApproverName.trim().toLowerCase()) ||
+        (loggedUserName && loggedUserName.trim().toLowerCase() === currentApproverName.trim().toLowerCase())));
 
   return (
     <div className={styles.detailContainer}>

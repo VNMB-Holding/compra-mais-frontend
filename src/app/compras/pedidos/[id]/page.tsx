@@ -5,8 +5,8 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
-
 import { formatCurrency } from "@/lib/utils/format-display";
+import { purchaseOrdersApi } from "@/lib/api/purchase-orders";
 
 export default function PedidoDetailPage() {
   const params = useParams();
@@ -15,10 +15,32 @@ export default function PedidoDetailPage() {
 
   const [confirmRecebimento, setConfirmRecebimento] = useState(false);
   const [recebimentoConfirmado, setRecebimentoConfirmado] = useState(false);
+  const [loadingPdf, setLoadingPdf] = useState(false);
   const { toast } = useToast();
-
   const pedidoId = (params.id as string) || "PED-000234";
   const isNewFlow = pedidoId === "PED-NOVO";
+
+  const handlePrintPO = async () => {
+    const idToUse = pedidoId !== "PED-NOVO" ? pedidoId : null;
+    if (!idToUse || idToUse.startsWith("PED-")) {
+      toast({ variant: "warning", title: "PDF indisponível", message: "O PDF só está disponível para pedidos salvos no banco de dados." });
+      return;
+    }
+    setLoadingPdf(true);
+    try {
+      const response = await purchaseOrdersApi.generatePdf(idToUse);
+      if (!response.ok) throw new Error(`Erro ${response.status}`);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (e) {
+      toast({ variant: "error", title: "Erro ao gerar PDF", message: e instanceof Error ? e.message : "Tente novamente." });
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
 
   const fornecedorNome = searchParams.get("fornecedor") || "Fornecedor Alfa S.A.";
   const fornecedorCnpj = searchParams.get("cnpj") || "11.222.333/0001-81";
@@ -97,8 +119,8 @@ export default function PedidoDetailPage() {
           )}
         </div>
         <div className={styles.headerActions}>
-          <Button variant="secondary">
-            <Icon name="printer" /> Imprimir PO
+          <Button variant="secondary" onClick={handlePrintPO} disabled={loadingPdf}>
+            <Icon name={loadingPdf ? "loading-01" : "printer"} /> {loadingPdf ? "Gerando PDF..." : "Imprimir PO"}
           </Button>
           {!recebimentoConfirmado ? (
             <Button variant="primary" onClick={() => setConfirmRecebimento(true)}>

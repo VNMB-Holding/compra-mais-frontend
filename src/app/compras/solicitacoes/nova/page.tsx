@@ -3,7 +3,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { categoriesApi, Category } from "@/lib/api/categories";
-import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import { GeoapifyGeocoderAutocomplete, GeoapifyContext } from '@geoapify/react-geocoder-autocomplete';
@@ -12,13 +11,13 @@ import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { useCreatePurchaseRequest } from "@/hooks/useQueries";
 
 function ApprovalModal({
   title,
   code,
   totalValue,
   priority,
-  onOpenRfq,
   onGoToList,
   onClose,
 }: {
@@ -26,7 +25,6 @@ function ApprovalModal({
   code: string;
   totalValue: number;
   priority: string;
-  onOpenRfq: () => void;
   onGoToList: () => void;
   onClose: () => void;
 }) {
@@ -59,7 +57,7 @@ function ApprovalModal({
           </div>
           <div className={styles.modalSummaryRow}>
             <span>Prioridade</span>
-            <strong>{priority}</strong>
+            <strong>{(priorityLabels as Record<string, string>)[priority] || priority}</strong>
           </div>
         </div>
 
@@ -108,7 +106,6 @@ export default function NovaSolicitacaoPage() {
 
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [createdCode, setCreatedCode] = useState("");
-  const [createdReqId, setCreatedReqId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -120,7 +117,6 @@ export default function NovaSolicitacaoPage() {
   const [requester, setRequester] = useState(user?.name || "");
   const [department, setDepartment] = useState(user?.department || "");
   const [priority, setPriority] = useState<Priority>("Media");
-  const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -220,6 +216,8 @@ export default function NovaSolicitacaoPage() {
     return opts;
   }, [categories]);
 
+  const createMutation = useCreatePurchaseRequest();
+
   const handleSubmit = async (asDraft = false) => {
     setIsSubmitting(true);
     try {
@@ -231,16 +229,21 @@ export default function NovaSolicitacaoPage() {
         ? new Date(Math.min(...validDates)).toISOString()
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const data = await purchaseRequestsApi.create({
+      const firstItemCategory = items[0]?.category;
+      const matchedCategory = categories.find((c) => c.name === firstItemCategory) || categories[0];
+      const derivedCategoryId = matchedCategory?.id || undefined;
+
+      const data = await createMutation.mutateAsync({
         tenantId: targetTenantId || user?.tenantId,
         description: title,
         requesterId: user?.id,
+        requesterName: requester || user?.name || user?.email,
         department: department,
         purchaseType: purchaseType,
         paymentTerms: paymentTerms || undefined,
         preferredSupplier: preferredSupplier || undefined,
         notes: (notes || "") + (deliveryWindow ? `\nJanela de recebimento: ${deliveryWindow}` : ""),
-        categoryId: categoryId || (categories[0]?.id ?? undefined),
+        categoryId: derivedCategoryId,
         justification: justification,
         estimatedBudget: totalEstimated,
         deliveryLocation: deliveryLocation,
@@ -269,7 +272,6 @@ export default function NovaSolicitacaoPage() {
         router.push("/compras/solicitacoes");
       } else {
         setCreatedCode(data.code);
-        setCreatedReqId(data.id);
         setShowApprovalModal(true);
       }
     } catch (err) {
@@ -284,13 +286,6 @@ export default function NovaSolicitacaoPage() {
     }
   };
 
-  const handleOpenRfq = () => {
-    const params = new URLSearchParams({
-      solicitacao: createdReqId
-    });
-    router.push(`/compras/rfqs/nova?${params.toString()}`);
-  };
-
   return (
     <div className={styles.formContainer}>
       {showApprovalModal && (
@@ -299,7 +294,6 @@ export default function NovaSolicitacaoPage() {
           code={createdCode}
           totalValue={totalEstimated}
           priority={priority}
-          onOpenRfq={handleOpenRfq}
           onGoToList={() => router.push("/compras/solicitacoes")}
           onClose={() => setShowApprovalModal(false)}
         />
