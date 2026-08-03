@@ -6,6 +6,8 @@ import { Sidebar } from "@/components/ui";
 import Topbar from "@/components/ui/Topbar/Topbar";
 import HelpModal from "@/components/HelpModal/HelpModal";
 
+import styles from "./LayoutClient.module.css";
+
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -19,13 +21,13 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden w-full max-w-full">
+    <div className={styles.layoutRoot}>
       <Sidebar isCollapsed={sidebarCollapsed} onHelpClick={() => setHelpOpen(true)} />
-      <div className="flex-grow flex flex-col h-dvh overflow-hidden">
-        <div className="flex-shrink-0">
+      <div className={styles.mainContainer}>
+        <div className={styles.topbarWrapper}>
           <Topbar isSidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
         </div>
-        <main className="flex-grow bg-slate-50 p-[40px] overflow-y-auto">
+        <main className={styles.contentArea}>
           {children}
         </main>
       </div>
