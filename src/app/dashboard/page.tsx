@@ -22,35 +22,12 @@ import { dashboardApi, DashboardKpis, CategoryBreakdown, MonthlyEconomy } from "
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 
-interface RFQRow {
-  id: string;
-  codigo: string;
-  descricao: string;
-  categoria: string;
-  dataAbertura: string;
-  dataEncerramento: string;
-  tipoSegmento: string;
-  status: "Aberta" | "Encerrando hoje" | "Encerrada";
-}
+import { RFQRow } from "@/types/domain";
+import { mapRfqStatus } from "@/lib/constants/status";
+import { formatCurrency } from "@/lib/utils/format-display";
+import { getTenantDisplayName } from "@/lib/utils/tenant";
 
 const PIE_COLORS = ["#007d79", "#7c3aed", "#db2777", "#64748b", "#f59e0b", "#10b981"];
-
-function formatCurrency(value: number): string {
-  if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(0)}k`;
-  return `R$ ${value.toLocaleString("pt-BR")}`;
-}
-
-function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Encerrada" {
-  if (rfq.status === "Closed" || rfq.status === "Cancelled") return "Encerrada";
-  if (rfq.status === "Open") {
-    const closes = new Date(rfq.closesAt);
-    const today = new Date();
-    if (closes.toDateString() === today.toDateString()) return "Encerrando hoje";
-    return "Aberta";
-  }
-  return "Aberta";
-}
 
 function formatDate(dateStr: string): string {
   try {
@@ -95,6 +72,7 @@ export default function DashboardPage() {
         dataEncerramento: formatDate(rfq.closesAt),
         tipoSegmento: "Menor Preço",
         status: mapRfqStatus(rfq),
+        empresa: getTenantDisplayName(rfq.tenantId || rfq.purchaseRequest?.tenantId, user),
       }));
       setRfqs(mapped);
     } catch (err) {

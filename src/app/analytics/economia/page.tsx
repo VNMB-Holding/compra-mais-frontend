@@ -12,6 +12,7 @@ import {
   ExportButton
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
+import { formatCurrency } from "@/lib/utils/format-display";
 
 interface CategoryEconomy {
   categoria: string;
@@ -216,14 +217,6 @@ export default function EconomiaPage() {
       details: detailsSum
     };
   }, [categoriesData, initiativesData, suppliersData, detailsData]);
-
-  function formatCurrency(val: number) {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      maximumFractionDigits: 0
-    }).format(val);
-  }
 
   const handleClearFilters = () => {
     setSelectedPeriod("all");

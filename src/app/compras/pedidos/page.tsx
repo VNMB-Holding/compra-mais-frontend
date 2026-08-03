@@ -7,7 +7,9 @@ import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./pedidos.module.css";
 import { apiClient } from "@/lib/api-client";
+import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP } from "@/lib/constants/status";
 
 interface PurchaseOrder {
   id: string;
@@ -27,16 +29,6 @@ interface PedidoRow {
   valorTotal: string;
   entrega: string;
   status: "Emitido" | "Faturado" | "Entregue";
-}
-
-const STATUS_MAP: Record<string, "Emitido" | "Faturado" | "Entregue"> = {
-  AwaitingSignature: "Emitido",
-  Signed: "Faturado",
-  Delivered: "Entregue",
-};
-
-function formatCurrency(value: number): string {
-  return `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function mapToRow(po: PurchaseOrder): PedidoRow {

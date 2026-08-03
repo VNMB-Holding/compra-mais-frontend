@@ -7,6 +7,7 @@ import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { logError, getErrorMessage } from "@/lib/utils/error";
+import { formatCurrency } from "@/lib/utils/format-display";
 
 type Estagio = "proposta" | "analise" | "aprovacao";
 
@@ -21,9 +22,6 @@ interface PropostaLocal {
   condicaoPagamento?: string;
   observacoes?: string;
 }
-
-const formatCurrency = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 function mapPropostas(rfq: Rfq): PropostaLocal[] {
   const invited = (rfq.rfqSuppliers ?? []).map((rs) => ({

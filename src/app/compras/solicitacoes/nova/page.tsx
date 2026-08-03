@@ -11,6 +11,7 @@ import '@geoapify/geocoder-autocomplete/styles/minimal.css';
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
+import { formatCurrency } from "@/lib/utils/format-display";
 
 function ApprovalModal({
   title,
@@ -29,9 +30,6 @@ function ApprovalModal({
   onGoToList: () => void;
   onClose: () => void;
 }) {
-  const formatCurrency = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -210,8 +208,17 @@ export default function NovaSolicitacaoPage() {
     setItems((current) => current.filter((item) => item.id !== id));
   };
 
-  const formatCurrency = (value: number) =>
-    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const uniqueCategoryOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { label: string; value: string }[] = [];
+    for (const c of categories) {
+      if (c.name && !seen.has(c.name)) {
+        seen.add(c.name);
+        opts.push({ label: c.name, value: c.name });
+      }
+    }
+    return opts;
+  }, [categories]);
 
   const handleSubmit = async (asDraft = false) => {
     setIsSubmitting(true);
@@ -527,7 +534,7 @@ export default function NovaSolicitacaoPage() {
                               <div className={`${styles.formGroup} ${styles.col4}`}>
                                 <label>Categoria <span className="required-asterisk">*</span></label>
                                 <Select
-                                  options={categories.map((c) => ({ label: c.name, value: c.name }))}
+                                  options={uniqueCategoryOptions}
                                   value={item.category}
                                   onChange={(value) => updateItem(item.id, "category", value)}
                                 />

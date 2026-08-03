@@ -6,8 +6,7 @@ import { Card, Button, Badge, Icon, ConfirmDialog } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
 
-const formatCurrency = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { formatCurrency } from "@/lib/utils/format-display";
 
 export default function PedidoDetailPage() {
   const params = useParams();

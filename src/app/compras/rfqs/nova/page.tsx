@@ -6,7 +6,7 @@ import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 import { rfqsApi } from "@/lib/api/rfqs";
-import { formatUserDisplayName } from "@/lib/utils/format-display";
+import { formatUserDisplayName, formatCurrency } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-new.module.css";
@@ -42,9 +42,6 @@ interface FornecedorConvidado {
 
 const SOLICITACOES_DISPONIVEIS: Solicitacao[] = [];
 const FORNECEDORES_BASE: FornecedorConvidado[] = [];
-
-const formatCurrency = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const PRIORITY_CLASS: Record<string, string> = {
   Alta: styles.priorityAlta,

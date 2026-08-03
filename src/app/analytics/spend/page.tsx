@@ -9,9 +9,10 @@ import {
   Select,
   Icon,
   Loading,
-  ExportButton
+  ExportButton,
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
+import { formatCurrency } from "@/lib/utils/format-display";
 
 interface SpendItem {
   categoria: string;
@@ -166,14 +167,6 @@ export default function SpendPage() {
       pedidos: pedidosSum
     };
   }, [categoriesData]);
-
-  function formatCurrency(val: number) {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      maximumFractionDigits: 0
-    }).format(val);
-  }
 
   const handleClearFilters = () => {
     setSelectedPeriod("all");
