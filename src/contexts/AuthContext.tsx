@@ -133,16 +133,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const loginData: any = await loginApi(email, password);
+      const loginData = await loginApi(email, password);
       const backendUser = loginData.user || {};
 
-      const token = loginData.access_token || backendUser.accessToken;
+      const token = loginData.access_token;
       setTokenProvider(() => token);
 
       let meRoles: string[] = backendUser.roles || [];
       let meScopes: string[] = backendUser.scopes || [];
-      let tenantId: string | undefined = backendUser.tenantId || backendUser.tenant_id;
-      const userId = backendUser.id || loginData.user?.id;
+      let tenantId: string | undefined = backendUser.tenant_id;
+      const userId = backendUser.id;
 
       if (userId) {
         try {
@@ -158,8 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!meRoles || meRoles.length === 0) meRoles = ["Admin"];
       if (!meScopes || meScopes.length === 0) meScopes = ["read", "write", "admin"];
 
-      let tenantName: string | undefined = backendUser.tenantName;
-      let availableTenants = backendUser.availableTenants || [];
+      let tenantName: string | undefined = backendUser.tenant_name;
+      let availableTenants = (backendUser as { availableTenants?: { id: string; name: string; type?: "Matriz" | "Filial" }[] }).availableTenants || [];
 
       if (!availableTenants || availableTenants.length === 0) {
         try {
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      let currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
+      let currentTenantObj = availableTenants.find((t) => t.id === tenantId);
       const isVnmb = (email || "").toLowerCase().includes("vnmb");
 
       if (!currentTenantObj && isVnmb && availableTenants.length > 0) {
@@ -202,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         tenantName,
         availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
         accessToken: token,
-        refreshToken: loginData.refresh_token || backendUser.refreshToken,
+        refreshToken: loginData.refresh_token,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(backendUser.name || "User")}`,
       };
 
