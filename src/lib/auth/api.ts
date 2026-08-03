@@ -9,6 +9,10 @@ export interface IdentityLoginResponse {
     id: string;
     name: string;
     email: string;
+    tenant_id?: string;
+    tenant_name?: string;
+    roles?: string[];
+    scopes?: string[];
   };
 }
 

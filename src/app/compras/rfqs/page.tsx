@@ -11,7 +11,7 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
 interface RFQRow {
   id: string;
@@ -21,20 +21,20 @@ interface RFQRow {
   dataAbertura: string;
   dataEncerramento: string;
   tipoSegmento: string;
-  status: "Aberta" | "Encerrando hoje" | "Em análise" | "Encerrada" | "Cancelada";
+  status: string;
   empresa: string;
 }
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  try {
+    return new Date(dateStr).toLocaleDateString("pt-BR");
+  } catch {
+    return "—";
+  }
 }
 
-function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Em análise" | "Encerrada" | "Cancelada" {
+function mapRfqStatus(rfq: Rfq): string {
   if (rfq.status === "Closed" || rfq.status === "Finished") return "Encerrada";
   if (rfq.status === "Cancelled") return "Cancelada";
   if (rfq.status === "UnderAnalysis") return "Em análise";
@@ -47,12 +47,8 @@ function mapRfqStatus(rfq: Rfq): "Aberta" | "Encerrando hoje" | "Em análise" | 
 }
 
 function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
-  let empresaFilial = "—";
   const tenantId = rfq.purchaseRequest?.tenantId || rfq.tenantId;
-  if (tenantId) {
-    const foundTenant = currentUser?.availableTenants?.find((t) => t.id === tenantId);
-    empresaFilial = foundTenant?.name || (rfq as any).tenantName || (rfq.purchaseRequest as any)?.tenantName || "—";
-  }
+  const empresaFilial = getTenantDisplayName(tenantId, currentUser);
 
   return {
     id: rfq.id,

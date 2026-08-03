@@ -11,6 +11,7 @@ import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
 import { getApprovalChainForRequest } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
+import { getTenantDisplayName } from "@/lib/utils/tenant";
 
 const PRIORITY_MAP: Record<string, string> = {
   Low: "Baixa",
@@ -149,12 +150,7 @@ export default function SolicitacaoDetailPage() {
   const isRejected = approved === false || sol?.status === "Rejected";
 
   const budget = Number(sol?.estimatedBudget || 0);
-  const companyName =
-    user?.availableTenants?.find((t) => t.id === sol?.tenantId)?.name ||
-    (sol as any)?.tenantName ||
-    (sol as any)?.tenant?.name ||
-    sol?.department ||
-    "VB AGRO";
+  const companyName = getTenantDisplayName(sol?.tenantId, user);
   const chain = getApprovalChainForRequest(companyName, budget);
 
   const pendingHistoryCount = sol?.approvalHistories?.length || 0;

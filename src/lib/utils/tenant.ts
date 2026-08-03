@@ -69,3 +69,24 @@ export function getBranchCompanyOptions(user: User | null, selectedCompanyId: st
     (t) => t.id !== selectedCompanyId && t.name.toUpperCase().includes(baseName)
   );
 }
+
+/**
+ * Retorna o nome amigável da Empresa/Unidade com base no tenantId do registro e do usuário logado
+ */
+export function getTenantDisplayName(tenantId?: string, user?: User | null): string {
+  if (!tenantId) {
+    return user?.tenantName || "—";
+  }
+
+  // 1. Tenta encontrar na lista de tenants do usuário por ID
+  const foundInUser = user?.availableTenants?.find((t) => t.id === tenantId);
+  if (foundInUser) return foundInUser.name;
+
+  // 2. Se for o mesmo tenantId do usuário logado
+  if (user?.tenantId === tenantId && user?.tenantName) {
+    return user.tenantName;
+  }
+
+  // 3. Fallback para o tenantName do usuário logado ou travessão
+  return user?.tenantName || "—";
+}

@@ -11,7 +11,7 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
 interface SolicitationRow {
   id: string;
@@ -60,9 +60,7 @@ function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationR
     finalCategory = typeof pr.category === "object" ? (pr.category as any).name || "Geral" : pr.category;
   }
 
-  // Busca estrita do nome do Tenant/Empresa pelo ID cadastrado no banco para este registro
-  const foundTenant = currentUser?.availableTenants?.find((t) => t.id === pr.tenantId);
-  const empresaFilial = foundTenant?.name || (pr as any).tenantName || (pr as any).tenant?.name || "—";
+  const empresaFilial = getTenantDisplayName(pr.tenantId, currentUser);
 
   return {
     id: pr.id,
