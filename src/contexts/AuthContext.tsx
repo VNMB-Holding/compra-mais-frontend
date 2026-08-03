@@ -30,16 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Keep the token provider in sync so every api-client request gets a fresh token.
   useEffect(() => {
     setTokenProvider(() => accessToken);
   }, [accessToken]);
 
-  // Use a ref to the logout function so the 401 handler never captures a stale closure.
   const logoutRef = useRef<() => void>(() => {});
 
-  // Register a global 401 handler once on mount.
-  // When any API request returns 401, we log the user out and redirect.
   useEffect(() => {
     setUnauthorizedHandler(() => {
       logoutRef.current();
@@ -60,7 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           let updatedUser = stored.user;
 
-          // Perform background enrichment if tenant info or availableTenants are missing
           try {
             let tenantId = updatedUser.tenantId;
             let meRoles = updatedUser.roles || [];
@@ -227,7 +222,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearSession();
   }, [refreshToken]);
 
-  // Keep the ref in sync so the 401 handler always calls the latest logout.
   useEffect(() => {
     logoutRef.current = logout;
   }, [logout]);

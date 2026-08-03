@@ -27,11 +27,6 @@ export function setTokenProvider(provider: () => string | null) {
   tokenProvider = provider;
 }
 
-/**
- * Register a global callback to be invoked whenever any API request
- * returns HTTP 401 (session expired / invalid token).
- * AuthContext uses this to trigger logout + redirect automatically.
- */
 export function setUnauthorizedHandler(handler: () => void) {
   unauthorizedHandler = handler;
 }
@@ -75,9 +70,6 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const response = await fetch(`${baseUrl}${cleanEndpoint}`, config);
 
   if (response.status === 401 && !auth) {
-    // Invoke the global handler with a debounce so AuthContext can
-    // logout + redirect without each page needing to handle 401 itself,
-    // avoiding multiple redirects if multiple parallel requests fail.
     const now = Date.now();
     if (unauthorizedHandler && now - lastUnauthorizedTime > UNAUTHORIZED_DEBOUNCE_MS) {
       lastUnauthorizedTime = now;
@@ -127,7 +119,6 @@ export const apiClient = {
     return request<T>(endpoint, { ...options, method: "DELETE" });
   },
 
-  /** Returns the raw authenticated Response (e.g. for blob/PDF downloads). */
   async getRaw(endpoint: string, options?: RequestOptions): Promise<Response> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { headers: customHeaders, auth = false, body: _body, ...rest } = options || {};

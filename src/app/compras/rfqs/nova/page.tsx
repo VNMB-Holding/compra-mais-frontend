@@ -147,7 +147,6 @@ export default function NewRfqPage() {
           setFornecedores([]);
         }
       } catch (e) {
-        // Should not normally reach here since each call has its own catch above.
         logError("rfqs/nova/loadApiData", e);
         toast({
           variant: "warning",

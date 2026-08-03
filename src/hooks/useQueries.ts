@@ -19,7 +19,7 @@ export function usePurchaseRequests(tenantId?: string) {
   return useQuery({
     queryKey: QUERY_KEYS.purchaseRequests(tenantId),
     queryFn: () => purchaseRequestsApi.list(tenantId),
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 30,
   });
 }
 
