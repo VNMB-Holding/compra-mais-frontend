@@ -3,7 +3,7 @@
 import React, { createContext, useState, useCallback, useEffect, useRef } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
-import { loginApi, getTenantsApi, logoutApi } from "@/lib/auth/api";
+import { loginApi, getTenantsApi, getUserByIdApi, logoutApi } from "@/lib/auth/api";
 import { setTokenProvider, setUnauthorizedHandler } from "@/lib/api-client";
 import { logError } from "@/lib/utils/error";
 
@@ -50,13 +50,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    function restore() {
+    async function restore() {
       try {
         const stored = loadStoredSession();
         if (stored) {
           setAccessToken(stored.accessToken);
           setRefreshToken(stored.refreshToken);
-          setUser(stored.user);
+          setTokenProvider(() => stored.accessToken);
+
+          let updatedUser = stored.user;
+
+          // Perform background enrichment if tenant info or availableTenants are missing
+          try {
+            let tenantId = updatedUser.tenantId;
+            let meRoles = updatedUser.roles || [];
+            let meScopes = updatedUser.scopes || [];
+
+            if (updatedUser.id) {
+              const userData = await getUserByIdApi(updatedUser.id).catch(() => null);
+              if (userData && userData.tenant_id) {
+                tenantId = userData.tenant_id;
+              }
+            }
+
+            let availableTenants = updatedUser.availableTenants || [];
+            if (!availableTenants || availableTenants.length === 0) {
+              const tenantsData = await getTenantsApi().catch(() => []);
+              if (tenantsData && tenantsData.length > 0) {
+                availableTenants = tenantsData.map((t) => ({
+                  id: t.id,
+                  name: t.name,
+                  type: t.type,
+                }));
+              }
+            }
+
+            let tenantName = updatedUser.tenantName;
+            let currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
+
+            const isVnmb = updatedUser.email?.toLowerCase().includes("vnmb");
+            if (!currentTenantObj && isVnmb && availableTenants.length > 0) {
+              currentTenantObj = availableTenants.find((t: any) => t.name.toUpperCase().includes("VNMB")) || availableTenants[0];
+              if (currentTenantObj) tenantId = currentTenantObj.id;
+            } else if (!currentTenantObj && availableTenants.length > 0) {
+              currentTenantObj = availableTenants[0];
+              tenantId = currentTenantObj.id;
+            }
+
+            if (currentTenantObj) {
+              tenantName = currentTenantObj.name;
+            }
+
+            const enrichedUser: User = {
+              ...updatedUser,
+              tenantId: tenantId || updatedUser.tenantId,
+              tenantName: tenantName || updatedUser.tenantName,
+              availableTenants: availableTenants.length > 0 ? availableTenants : updatedUser.availableTenants,
+              roles: meRoles.length > 0 ? meRoles : updatedUser.roles,
+              scopes: meScopes.length > 0 ? meScopes : updatedUser.scopes,
+            };
+
+            updatedUser = enrichedUser;
+            saveSession(stored.accessToken, stored.refreshToken, enrichedUser);
+          } catch (e) {
+            logError("AuthContext/restoreEnrichment", e);
+          }
+
+          setUser(updatedUser);
         } else {
           setUser(null);
         }
@@ -76,11 +136,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const loginData: any = await loginApi(email, password);
       const backendUser = loginData.user || {};
 
-      setTokenProvider(() => loginData.access_token || backendUser.accessToken);
+      const token = loginData.access_token || backendUser.accessToken;
+      setTokenProvider(() => token);
 
-      let meRoles: string[] = backendUser.roles || ["Admin"];
-      let meScopes: string[] = backendUser.scopes || ["read", "write", "admin"];
+      let meRoles: string[] = backendUser.roles || [];
+      let meScopes: string[] = backendUser.scopes || [];
       let tenantId: string | undefined = backendUser.tenantId || backendUser.tenant_id;
+      const userId = backendUser.id || loginData.user?.id;
+
+      if (userId) {
+        try {
+          const userData = await getUserByIdApi(userId);
+          if (userData && userData.tenant_id) {
+            tenantId = userData.tenant_id;
+          }
+        } catch (err) {
+          logError("AuthContext/getUserByIdApi", err);
+        }
+      }
+
+      if (!meRoles || meRoles.length === 0) meRoles = ["Admin"];
+      if (!meScopes || meScopes.length === 0) meScopes = ["read", "write", "admin"];
+
       let tenantName: string | undefined = backendUser.tenantName;
       let availableTenants = backendUser.availableTenants || [];
 
@@ -97,7 +174,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      const currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
+      let currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
+      const isVnmb = (email || "").toLowerCase().includes("vnmb");
+
+      if (!currentTenantObj && isVnmb && availableTenants.length > 0) {
+        currentTenantObj = availableTenants.find((t: any) => t.name.toUpperCase().includes("VNMB")) || availableTenants[0];
+        if (currentTenantObj) tenantId = currentTenantObj.id;
+      } else if (!currentTenantObj && availableTenants.length > 0) {
+        currentTenantObj = availableTenants[0];
+        tenantId = currentTenantObj.id;
+      }
+
       if (currentTenantObj) {
         tenantName = currentTenantObj.name;
       }
@@ -114,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         tenantId,
         tenantName,
         availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
-        accessToken: loginData.access_token || backendUser.accessToken,
+        accessToken: token,
         refreshToken: loginData.refresh_token || backendUser.refreshToken,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(backendUser.name || "User")}`,
       };

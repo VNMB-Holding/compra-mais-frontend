@@ -151,6 +151,8 @@ export default function SolicitacaoDetailPage() {
   const budget = Number(sol?.estimatedBudget || 0);
   const companyName =
     user?.availableTenants?.find((t) => t.id === sol?.tenantId)?.name ||
+    (sol as any)?.tenantName ||
+    (sol as any)?.tenant?.name ||
     sol?.department ||
     "VB AGRO";
   const chain = getApprovalChainForRequest(companyName, budget);

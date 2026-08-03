@@ -62,7 +62,7 @@ function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationR
 
   // Busca estrita do nome do Tenant/Empresa pelo ID cadastrado no banco para este registro
   const foundTenant = currentUser?.availableTenants?.find((t) => t.id === pr.tenantId);
-  const empresaFilial = foundTenant?.name || "—";
+  const empresaFilial = foundTenant?.name || (pr as any).tenantName || (pr as any).tenant?.name || "—";
 
   return {
     id: pr.id,

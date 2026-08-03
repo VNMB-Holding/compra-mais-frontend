@@ -32,8 +32,21 @@ export async function loginApi(email: string, password: string): Promise<Identit
   );
 }
 
-export async function getMeApi(): Promise<IdentityMeResponse> {
-  return apiClient.get<IdentityMeResponse>("/api/auth/me", { auth: true });
+export interface IdentityUserResponse {
+  id: string;
+  tenant_id: string;
+  name: string;
+  email: string;
+  status: string;
+  created_at: string;
+}
+
+export async function getUserByIdApi(userId: string): Promise<IdentityUserResponse> {
+  return apiClient.get<IdentityUserResponse>(`/api/users/${userId}`, { auth: true });
+}
+
+export async function getUserAccessApi(userId: string): Promise<any[]> {
+  return apiClient.get<any[]>(`/api/users/${userId}/access`, { auth: true });
 }
 
 export interface IdentityTenant {

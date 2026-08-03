@@ -50,7 +50,8 @@ function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
   let empresaFilial = "—";
   const tenantId = rfq.purchaseRequest?.tenantId || rfq.tenantId;
   if (tenantId) {
-    empresaFilial = currentUser?.availableTenants?.find(t => t.id === tenantId)?.name || "—";
+    const foundTenant = currentUser?.availableTenants?.find((t) => t.id === tenantId);
+    empresaFilial = foundTenant?.name || (rfq as any).tenantName || (rfq.purchaseRequest as any)?.tenantName || "—";
   }
 
   return {
