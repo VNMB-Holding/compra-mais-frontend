@@ -87,16 +87,18 @@ export default function SolicitacaoDetailPage() {
   const handleApprove = async () => {
     if (sol) {
       try {
-        const updated = await purchaseRequestsApi.updateStatus(sol.id, "Approved");
-        const isFinal = updated.status === "Approved" || updated.status === "InQuote" || updated.status === "Finished";
-        setSol(updated);
+        await purchaseRequestsApi.updateStatus(sol.id, "Approved");
+        const fresh = await purchaseRequestsApi.getById(sol.id);
+        setSol(fresh);
+
+        const isFinal = fresh.status === "Approved" || fresh.status === "InQuote" || fresh.status === "Finished";
 
         if (isFinal) {
           setApproved(true);
           toast({
             variant: "success",
             title: "Solicitação aprovada!",
-            message: `${sol?.code || solId} foi totalmente aprovada e está liberada para abertura de RFQ.`,
+            message: `${fresh.code || solId} foi totalmente aprovada e está liberada para abertura de RFQ.`,
           });
         } else {
           toast({
@@ -118,13 +120,15 @@ export default function SolicitacaoDetailPage() {
     if (sol) {
       try {
         await purchaseRequestsApi.updateStatus(sol.id, "Rejected");
+        const fresh = await purchaseRequestsApi.getById(sol.id);
+        setSol(fresh);
+        setApproved(false);
       } catch (e) {
         logError("solicitacoes/[id]/reject", e);
         toast({ variant: "error", title: "Erro ao rejeitar", message: getErrorMessage(e) });
         return;
       }
     }
-    setApproved(false);
     setDialog(null);
     toast({
       variant: "error",
