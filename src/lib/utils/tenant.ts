@@ -78,7 +78,7 @@ export function getTenantDisplayName(tenantId?: string, user?: User | null): str
     return user?.tenantName || "—";
   }
 
-  // 1. Tenta encontrar na lista de tenants do usuário por ID
+  // 1. Tenta encontrar na lista de tenants do usuário por ID exato
   const foundInUser = user?.availableTenants?.find((t) => t.id === tenantId);
   if (foundInUser) return foundInUser.name;
 
