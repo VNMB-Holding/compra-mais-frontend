@@ -74,6 +74,6 @@ export const purchaseRequestsApi = {
   create: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
     apiClient.post<PurchaseRequest>("/api/purchase-requests", data),
   
-  updateStatus: (id: string, status: PurchaseRequest["status"]) =>
-    apiClient.patch<PurchaseRequest>(`/api/purchase-requests/${id}/status`, { status }),
+  updateStatus: (id: string, status: PurchaseRequest["status"], comments?: string) =>
+    apiClient.patch<PurchaseRequest>(`/api/purchase-requests/${id}/status`, { status, comments }),
 };

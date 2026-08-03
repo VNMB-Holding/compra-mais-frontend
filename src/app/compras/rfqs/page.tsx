@@ -13,17 +13,9 @@ import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
-interface RFQRow {
-  id: string;
-  codigo: string;
-  descricao: string;
-  categoria: string;
-  dataAbertura: string;
-  dataEncerramento: string;
-  tipoSegmento: string;
-  status: string;
-  empresa: string;
-}
+import { RFQRow } from "@/types/domain";
+import { useRfqs } from "@/hooks/useQueries";
+import { mapRfqStatus } from "@/lib/constants/status";
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -32,18 +24,6 @@ function formatDate(dateStr: string | null | undefined): string {
   } catch {
     return "—";
   }
-}
-
-function mapRfqStatus(rfq: Rfq): string {
-  if (rfq.status === "Closed" || rfq.status === "Finished") return "Encerrada";
-  if (rfq.status === "Cancelled") return "Cancelada";
-  if (rfq.status === "UnderAnalysis") return "Em análise";
-  if (rfq.closesAt) {
-    const today = new Date().toISOString().split("T")[0];
-    const closes = new Date(rfq.closesAt).toISOString().split("T")[0];
-    if (today === closes) return "Encerrando hoje";
-  }
-  return "Aberta";
 }
 
 function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
@@ -66,6 +46,9 @@ function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
 export default function RfqsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const [categoria, setCategoria] = useState("Todas");
+  const [status, setStatus] = useState("Todos");
+  const [kpis, setKpis] = useState<RfqKpis | null>(null);
 
   const primaryCompanies = getPrimaryCompanyOptions(user);
   const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
@@ -75,39 +58,38 @@ export default function RfqsPage() {
   const showBranchFilter = branchCompanies.length > 0;
   const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
 
-  const [categoria, setCategoria] = useState("Todas");
-  const [status, setStatus] = useState("Todos");
-  const [rfqs, setRfqs] = useState<RFQRow[]>([]);
-  const [kpis, setKpis] = useState<RfqKpis | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryTenantId = React.useMemo(() => {
+    if (selectedBranchId !== "TODAS") return selectedBranchId;
+    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
+    return undefined;
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
+
+  const { data: rawRfqs = [], isLoading: loadingRfqs, error: queryError } = useRfqs(queryTenantId);
+
+  const rfqs: RFQRow[] = React.useMemo(() => {
+    return rawRfqs.map((rfq) => mapToRow(rfq, user));
+  }, [rawRfqs, user]);
+
+  const loading = loadingRfqs;
+  const error = queryError ? getErrorMessage(queryError) : null;
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchKpis() {
       try {
-        setLoading(true);
         let queryTenantId: string | undefined = undefined;
         if (selectedBranchId !== "TODAS") {
           queryTenantId = selectedBranchId;
         } else if (selectedPrimaryCompanyId !== "TODAS") {
           queryTenantId = selectedPrimaryCompanyId;
         }
-
-        const [list, kpisData] = await Promise.all([
-          rfqsApi.list(queryTenantId),
-          rfqsApi.getKpis(queryTenantId),
-        ]);
-        setRfqs(list.map(rfq => mapToRow(rfq, user)));
+        const kpisData = await rfqsApi.getKpis(queryTenantId);
         setKpis(kpisData);
       } catch (err) {
-        logError("rfqs/list", err);
-        setError(getErrorMessage(err));
-      } finally {
-        setLoading(false);
+        logError("rfqs/kpis", err);
       }
     }
-    fetchData();
-  }, [user, selectedPrimaryCompanyId, selectedBranchId]);
+    fetchKpis();
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
 
   const categoriasOptions = [
     { label: "Todas as categorias", value: "Todas" },

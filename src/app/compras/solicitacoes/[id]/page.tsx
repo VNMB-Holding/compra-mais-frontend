@@ -12,26 +12,8 @@ import { getApprovalChainForRequest } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { getTenantDisplayName } from "@/lib/utils/tenant";
-
-const PRIORITY_MAP: Record<string, string> = {
-  Low: "Baixa",
-  Medium: "Média",
-  High: "Alta",
-  Urgent: "Urgente",
-  Critical: "Crítica",
-};
-
-const STATUS_LABEL_MAP: Record<string, string> = {
-  Draft: "Rascunho",
-  AwaitingApproval: "Aguardando aprovação",
-  Approved: "Aprovada",
-  Rejected: "Rejeitada",
-  InQuote: "Em Cotação",
-  Finished: "Atendida",
-  Pending: "Pendente",
-  UnderAnalysis: "Em Análise",
-  Cancelled: "Cancelada",
-};
+import { PRIORITY_MAP, PURCHASE_REQUEST_STATUS_MAP as STATUS_LABEL_MAP } from "@/lib/constants/status";
+import { useApprovePurchaseRequest, useRejectPurchaseRequest } from "@/hooks/useQueries";
 
 type DialogType = "approve" | "reject" | null;
 
@@ -84,10 +66,13 @@ export default function SolicitacaoDetailPage() {
     if (solId) loadDetail();
   }, [solId]);
 
+  const approveMutation = useApprovePurchaseRequest();
+  const rejectMutation = useRejectPurchaseRequest();
+
   const handleApprove = async () => {
     if (sol) {
       try {
-        await purchaseRequestsApi.updateStatus(sol.id, "Approved");
+        await approveMutation.mutateAsync({ id: sol.id });
         const fresh = await purchaseRequestsApi.getById(sol.id);
         setSol(fresh);
 
@@ -119,7 +104,7 @@ export default function SolicitacaoDetailPage() {
   const handleReject = async () => {
     if (sol) {
       try {
-        await purchaseRequestsApi.updateStatus(sol.id, "Rejected");
+        await rejectMutation.mutateAsync({ id: sol.id });
         const fresh = await purchaseRequestsApi.getById(sol.id);
         setSol(fresh);
         setApproved(false);
@@ -298,7 +283,7 @@ export default function SolicitacaoDetailPage() {
                         )}
                       </div>
                       <div className={styles.stepInfo}>
-                        <strong>Alçada {lvl.level}: {lvl.roleOrName}</strong>
+                        <strong>Alçada {lvl.level}</strong>
                         <span>
                           {isLevelDone
                             ? historyMatch?.approverId && !isUuid(historyMatch.approverId)

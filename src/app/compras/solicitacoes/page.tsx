@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Icon, Select, Loading, ErrorState } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
@@ -13,39 +13,10 @@ import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
-interface SolicitationRow {
-  id: string;
-  codigo: string;
-  descricao: string;
-  solicitante: string;
-  data: string;
-  status: string;
-  prioridade: string;
-  categoria: string;
-  empresa: string;
-}
-
-const STATUS_MAP: Record<string, string> = {
-  Draft: "Rascunho",
-  AwaitingApproval: "Aguardando aprovação",
-  Approved: "Aprovada",
-  Rejected: "Rejeitada",
-  InQuote: "Em Cotação",
-  Finished: "Atendida",
-  Pending: "Pendente",
-  UnderAnalysis: "Em Análise",
-  Cancelled: "Cancelada",
-};
-
-const PRIORITY_MAP: Record<string, string> = {
-  Low: "Baixa",
-  Medium: "Média",
-  High: "Alta",
-  Urgent: "Urgente",
-  Critical: "Crítica",
-};
-
+import { SolicitationRow } from "@/types/domain";
+import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, PRIORITY_MAP } from "@/lib/constants/status";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
+import { usePurchaseRequests } from "@/hooks/useQueries";
 
 function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationRow {
   const itemCategories = pr.items?.map((i: any) => i.category).filter(Boolean) || [];
@@ -78,14 +49,11 @@ function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationR
 export default function SolicitacoesPage() {
   const router = useRouter();
 
+  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [prioridade, setPrioridade] = useState("Todos");
-  const [solicitacoes, setSolicitacoes] = useState<SolicitationRow[]>([]);
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const { user } = useAuth();
   const primaryCompanies = getPrimaryCompanyOptions(user);
   const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
 
@@ -94,33 +62,38 @@ export default function SolicitacoesPage() {
   const showBranchFilter = branchCompanies.length > 0;
   const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
 
+  const queryTenantId = useMemo(() => {
+    if (selectedBranchId !== "TODAS") return selectedBranchId;
+    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
+    return undefined;
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
+
+  const { data: rawList = [], isLoading: loadingRequests, error: queryError } = usePurchaseRequests(queryTenantId);
+
+  const solicitacoes: SolicitationRow[] = React.useMemo(() => {
+    return rawList.map((pr) => mapToRow(pr, user));
+  }, [rawList, user]);
+
+  const loading = loadingRequests;
+  const error = queryError ? getErrorMessage(queryError) : null;
+
   useEffect(() => {
-    async function fetchData() {
+    async function fetchKpis() {
       try {
-        setLoading(true);
-        // Determina qual tenantId enviar para a API: se houver filial selecionada usa ela, senão usa a empresa principal selecionada
         let queryTenantId: string | undefined = undefined;
         if (selectedBranchId !== "TODAS") {
           queryTenantId = selectedBranchId;
         } else if (selectedPrimaryCompanyId !== "TODAS") {
           queryTenantId = selectedPrimaryCompanyId;
         }
-
-        const [list, kpisData] = await Promise.all([
-          purchaseRequestsApi.list(queryTenantId),
-          purchaseRequestsApi.getKpis(queryTenantId),
-        ]);
-        setSolicitacoes(list.map((pr) => mapToRow(pr, user)));
+        const kpisData = await purchaseRequestsApi.getKpis(queryTenantId);
         setKpis(kpisData);
       } catch (err) {
-        logError("solicitacoes/list", err);
-        setError(getErrorMessage(err));
-      } finally {
-        setLoading(false);
+        logError("solicitacoes/kpis", err);
       }
     }
-    fetchData();
-  }, [user, selectedPrimaryCompanyId, selectedBranchId]);
+    fetchKpis();
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
