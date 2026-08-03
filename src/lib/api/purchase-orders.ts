@@ -37,8 +37,5 @@ export const purchaseOrdersApi = {
 
   getById: (id: string) => apiClient.get<PurchaseOrder>(`/api/purchase-orders/${id}`),
 
-  generatePdf: (id: string) =>
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/purchase-orders/${id}/pdf`, {
-      credentials: "include",
-    }),
+  generatePdf: (id: string) => apiClient.getRaw(`/api/purchase-orders/${id}/pdf`),
 };

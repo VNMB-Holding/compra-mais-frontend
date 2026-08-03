@@ -126,6 +126,26 @@ export const apiClient = {
   delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     return request<T>(endpoint, { ...options, method: "DELETE" });
   },
+
+  /** Returns the raw authenticated Response (e.g. for blob/PDF downloads). */
+  async getRaw(endpoint: string, options?: RequestOptions): Promise<Response> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { headers: customHeaders, auth = false, body: _body, ...rest } = options || {};
+
+    const headers: Record<string, string> = {
+      ...(customHeaders as Record<string, string>),
+    };
+
+    const token = getStoredToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const baseUrl = auth ? AUTH_API_URL.replace(/\/+$/, "") : BIZ_API_URL;
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+
+    return fetch(`${baseUrl}${cleanEndpoint}`, { ...rest, method: "GET", headers });
+  },
 };
 
 export { ApiError };
