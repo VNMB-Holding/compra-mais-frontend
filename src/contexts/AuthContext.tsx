@@ -73,60 +73,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const loginData = await loginApi(email, password);
+      const loginData: any = await loginApi(email, password);
+      const backendUser = loginData.user || {};
 
-      setTokenProvider(() => loginData.access_token);
+      setTokenProvider(() => loginData.access_token || backendUser.accessToken);
 
-      let meRoles: string[] = ["Admin"];
-      let meScopes: string[] = ["read", "write", "admin"];
-      let tenantId: string | undefined = (loginData.user as any)?.tenantId || (loginData.user as any)?.tenant_id;
+      let meRoles: string[] = backendUser.roles || ["Admin"];
+      let meScopes: string[] = backendUser.scopes || ["read", "write", "admin"];
+      let tenantId: string | undefined = backendUser.tenantId || backendUser.tenant_id;
+      let tenantName: string | undefined = backendUser.tenantName;
+      let availableTenants = backendUser.availableTenants || [];
 
-      let availableTenants: { id: string; name: string; type?: "Matriz" | "Filial" }[] = [];
-      try {
-        const tenantsData = await getTenantsApi();
-        if (tenantsData && tenantsData.length > 0) {
-          const currentTenant = tenantsData.find((t) => t.id === tenantId);
-          const isVnmbAdmin = currentTenant
-            ? currentTenant.name.toUpperCase().includes("VNMB")
-            : loginData.user.email.toLowerCase().includes("vnmb");
-
-          if (isVnmbAdmin) {
+      if (!availableTenants || availableTenants.length === 0) {
+        try {
+          const tenantsData = await getTenantsApi();
+          if (tenantsData && tenantsData.length > 0) {
             availableTenants = tenantsData.map((t) => ({
               id: t.id,
               name: t.name,
               type: t.type,
             }));
-          } else if (currentTenant) {
-            availableTenants = [
-              {
-                id: currentTenant.id,
-                name: currentTenant.name,
-                type: currentTenant.type,
-              },
-            ];
           }
-        }
-      } catch {
+        } catch {}
       }
 
-      const currentTenantObj = availableTenants.find((t) => t.id === tenantId);
-      const tenantName = currentTenantObj?.name || (loginData.user as any)?.tenant_name || (loginData.user as any)?.tenantName;
+      const currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
+      if (currentTenantObj) {
+        tenantName = currentTenantObj.name;
+      }
 
       const role = mapApiRole(meRoles);
 
       const loggedInUser: User = {
-        id: loginData.user.id,
-        name: loginData.user.name,
-        email: loginData.user.email,
+        id: backendUser.id || loginData.user?.id,
+        name: backendUser.name || loginData.user?.name,
+        email: backendUser.email || loginData.user?.email,
         role,
         roles: meRoles,
         scopes: meScopes,
         tenantId,
         tenantName,
         availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
-        accessToken: loginData.access_token,
-        refreshToken: loginData.refresh_token,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(loginData.user.name)}`,
+        accessToken: loginData.access_token || backendUser.accessToken,
+        refreshToken: loginData.refresh_token || backendUser.refreshToken,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(backendUser.name || "User")}`,
       };
 
       setAccessToken(loginData.access_token);
