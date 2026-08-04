@@ -21,4 +21,7 @@ export { default as CommandPalette } from './CommandPalette/CommandPalette';
 export { default as ExportButton } from './ExportButton/ExportButton';
 export { default as Stepper } from './Stepper/Stepper';
 export { default as ErrorState } from './ErrorState/ErrorState';
+export { default as Skeleton, TableSkeleton, CardSkeleton, KpiCardSkeleton } from './Skeleton/Skeleton';
+
+
 

@@ -6,6 +6,15 @@
   position: relative;
 }
 
+.clickableCard {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clickableCard:hover {
+  transform: translateY(-2px);
+}
+
 .iconWrapper {
   width: 40px;
   height: 40px;
