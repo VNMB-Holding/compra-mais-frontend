@@ -2,47 +2,57 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Badge, Card, Icon, Button } from "@/components/ui";
+import { Badge, Card, Icon, Button, Loading } from "@/components/ui";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedor-detail.module.css";
+import { useSupplier } from "@/hooks/useQueries";
 
 export default function FornecedorDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const supplierId = params?.id as string;
   const [activeTab, setActiveTab] = useState("visao-geral");
 
-  interface HistoricoRow {
-    data: string;
-    tipo: string;
-    descricao: string;
-    valor: string;
-    status: string;
-  }
+  const { data: supplier, isLoading, isError } = useSupplier(supplierId);
 
-  const historico: HistoricoRow[] = [
-    { data: "15/06/2024", tipo: "Pedido", descricao: "Compra de Combustível - Lote 4521", valor: "R$ 22.400,00", status: "Entregue" },
-    { data: "02/06/2024", tipo: "RFQ", descricao: "Cotação de Combustíveis - Mês de Junho", valor: "-", status: "Fechada" },
-    { data: "22/05/2024", tipo: "Pedido", descricao: "Compra de Combustível - Lote 4489", valor: "R$ 18.700,00", status: "Entregue" },
-    { data: "10/05/2024", tipo: "Avaliação", descricao: "Avaliação de desempenho trimestral", valor: "-", status: "Concluída" },
-    { data: "28/04/2024", tipo: "Pedido", descricao: "Compra de Combustível - Lote 4401", valor: "R$ 15.400,00", status: "Entregue" },
-    { data: "15/04/2024", tipo: "RFQ", descricao: "Cotação de Combustíveis - Abastecimento", valor: "-", status: "Fechada" },
-    { data: "01/04/2024", tipo: "Contrato", descricao: "Renovação de contrato - Categoria Combustíveis", valor: "R$ 240.000,00", status: "Ativo" },
-    { data: "18/03/2024", tipo: "Pedido", descricao: "Compra de Combustível - Lote 4322", valor: "R$ 14.800,00", status: "Entregue" },
-  ];
-
-  const renderStars = (count: number) => {
+  const renderStars = (score: number) => {
+    const starCount = Math.min(5, Math.max(1, Math.round(score / 20)));
     return (
       <div className={styles.starRow}>
         {[...Array(5)].map((_, i) => (
-          <Icon key={i} name="star-01" size={14} className={i < count ? styles.starFilled : styles.starEmpty} />
+          <Icon key={i} name="star-01" size={14} className={i < starCount ? styles.starFilled : styles.starEmpty} />
         ))}
       </div>
     );
   };
 
+  if (isLoading) {
+    return <Loading variant="fullscreen" message="Carregando perfil do fornecedor..." />;
+  }
+
+  if (isError || !supplier) {
+    return (
+      <div className={styles.pageContainer}>
+        <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
+          <Icon name="arrow-left" size={16} /> Voltar ao diretório
+        </button>
+        <Card style={{ padding: 40, textAlign: "center", marginTop: 24 }}>
+          <h2>Fornecedor não localizado</h2>
+          <p style={{ color: "#64748b", marginTop: 8 }}>Não foi possível encontrar os dados para o código informado.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || "FR";
+  const hasScore = supplier.performanceScore !== undefined && supplier.performanceScore !== null;
+  const score = supplier.performanceScore ?? 0;
+  const scoreFormatted = hasScore ? (score / 10).toFixed(1).replace(".", ",") : "—";
+  const statusLabel = supplier.status === "Active" ? "Homologado" : supplier.status === "Pending" ? "Pendente" : supplier.status;
+  const statusVariant = supplier.status === "Active" ? "success" : supplier.status === "Pending" ? "warning" : "gray";
+
   return (
     <div className={styles.pageContainer}>
-      
       
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
@@ -72,17 +82,16 @@ export default function FornecedorDetailPage() {
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
           
-          
           <div className={styles.summaryColBase}>
-            <div className={`${styles.avatarBig} ${styles.avatarGreen}`}>FB</div>
+            <div className={`${styles.avatarBig} ${styles.avatarGreen}`}>{getInitials(supplier.corporateName)}</div>
             <div className={styles.baseInfo}>
               <div className={styles.titleRow}>
-                <h2>Fornecedor Bravo LTDA</h2>
+                <h2>{supplier.corporateName}</h2>
                 <Badge variant="success" className={styles.badgeVerificado}>CNPJ verificado</Badge>
               </div>
-              <p className={styles.docInfo}>CNPJ: 22.333.444/0001-82 <span className={styles.divider}>|</span> Combustíveis</p>
+              <p className={styles.docInfo}>CNPJ: {supplier.cnpj} <span className={styles.divider}>|</span> {supplier.segment || "Geral"}</p>
               <div className={styles.updateInfo}>
-                <span>Última atualização: 24/06/2026 às 14:11</span>
+                <span>Última atualização: {new Date(supplier.updatedAt || supplier.createdAt).toLocaleDateString("pt-BR")}</span>
                 <button className={styles.btnRefresh}>
                   <Icon name="refresh" size={14} /> Atualizar
                 </button>
@@ -97,12 +106,14 @@ export default function FornecedorDetailPage() {
               <Icon name="star-01" size={16} />
             </div>
             <div className={styles.scoreValue}>
-              <strong className={styles.textGreen}>9,2</strong>
+              <strong className={styles.textGreen}>{scoreFormatted}</strong>
               <small>/10</small>
             </div>
             <div className={styles.titleRow}>
-              {renderStars(4)}
-              <Badge variant="success" className={styles.badgeScore}>Excelente</Badge>
+              {hasScore ? renderStars(score) : null}
+              <Badge variant={hasScore && score >= 80 ? "success" : hasScore && score >= 60 ? "primary" : "gray"} className={styles.badgeScore}>
+                {hasScore ? (score >= 80 ? "Excelente" : score >= 60 ? "Bom" : "Atenção") : "Sem avaliação"}
+              </Badge>
             </div>
           </div>
 
@@ -110,10 +121,10 @@ export default function FornecedorDetailPage() {
           <div className={styles.summaryColStatus}>
             <div className={styles.statusRow}>
               <span>Situação Cadastral</span>
-              <Badge variant="success" className={styles.badgeHomologado}>Homologado</Badge>
+              <Badge variant={statusVariant} className={styles.badgeHomologado}>{statusLabel}</Badge>
             </div>
-            <p className={styles.etapaText}>Status do Contrato: Ativo</p>
-            <p className={styles.subStatusText}>Parceiro homologado desde 18/08/2023</p>
+            <p className={styles.etapaText}>Status do Contrato: {supplier.status === "Active" ? "Ativo" : "Em Análise"}</p>
+            <p className={styles.subStatusText}>Cadastrado desde {new Date(supplier.createdAt).toLocaleDateString("pt-BR")}</p>
           </div>
 
         </div>
@@ -132,10 +143,10 @@ export default function FornecedorDetailPage() {
           <>
             
             <div className={styles.kpiGrid}>
-              <KpiCard title="OTIF" value="94%" icon="truck-01" description="Entregas no prazo" />
-              <KpiCard title="Qualidade" value="98%" icon="award-01" description="Conformidade dos itens" />
-              <KpiCard title="Volume negociado (12m)" value="R$ 1,2M" icon="bank-note-01" />
-              <KpiCard title="Pedidos atendidos (12m)" value="128" icon="shopping-cart-01" />
+              <KpiCard title="Score de Performance" value={`${score}/100`} icon="star-01" description="Avaliação geral" />
+              <KpiCard title="Segmento / Categoria" value={supplier.segment || "Geral"} icon="tag-01" description="Ramo de atuação" />
+              <KpiCard title="Situação Cadastral" value={statusLabel} icon="shield-tick" description="Status do contrato" />
+              <KpiCard title="Data de Cadastro" value={new Date(supplier.createdAt).toLocaleDateString("pt-BR")} icon="calendar" description="Início da parceria" />
             </div>
 
             
@@ -154,36 +165,26 @@ export default function FornecedorDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {historico.map((item, index) => {
-                      let iconName = "clock";
-                      if (item.tipo === "Pedido") iconName = "shopping-cart-01";
-                      else if (item.tipo === "RFQ") iconName = "file-02";
-                      else if (item.tipo === "Avaliação") iconName = "award-01";
-                      else if (item.tipo === "Contrato") iconName = "clipboard";
-
-                      return (
-                        <tr key={index}>
-                          <td>
-                            <div className={styles.itemDesc}>
-                              <div className={styles.itemIconWrapper}>
-                                <Icon name={iconName} size={20} />
-                              </div>
-                              <div className={styles.itemDescText}>
-                                <strong>{item.data}</strong>
-                                <small>{item.tipo}</small>
-                              </div>
-                            </div>
-                          </td>
-                          <td>{item.descricao}</td>
-                          <td style={{ textAlign: "right", fontWeight: "600" }}>{item.valor}</td>
-                          <td style={{ textAlign: "center" }}>
-                            <span className={`${styles.historicoBadge} ${item.status === "Entregue" || item.status === "Concluída" || item.status === "Fechada" ? styles.badgeHistoricoGreen : item.status === "Ativo" ? styles.badgeHistoricoBlue : styles.badgeHistoricoYellow}`}>
-                              {item.status}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    <tr>
+                      <td>
+                        <div className={styles.itemDesc}>
+                          <div className={styles.itemIconWrapper}>
+                            <Icon name="clipboard" size={20} />
+                          </div>
+                          <div className={styles.itemDescText}>
+                            <strong>{new Date(supplier.createdAt).toLocaleDateString("pt-BR")}</strong>
+                            <small>Cadastro</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>Homologação e registro inicial do fornecedor</td>
+                      <td style={{ textAlign: "right", fontWeight: "600" }}>-</td>
+                      <td style={{ textAlign: "center" }}>
+                        <span className={`${styles.historicoBadge} ${styles.badgeHistoricoGreen}`}>
+                          Concluído
+                        </span>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -200,28 +201,28 @@ export default function FornecedorDetailPage() {
                 <Icon name="building-01" size={20} />
                 <div className={styles.infoText}>
                   <small>Razão Social</small>
-                  <span>Fornecedor Bravo LTDA</span>
+                  <span>{supplier.corporateName}</span>
                 </div>
               </div>
               <div className={styles.infoItem}>
                 <Icon name="file-check-01" size={20} />
                 <div className={styles.infoText}>
                   <small>CNPJ</small>
-                  <span>22.333.444/0001-82</span>
+                  <span>{supplier.cnpj}</span>
                 </div>
               </div>
               <div className={styles.infoItem}>
                 <Icon name="tag-01" size={20} />
                 <div className={styles.infoText}>
-                  <small>Categoria</small>
-                  <span>Combustíveis</span>
+                  <small>Categoria / Segmento</small>
+                  <span>{supplier.segment || "Geral"}</span>
                 </div>
               </div>
               <div className={styles.infoItem}>
                 <Icon name="calendar" size={20} />
                 <div className={styles.infoText}>
                   <small>Fornecedor desde</small>
-                  <span>18/08/2023</span>
+                  <span>{new Date(supplier.createdAt).toLocaleDateString("pt-BR")}</span>
                 </div>
               </div>
 
@@ -229,28 +230,28 @@ export default function FornecedorDetailPage() {
                 <Icon name="user-01" size={20} />
                 <div className={styles.infoText}>
                   <small>Contato principal</small>
-                  <span>João Silva</span>
+                  <span>{supplier.contactName || "Não informado"}</span>
                 </div>
               </div>
               <div className={styles.infoItem}>
                 <Icon name="mail-01" size={20} />
                 <div className={styles.infoText}>
                   <small>E-mail</small>
-                  <span>vendas@bravo.com.br</span>
+                  <span>{supplier.contactEmail}</span>
                 </div>
               </div>
               <div className={styles.infoItem}>
                 <Icon name="phone" size={20} />
                 <div className={styles.infoText}>
                   <small>Telefone</small>
-                  <span>(11) 99999-9999</span>
+                  <span>{supplier.contactPhone}</span>
                 </div>
               </div>
               <div className={styles.infoItem}>
-                <Icon name="globe-01" size={20} />
+                <Icon name="file-02" size={20} />
                 <div className={styles.infoText}>
-                  <small>Website</small>
-                  <span>www.bravo.com.br</span>
+                  <small>Inscrição Estadual</small>
+                  <span>{supplier.stateRegistration || "Isento"}</span>
                 </div>
               </div>
 
@@ -258,7 +259,7 @@ export default function FornecedorDetailPage() {
                 <Icon name="marker-pin-01" size={20} />
                 <div className={styles.infoText}>
                   <small>Endereço</small>
-                  <span>Av. das Nações Unidas, 12.345, Conj. 1201 — São Paulo - SP, 04578-000</span>
+                  <span>{supplier.address} — CEP: {supplier.zipCode}</span>
                 </div>
               </div>
             </div>

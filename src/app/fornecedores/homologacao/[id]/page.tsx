@@ -135,7 +135,7 @@ export default function HomologacaoDetailPage() {
              </Card>
              
              <Card className={styles.dataCard} style={{ gridColumn: "1 / -1" }}>
-               <div className={styles.cardHeaderSmall}><Icon name="alert-triangle" size={18}/> <h3>Apontamentos Restritivos (Mock)</h3></div>
+               <div className={styles.cardHeaderSmall}><Icon name="alert-triangle" size={18}/> <h3>Apontamentos Restritivos</h3></div>
                <table className={styles.apontamentosTable}>
                   <thead>
                     <tr>

@@ -14,7 +14,8 @@ import {
   UrgentQuoteCard,
   Icon,
   Loading,
-  ErrorState
+  ErrorState,
+  TableSkeleton
 } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import { useAuth } from "@/hooks/useAuth";
@@ -157,16 +158,46 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs em andamento" value={loading ? "—" : String(kpis?.rfqsInProgress || 0)} icon="receipt-check" linkLabel="Ver todas" />
-        <KpiCard title="Aprovações pendentes" value={loading ? "—" : String(kpis?.approvalsPending || 0)} icon="shield-01" linkLabel="Ver todas" />
+        <KpiCard 
+          title="RFQs em andamento" 
+          value={String(kpis?.rfqsInProgress || 0)} 
+          icon="receipt-check" 
+          linkLabel="Ver todas" 
+          loading={loading}
+          onClick={() => router.push("/compras/rfqs")}
+        />
+        <KpiCard 
+          title="Aprovações pendentes" 
+          value={String(kpis?.approvalsPending || 0)} 
+          icon="shield-01" 
+          linkLabel="Ver todas" 
+          loading={loading}
+          onClick={() => router.push("/compras/solicitacoes")}
+        />
         <KpiCard 
           title="Economia acumulada" 
-          value={loading ? "—" : formatCurrency(kpis?.economy || 0)} 
+          value={formatCurrency(kpis?.economy || 0)} 
           icon="trend-up-01" 
           linkLabel="Ver detalhes" 
+          loading={loading}
+          onClick={() => router.push("/compras/rfqs")}
         />
-        <KpiCard title="Pedidos emitidos" value={loading ? "—" : String(kpis?.ordersEmitted || 0)} icon="box" linkLabel="Ver todos" />
-        <KpiCard title="Fornecedores ativos" value={loading ? "—" : String(kpis?.suppliersActive || 0)} icon="users-01" linkLabel="Ver todos" />
+        <KpiCard 
+          title="Pedidos emitidos" 
+          value={String(kpis?.ordersEmitted || 0)} 
+          icon="box" 
+          linkLabel="Ver todos" 
+          loading={loading}
+          onClick={() => router.push("/compras/pedidos")}
+        />
+        <KpiCard 
+          title="Fornecedores ativos" 
+          value={String(kpis?.suppliersActive || 0)} 
+          icon="users-01" 
+          linkLabel="Ver todos" 
+          loading={loading}
+          onClick={() => router.push("/fornecedores/diretorio")}
+        />
       </div>
 
       <div className={styles.middleGrid}>
@@ -183,7 +214,7 @@ export default function DashboardPage() {
               timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
               imageUrl: "/images/bg-tubo-card.png",
             }} 
-            onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.codigo}`)} 
+            onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.id}`)} 
           />
         )}
 
@@ -198,7 +229,7 @@ export default function DashboardPage() {
           <div className={styles.chartWrapperElement}>
             <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
           </div>
-          <button className={styles.cardLink}>
+          <button className={styles.cardLink} onClick={() => router.push("/compras/rfqs")}>
             Ver evolução completa <Icon name="arrow-right" size={16} />
           </button>
         </Card>
@@ -222,7 +253,7 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-          <button className={styles.cardLink}>
+          <button className={styles.cardLink} onClick={() => router.push("/configuracoes/categorias")}>
             Ver todas as categorias <Icon name="arrow-right" size={16} />
           </button>
         </Card>
@@ -231,15 +262,15 @@ export default function DashboardPage() {
       <Card noPadding className={styles.tableCard}>
         <div className={styles.tableHeaderActions}>
           <Tabs tabs={tabsConfig} activeTab={activeTab} onChange={setActiveTab} />
-          <Button variant="secondary">Filtrar Avançado</Button>
+          <Button variant="secondary" onClick={() => router.push("/compras/rfqs")}>Filtrar Avançado</Button>
         </div>
 
         {loading ? (
-          <Loading variant="inline" message="Carregando dados..." size="medium" />
+          <TableSkeleton rows={5} columns={5} />
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
         ) : (
-          <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.codigo}`)} />
+          <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
         )}
       </Card>
     </div>

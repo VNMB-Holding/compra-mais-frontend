@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { categoriesApi, Category } from "@/lib/api/categories";
-import { Button, Icon, ErrorState } from "@/components/ui";
+import { Button, Icon, ErrorState, TableSkeleton } from "@/components/ui";
+
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./page.module.css";
 import { getErrorMessage, logError } from "@/lib/utils/error";
@@ -104,7 +105,9 @@ export default function CategoriasAdminPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={3} style={{ textAlign: "center", padding: "32px" }}>Carregando...</td>
+                <td colSpan={3} style={{ padding: 0 }}>
+                  <TableSkeleton rows={4} columns={3} />
+                </td>
               </tr>
             ) : error ? (
               <tr>

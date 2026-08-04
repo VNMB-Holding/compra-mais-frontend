@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, Select } from "@/components/ui";
+import { Card, Button, Badge, Icon, Select, TableSkeleton } from "@/components/ui";
+
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./homologacao.module.css";
@@ -24,6 +25,7 @@ interface HomologacaoRow {
 
 export default function HomologacaoPage() {
   const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
 
   const [categoria, setCategoria] = React.useState("Todas");
   const [risco, setRisco] = React.useState("Todas");
@@ -159,12 +161,12 @@ export default function HomologacaoPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total solicitações" value="128" icon="file-02" description="Total Geral" />
-        <KpiCard title="Em análise" value="24" icon="search-md" description="Processando" />
-        <KpiCard title="Pendências" value="8" icon="clock" description="Necessita ação" />
-        <KpiCard title="Aguardando docs." value="14" icon="file-01" description="Pendente parceiro" />
-        <KpiCard title="Homologados" value="56" icon="check-circle" description="Sucesso" />
-        <KpiCard title="Rejeitados" value="18" icon="x-circle" description="Recusados" />
+        <KpiCard title="Total solicitações" value="128" icon="file-02" description="Total Geral" loading={loading} />
+        <KpiCard title="Em análise" value="24" icon="search-md" description="Processando" loading={loading} />
+        <KpiCard title="Pendências" value="8" icon="clock" description="Necessita ação" loading={loading} />
+        <KpiCard title="Aguardando docs." value="14" icon="file-01" description="Pendente parceiro" loading={loading} />
+        <KpiCard title="Homologados" value="56" icon="check-circle" description="Sucesso" loading={loading} />
+        <KpiCard title="Rejeitados" value="18" icon="x-circle" description="Recusados" loading={loading} />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -199,11 +201,15 @@ export default function HomologacaoPage() {
           </div>
         </div>
 
-        <DataTable 
-          columns={colunas} 
-          data={dados} 
-          onRowClick={(row) => router.push(`/fornecedores/homologacao/${row.id}`)} 
-        />
+        {loading ? (
+          <TableSkeleton rows={6} columns={6} />
+        ) : (
+          <DataTable 
+            columns={colunas} 
+            data={dados} 
+            onRowClick={(row) => router.push(`/fornecedores/homologacao/${row.id}`)} 
+          />
+        )}
 
         <div className={styles.tableFooter}>
           <span>Mostrando 1 a 8 de 128 fornecedores</span>

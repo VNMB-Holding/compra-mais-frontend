@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon, Select, Loading, ErrorState } from "@/components/ui";
+import { Card, Button, Icon, Select, Loading, ErrorState, TableSkeleton } from "@/components/ui";
+
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
@@ -198,10 +199,10 @@ export default function FornecedoresListPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Fornecedores homologados" value={loading ? "—" : String(kpis?.active || 0)} icon="users-01" description="Ativos" />
-        <KpiCard title="Em homologação" value={loading ? "—" : String(kpis?.underCertification || 0)} icon="clock" description="Pendente" />
-        <KpiCard title="Nota média de performance" value={loading ? "—" : (kpis?.avgPerformanceScore || "-")} icon="star-01" description="Entre homologados" />
-        <KpiCard title="Categorias cobertas" value={loading ? "—" : String(kpis?.segmentCount || 0)} icon="shield-01" />
+        <KpiCard title="Fornecedores homologados" value={String(kpis?.active || 0)} icon="users-01" description="Ativos" loading={loading} />
+        <KpiCard title="Em homologação" value={String(kpis?.underCertification || 0)} icon="clock" description="Pendente" loading={loading} />
+        <KpiCard title="Nota média de performance" value={kpis?.avgPerformanceScore || "-"} icon="star-01" description="Entre homologados" loading={loading} />
+        <KpiCard title="Categorias cobertas" value={String(kpis?.segmentCount || 0)} icon="shield-01" loading={loading} />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -229,7 +230,7 @@ export default function FornecedoresListPage() {
         </div>
 
         {loading ? (
-          <Loading variant="inline" message="Carregando fornecedores..." size="medium" />
+          <TableSkeleton rows={6} columns={6} />
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
         ) : (
