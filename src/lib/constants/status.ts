@@ -37,7 +37,7 @@ export function mapRfqStatus(rfq: { status: string; closesAt?: string | null }):
   return "Aberta";
 }
 
-export type BadgeVariant = "primary" | "secondary" | "success" | "warning" | "danger" | "gray";
+export type BadgeVariant = "primary" | "gray" | "success" | "warning" | "danger" | "dark";
 
 export function getStatusBadgeVariant(status?: string | null): BadgeVariant {
   if (!status) return "gray";
