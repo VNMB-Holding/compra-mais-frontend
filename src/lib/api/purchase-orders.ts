@@ -33,7 +33,12 @@ export interface OrderItem {
 }
 
 export const purchaseOrdersApi = {
-  list: () => apiClient.get<PurchaseOrder[]>("/api/purchase-orders"),
+  list: (tenantId?: string) => {
+    const params = new URLSearchParams();
+    if (tenantId) params.append("tenantId", tenantId);
+    const qs = params.toString();
+    return apiClient.get<PurchaseOrder[]>(`/api/purchase-orders${qs ? `?${qs}` : ''}`);
+  },
 
   getById: (id: string) => apiClient.get<PurchaseOrder>(`/api/purchase-orders/${id}`),
 

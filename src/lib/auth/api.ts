@@ -79,6 +79,6 @@ export async function refreshTokenApi(refreshToken: string): Promise<{ access_to
   return apiClient.post<{ access_token: string; refresh_token: string }>(
     "/api/auth/refresh",
     { refresh_token: refreshToken },
-    { auth: false }
+    { auth: true }
   );
 }

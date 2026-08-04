@@ -19,6 +19,7 @@ export const PRIORITY_MAP: Record<string, string> = {
 };
 
 export const PURCHASE_ORDER_STATUS_MAP: Record<string, "Emitido" | "Faturado" | "Entregue"> = {
+  Sent: "Emitido",
   AwaitingSignature: "Emitido",
   Signed: "Faturado",
   Delivered: "Entregue",
@@ -55,6 +56,8 @@ export function getStatusBadgeVariant(status: string): "success" | "warning" | "
     case "Em Cotação":
     case "Open":
     case "Aberta":
+    case "Sent":
+    case "Emitido":
       return "info";
     case "Rejected":
     case "Rejeitada":

@@ -88,7 +88,8 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   const response = await fetch(`${baseUrl}${cleanEndpoint}`, config);
 
-  if (response.status === 401 && !auth && !cleanEndpoint.includes("/auth/refresh")) {
+  const isAuthEndpoint = cleanEndpoint.includes("/auth/refresh") || cleanEndpoint.includes("/auth/login");
+  if (response.status === 401 && !isAuthEndpoint) {
     if (refreshHandler) {
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {

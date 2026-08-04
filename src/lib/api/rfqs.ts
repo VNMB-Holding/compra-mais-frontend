@@ -24,6 +24,7 @@ export interface Rfq {
     supplier: {
       id: string;
       corporateName: string;
+      tradeName?: string;
       cnpj: string;
     };
   }[];
@@ -38,6 +39,7 @@ export interface Rfq {
     supplier: {
       id: string;
       corporateName: string;
+      tradeName?: string;
       cnpj: string;
     };
     items?: {
