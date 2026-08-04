@@ -34,6 +34,9 @@ export default function AprovacaoPage() {
   const [details, setDetails] = useState<ApprovalDetails | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [rejected, setRejected] = useState(false);
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {
     if (!token) return;
@@ -51,6 +54,8 @@ export default function AprovacaoPage() {
         setDetails(data);
         if (data.status === 'APPROVED') {
           setCompleted(true);
+        } else if (data.status === 'REJECTED') {
+          setRejected(true);
         }
       })
       .catch((err) => {
@@ -79,6 +84,33 @@ export default function AprovacaoPage() {
       setCompleted(true);
     } catch (err: any) {
       alert(err.message || 'Erro ao aprovar solicitação.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!token) return;
+    if (!rejectionReason.trim()) {
+      alert('Por favor, informe a justificativa da recusa.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${backendUrl}/api/purchase-requests/approval-link/${token}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comments: rejectionReason.trim() }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Falha ao registrar recusa.');
+      }
+
+      setRejected(true);
+    } catch (err: any) {
+      alert(err.message || 'Erro ao recusar solicitação.');
     } finally {
       setSubmitting(false);
     }
@@ -125,8 +157,8 @@ export default function AprovacaoPage() {
                 Aprovador: <strong>{details.approverName}</strong> ({details.approverRole})
               </p>
             </div>
-            <Badge variant={completed ? 'success' : 'warning'}>
-              {completed ? 'Aprovada' : 'Aguardando Aprovação'}
+            <Badge variant={completed ? 'success' : rejected ? 'danger' : 'warning'}>
+              {completed ? 'Aprovada' : rejected ? 'Recusada' : 'Aguardando Aprovação'}
             </Badge>
           </div>
 
@@ -138,6 +170,16 @@ export default function AprovacaoPage() {
               <h2 className={styles.successTitle}>Aprovação Confirmada!</h2>
               <p className={styles.successText}>
                 Sua assinatura eletrônica e os dados de auditoria (IP e Timestamp) foram gravados com sucesso no histórico da solicitação.
+              </p>
+            </div>
+          ) : rejected ? (
+            <div className={styles.successBox} style={{ borderColor: 'var(--color-danger, #ef4444)' }}>
+              <div className={styles.successIcon} style={{ background: '#fee2e2', color: '#dc2626' }}>
+                <Icon name="close" size={28} />
+              </div>
+              <h2 className={styles.successTitle} style={{ color: '#dc2626' }}>Solicitação Recusada</h2>
+              <p className={styles.successText}>
+                A recusa desta demanda foi registrada com sucesso no histórico da solicitação.
               </p>
             </div>
           ) : (
@@ -184,15 +226,67 @@ export default function AprovacaoPage() {
                 </div>
               )}
 
+              {showRejectInput && (
+                <div style={{ marginTop: '16px', marginBottom: '8px' }}>
+                  <label className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>Motivo da Recusa *</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Descreva o motivo pelo qual esta solicitação está sendo recusada..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+              )}
+
               <div className={styles.actionBox}>
-                <Button
-                  variant="primary"
-                  className={styles.btnApprove}
-                  onClick={handleApprove}
-                  disabled={submitting}
-                >
-                  <Icon name="check" /> {submitting ? 'Registrando Aprovação...' : 'Confirmar e Assinar Eletronicamente'}
-                </Button>
+                {!showRejectInput ? (
+                  <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                    <Button
+                      variant="primary"
+                      className={styles.btnApprove}
+                      onClick={handleApprove}
+                      disabled={submitting}
+                      style={{ flex: 1 }}
+                    >
+                      <Icon name="check" /> {submitting ? 'Registrando...' : 'Confirmar e Assinar'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowRejectInput(true)}
+                      disabled={submitting}
+                      style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                    >
+                      <Icon name="close" /> Recusar Demanda
+                    </Button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                    <Button
+                      variant="primary"
+                      onClick={handleReject}
+                      disabled={submitting}
+                      style={{ background: '#dc2626', borderColor: '#dc2626', flex: 1 }}
+                    >
+                      <Icon name="close" /> {submitting ? 'Enviando Recusa...' : 'Confirmar Recusa'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowRejectInput(false)}
+                      disabled={submitting}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
 
                 <div className={styles.auditFooter}>
                   <Icon name="shield-tick" size={14} /> Assinatura protegida com registro de IP, data e hora de auditoria.

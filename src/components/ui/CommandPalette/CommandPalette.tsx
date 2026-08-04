@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "../Icon/Icon";
 import styles from "./CommandPalette.module.css";
@@ -51,14 +51,24 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   const inputRef = useRef<HTMLInputElement>(null);
   const itemsContainerRef = useRef<HTMLDivElement>(null);
 
+  const handleSelect = useCallback(
+    (item: SearchItem) => {
+      router.push(item.url);
+      onClose();
+    },
+    [router, onClose]
+  );
+
+  const prevIsOpen = useRef(isOpen);
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpen.current) {
       setQuery("");
       setSelectedIndex(0);
       setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
     }
+    prevIsOpen.current = isOpen;
   }, [isOpen]);
 
   const filteredItems = SEARCH_ITEMS.filter((item) => {
@@ -75,12 +85,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   }, {} as Record<string, SearchItem[]>);
 
   const flatItems = Object.values(itemsByCategory).flat();
-
-  useEffect(() => {
-    if (selectedIndex >= flatItems.length) {
-      setSelectedIndex(0);
-    }
-  }, [flatItems.length, selectedIndex]);
+  const safeSelectedIndex = selectedIndex >= flatItems.length ? 0 : selectedIndex;
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -97,15 +102,15 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
         setSelectedIndex((prev) => (prev - 1 + flatItems.length) % Math.max(1, flatItems.length));
       } else if (e.key === "Enter") {
         e.preventDefault();
-        if (flatItems[selectedIndex]) {
-          handleSelect(flatItems[selectedIndex]);
+        if (flatItems[safeSelectedIndex]) {
+          handleSelect(flatItems[safeSelectedIndex]);
         }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, flatItems, selectedIndex]);
+  }, [isOpen, flatItems, safeSelectedIndex, handleSelect, onClose]);
 
   useEffect(() => {
     if (itemsContainerRef.current) {
@@ -127,12 +132,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
         }
       }
     }
-  }, [selectedIndex]);
-
-  const handleSelect = (item: SearchItem) => {
-    router.push(item.url);
-    onClose();
-  };
+  }, [safeSelectedIndex]);
 
   if (!isOpen) return null;
 
