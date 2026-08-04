@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading, ErrorState } from "@/components/ui";
+import { Button, Card, Icon, Select, Loading, ErrorState, TableSkeleton } from "@/components/ui";
+
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
@@ -226,10 +227,10 @@ export default function SolicitacoesPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de solicitações" value={loading ? "—" : String(kpis?.total || 0)} icon="clipboard" description="Neste mês" />
-        <KpiCard title="Aguardando aprovação" value={loading ? "—" : String(kpis?.awaitingApproval || 0)} icon="hourglass-01" description="Pendente" />
-        <KpiCard title="Aprovadas" value={loading ? "—" : String(kpis?.approved || 0)} icon="check-circle" description="Prontas para cotar" />
-        <KpiCard title="Categorias" value={loading ? "—" : String(kpis?.categoryCount || 0)} icon="folder" />
+        <KpiCard title="Total de solicitações" value={String(kpis?.total || 0)} icon="clipboard" description="Neste mês" loading={loading} />
+        <KpiCard title="Aguardando aprovação" value={String(kpis?.awaitingApproval || 0)} icon="hourglass-01" description="Pendente" loading={loading} />
+        <KpiCard title="Aprovadas" value={String(kpis?.approved || 0)} icon="check-circle" description="Prontas para cotar" loading={loading} />
+        <KpiCard title="Categorias" value={String(kpis?.categoryCount || 0)} icon="folder" loading={loading} />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -303,7 +304,7 @@ export default function SolicitacoesPage() {
         </div>
 
         {loading ? (
-          <Loading variant="inline" message="Carregando solicitações..." size="medium" />
+          <TableSkeleton rows={6} columns={6} />
         ) : error ? (
           <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : filtered.length === 0 ? (

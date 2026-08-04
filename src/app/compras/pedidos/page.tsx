@@ -2,24 +2,17 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, Loading, ErrorState } from "@/components/ui";
+import { Card, Icon, Select, Loading, ErrorState, TableSkeleton } from "@/components/ui";
+
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./pedidos.module.css";
-import { apiClient } from "@/lib/api-client";
+import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP } from "@/lib/constants/status";
-
-interface PurchaseOrder {
-  id: string;
-  code: string;
-  totalValue: number;
-  estimatedDeliveryDate: string;
-  status: string;
-  createdAt: string;
-  supplier?: { corporateName: string };
-}
+import { useAuth } from "@/hooks/useAuth";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 
 interface PedidoRow {
   id: string;
@@ -45,6 +38,7 @@ function mapToRow(po: PurchaseOrder): PedidoRow {
 
 export default function PedidosPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const [fornecedor, setFornecedor] = useState("Todas");
   const [status, setStatus] = useState("Todos");
@@ -53,11 +47,24 @@ export default function PedidosPage() {
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  const primaryCompanies = getPrimaryCompanyOptions(user);
+  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
+  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
+  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
+  const showBranchFilter = branchCompanies.length > 0;
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
+
+  const queryTenantId = React.useMemo(() => {
+    if (selectedBranchId !== "TODAS") return selectedBranchId;
+    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
+    return undefined;
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
+
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
-      const data = await apiClient.get<PurchaseOrder[]>("/api/purchase-orders");
+      const data = await purchaseOrdersApi.list(queryTenantId);
       const rows = data.map(mapToRow);
       setPedidos(rows);
       setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
@@ -68,7 +75,7 @@ export default function PedidosPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryTenantId]);
 
   useEffect(() => {
     fetchData();
@@ -133,10 +140,10 @@ export default function PedidosPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de pedidos" value={loading ? "—" : String(pedidos.length)} icon="shopping-cart-01" description="Este mês" />
-        <KpiCard title="Pendentes" value={loading ? "—" : String(pendentCount)} icon="clock" description="Aguardando entrega" />
-        <KpiCard title="Entregues" value={loading ? "—" : String(entregueCount)} icon="check-circle" description="Finalizados" />
-        <KpiCard title="Valor total" value={loading ? "—" : formatCurrency(totalValue)} icon="currency-dollar-circle" description="Em pedidos" />
+        <KpiCard title="Total de pedidos" value={String(pedidos.length)} icon="shopping-cart-01" description="Este mês" loading={loading} />
+        <KpiCard title="Pendentes" value={String(pendentCount)} icon="clock" description="Aguardando entrega" loading={loading} />
+        <KpiCard title="Entregues" value={String(entregueCount)} icon="check-circle" description="Finalizados" loading={loading} />
+        <KpiCard title="Valor total" value={formatCurrency(totalValue)} icon="currency-dollar-circle" description="Em pedidos" loading={loading} />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -147,6 +154,31 @@ export default function PedidosPage() {
             <input type="text" placeholder="Buscar pedido..." />
           </div>
           <div className={styles.filtersGroup}>
+            {showPrimaryCompanyFilter && (
+              <Select
+                options={[
+                  { label: "Empresa: Todas", value: "TODAS" },
+                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
+                ]}
+                value={selectedPrimaryCompanyId}
+                onChange={(val) => {
+                  setSelectedPrimaryCompanyId(val);
+                  setSelectedBranchId("TODAS");
+                }}
+                className={styles.customSelectFilter}
+              />
+            )}
+            {showBranchFilter && (
+              <Select
+                options={[
+                  { label: "Filial: Todas", value: "TODAS" },
+                  ...branchCompanies.map((b) => ({ label: b.name, value: b.id })),
+                ]}
+                value={selectedBranchId}
+                onChange={setSelectedBranchId}
+                className={styles.customSelectFilter}
+              />
+            )}
             <Select
               options={fornecedoresOptions}
               value={fornecedor}
@@ -164,7 +196,7 @@ export default function PedidosPage() {
         </div>
 
         {loading ? (
-          <Loading variant="inline" message="Carregando pedidos..." size="medium" />
+          <TableSkeleton rows={6} columns={6} />
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
         ) : (

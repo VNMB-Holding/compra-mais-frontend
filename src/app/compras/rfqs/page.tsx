@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading, ErrorState, Badge } from "@/components/ui";
+import { Button, Card, Icon, Select, Loading, ErrorState, Badge, TableSkeleton } from "@/components/ui";
+
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./rfqs.module.css";
@@ -195,10 +196,10 @@ export default function RfqsPage() {
       </div>
 
       <div className={styles.kpiGrid}>
-        <KpiCard title="RFQs Abertas" value={loading ? "—" : String(kpis?.open || 0)} icon="hourglass-01" description="Em andamento" />
-        <KpiCard title="Propostas Recebidas" value={loading ? "—" : String(kpis?.proposalCount || 0)} icon="file-01" description="Aguardando análise" />
-        <KpiCard title="Finalizadas" value={loading ? "—" : String(kpis?.total || 0)} icon="check-circle" description="Concluídas" />
-        <KpiCard title="Em Negociação" value={loading ? "—" : String(kpis?.total || 0)} icon="users-01" />
+        <KpiCard title="RFQs Abertas" value={String(kpis?.open || 0)} icon="hourglass-01" description="Em andamento" loading={loading} />
+        <KpiCard title="Propostas Recebidas" value={String(kpis?.proposalCount || 0)} icon="file-01" description="Aguardando análise" loading={loading} />
+        <KpiCard title="Finalizadas" value={String(kpis?.total || 0)} icon="check-circle" description="Concluídas" loading={loading} />
+        <KpiCard title="Em Negociação" value={String(kpis?.total || 0)} icon="users-01" loading={loading} />
       </div>
 
       <Card noPadding className={styles.mainListCard}>
@@ -272,7 +273,7 @@ export default function RfqsPage() {
         </div>
 
         {loading ? (
-          <Loading variant="inline" message="Carregando RFQs..." size="medium" />
+          <TableSkeleton rows={6} columns={6} />
         ) : error ? (
           <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : filtered.length === 0 ? (

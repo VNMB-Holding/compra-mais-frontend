@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Loading } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton } from "@/components/ui";
+
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
@@ -25,42 +26,41 @@ interface PropostaLocal {
 }
 
 function mapPropostas(rfq: Rfq): PropostaLocal[] {
-  const invited = (rfq.rfqSuppliers ?? []).map((rs) => ({
-    fornecedorId: rs.supplierId,
-    nome: rs.supplier.corporateName,
-    cnpj: rs.supplier.cnpj,
-  }));
+  const mapBySupplier = new Map<string, PropostaLocal>();
 
-  return invited.map((inv) => {
-    const proposal = (rfq.proposals ?? []).find(
-      (p) => p.supplierId === inv.fornecedorId
-    );
-    if (!proposal || proposal.status === "Draft") {
-      return { ...inv, status: "aguardando" };
+  (rfq.rfqSuppliers ?? []).forEach((rs) => {
+    if (rs.supplierId) {
+      mapBySupplier.set(rs.supplierId, {
+        fornecedorId: rs.supplierId,
+        nome: rs.supplier?.tradeName || rs.supplier?.corporateName || "Razão Social não informada",
+        cnpj: rs.supplier?.cnpj || "—",
+        status: "aguardando",
+      });
     }
-    if (proposal.status === "Declined") {
-      return { ...inv, status: "declinada" };
-    }
-    const unitPrice =
-      proposal.items && proposal.items.length > 0
-        ? proposal.items[0].unitPrice
-        : proposal.totalValue
-        ? proposal.totalValue
-        : 0;
-    const freight =
-      proposal.items && proposal.items.length > 0
-        ? proposal.items[0].freightCost
-        : 0;
-    return {
-      ...inv,
-      propostaId: proposal.id,  // ID real da SupplierProposal
-      status: "recebida",
-      precoUnitario: Number(unitPrice),
-      frete: Number(freight),
-      prazoEntrega: proposal.deliveryTime ?? 1,
-      condicaoPagamento: proposal.paymentTerms ?? "30 dias DDL",
-    };
   });
+
+  (rfq.proposals ?? []).forEach((p) => {
+    if (p.supplierId) {
+      const existing = mapBySupplier.get(p.supplierId);
+      const unitPrice = p.items && p.items.length > 0 ? p.items[0].unitPrice : (p.totalValue ?? 0);
+      const freight = p.items && p.items.length > 0 ? p.items[0].freightCost : 0;
+      const status: PropostaLocal["status"] = p.status === "Declined" ? "declinada" : p.status === "Draft" ? "aguardando" : "recebida";
+
+      mapBySupplier.set(p.supplierId, {
+        fornecedorId: p.supplierId,
+        propostaId: p.id,
+        nome: p.supplier?.tradeName || p.supplier?.corporateName || existing?.nome || "Razão Social não informada",
+        cnpj: p.supplier?.cnpj || existing?.cnpj || "—",
+        status,
+        precoUnitario: Number(unitPrice),
+        frete: Number(freight),
+        prazoEntrega: p.deliveryTime ?? 0,
+        condicaoPagamento: p.paymentTerms || "Não informada",
+      });
+    }
+  });
+
+  return Array.from(mapBySupplier.values());
 }
 
 function getEstagio(rfq: Rfq): Estagio {
@@ -84,9 +84,18 @@ function PropostaCard({
   const [draft, setDraft] = useState({
     precoUnitario: proposta.precoUnitario ?? 0,
     frete: proposta.frete ?? 0,
-    prazoEntrega: proposta.prazoEntrega ?? 1,
-    condicaoPagamento: proposta.condicaoPagamento ?? "30 dias DDL",
+    prazoEntrega: proposta.prazoEntrega ?? 0,
+    condicaoPagamento: proposta.condicaoPagamento || "",
   });
+
+  useEffect(() => {
+    setDraft({
+      precoUnitario: proposta.precoUnitario ?? 0,
+      frete: proposta.frete ?? 0,
+      prazoEntrega: proposta.prazoEntrega ?? 0,
+      condicaoPagamento: proposta.condicaoPagamento || "",
+    });
+  }, [proposta.precoUnitario, proposta.frete, proposta.prazoEntrega, proposta.condicaoPagamento]);
 
   const handleSalvar = () => {
     onSalvar(proposta.fornecedorId, { ...draft, status: "recebida" });
@@ -283,15 +292,16 @@ export default function RfqDetailPage() {
 
 
   const propostasRankeadas = [...recebidas].sort(
-    (a, b) => (a.precoUnitario! + a.frete!) - (b.precoUnitario! + b.frete!)
+    (a, b) => ((a.precoUnitario || 0) + (a.frete || 0)) - ((b.precoUnitario || 0) + (b.frete || 0))
   );
-  const melhorProposta = propostasRankeadas[0];
+  const melhorProposta = propostasRankeadas[0] || null;
 
-  const totalQtd =
+  const rawQtd =
     rfq?.purchaseRequest?.items?.reduce(
-      (s: number, i: { quantity: number }) => s + Number(i.quantity),
+      (s: number, i: { quantity: number }) => s + Number(i.quantity || 0),
       0
-    ) ?? 1;
+    ) ?? 0;
+  const totalQtd = rawQtd > 0 ? rawQtd : 1;
 
   const vencedor = propostas.find((p) => p.fornecedorId === vencedorId);
   const pendingVencedor = propostas.find((p) => p.fornecedorId === pendingVencedorId);
@@ -519,7 +529,17 @@ export default function RfqDetailPage() {
         <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
           <Icon name="chevron-left" /> Voltar para Cotações
         </button>
-        <Loading variant="inline" message="Carregando cotação..." size="large" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 16 }}>
+          <div style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+            <Skeleton variant="title" width="40%" />
+            <Skeleton variant="text" width="65%" style={{ marginBottom: 16 }} />
+            <div style={{ display: "flex", gap: 12 }}>
+              <Skeleton width={140} height={28} />
+              <Skeleton width={140} height={28} />
+            </div>
+          </div>
+          <CardSkeleton height={340} />
+        </div>
       </div>
     );
   }
@@ -618,30 +638,30 @@ export default function RfqDetailPage() {
                     <Icon name="trend-up-01" />
                   </div>
                   <h3>
-                    {formatCurrency(melhorProposta.precoUnitario! + melhorProposta.frete!)}/un
+                    {formatCurrency((melhorProposta?.precoUnitario || 0) + (melhorProposta?.frete || 0))}/un
                   </h3>
-                  <span className={styles.subTextDark}>{melhorProposta.nome}</span>
+                  <span className={styles.subTextDark}>{melhorProposta?.nome || "—"}</span>
                 </div>
               </Card>
               <Card className={styles.metricCard}>
                 <span className={styles.label}>Menor preço unitário</span>
                 <h3 className={styles.textPrimary}>
-                  {formatCurrency(Math.min(...recebidas.map((p) => p.precoUnitario!)))}
+                  {formatCurrency(Math.min(...recebidas.map((p) => p.precoUnitario || 0)))}
                 </h3>
-                <span className={styles.sub}>{propostasRankeadas[0]?.nome}</span>
+                <span className={styles.sub}>{propostasRankeadas[0]?.nome || "—"}</span>
               </Card>
               <Card className={styles.metricCard}>
                 <span className={styles.label}>Média das propostas</span>
                 <h3>
                   {formatCurrency(
-                    recebidas.reduce((s, p) => s + p.precoUnitario!, 0) / recebidas.length
+                    recebidas.reduce((s, p) => s + (p.precoUnitario || 0), 0) / (recebidas.length || 1)
                   )}
                 </h3>
                 <span className={styles.sub}>Base: {recebidas.length} propostas</span>
               </Card>
               <Card className={styles.metricCard}>
                 <span className={styles.label}>Melhor prazo</span>
-                <h3>{Math.min(...recebidas.map((p) => p.prazoEntrega!))} dia(s)</h3>
+                <h3>{Math.min(...recebidas.map((p) => p.prazoEntrega || 1))} dia(s)</h3>
                 <span className={styles.sub}>
                   {
                     recebidas.find(

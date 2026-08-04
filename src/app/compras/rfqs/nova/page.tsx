@@ -2,7 +2,8 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Icon, Select, Badge } from "@/components/ui";
+import { Card, Button, Icon, Select, Badge, Skeleton } from "@/components/ui";
+
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 import { rfqsApi } from "@/lib/api/rfqs";
@@ -64,7 +65,7 @@ export default function NewRfqPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const paramSol = searchParams.get("sol") ?? searchParams.get("solicitacao") ?? "";
+  const paramSol = searchParams.get("solicitationId") ?? searchParams.get("sol") ?? searchParams.get("solicitacao") ?? "";
   const paramTitulo = searchParams.get("titulo") ?? "";
   const paramValor = searchParams.get("valor") ?? "";
   const paramPrioridade = searchParams.get("prioridade") ?? "";
@@ -277,12 +278,16 @@ export default function NewRfqPage() {
 
             <div className={styles.gateSelectGroup}>
               <label className={styles.gateLabel}>Solicitação de Compra Aprovada <span className="required-asterisk">*</span></label>
-              <Select
-                options={solicidadoesApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
-                value={solicitacaoSelecionada}
-                onChange={setSolicitacaoSelecionada}
-                placeholder={loadingData ? "Carregando solicitações..." : "Selecione uma solicitação..."}
-              />
+              {loadingData ? (
+                <Skeleton height={42} width="100%" />
+              ) : (
+                <Select
+                  options={solicidadoesApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
+                  value={solicitacaoSelecionada}
+                  onChange={setSolicitacaoSelecionada}
+                  placeholder="Selecione uma solicitação..."
+                />
+              )}
             </div>
 
             

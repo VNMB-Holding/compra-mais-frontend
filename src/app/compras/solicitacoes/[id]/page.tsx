@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Loading } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton } from "@/components/ui";
+
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
@@ -208,7 +209,28 @@ export default function SolicitacaoDetailPage() {
       </button>
 
       {loading ? (
-        <Loading variant="inline" message="Carregando solicitação..." size="large" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+            <Skeleton variant="title" width="30%" />
+            <Skeleton variant="text" width="60%" style={{ marginBottom: 16 }} />
+            <div style={{ display: "flex", gap: 12 }}>
+              <Skeleton width={140} height={28} />
+              <Skeleton width={140} height={28} />
+              <Skeleton width={140} height={28} />
+            </div>
+          </div>
+          <div className={styles.layout2Col}>
+            <div className={styles.colMain}>
+              <CardSkeleton height={200} />
+              <div style={{ marginTop: 20 }}>
+                <CardSkeleton height={320} />
+              </div>
+            </div>
+            <div className={styles.colSide}>
+              <CardSkeleton height={300} />
+            </div>
+          </div>
+        </div>
       ) : (
         <>
       
@@ -227,7 +249,13 @@ export default function SolicitacaoDetailPage() {
             <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: {priorityLabel}</span>
           </div>
         </div>
-        {!isFullyApproved && !isRejected && (
+        {isFullyApproved ? (
+          <div className={styles.headerActions}>
+            <Button variant="primary" onClick={() => router.push(`/compras/rfqs/nova?solicitationId=${sol?.id || solId}`)}>
+              <Icon name="plus" /> Criar Cotação (RFQ)
+            </Button>
+          </div>
+        ) : !isRejected && (
           <div className={styles.headerActions}>
             {canUserApproveCurrentLevel ? (
               <>
@@ -548,15 +576,9 @@ export default function SolicitacaoDetailPage() {
           
           <Card className={styles.sideCard}>
             <h4>Arquivos e Termos Técnicos</h4>
-            <div className={styles.fileRow}>
-              <Icon name="file-01" />
-              <div className={styles.fileInfo}>
-                <strong>Especificacao_Tecnica_Diesel.pdf</strong>
-                <small>PDF • 245 KB</small>
-              </div>
-              <button className={styles.downloadIconBtn} title="Baixar anexo">
-                <Icon name="download-01" />
-              </button>
+            <div style={{ fontSize: 13, color: "#64748b", padding: "12px 0", textAlign: "center" }}>
+              <Icon name="file-01" size={24} style={{ marginBottom: 6, color: "#94a3b8" }} />
+              <p>Nenhum anexo ou documento anexado a esta solicitação.</p>
             </div>
           </Card>
 
