@@ -74,3 +74,11 @@ export async function logoutApi(refreshToken: string): Promise<void> {
     { auth: true }
   );
 }
+
+export async function refreshTokenApi(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+  return apiClient.post<{ access_token: string; refresh_token: string }>(
+    "/api/auth/refresh",
+    { refresh_token: refreshToken },
+    { auth: false }
+  );
+}

@@ -3,8 +3,8 @@
 import React, { createContext, useState, useCallback, useEffect, useRef } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
-import { loginApi, getTenantsApi, getUserByIdApi, logoutApi } from "@/lib/auth/api";
-import { setTokenProvider, setUnauthorizedHandler } from "@/lib/api-client";
+import { loginApi, getTenantsApi, getUserByIdApi, logoutApi, refreshTokenApi } from "@/lib/auth/api";
+import { setTokenProvider, setUnauthorizedHandler, setRefreshHandler } from "@/lib/api-client";
 import { logError } from "@/lib/utils/error";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,9 +30,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refreshTokenRef = useRef<string | null>(null);
+  useEffect(() => {
+    refreshTokenRef.current = refreshToken;
+  }, [refreshToken]);
+
+  const userRef = useRef<User | null>(null);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   useEffect(() => {
     setTokenProvider(() => accessToken);
   }, [accessToken]);
+
+  useEffect(() => {
+    setRefreshHandler(async () => {
+      const currentRefresh = refreshTokenRef.current || (typeof window !== "undefined" ? localStorage.getItem("compra_refresh_token") : null);
+      if (!currentRefresh) return null;
+
+      try {
+        const res = await refreshTokenApi(currentRefresh);
+        const newAccess = res.access_token;
+        const newRefresh = res.refresh_token || currentRefresh;
+
+        setAccessToken(newAccess);
+        setRefreshToken(newRefresh);
+        setTokenProvider(() => newAccess);
+
+        if (userRef.current) {
+          saveSession(newAccess, newRefresh, userRef.current);
+        }
+
+        return newAccess;
+      } catch (err) {
+        logError("AuthContext/refreshSession", err);
+        return null;
+      }
+    });
+  }, []);
 
   const logoutRef = useRef<() => void>(() => {});
 

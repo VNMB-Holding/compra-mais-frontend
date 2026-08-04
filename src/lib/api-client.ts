@@ -20,6 +20,10 @@ class ApiError extends Error {
 
 let tokenProvider: (() => string | null) | null = null;
 let unauthorizedHandler: (() => void) | null = null;
+let refreshHandler: (() => Promise<string | null>) | null = null;
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];
+
 let lastUnauthorizedTime = 0;
 const UNAUTHORIZED_DEBOUNCE_MS = 2000;
 
@@ -29,6 +33,21 @@ export function setTokenProvider(provider: () => string | null) {
 
 export function setUnauthorizedHandler(handler: () => void) {
   unauthorizedHandler = handler;
+}
+
+export function setRefreshHandler(handler: () => Promise<string | null>) {
+  refreshHandler = handler;
+}
+
+function processQueue(error: any, token: string | null = null) {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else if (token) {
+      promise.resolve(token);
+    }
+  });
+  failedQueue = [];
 }
 
 function getStoredToken(): string | null {
@@ -69,7 +88,48 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   const response = await fetch(`${baseUrl}${cleanEndpoint}`, config);
 
-  if (response.status === 401 && !auth) {
+  if (response.status === 401 && !auth && !cleanEndpoint.includes("/auth/refresh")) {
+    if (refreshHandler) {
+      if (isRefreshing) {
+        return new Promise<string>((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(async (newToken) => {
+          headers["Authorization"] = `Bearer ${newToken}`;
+          const retryRes = await fetch(`${baseUrl}${cleanEndpoint}`, {
+            ...rest,
+            headers,
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+          });
+          if (retryRes.ok) {
+            return retryRes.status === 204 ? (undefined as T) : (retryRes.json() as Promise<T>);
+          }
+          throw new ApiError("Sessão expirada. Faça login novamente.", 401);
+        });
+      }
+
+      isRefreshing = true;
+
+      try {
+        const newToken = await refreshHandler();
+        isRefreshing = false;
+        if (newToken) {
+          processQueue(null, newToken);
+          headers["Authorization"] = `Bearer ${newToken}`;
+          const retryResponse = await fetch(`${baseUrl}${cleanEndpoint}`, {
+            ...rest,
+            headers,
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+          });
+          if (retryResponse.ok) {
+            return retryResponse.status === 204 ? (undefined as T) : (retryResponse.json() as Promise<T>);
+          }
+        }
+      } catch (e) {
+        isRefreshing = false;
+        processQueue(e, null);
+      }
+    }
+
     const now = Date.now();
     if (unauthorizedHandler && now - lastUnauthorizedTime > UNAUTHORIZED_DEBOUNCE_MS) {
       lastUnauthorizedTime = now;
