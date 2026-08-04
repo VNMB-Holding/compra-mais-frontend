@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, Loading, ErrorState, TableSkeleton } from "@/components/ui";
+import { Card, Icon, Select, Loading, ErrorState, TableSkeleton, Badge } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -10,7 +10,7 @@ import styles from "./pedidos.module.css";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP } from "@/lib/constants/status";
+import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 
@@ -112,11 +112,7 @@ export default function PedidosPage() {
     { header: "Entrega Prevista", accessorKey: "entrega" },
     {
       header: "Status",
-      cell: (row) => (
-        <span className={`${styles.statusBadge} ${row.status === "Entregue" ? styles.badgeGreen : row.status === "Faturado" ? styles.badgeBlue : styles.badgeYellow}`}>
-          {row.status}
-        </span>
-      )
+      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
     },
     {
       header: "",

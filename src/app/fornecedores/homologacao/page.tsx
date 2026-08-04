@@ -7,6 +7,7 @@ import { Card, Button, Badge, Icon, Select, TableSkeleton } from "@/components/u
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./homologacao.module.css";
+import { getStatusBadgeVariant } from "@/lib/constants/status";
 
 interface HomologacaoRow {
   id: string;
@@ -133,7 +134,7 @@ export default function HomologacaoPage() {
     },
     {
       header: "Status",
-      cell: (row) => <Badge variant={row.statusVariant}>{row.status}</Badge>
+      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
     },
     {
       header: "Última Atualização",

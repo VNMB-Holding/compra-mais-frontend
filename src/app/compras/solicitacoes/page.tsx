@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading, ErrorState, TableSkeleton } from "@/components/ui";
+import { Button, Card, Icon, Select, Loading, ErrorState, TableSkeleton, Badge } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -15,7 +15,7 @@ import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
 import { SolicitationRow } from "@/types/domain";
-import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, PRIORITY_MAP } from "@/lib/constants/status";
+import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, PRIORITY_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { usePurchaseRequests } from "@/hooks/useQueries";
 
@@ -165,24 +165,7 @@ export default function SolicitacoesPage() {
     },
     {
       header: "Status",
-      cell: (row) => {
-        const sClass =
-          row.status === "Aprovada" || row.status === "Atendida"
-            ? styles.badgeGreen
-            : row.status === "Aguardando aprovação" || row.status === "Em Análise"
-            ? styles.badgeYellow
-            : row.status === "Em Cotação"
-            ? styles.badgeBlue
-            : row.status === "Rejeitada" || row.status === "Cancelada"
-            ? styles.badgeRed
-            : styles.badgeGray;
-
-        return (
-          <span className={`${styles.statusBadge} ${sClass}`}>
-            {row.status}
-          </span>
-        );
-      }
+      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
     },
     {
       header: "",

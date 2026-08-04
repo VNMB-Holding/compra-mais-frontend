@@ -37,33 +37,72 @@ export function mapRfqStatus(rfq: { status: string; closesAt?: string | null }):
   return "Aberta";
 }
 
-export function getStatusBadgeVariant(status: string): "success" | "warning" | "danger" | "gray" | "info" {
-  switch (status) {
-    case "Approved":
-    case "Aprovada":
-    case "Finished":
-    case "Atendida":
-    case "Active":
+export type BadgeVariant = "primary" | "secondary" | "success" | "warning" | "danger" | "gray";
+
+export function getStatusBadgeVariant(status?: string | null): BadgeVariant {
+  if (!status) return "gray";
+  const s = status.trim().toLowerCase();
+
+  switch (s) {
+    case "approved":
+    case "aprovada":
+    case "finished":
+    case "atendida":
+    case "active":
+    case "homologado":
+    case "entregue":
+    case "delivered":
+    case "concluído":
+    case "concluida":
+    case "sucesso":
       return "success";
-    case "AwaitingApproval":
-    case "Aguardando aprovação":
-    case "UnderAnalysis":
-    case "Em Análise":
-    case "Pending":
-    case "Pendente":
+
+    case "awaitingapproval":
+    case "aguardando aprovação":
+    case "aguardando aprovacao":
+    case "underanalysis":
+    case "em análise":
+    case "em analise":
+    case "pending":
+    case "pendente":
+    case "encerrando hoje":
+    case "em transporte":
+    case "intransit":
+    case "aguardando docs.":
+    case "aguardando documentos":
       return "warning";
-    case "InQuote":
-    case "Em Cotação":
-    case "Open":
-    case "Aberta":
-    case "Sent":
-    case "Emitido":
-      return "info";
-    case "Rejected":
-    case "Rejeitada":
-    case "Cancelled":
-    case "Cancelada":
+
+    case "inquote":
+    case "em cotação":
+    case "em cotacao":
+    case "open":
+    case "aberta":
+    case "sent":
+    case "emitido":
+    case "faturado":
+    case "signed":
+    case "awaitingsignature":
+    case "em análise (homologação)":
+      return "primary";
+
+    case "rejected":
+    case "rejeitada":
+    case "rejeitado":
+    case "cancelled":
+    case "cancelada":
+    case "suspended":
+    case "bloqueado":
+    case "crítico":
+    case "critico":
+    case "alto":
       return "danger";
+
+    case "draft":
+    case "rascunho":
+    case "encerrada":
+    case "closed":
+    case "inactive":
+    case "inativo":
     default:
       return "gray";
   }

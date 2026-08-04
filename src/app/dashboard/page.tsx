@@ -24,7 +24,7 @@ import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 
 import { RFQRow } from "@/types/domain";
-import { mapRfqStatus } from "@/lib/constants/status";
+import { mapRfqStatus, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getTenantDisplayName } from "@/lib/utils/tenant";
 
@@ -127,7 +127,7 @@ export default function DashboardPage() {
     {
       header: "Status",
       cell: (row) => (
-        <Badge variant={row.status === "Aberta" ? "success" : row.status === "Encerrando hoje" ? "warning" : "gray"}>
+        <Badge variant={getStatusBadgeVariant(row.status)}>
           {row.status}
         </Badge>
       )
