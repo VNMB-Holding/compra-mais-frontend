@@ -310,7 +310,34 @@ export default function SolicitacaoDetailPage() {
                             : `Pendente (${lvl.roleOrName})`}
                         </span>
                         {isLevelActive && !isLevelDone && !isRejected ? (
-                          <span className={styles.warningBadgeHint}>Falta aprovar</span>
+                          <div style={{ marginTop: 4 }}>
+                            <span className={styles.warningBadgeHint}>Falta aprovar</span>
+                            <button
+                              onClick={() => {
+                                const histories = (sol as any)?.approvalHistories || [];
+                                const token = (historyMatch as any)?.id || histories[index]?.id || sol?.id;
+                                const link = `${window.location.origin}/aprovacao/${token}`;
+                                navigator.clipboard.writeText(link);
+                                toast({ variant: "success", title: "Link Copiado!", message: "Link de aprovação copiado para a área de transferência." });
+                              }}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                                marginLeft: 8,
+                                padding: "2px 8px",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                borderRadius: 4,
+                                border: "1px solid #0284c7",
+                                background: "#f0f9ff",
+                                color: "#0369a1",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <Icon name="link-01" size={12} /> Copiar Link
+                            </button>
+                          </div>
                         ) : isLevelDone ? (
                           <small>
                             {historyMatch?.actionDate
