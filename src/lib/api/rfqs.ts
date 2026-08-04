@@ -77,7 +77,8 @@ export const rfqsApi = {
     apiClient.post<Rfq>("/api/rfqs", data),
   
   createProposal: (rfqId: string, data: { supplierId: string; unitPrice: number; freightCost?: number; paymentTerms?: string; deliveryTime?: number; notes?: string }) =>
-    apiClient.post(`/api/rfqs/${rfqId}/proposals`, data),
+    apiClient.post<{ id: string; rfqId: string; supplierId: string; status: string; isWinner: boolean }>(`/api/rfqs/${rfqId}/proposals`, data),
+
 
   selectWinner: (rfqId: string, proposalId: string) =>
     apiClient.patch(`/api/rfqs/${rfqId}/winner`, { proposalId }),

@@ -259,19 +259,28 @@ export default function RfqDetailPage() {
     setPropostas((c) => c.map((p) => (p.fornecedorId === id ? { ...p, ...dados } : p)));
     if (dados.precoUnitario) {
       try {
-        await rfqsApi.createProposal(rfqId, {
+        const propostaCriada = await rfqsApi.createProposal(rfqId, {
           supplierId: id,
           unitPrice: Number(dados.precoUnitario) || 0,
           freightCost: Number(dados.frete) || 0,
           paymentTerms: dados.condicaoPagamento || "30 dias DDL",
           deliveryTime: Number(dados.prazoEntrega) || 5,
         });
+        // Armazena o propostaId real retornado pela API no estado local
+        if (propostaCriada?.id) {
+          setPropostas((c) =>
+            c.map((p) =>
+              p.fornecedorId === id ? { ...p, propostaId: propostaCriada.id } : p
+            )
+          );
+        }
         toast({ variant: "success", title: "Proposta salva!", message: "A proposta comercial foi salva no servidor com sucesso." });
       } catch (err) {
         logError("rfqs/[id]/createProposal", err);
       }
     }
   };
+
 
   const propostasRankeadas = [...recebidas].sort(
     (a, b) => (a.precoUnitario! + a.frete!) - (b.precoUnitario! + b.frete!)
