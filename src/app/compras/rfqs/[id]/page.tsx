@@ -13,6 +13,7 @@ type Estagio = "proposta" | "analise" | "aprovacao";
 
 interface PropostaLocal {
   fornecedorId: string;
+  propostaId?: string;   // ID real da SupplierProposal no banco
   nome: string;
   cnpj: string;
   status: "aguardando" | "recebida" | "declinada";
@@ -52,6 +53,7 @@ function mapPropostas(rfq: Rfq): PropostaLocal[] {
         : 0;
     return {
       ...inv,
+      propostaId: proposal.id,  // ID real da SupplierProposal
       status: "recebida",
       precoUnitario: Number(unitPrice),
       frete: Number(freight),
@@ -350,7 +352,16 @@ export default function RfqDetailPage() {
         onConfirm={async () => {
           if (pendingVencedorId) {
             try {
-              await rfqsApi.selectWinner(rfqId, pendingVencedorId);
+              // pendingVencedorId é o supplierId; buscamos o propostaId real
+              const propostaIdParaEnviar = propostas.find(
+                (p) => p.fornecedorId === pendingVencedorId
+              )?.propostaId;
+              if (!propostaIdParaEnviar) {
+                toast({ variant: "error", title: "Proposta não encontrada", message: "Salve a proposta do fornecedor antes de selecioná-lo como vencedor." });
+                setDialog(null);
+                return;
+              }
+              await rfqsApi.selectWinner(rfqId, propostaIdParaEnviar);
               setVencedorId(pendingVencedorId);
               setEstagio("aprovacao");
               toast({
