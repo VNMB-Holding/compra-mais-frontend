@@ -13,7 +13,7 @@ type Estagio = "proposta" | "analise" | "aprovacao";
 
 interface PropostaLocal {
   fornecedorId: string;
-  propostaId?: string;   // ID real da SupplierProposal no banco
+  propostaId?: string;
   nome: string;
   cnpj: string;
   status: "aguardando" | "recebida" | "declinada";
