@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, cleanTenantParam } from "@/lib/api-client";
 
 export interface Category {
   id: string;
@@ -10,7 +10,13 @@ export interface Category {
 }
 
 export const categoriesApi = {
-  list: () => apiClient.get<Category[]>("/api/categories"),
+  list: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
+    const params = new URLSearchParams();
+    if (validTenant) params.append("tenantId", validTenant);
+    const qs = params.toString();
+    return apiClient.get<Category[]>(`/api/categories${qs ? `?${qs}` : ''}`);
+  },
   getById: (id: string) => apiClient.get<Category>(`/api/categories/${id}`),
   create: (data: { name: string; description?: string }) =>
     apiClient.post<Category>("/api/categories", data),

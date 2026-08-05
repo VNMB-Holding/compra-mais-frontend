@@ -201,3 +201,11 @@ export const apiClient = {
 };
 
 export { ApiError };
+
+export function cleanTenantParam(tenantId?: string): string | undefined {
+  if (!tenantId || tenantId === "undefined" || tenantId === "null" || tenantId === "TODAS") {
+    return undefined;
+  }
+  return tenantId;
+}
+

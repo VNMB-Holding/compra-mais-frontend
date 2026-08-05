@@ -28,6 +28,8 @@ import { mapRfqStatus, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getTenantDisplayName } from "@/lib/utils/tenant";
 
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
+
 const PIE_COLORS = ["#007d79", "#7c3aed", "#db2777", "#64748b", "#f59e0b", "#10b981"];
 
 function formatDate(dateStr: string): string {
@@ -49,20 +51,34 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const primaryCompanies = getPrimaryCompanyOptions(user);
+  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
+
+  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
+  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
+  const showBranchFilter = branchCompanies.length > 0;
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
+
+  const queryTenantId = React.useMemo(() => {
+    if (selectedBranchId !== "TODAS") return selectedBranchId;
+    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
+    return undefined;
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
+
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
       const [kpisData, rfqsData, economyChart, categoriesData] = await Promise.all([
-        dashboardApi.getKpis(),
-        rfqsApi.list(),
-        dashboardApi.getMonthlyEconomy(),
-        dashboardApi.getCategories(),
+        dashboardApi.getKpis(queryTenantId).catch(() => null),
+        rfqsApi.list(queryTenantId).catch(() => []),
+        dashboardApi.getMonthlyEconomy(queryTenantId).catch(() => []),
+        dashboardApi.getCategories(queryTenantId).catch(() => []),
       ]);
 
       setKpis(kpisData);
-      setEconomyData(economyChart);
-      setCategories(categoriesData);
+      setEconomyData(economyChart || []);
+      setCategories(categoriesData || []);
 
       const mapped: RFQRow[] = rfqsData.map((rfq) => ({
         id: rfq.id,
@@ -82,7 +98,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryTenantId, user]);
 
   useEffect(() => {
     fetchData();

@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, cleanTenantParam } from "@/lib/api-client";
 import { CategoryType } from "@/lib/utils/category-icon";
 
 export interface Supplier {
@@ -30,11 +30,23 @@ export interface SupplierKpis {
 }
 
 export const suppliersApi = {
-  list: () => apiClient.get<Supplier[]>("/api/suppliers"),
+  list: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
+    const params = new URLSearchParams();
+    if (validTenant) params.append("tenantId", validTenant);
+    const qs = params.toString();
+    return apiClient.get<Supplier[]>(`/api/suppliers${qs ? `?${qs}` : ''}`);
+  },
   
   getById: (id: string) => apiClient.get<Supplier>(`/api/suppliers/${id}`),
   
-  getKpis: () => apiClient.get<SupplierKpis>("/api/suppliers/kpis"),
+  getKpis: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
+    const params = new URLSearchParams();
+    if (validTenant) params.append("tenantId", validTenant);
+    const qs = params.toString();
+    return apiClient.get<SupplierKpis>(`/api/suppliers/kpis${qs ? `?${qs}` : ''}`);
+  },
   
   create: (data: Partial<Supplier>) => apiClient.post<Supplier>("/api/suppliers", data),
   

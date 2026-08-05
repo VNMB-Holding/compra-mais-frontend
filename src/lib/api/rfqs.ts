@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, cleanTenantParam } from "@/lib/api-client";
 
 export interface Rfq {
   id: string;
@@ -60,8 +60,9 @@ export interface RfqKpis {
 
 export const rfqsApi = {
   list: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
     const params = new URLSearchParams();
-    if (tenantId) params.append("tenantId", tenantId);
+    if (validTenant) params.append("tenantId", validTenant);
     const qs = params.toString();
     return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ''}`);
   },
@@ -69,8 +70,9 @@ export const rfqsApi = {
   getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
   
   getKpis: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
     const params = new URLSearchParams();
-    if (tenantId) params.append("tenantId", tenantId);
+    if (validTenant) params.append("tenantId", validTenant);
     const qs = params.toString();
     return apiClient.get<RfqKpis>(`/api/rfqs/kpis${qs ? `?${qs}` : ''}`);
   },

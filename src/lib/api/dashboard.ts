@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, cleanTenantParam } from "@/lib/api-client";
 
 export interface DashboardKpis {
   rfqsInProgress: number;
@@ -41,16 +41,21 @@ export interface EconomyAnalyticsResponse {
   monthlyTrend: { month: string; economy: number }[];
 }
 
+function buildQs(tenantId?: string): string {
+  const valid = cleanTenantParam(tenantId);
+  return valid ? `?tenantId=${encodeURIComponent(valid)}` : '';
+}
+
 export const dashboardApi = {
-  getKpis: () => apiClient.get<DashboardKpis>("/api/dashboard/kpis"),
+  getKpis: (tenantId?: string) => apiClient.get<DashboardKpis>(`/api/dashboard/kpis${buildQs(tenantId)}`),
 
-  getRecentRfqs: () => apiClient.get<RecentRfqItem[]>("/api/dashboard/recent-rfqs"),
+  getRecentRfqs: (tenantId?: string) => apiClient.get<RecentRfqItem[]>(`/api/dashboard/recent-rfqs${buildQs(tenantId)}`),
 
-  getCategories: () => apiClient.get<CategoryBreakdown[]>("/api/dashboard/categories"),
+  getCategories: (tenantId?: string) => apiClient.get<CategoryBreakdown[]>(`/api/dashboard/categories${buildQs(tenantId)}`),
 
-  getMonthlyEconomy: () => apiClient.get<MonthlyEconomy[]>("/api/dashboard/monthly-economy"),
+  getMonthlyEconomy: (tenantId?: string) => apiClient.get<MonthlyEconomy[]>(`/api/dashboard/monthly-economy${buildQs(tenantId)}`),
 
-  getSpendAnalytics: () => apiClient.get<SpendAnalyticsResponse>('/api/dashboard/analytics/spend'),
-  getEconomyAnalytics: () => apiClient.get<EconomyAnalyticsResponse>('/api/dashboard/analytics/economia'),
+  getSpendAnalytics: (tenantId?: string) => apiClient.get<SpendAnalyticsResponse>(`/api/dashboard/analytics/spend${buildQs(tenantId)}`),
+  getEconomyAnalytics: (tenantId?: string) => apiClient.get<EconomyAnalyticsResponse>(`/api/dashboard/analytics/economia${buildQs(tenantId)}`),
 };
 

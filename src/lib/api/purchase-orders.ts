@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, cleanTenantParam } from "@/lib/api-client";
 
 export interface PurchaseOrder {
   id: string;
@@ -34,8 +34,9 @@ export interface OrderItem {
 
 export const purchaseOrdersApi = {
   list: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
     const params = new URLSearchParams();
-    if (tenantId) params.append("tenantId", tenantId);
+    if (validTenant) params.append("tenantId", validTenant);
     const qs = params.toString();
     return apiClient.get<PurchaseOrder[]>(`/api/purchase-orders${qs ? `?${qs}` : ''}`);
   },

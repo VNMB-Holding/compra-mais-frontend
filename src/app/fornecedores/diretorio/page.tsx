@@ -11,11 +11,16 @@ import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 
+import { useAuth } from "@/hooks/useAuth";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
+import { User } from "@/types/auth";
+
 interface FornecedorRow {
   id: string;
   iniciais: string;
   nome: string;
   cnpj: string;
+  empresa: string;
   categoria: string;
   catIcon: string;
   status: string;
@@ -27,16 +32,18 @@ interface FornecedorRow {
   cor: "green" | "orange";
 }
 
-function mapSupplierToRow(s: Supplier): FornecedorRow {
+function mapSupplierToRow(s: Supplier, currentUser?: User | null): FornecedorRow {
   const isActive = s.status === "Active";
   const score = s.performanceScore ? Number(s.performanceScore) : null;
   const stars = score ? Math.round(score / 2) : 0;
+  const empresaFilial = getTenantDisplayName(s.tenantId, currentUser);
 
   return {
     id: s.id,
     iniciais: s.corporateName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
     nome: s.corporateName,
     cnpj: s.cnpj,
+    empresa: empresaFilial,
     categoria: s.segment,
     catIcon: getCategoryIcon(s.segment),
     status: isActive ? "Homologado" : s.status === "UnderCertification" ? "Em homologação" : "Inativo",
@@ -56,6 +63,7 @@ function mapSupplierToRow(s: Supplier): FornecedorRow {
 
 export default function FornecedoresListPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const [categoria, setCategoria] = useState("Todas");
   const [status, setStatus] = useState("Todos");
@@ -64,15 +72,29 @@ export default function FornecedoresListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const primaryCompanies = getPrimaryCompanyOptions(user);
+  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
+
+  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
+  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
+  const showBranchFilter = branchCompanies.length > 0;
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
+
+  const queryTenantId = React.useMemo(() => {
+    if (selectedBranchId !== "TODAS") return selectedBranchId;
+    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
+    return undefined;
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
+
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
       const [suppliers, kpisData] = await Promise.all([
-        suppliersApi.list(),
-        suppliersApi.getKpis(),
+        suppliersApi.list(queryTenantId).catch(() => []),
+        suppliersApi.getKpis(queryTenantId).catch(() => null),
       ]);
-      setFornecedores(suppliers.map(mapSupplierToRow));
+      setFornecedores((suppliers || []).map((s) => mapSupplierToRow(s, user)));
       setKpis(kpisData);
     } catch (err) {
       logError("fornecedores/fetchData", err);
@@ -80,7 +102,7 @@ export default function FornecedoresListPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryTenantId, user]);
 
   useEffect(() => {
     fetchData();
@@ -131,6 +153,7 @@ export default function FornecedoresListPage() {
         </div>
       )
     },
+    { header: "Empresa / Unidade", accessorKey: "empresa" },
     {
       header: "Categoria",
       cell: (row) => (
@@ -213,6 +236,34 @@ export default function FornecedoresListPage() {
             <input type="text" placeholder="Buscar fornecedor..." />
           </div>
           <div className={styles.filtersGroup}>
+            {showPrimaryCompanyFilter && (
+              <Select
+                options={[
+                  { label: "Empresas: Todas", value: "TODAS" },
+                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
+                ]}
+                value={selectedPrimaryCompanyId}
+                onChange={(val) => {
+                  setSelectedPrimaryCompanyId(val);
+                  setSelectedBranchId("TODAS");
+                }}
+                icon="building-07"
+                className={styles.customSelectFilter}
+              />
+            )}
+
+            {showBranchFilter && (
+              <Select
+                options={[
+                  { label: "Filiais: Todas", value: "TODAS" },
+                  ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
+                ]}
+                value={selectedBranchId}
+                onChange={setSelectedBranchId}
+                icon="building-07"
+                className={styles.customSelectFilter}
+              />
+            )}
             <Select
               options={categoriasOptions}
               value={categoria}

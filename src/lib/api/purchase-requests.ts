@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, cleanTenantParam } from "@/lib/api-client";
 
 export interface PurchaseRequest {
   id: string;
@@ -56,8 +56,9 @@ export interface PurchaseRequestKpis {
 
 export const purchaseRequestsApi = {
   list: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
     const params = new URLSearchParams();
-    if (tenantId) params.append("tenantId", tenantId);
+    if (validTenant) params.append("tenantId", validTenant);
     const qs = params.toString();
     return apiClient.get<PurchaseRequest[]>(`/api/purchase-requests${qs ? `?${qs}` : ''}`);
   },
@@ -65,8 +66,9 @@ export const purchaseRequestsApi = {
   getById: (id: string) => apiClient.get<PurchaseRequest>(`/api/purchase-requests/${id}`),
   
   getKpis: (tenantId?: string) => {
+    const validTenant = cleanTenantParam(tenantId);
     const params = new URLSearchParams();
-    if (tenantId) params.append("tenantId", tenantId);
+    if (validTenant) params.append("tenantId", validTenant);
     const qs = params.toString();
     return apiClient.get<PurchaseRequestKpis>(`/api/purchase-requests/kpis${qs ? `?${qs}` : ''}`);
   },
