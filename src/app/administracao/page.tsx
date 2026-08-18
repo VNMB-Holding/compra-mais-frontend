@@ -42,8 +42,8 @@ interface UserRow {
 
 interface EmpresaRow {
   id: string;
-  razaoSocial: string;
-  nomeFantasia: string;
+  corporateName: string;
+  tradeName: string;
   cnpj: string;
   segmento: string;
   inscricaoEstadual: string;
@@ -126,8 +126,8 @@ const INITIAL_USERS: UserRow[] = [
 const INITIAL_EMPRESAS: EmpresaRow[] = [
   {
     id: "1",
-    razaoSocial: "NMB Holdings S.A.",
-    nomeFantasia: "NMB Holding",
+    corporateName: "NMB Holdings S.A.",
+    tradeName: "NMB Holding",
     cnpj: "12.345.678/0001-90",
     segmento: "Transporte e Logística",
     inscricaoEstadual: "123.456.789.000",
@@ -137,8 +137,8 @@ const INITIAL_EMPRESAS: EmpresaRow[] = [
   },
   {
     id: "2",
-    razaoSocial: "Mineradora Ouro Preto Ltda",
-    nomeFantasia: "Ouro Preto Min.",
+    corporateName: "Mineradora Ouro Preto Ltda",
+    tradeName: "Ouro Preto Min.",
     cnpj: "98.765.432/0001-10",
     segmento: "Mineração",
     inscricaoEstadual: "987.654.321.000",
@@ -148,8 +148,8 @@ const INITIAL_EMPRESAS: EmpresaRow[] = [
   },
   {
     id: "3",
-    razaoSocial: "Agro Sul Exportações S.A.",
-    nomeFantasia: "AgroSul",
+    corporateName: "Agro Sul Exportações S.A.",
+    tradeName: "AgroSul",
     cnpj: "45.678.901/0001-23",
     segmento: "Agronegócio",
     inscricaoEstadual: "ISENTO",
@@ -494,8 +494,8 @@ export default function AdministracaoPage() {
   const handleSaveEmpresa = (data: EmpresaFormData) => {
     const row: EmpresaRow = {
       id: editingEmpresa?.id || String(Date.now()),
-      razaoSocial: data.razaoSocial,
-      nomeFantasia: data.nomeFantasia,
+      corporateName: data.corporateName,
+      tradeName: data.tradeName,
       cnpj: data.cnpj,
       segmento: data.segmento,
       inscricaoEstadual: data.inscricaoEstadual,
@@ -505,7 +505,7 @@ export default function AdministracaoPage() {
     };
     if (empresaModalMode === "create") {
       setEmpresas((prev) => [...prev, row]);
-      toast({ title: "Empresa cadastrada!", message: `${row.razaoSocial} foi adicionada ao sistema.`, variant: "success" });
+      toast({ title: "Empresa cadastrada!", message: `${row.corporateName} foi adicionada ao sistema.`, variant: "success" });
     } else {
       setEmpresas((prev) => prev.map((e) => (e.id === row.id ? row : e)));
       toast({ title: "Empresa atualizada", message: "Os dados foram salvos.", variant: "success" });
@@ -516,7 +516,7 @@ export default function AdministracaoPage() {
   const handleDeleteEmpresa = () => {
     if (!deleteEmpresaDialog) return;
     setEmpresas((prev) => prev.filter((e) => e.id !== deleteEmpresaDialog.id));
-    toast({ title: "Empresa removida", message: `${deleteEmpresaDialog.razaoSocial} foi removida.`, variant: "success" });
+    toast({ title: "Empresa removida", message: `${deleteEmpresaDialog.corporateName} foi removida.`, variant: "success" });
     setDeleteEmpresaDialog(null);
   };
 
@@ -540,7 +540,7 @@ export default function AdministracaoPage() {
         const emp = empresas.find((e) => e.id === row.empresaId);
         return (
           <div className={styles.doubleText}>
-            <strong style={{ fontSize: "13px", color: "#334155" }}>{emp?.razaoSocial || "—"}</strong>
+            <strong style={{ fontSize: "13px", color: "#334155" }}>{emp?.corporateName || "—"}</strong>
             <span>{emp?.cnpj || ""}</span>
           </div>
         );
@@ -700,8 +700,8 @@ export default function AdministracaoPage() {
             <Icon name="building-01" size={16} />
           </div>
           <div className={styles.doubleText}>
-            <strong>{row.razaoSocial}</strong>
-            <span>{row.nomeFantasia || row.razaoSocial}</span>
+            <strong>{row.corporateName}</strong>
+            <span>{row.tradeName || row.corporateName}</span>
           </div>
         </div>
       ),
@@ -760,7 +760,7 @@ export default function AdministracaoPage() {
   const filteredEmpresas = empresas.filter(
     (e) =>
       !empresaSearch ||
-      e.razaoSocial.toLowerCase().includes(empresaSearch.toLowerCase()) ||
+      e.corporateName.toLowerCase().includes(empresaSearch.toLowerCase()) ||
       e.cnpj.includes(empresaSearch)
   );
 
@@ -1045,7 +1045,7 @@ export default function AdministracaoPage() {
       <AdminUserModal
         open={userModalOpen}
         mode={userModalMode}
-        empresas={empresas.map((e) => ({ id: e.id, razaoSocial: e.razaoSocial, cnpj: e.cnpj }))}
+        empresas={empresas.map((e) => ({ id: e.id, corporateName: e.corporateName, cnpj: e.cnpj }))}
         initialData={
           editingUser
             ? {
@@ -1107,8 +1107,8 @@ export default function AdministracaoPage() {
         open={empresaModalOpen}
         mode={empresaModalMode}
         initialData={editingEmpresa ? {
-          razaoSocial: editingEmpresa.razaoSocial,
-          nomeFantasia: editingEmpresa.nomeFantasia,
+          corporateName: editingEmpresa.corporateName,
+          tradeName: editingEmpresa.tradeName,
           cnpj: editingEmpresa.cnpj,
           segmento: editingEmpresa.segmento,
           inscricaoEstadual: editingEmpresa.inscricaoEstadual,
@@ -1124,7 +1124,7 @@ export default function AdministracaoPage() {
         open={!!deleteEmpresaDialog}
         variant="danger"
         title="Remover empresa?"
-        message={`${deleteEmpresaDialog?.razaoSocial} será removida do sistema. Os usuários vinculados perderão a associação.`}
+        message={`${deleteEmpresaDialog?.corporateName} será removida do sistema. Os usuários vinculados perderão a associação.`}
         confirmLabel="Remover"
         onConfirm={handleDeleteEmpresa}
         onCancel={() => setDeleteEmpresaDialog(null)}

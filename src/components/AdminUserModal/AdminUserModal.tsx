@@ -5,7 +5,7 @@ import styles from "@/app/administracao/administracao.module.css";
 
 export interface EmpresaOption {
   id: string;
-  razaoSocial: string;
+  corporateName: string;
   cnpj: string;
 }
 
@@ -209,7 +209,7 @@ export default function AdminUserModal({
                   <option value="">Selecione a empresa...</option>
                   {empresas.map((emp) => (
                     <option key={emp.id} value={emp.id}>
-                      {emp.razaoSocial}
+                      {emp.corporateName}
                     </option>
                   ))}
                 </select>

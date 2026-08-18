@@ -4,8 +4,8 @@ import { Button } from "@/components/ui";
 import styles from "@/app/administracao/administracao.module.css";
 
 export interface EmpresaFormData {
-  razaoSocial: string;
-  nomeFantasia: string;
+  corporateName: string;
+  tradeName: string;
   cnpj: string;
   segmento: string;
   inscricaoEstadual: string;
@@ -37,8 +37,8 @@ const SEGMENTO_OPTIONS = [
 ];
 
 const DEFAULT_DATA: EmpresaFormData = {
-  razaoSocial: "",
-  nomeFantasia: "",
+  corporateName: "",
+  tradeName: "",
   cnpj: "",
   segmento: "Transporte e Logística",
   inscricaoEstadual: "",
@@ -143,8 +143,8 @@ export default function AdminEmpresaModal({
                 <label>Razão Social <span style={{ color: "#ef4444" }}>*</span></label>
                 <input
                   className={styles.formControl}
-                  name="razaoSocial"
-                  value={form.razaoSocial}
+                  name="corporateName"
+                  value={form.corporateName}
                   onChange={handleChange}
                   placeholder="Ex: Transportes Silva Ltda"
                   required
@@ -158,8 +158,8 @@ export default function AdminEmpresaModal({
                 <label>Nome Fantasia</label>
                 <input
                   className={styles.formControl}
-                  name="nomeFantasia"
-                  value={form.nomeFantasia}
+                  name="tradeName"
+                  value={form.tradeName}
                   onChange={handleChange}
                   placeholder="Ex: Silva Transportes"
                   disabled={loading}

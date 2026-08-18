@@ -10,31 +10,31 @@ import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 
-type Estagio = "proposta" | "analise" | "aprovacao";
+type RfqStage = "proposal" | "analysis" | "approval";
 
-interface PropostaLocal {
-  fornecedorId: string;
-  propostaId?: string;
-  nome: string;
+interface LocalProposal {
+  supplierId: string;
+  proposalId?: string;
+  supplierName: string;
   cnpj: string;
-  status: "aguardando" | "recebida" | "declinada";
-  precoUnitario?: number;
-  frete?: number;
-  prazoEntrega?: number;
-  condicaoPagamento?: string;
-  observacoes?: string;
+  status: "awaiting" | "received" | "declined";
+  unitPrice?: number;
+  freightCost?: number;
+  deliveryTime?: number;
+  paymentTerms?: string;
+  notes?: string;
 }
 
-function mapPropostas(rfq: Rfq): PropostaLocal[] {
-  const mapBySupplier = new Map<string, PropostaLocal>();
+function mapPropostas(rfq: Rfq): LocalProposal[] {
+  const mapBySupplier = new Map<string, LocalProposal>();
 
   (rfq.rfqSuppliers ?? []).forEach((rs) => {
     if (rs.supplierId) {
       mapBySupplier.set(rs.supplierId, {
-        fornecedorId: rs.supplierId,
-        nome: rs.supplier?.tradeName || rs.supplier?.corporateName || "Razão Social não informada",
+        supplierId: rs.supplierId,
+        supplierName: rs.supplier?.tradeName || rs.supplier?.corporateName || "Razão Social não informada",
         cnpj: rs.supplier?.cnpj || "—",
-        status: "aguardando",
+        status: "awaiting",
       });
     }
   });
@@ -42,20 +42,31 @@ function mapPropostas(rfq: Rfq): PropostaLocal[] {
   (rfq.proposals ?? []).forEach((p) => {
     if (p.supplierId) {
       const existing = mapBySupplier.get(p.supplierId);
-      const unitPrice = p.items && p.items.length > 0 ? p.items[0].unitPrice : (p.totalValue ?? 0);
-      const freight = p.items && p.items.length > 0 ? p.items[0].freightCost : 0;
-      const status: PropostaLocal["status"] = p.status === "Declined" ? "declinada" : p.status === "Draft" ? "aguardando" : "recebida";
+      const unitPrice = (p.items && p.items.length > 0)
+        ? p.items[0].unitPrice
+        : (p.totalValue ?? 0);
+      const freight = (p.items && p.items.length > 0)
+        ? (p.items[0].freightCost ?? (p as any).freightCost ?? (p as any).shippingCost ?? 0)
+        : ((p as any).freightCost ?? (p as any).shippingCost ?? 0);
+
+      const isDeclined = p.status === "Declined";
+      const isDraftWithoutPrice = p.status === "Draft" && Number(unitPrice) === 0;
+      const status: LocalProposal["status"] = isDeclined
+        ? "declined"
+        : isDraftWithoutPrice
+        ? "awaiting"
+        : "received";
 
       mapBySupplier.set(p.supplierId, {
-        fornecedorId: p.supplierId,
-        propostaId: p.id,
-        nome: p.supplier?.tradeName || p.supplier?.corporateName || existing?.nome || "Razão Social não informada",
+        supplierId: p.supplierId,
+        proposalId: p.id,
+        supplierName: p.supplier?.tradeName || p.supplier?.corporateName || existing?.supplierName || "Razão Social não informada",
         cnpj: p.supplier?.cnpj || existing?.cnpj || "—",
         status,
-        precoUnitario: Number(unitPrice),
-        frete: Number(freight),
-        prazoEntrega: p.deliveryTime ?? 0,
-        condicaoPagamento: p.paymentTerms || "Não informada",
+        unitPrice: Number(unitPrice),
+        freightCost: Number(freight),
+        deliveryTime: p.deliveryTime ?? 0,
+        paymentTerms: p.paymentTerms || "Não informada",
       });
     }
   });
@@ -63,10 +74,11 @@ function mapPropostas(rfq: Rfq): PropostaLocal[] {
   return Array.from(mapBySupplier.values());
 }
 
-function getEstagio(rfq: Rfq): Estagio {
-  if (rfq.status === "Finished" || rfq.status === "Closed") return "aprovacao";
-  if (rfq.status === "UnderAnalysis") return "analise";
-  return "proposta";
+function getStage(rfq: Rfq): RfqStage {
+  const winnerExists = (rfq.proposals ?? []).some((p) => p.isWinner);
+  if (winnerExists || rfq.status === "Finished" || rfq.status === "Closed") return "approval";
+  if (rfq.status === "UnderAnalysis") return "analysis";
+  return "proposal";
 }
 
 function PropostaCard({
@@ -75,38 +87,38 @@ function PropostaCard({
   totalQtd,
   onSalvar,
 }: {
-  proposta: PropostaLocal;
+  proposta: LocalProposal;
   isWinner: boolean;
   totalQtd: number;
-  onSalvar: (id: string, dados: Partial<PropostaLocal>) => void;
+  onSalvar: (id: string, dados: Partial<LocalProposal>) => void;
 }) {
   const [aberto, setAberto] = useState(false);
   const [draft, setDraft] = useState({
-    precoUnitario: proposta.precoUnitario ?? 0,
-    frete: proposta.frete ?? 0,
-    prazoEntrega: proposta.prazoEntrega ?? 0,
-    condicaoPagamento: proposta.condicaoPagamento || "",
+    unitPrice: proposta.unitPrice ?? 0,
+    freightCost: proposta.freightCost ?? 0,
+    deliveryTime: proposta.deliveryTime ?? 0,
+    paymentTerms: proposta.paymentTerms || "",
   });
 
   useEffect(() => {
     setDraft({
-      precoUnitario: proposta.precoUnitario ?? 0,
-      frete: proposta.frete ?? 0,
-      prazoEntrega: proposta.prazoEntrega ?? 0,
-      condicaoPagamento: proposta.condicaoPagamento || "",
+      unitPrice: proposta.unitPrice ?? 0,
+      freightCost: proposta.freightCost ?? 0,
+      deliveryTime: proposta.deliveryTime ?? 0,
+      paymentTerms: proposta.paymentTerms || "",
     });
-  }, [proposta.precoUnitario, proposta.frete, proposta.prazoEntrega, proposta.condicaoPagamento]);
+  }, [proposta.unitPrice, proposta.freightCost, proposta.deliveryTime, proposta.paymentTerms]);
 
   const handleSalvar = () => {
-    onSalvar(proposta.fornecedorId, { ...draft, status: "recebida" });
+    onSalvar(proposta.supplierId, { ...draft, status: "received" });
     setAberto(false);
   };
 
-  const totalEqualizado = (draft.precoUnitario + draft.frete) * (totalQtd || 1);
+  const totalEqualizado = (draft.unitPrice + draft.freightCost) * (totalQtd || 1);
 
   return (
     <div
-      className={`${styles.propostaCard} ${proposta.status === "recebida" ? styles.propostaRecebida : ""} ${isWinner ? styles.propostaVencedora : ""}`}
+      className={`${styles.propostaCard} ${proposta.status === "received" ? styles.propostaRecebida : ""} ${isWinner ? styles.propostaVencedora : ""}`}
     >
       <div className={styles.propostaCardHeader}>
         <div className={styles.propostaInfo}>
@@ -116,40 +128,40 @@ function PropostaCard({
                 <Icon name="trophy-01" size={12} /> Melhor proposta
               </span>
             )}
-            <strong>{proposta.nome}</strong>
+            <strong>{proposta.supplierName}</strong>
           </div>
           <span className={styles.propostaCnpj}>{proposta.cnpj}</span>
         </div>
 
         <div className={styles.propostaCardRight}>
-          {proposta.status === "aguardando" && (
+          {proposta.status === "awaiting" && (
             <span className={styles.badgeAguardando}>
               <Icon name="clock" size={13} /> Aguardando
             </span>
           )}
-          {proposta.status === "declinada" && (
+          {proposta.status === "declined" && (
             <span className={styles.badgeAguardando} style={{ background: "#fee2e2", color: "#991b1b" }}>
               <Icon name="x-close" size={13} /> Declinada
             </span>
           )}
-          {proposta.status === "recebida" && !aberto && (
+          {proposta.status === "received" && !aberto && (
             <div className={styles.propostaSumario}>
               <span className={styles.propostaPreco}>
-                {formatCurrency(proposta.precoUnitario!)} / un
+                {formatCurrency(proposta.unitPrice!)} / un
               </span>
               <span className={styles.propostaPrazo}>
-                {proposta.prazoEntrega} dia(s) · {proposta.condicaoPagamento}
+                {proposta.deliveryTime} dia(s) · {proposta.paymentTerms}
               </span>
             </div>
           )}
 
           <div className={styles.propostaActions}>
-            {proposta.status === "aguardando" && (
+            {proposta.status === "awaiting" && (
               <button className={styles.btnRegistrar} onClick={() => setAberto(!aberto)}>
                 <Icon name="plus" size={15} /> Registrar proposta
               </button>
             )}
-            {proposta.status === "recebida" && (
+            {proposta.status === "received" && (
               <button className={styles.btnEditar} onClick={() => setAberto(!aberto)}>
                 <Icon name="edit-01" size={15} /> {aberto ? "Fechar" : "Editar"}
               </button>
@@ -168,8 +180,8 @@ function PropostaCard({
                 type="number"
                 step="0.01"
                 className={styles.propostaInput}
-                value={draft.precoUnitario}
-                onChange={(e) => setDraft((d) => ({ ...d, precoUnitario: Number(e.target.value) }))}
+                value={draft.unitPrice}
+                onChange={(e) => setDraft((d) => ({ ...d, unitPrice: Number(e.target.value) }))}
               />
             </div>
             <div className={styles.propostaField}>
@@ -178,8 +190,8 @@ function PropostaCard({
                 type="number"
                 step="0.01"
                 className={styles.propostaInput}
-                value={draft.frete}
-                onChange={(e) => setDraft((d) => ({ ...d, frete: Number(e.target.value) }))}
+                value={draft.freightCost}
+                onChange={(e) => setDraft((d) => ({ ...d, freightCost: Number(e.target.value) }))}
               />
             </div>
             <div className={styles.propostaField}>
@@ -187,21 +199,21 @@ function PropostaCard({
               <input
                 type="number"
                 className={styles.propostaInput}
-                value={draft.prazoEntrega}
-                onChange={(e) => setDraft((d) => ({ ...d, prazoEntrega: Number(e.target.value) }))}
+                value={draft.deliveryTime}
+                onChange={(e) => setDraft((d) => ({ ...d, deliveryTime: Number(e.target.value) }))}
               />
             </div>
             <div className={styles.propostaField}>
               <label>Condição de pagamento</label>
               <input
                 className={styles.propostaInput}
-                value={draft.condicaoPagamento}
-                onChange={(e) => setDraft((d) => ({ ...d, condicaoPagamento: e.target.value }))}
+                value={draft.paymentTerms}
+                onChange={(e) => setDraft((d) => ({ ...d, paymentTerms: e.target.value }))}
               />
             </div>
           </div>
 
-          {draft.precoUnitario > 0 && (
+          {draft.unitPrice > 0 && (
             <div className={styles.propostaTotalPreview}>
               <span>Custo total equalizado estimado:</span>
               <strong>{formatCurrency(totalEqualizado)}</strong>
@@ -229,8 +241,8 @@ export default function RfqDetailPage() {
 
   const [rfq, setRfq] = useState<Rfq | null>(null);
   const [loading, setLoading] = useState(true);
-  const [estagio, setEstagio] = useState<Estagio>("proposta");
-  const [propostas, setPropostas] = useState<PropostaLocal[]>([]);
+  const [stage, setStage] = useState<RfqStage>("proposal");
+  const [propostas, setPropostas] = useState<LocalProposal[]>([]);
   const [vencedorId, setVencedorId] = useState<string | null>(null);
 
   type DialogType = "encerrar" | "selecionar" | "gerar" | null;
@@ -246,7 +258,7 @@ export default function RfqDetailPage() {
         const data = await rfqsApi.getById(rfqId);
         setRfq(data);
         setPropostas(mapPropostas(data));
-        setEstagio(getEstagio(data));
+        setStage(getStage(data));
         const winner = (data.proposals ?? []).find((p) => p.isWinner);
         if (winner) setVencedorId(winner.supplierId);
       } catch (err) {
@@ -263,23 +275,23 @@ export default function RfqDetailPage() {
     if (rfqId) load();
   }, [rfqId]);
 
-  const recebidas = propostas.filter((p) => p.status === "recebida");
-  const handleSalvarProposta = async (id: string, dados: Partial<PropostaLocal>) => {
-    setPropostas((c) => c.map((p) => (p.fornecedorId === id ? { ...p, ...dados } : p)));
-    if (dados.precoUnitario) {
+  const recebidas = propostas.filter((p) => p.status === "received");
+  const handleSalvarProposta = async (id: string, dados: Partial<LocalProposal>) => {
+    setPropostas((c) => c.map((p) => (p.supplierId === id ? { ...p, ...dados } : p)));
+    if (dados.unitPrice) {
       try {
         const propostaCriada = await rfqsApi.createProposal(rfqId, {
           supplierId: id,
-          unitPrice: Number(dados.precoUnitario) || 0,
-          freightCost: Number(dados.frete) || 0,
-          paymentTerms: dados.condicaoPagamento || "30 dias DDL",
-          deliveryTime: Number(dados.prazoEntrega) || 5,
+          unitPrice: Number(dados.unitPrice) || 0,
+          freightCost: Number(dados.freightCost) || 0,
+          paymentTerms: dados.paymentTerms || "30 dias DDL",
+          deliveryTime: Number(dados.deliveryTime) || 5,
         });
         // Armazena o propostaId real retornado pela API no estado local
         if (propostaCriada?.id) {
           setPropostas((c) =>
             c.map((p) =>
-              p.fornecedorId === id ? { ...p, propostaId: propostaCriada.id } : p
+              p.supplierId === id ? { ...p, proposalId: propostaCriada.id } : p
             )
           );
         }
@@ -292,7 +304,7 @@ export default function RfqDetailPage() {
 
 
   const propostasRankeadas = [...recebidas].sort(
-    (a, b) => ((a.precoUnitario || 0) + (a.frete || 0)) - ((b.precoUnitario || 0) + (b.frete || 0))
+    (a, b) => ((a.unitPrice || 0) + (a.freightCost || 0)) - ((b.unitPrice || 0) + (b.freightCost || 0))
   );
   const melhorProposta = propostasRankeadas[0] || null;
 
@@ -303,8 +315,8 @@ export default function RfqDetailPage() {
     ) ?? 0;
   const totalQtd = rawQtd > 0 ? rawQtd : 1;
 
-  const vencedor = propostas.find((p) => p.fornecedorId === vencedorId);
-  const pendingVencedor = propostas.find((p) => p.fornecedorId === pendingVencedorId);
+  const vencedor = propostas.find((p) => p.supplierId === vencedorId);
+  const pendingVencedor = propostas.find((p) => p.supplierId === pendingVencedorId);
 
   const rfqTitle = rfq?.title || rfq?.purchaseRequest?.description || "—";
   const rfqCode = rfq?.code || rfqId;
@@ -314,11 +326,11 @@ export default function RfqDetailPage() {
     : "—";
 
   const badgeVariant =
-    estagio === "aprovacao" ? "warning" : estagio === "analise" ? "primary" : "success";
+    stage === "approval" ? "warning" : stage === "analysis" ? "primary" : "success";
   const badgeLabel =
-    estagio === "proposta"
+    stage === "proposal"
       ? "Aguardando propostas"
-      : estagio === "analise"
+      : stage === "analysis"
       ? "Em análise"
       : "Em aprovação";
 
@@ -335,7 +347,7 @@ export default function RfqDetailPage() {
         onConfirm={async () => {
           try {
             await rfqsApi.updateStatus(rfqId, "UnderAnalysis");
-            setEstagio("analise");
+            setStage("analysis");
             toast({
               variant: "warning",
               title: "Coleta encerrada",
@@ -360,7 +372,7 @@ export default function RfqDetailPage() {
         message={
           pendingVencedor ? (
             <>
-              <strong>{pendingVencedor.nome}</strong> será declarado vencedor desta RFQ. Um
+              <strong>{pendingVencedor.supplierName}</strong> será declarado vencedor desta RFQ. Um
               Pedido de Compra será gerado em seguida.
             </>
           ) : (
@@ -371,22 +383,42 @@ export default function RfqDetailPage() {
         onConfirm={async () => {
           if (pendingVencedorId) {
             try {
-              // pendingVencedorId é o supplierId; buscamos o propostaId real
-              const propostaIdParaEnviar = propostas.find(
-                (p) => p.fornecedorId === pendingVencedorId
-              )?.propostaId;
+              let propostaIdParaEnviar = propostas.find(
+                (p) => p.supplierId === pendingVencedorId
+              )?.proposalId;
+
+              // Se a proposta ainda não tiver id cadastrado no backend, cria automaticamente
               if (!propostaIdParaEnviar) {
-                toast({ variant: "error", title: "Proposta não encontrada", message: "Salve a proposta do fornecedor antes de selecioná-lo como vencedor." });
+                const propLocal = propostas.find((p) => p.supplierId === pendingVencedorId);
+                const propCriada = await rfqsApi.createProposal(rfqId, {
+                  supplierId: pendingVencedorId,
+                  unitPrice: propLocal?.unitPrice ?? 0,
+                  freightCost: propLocal?.freightCost ?? 0,
+                  paymentTerms: propLocal?.paymentTerms || "30 dias DDL",
+                  deliveryTime: propLocal?.deliveryTime ?? 5,
+                });
+                propostaIdParaEnviar = propCriada?.id;
+              }
+
+              if (!propostaIdParaEnviar) {
+                toast({ variant: "error", title: "Proposta não encontrada", message: "Não foi possível registrar a proposta para este fornecedor." });
                 setDialog(null);
                 return;
               }
+
               await rfqsApi.selectWinner(rfqId, propostaIdParaEnviar);
+
+              // Atualiza os dados completos da RFQ vindos do servidor
+              const updated = await rfqsApi.getById(rfqId);
+              setRfq(updated);
+              setPropostas(mapPropostas(updated));
               setVencedorId(pendingVencedorId);
-              setEstagio("aprovacao");
+              setStage(getStage(updated));
+
               toast({
                 variant: "success",
                 title: "Fornecedor selecionado!",
-                message: `${pendingVencedor?.nome ?? "Fornecedor"} foi declarado vencedor desta RFQ no servidor.`,
+                message: `${pendingVencedor?.supplierName ?? "Fornecedor"} foi declarado vencedor desta RFQ no servidor.`,
               });
             } catch (e) {
               logError("rfqs/[id]/selectWinner", e);
@@ -411,9 +443,9 @@ export default function RfqDetailPage() {
         message={
           vencedor ? (
             <>
-              O PO será emitido para <strong>{vencedor.nome}</strong> no valor total de{" "}
+              O PO será emitido para <strong>{vencedor.supplierName}</strong> no valor total de{" "}
               <strong>
-                {formatCurrency(((vencedor.precoUnitario ?? 0) + (vencedor.frete ?? 0)) * totalQtd)}
+                {formatCurrency(((vencedor.unitPrice ?? 0) + (vencedor.freightCost ?? 0)) * totalQtd)}
               </strong>
               . Esta ação é definitiva.
             </>
@@ -428,7 +460,7 @@ export default function RfqDetailPage() {
             toast({
               variant: "success",
               title: "Pedido de Compra emitido com sucesso!",
-              message: `PO ${(po as any)?.code || ""} gerado para ${vencedor?.nome ?? "fornecedor"}.`,
+              message: `PO ${(po as any)?.code || ""} gerado para ${vencedor?.supplierName ?? "fornecedor"}.`,
               duration: 6000,
             });
             router.push(`/compras/pedidos`);
@@ -468,11 +500,11 @@ export default function RfqDetailPage() {
       <div className={styles.estagioPista}>
         <div
           className={`${styles.estsgioItem} ${
-            estagio === "proposta" ? styles.estsgioAtivo : styles.estagioConcluido
+            stage === "proposal" ? styles.estsgioAtivo : styles.estagioConcluido
           }`}
         >
           <div className={styles.estsgioIcone}>
-            {estagio === "proposta" ? "1" : <Icon name="check" size={16} />}
+            {stage === "proposal" ? "1" : <Icon name="check" size={16} />}
           </div>
           <div>
             <strong>Coleta de propostas</strong>
@@ -483,20 +515,20 @@ export default function RfqDetailPage() {
         </div>
         <div
           className={`${styles.estagioConetor} ${
-            estagio !== "proposta" ? styles.estsgioConectorAtivo : ""
+            stage !== "proposal" ? styles.estsgioConectorAtivo : ""
           }`}
         />
         <div
           className={`${styles.estsgioItem} ${
-            estagio === "analise"
+            stage === "analysis"
               ? styles.estsgioAtivo
-              : estagio === "aprovacao"
+              : stage === "approval"
               ? styles.estagioConcluido
               : styles.estsgioInativo
           }`}
         >
           <div className={styles.estsgioIcone}>
-            {estagio === "aprovacao" ? <Icon name="check" size={16} /> : "2"}
+            {stage === "approval" ? <Icon name="check" size={16} /> : "2"}
           </div>
           <div>
             <strong>Análise e comparativo</strong>
@@ -505,12 +537,12 @@ export default function RfqDetailPage() {
         </div>
         <div
           className={`${styles.estagioConetor} ${
-            estagio === "aprovacao" ? styles.estsgioConectorAtivo : ""
+            stage === "approval" ? styles.estsgioConectorAtivo : ""
           }`}
         />
         <div
           className={`${styles.estsgioItem} ${
-            estagio === "aprovacao" ? styles.estsgioAtivo : styles.estsgioInativo
+            stage === "approval" ? styles.estsgioAtivo : styles.estsgioInativo
           }`}
         >
           <div className={styles.estsgioIcone}>3</div>
@@ -544,7 +576,7 @@ export default function RfqDetailPage() {
     );
   }
 
-  if (estagio === "proposta") {
+  if (stage === "proposal") {
     return (
       <div className={styles.detailContainer}>
         <Header />
@@ -602,7 +634,7 @@ export default function RfqDetailPage() {
           ) : (
             propostas.map((p) => (
               <PropostaCard
-                key={p.fornecedorId}
+                key={p.supplierId}
                 proposta={p}
                 isWinner={false}
                 totalQtd={totalQtd}
@@ -615,7 +647,7 @@ export default function RfqDetailPage() {
     );
   }
 
-  if (estagio === "analise") {
+  if (stage === "analysis") {
     return (
       <div className={styles.detailContainer}>
         <Header />
@@ -624,7 +656,7 @@ export default function RfqDetailPage() {
           <div style={{ textAlign: "center", padding: "48px 24px", color: "#94a3b8" }}>
             <Icon name="file-search-02" size={40} />
             <p style={{ marginTop: 12 }}>Nenhuma proposta recebida para comparar.</p>
-            <Button variant="secondary" style={{ marginTop: 16 }} onClick={() => setEstagio("proposta")}>
+            <Button variant="secondary" style={{ marginTop: 16 }} onClick={() => setStage("proposal")}>
               Voltar para coleta
             </Button>
           </div>
@@ -638,36 +670,36 @@ export default function RfqDetailPage() {
                     <Icon name="trend-up-01" />
                   </div>
                   <h3>
-                    {formatCurrency((melhorProposta?.precoUnitario || 0) + (melhorProposta?.frete || 0))}/un
+                    {formatCurrency((melhorProposta?.unitPrice || 0) + (melhorProposta?.freightCost || 0))}/un
                   </h3>
-                  <span className={styles.subTextDark}>{melhorProposta?.nome || "—"}</span>
+                  <span className={styles.subTextDark}>{melhorProposta?.supplierName || "—"}</span>
                 </div>
               </Card>
               <Card className={styles.metricCard}>
                 <span className={styles.label}>Menor preço unitário</span>
                 <h3 className={styles.textPrimary}>
-                  {formatCurrency(Math.min(...recebidas.map((p) => p.precoUnitario || 0)))}
+                  {formatCurrency(Math.min(...recebidas.map((p) => p.unitPrice || 0)))}
                 </h3>
-                <span className={styles.sub}>{propostasRankeadas[0]?.nome || "—"}</span>
+                <span className={styles.sub}>{propostasRankeadas[0]?.supplierName || "—"}</span>
               </Card>
               <Card className={styles.metricCard}>
                 <span className={styles.label}>Média das propostas</span>
                 <h3>
                   {formatCurrency(
-                    recebidas.reduce((s, p) => s + (p.precoUnitario || 0), 0) / (recebidas.length || 1)
+                    recebidas.reduce((s, p) => s + (p.unitPrice || 0), 0) / (recebidas.length || 1)
                   )}
                 </h3>
                 <span className={styles.sub}>Base: {recebidas.length} propostas</span>
               </Card>
               <Card className={styles.metricCard}>
                 <span className={styles.label}>Melhor prazo</span>
-                <h3>{Math.min(...recebidas.map((p) => p.prazoEntrega || 1))} dia(s)</h3>
+                <h3>{Math.min(...recebidas.map((p) => p.deliveryTime || 1))} dia(s)</h3>
                 <span className={styles.sub}>
                   {
                     recebidas.find(
                       (p) =>
-                        p.prazoEntrega === Math.min(...recebidas.map((x) => x.prazoEntrega!))
-                    )?.nome
+                        p.deliveryTime === Math.min(...recebidas.map((x) => x.deliveryTime!))
+                    )?.supplierName
                   }
                 </span>
               </Card>
@@ -679,7 +711,7 @@ export default function RfqDetailPage() {
                   <h4>Matriz de Equalização Comercial</h4>
                   <p>Valores consolidados para tomada de decisão.</p>
                 </div>
-                <button className={styles.btnVoltarColeta} onClick={() => setEstagio("proposta")}>
+                <button className={styles.btnVoltarColeta} onClick={() => setStage("proposal")}>
                   <Icon name="arrow-left" size={15} /> Voltar e editar propostas
                 </button>
               </div>
@@ -690,9 +722,9 @@ export default function RfqDetailPage() {
                     <tr>
                       <th className={styles.rowHeader}>Critério</th>
                       {propostasRankeadas.map((p, i) => (
-                        <th key={p.fornecedorId} className={i === 0 ? styles.winnerHeaderCol : ""}>
+                        <th key={p.supplierId} className={i === 0 ? styles.winnerHeaderCol : ""}>
                           {i === 0 && <div className={styles.winnerBadgeTip}>MELHOR OPÇÃO</div>}
-                          {p.nome.split(" ").slice(0, 2).join(" ")}
+                          {p.supplierName.split(" ").slice(0, 2).join(" ")}
                         </th>
                       ))}
                     </tr>
@@ -702,10 +734,10 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Preço Unitário Líquido</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.fornecedorId}
+                          key={p.supplierId}
                           className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}
                         >
-                          {formatCurrency(p.precoUnitario!)}
+                          {formatCurrency(p.unitPrice!)}
                         </td>
                       ))}
                     </tr>
@@ -713,10 +745,10 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Custo de Frete (unit)</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.fornecedorId}
+                          key={p.supplierId}
                           className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}
                         >
-                          {formatCurrency(p.frete!)}
+                          {formatCurrency(p.freightCost!)}
                         </td>
                       ))}
                     </tr>
@@ -724,10 +756,10 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Prazo de Entrega</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.fornecedorId}
+                          key={p.supplierId}
                           className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}
                         >
-                          {p.prazoEntrega} dia(s)
+                          {p.deliveryTime} dia(s)
                         </td>
                       ))}
                     </tr>
@@ -735,10 +767,10 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Condição de Pagamento</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.fornecedorId}
+                          key={p.supplierId}
                           className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                         >
-                          {p.condicaoPagamento}
+                          {p.paymentTerms}
                         </td>
                       ))}
                     </tr>
@@ -746,23 +778,23 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeaderTotal}>Custo Total Equalizado</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.fornecedorId}
+                          key={p.supplierId}
                           className={i === 0 ? styles.winnerCellTotal : styles.totalMutedText}
                         >
-                          {formatCurrency((p.precoUnitario! + p.frete!) * totalQtd)}
+                          {formatCurrency((p.unitPrice! + p.freightCost!) * totalQtd)}
                         </td>
                       ))}
                     </tr>
                     <tr>
                       <td className={styles.rowHeader} />
                       {propostasRankeadas.map((p, i) => (
-                        <td key={p.fornecedorId} className={styles.selectCell}>
+                        <td key={p.supplierId} className={styles.selectCell}>
                           <button
                             className={
                               i === 0 ? styles.btnSelecionarVencedor : styles.btnSelecionarSecundario
                             }
                             onClick={() => {
-                              setPendingVencedorId(p.fornecedorId);
+                              setPendingVencedorId(p.supplierId);
                               setDialog("selecionar");
                             }}
                           >
@@ -809,7 +841,7 @@ export default function RfqDetailPage() {
             </h3>
             <div className={styles.aprovacaoDataRow}>
               <span>Razão Social</span>
-              <strong>{vencedor?.nome ?? "—"}</strong>
+              <strong>{vencedor?.supplierName ?? "—"}</strong>
             </div>
             <div className={styles.aprovacaoDataRow}>
               <span>CNPJ</span>
@@ -823,11 +855,11 @@ export default function RfqDetailPage() {
             </h3>
             <div className={styles.aprovacaoDataRow}>
               <span>Prazo de Entrega</span>
-              <strong>{vencedor?.prazoEntrega ?? "—"} dia(s)</strong>
+              <strong>{vencedor?.deliveryTime ?? "—"} dia(s)</strong>
             </div>
             <div className={styles.aprovacaoDataRow}>
               <span>Condição de Pagamento</span>
-              <strong>{vencedor?.condicaoPagamento ?? "—"}</strong>
+              <strong>{vencedor?.paymentTerms ?? "—"}</strong>
             </div>
           </Card>
 
@@ -837,11 +869,11 @@ export default function RfqDetailPage() {
             </h3>
             <div className={styles.aprovacaoDataRow}>
               <span>Preço Unitário Líquido</span>
-              <strong>{formatCurrency(vencedor?.precoUnitario ?? 0)} / unidade</strong>
+              <strong>{formatCurrency(vencedor?.unitPrice ?? 0)} / unidade</strong>
             </div>
             <div className={styles.aprovacaoDataRow}>
               <span>Custo de Frete Adicional</span>
-              <strong>{formatCurrency(vencedor?.frete ?? 0)} / unidade</strong>
+              <strong>{formatCurrency(vencedor?.freightCost ?? 0)} / unidade</strong>
             </div>
           </Card>
         </div>
@@ -853,13 +885,13 @@ export default function RfqDetailPage() {
           </div>
           <div className={styles.aprovacaoTotalValue}>
             {formatCurrency(
-              ((vencedor?.precoUnitario ?? 0) + (vencedor?.frete ?? 0)) * totalQtd
+              ((vencedor?.unitPrice ?? 0) + (vencedor?.freightCost ?? 0)) * totalQtd
             )}
           </div>
         </div>
 
         <div className={styles.aprovacaoFooter}>
-          <button className={styles.btnVoltarAnalise} onClick={() => setEstagio("analise")}>
+          <button className={styles.btnVoltarAnalise} onClick={() => setStage("analysis")}>
             <Icon name="arrow-left" size={15} /> Voltar para Matriz
           </button>
           <Button

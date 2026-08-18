@@ -19,6 +19,14 @@ export interface PurchaseRequest {
   deadline: string;
   priority: "Low" | "Medium" | "High" | "Urgent" | "Critical";
   status: "Draft" | "AwaitingApproval" | "Approved" | "Rejected" | "InQuote" | "Finished" | "Pending" | "UnderAnalysis" | "Cancelled";
+  corporateCode?: string;
+  corporateCompanyId?: string;
+  corporateRequester?: string;
+  corporateStockLocation?: string;
+  corporateOriginReq?: string;
+  corporateIntegration?: string;
+  source?: string;
+  rawPayload?: any;
   createdAt: string;
   updatedAt: string;
   items?: RequestItem[];
@@ -44,6 +52,11 @@ export interface RequestItem {
   estimatedUnitPrice?: number;
   costCenter?: string;
   requiredDate?: string;
+  corporateItemCode?: string;
+  corporateItemNumber?: number;
+  corporateWorkSite?: string;
+  reason?: string;
+  brand?: string;
 }
 
 export interface PurchaseRequestKpis {

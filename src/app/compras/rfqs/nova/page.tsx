@@ -89,7 +89,7 @@ export default function NewRfqPage() {
   const [itens, setItens] = useState<ItemCotacao[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
 
-  const [solicidadoesApi, setSolicitacoesApi] = useState<Solicitacao[]>(SOLICITACOES_DISPONIVEIS);
+  const [requestsApi, setRequestsApi] = useState<Solicitacao[]>(SOLICITACOES_DISPONIVEIS);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -131,9 +131,9 @@ export default function NewRfqPage() {
             observacoes: r.justification || "",
           }));
 
-          setSolicitacoesApi(mappedReqs);
+          setRequestsApi(mappedReqs);
         } else {
-          setSolicitacoesApi([]);
+          setRequestsApi([]);
         }
 
         if (sups && sups.length > 0) {
@@ -165,7 +165,7 @@ export default function NewRfqPage() {
   useEffect(() => {
     if (!paramSol) return;
 
-    const solExistente = solicidadoesApi.find((s) => s.id === paramSol || (s as any).code === paramSol);
+    const solExistente = requestsApi.find((s) => s.id === paramSol || (s as any).code === paramSol);
 
     if (solExistente) {
       setSolicitacaoConfirmada(solExistente);
@@ -186,11 +186,11 @@ export default function NewRfqPage() {
       });
     }
     setCurrentStep(1);
-  }, [paramSol, solicidadoesApi]);
+  }, [paramSol, requestsApi]);
 
 
   const handleConfirmarSolicitacao = () => {
-    const sol = solicidadoesApi.find((s) => s.id === solicitacaoSelecionada);
+    const sol = requestsApi.find((s) => s.id === solicitacaoSelecionada);
     if (!sol) return;
     setSolicitacaoConfirmada(sol);
     setTituloRfq(`RFQ — ${sol.titulo}`);
@@ -242,7 +242,7 @@ export default function NewRfqPage() {
 
 
 
-  const solicitacaoPreview = solicidadoesApi.find((s) => s.id === solicitacaoSelecionada);
+  const solicitacaoPreview = requestsApi.find((s: Solicitacao) => s.id === solicitacaoSelecionada);
 
 
   if (!solicitacaoConfirmada) {
@@ -282,7 +282,7 @@ export default function NewRfqPage() {
                 <Skeleton height={42} width="100%" />
               ) : (
                 <Select
-                  options={solicidadoesApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
+                  options={requestsApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
                   value={solicitacaoSelecionada}
                   onChange={setSolicitacaoSelecionada}
                   placeholder="Selecione uma solicitação..."
@@ -322,7 +322,7 @@ export default function NewRfqPage() {
                   </div>
                 </dl>
                 <ul className={styles.gatePreviewItens}>
-                  {solicitacaoPreview.itens.map((item) => (
+                  {solicitacaoPreview.itens.map((item: any) => (
                     <li key={item.id}>
                       <Icon name="package" size={14} />
                       {item.descricao} — {item.qtd.toLocaleString("pt-BR")} {item.unidade}
