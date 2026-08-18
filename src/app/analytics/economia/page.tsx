@@ -362,13 +362,17 @@ export default function EconomiaPage() {
         <div className={styles.filterInput}>
           <Select
             options={[
-              { value: "all", label: "Todas" },
-              { value: "lins", label: "Unidade Lins" },
-              { value: "promissao", label: "Unidade Promissão" },
-              { value: "guaiuba", label: "Unidade Guaiúba" }
+              { value: "all", label: "Todas as Empresas" },
+              ...(user?.availableTenants || []).map((t) => ({
+                value: t.id,
+                label: t.name,
+              })),
             ]}
-            value={selectedUnidade}
-            onChange={setSelectedUnidade}
+            value={selectedPrimaryCompanyId === "TODAS" ? "all" : selectedPrimaryCompanyId}
+            onChange={(val) => {
+              setSelectedPrimaryCompanyId(val === "all" ? "TODAS" : val);
+              setSelectedUnidade(val);
+            }}
           />
         </div>
 
