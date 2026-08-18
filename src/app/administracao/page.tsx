@@ -838,9 +838,7 @@ export default function AdministracaoPage() {
                     onChange={setStatusFilter}
                     className={styles.customSelectFilter}
                   />
-                  <Button variant="primary" onClick={openCreateUser}>
-                    <Icon name="plus" size={16} /> Novo Usuário
-                  </Button>
+                  {/* Criação de usuário desabilitada: gerenciado via Identity */}
                 </div>
               </div>
 
@@ -1024,9 +1022,7 @@ export default function AdministracaoPage() {
                     onChange={(e) => setEmpresaSearch(e.target.value)}
                   />
                 </div>
-                <Button variant="primary" onClick={openCreateEmpresa}>
-                  <Icon name="plus" size={16} /> Nova Empresa
-                </Button>
+                {/* Cadastro manual de empresa desabilitado: sincronizado via Identity/Corporate */}
               </div>
 
               <DataTable data={filteredEmpresas} columns={empresaColumns} />
