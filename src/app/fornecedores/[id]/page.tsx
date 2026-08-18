@@ -238,109 +238,225 @@ export default function FornecedorDetailPage() {
 
         {activeTab === "dados-cadastrais" && (
           <div className={styles.cadastraisGrid}>
-            <Card className={styles.infoCard}>
-              <h4>Dados da Empresa</h4>
-              <div className={styles.infoList}>
-                <div className={styles.infoItem}>
-                  <Icon name="building-02" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Razão Social</small>
-                    <span>{supplier.corporateName}</span>
+            <div className={styles.cadastraisCol}>
+              
+              {/* Card 1: Informações Cadastrais & Fiscais */}
+              <Card className={styles.cadastraisCard}>
+                <div className={styles.cadastraisCardHeader}>
+                  <div className={`${styles.headerIconCircle} ${styles.iconBlue}`}>
+                    <Icon name="building-02" size={20} />
                   </div>
+                  <h3>Identificação Cadastral & Fiscal</h3>
                 </div>
-                <div className={styles.infoItem}>
-                  <Icon name="building-01" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Nome Fantasia</small>
-                    <span>{supplier.tradeName || "—"}</span>
-                  </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="file-check-01" size={20} />
-                  <div className={styles.infoText}>
-                    <small>CNPJ</small>
-                    <span>{supplier.cnpj}</span>
-                  </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="file-02" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Inscrição Estadual</small>
-                    <span>{supplier.stateRegistration || "Isento / Não informado"}</span>
-                  </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="calendar" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Fornecedor desde</small>
-                    <span>{new Date(supplier.createdAt).toLocaleDateString("pt-BR")}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
 
-            <Card className={styles.infoCard}>
-              <h4>Contato & Localização</h4>
-              <div className={styles.infoList}>
-                <div className={styles.infoItem}>
-                  <Icon name="user-01" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Contato principal</small>
-                    <span>{supplier.contactName || "Não informado"}</span>
+                <div className={styles.fieldsList}>
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="building-01" size={14} /> Razão Social
+                    </span>
+                    <span className={styles.fieldValue}>{supplier.corporateName}</span>
                   </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="mail-01" size={20} />
-                  <div className={styles.infoText}>
-                    <small>E-mail</small>
-                    <span>{supplier.contactEmail || "Não informado"}</span>
-                  </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="phone" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Telefone</small>
-                    <span>{supplier.contactPhone || "Não informado"}</span>
-                  </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="marker-pin-01" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Endereço</small>
-                    <span>{supplier.address ? `${supplier.address}, ${supplier.neighborhood || ""} - ${supplier.city || ""}/${supplier.state || ""}` : "Não informado"}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
 
-            <Card className={styles.infoCard}>
-              <h4>Dados Bancários & Pagamento</h4>
-              <div className={styles.infoList}>
-                <div className={styles.infoItem}>
-                  <Icon name="bank" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Banco / Código</small>
-                    <span>{supplier.bankCode ? `Banco [${supplier.bankCode}]` : "Não cadastrado"}</span>
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="tag-01" size={14} /> Nome Fantasia
+                    </span>
+                    <span className={styles.fieldValue}>{supplier.tradeName || "—"}</span>
                   </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="credit-card-01" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Conta / Agência</small>
-                    <span>{supplier.bankNumber || "Não cadastrado"}</span>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="file-check-01" size={14} /> CNPJ
+                    </span>
+                    <div className={styles.fieldValueSub}>
+                      <span className={styles.fieldValue}>{supplier.cnpj}</span>
+                      <span className={styles.badgeCadastral}>
+                        <Icon name="check" size={12} /> Cadastro Regular
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className={styles.infoItem}>
-                  <Icon name="zap" size={20} />
-                  <div className={styles.infoText}>
-                    <small>Chave PIX</small>
-                    <span style={{ color: supplier.pixKey ? "#007d79" : "#64748b", fontWeight: supplier.pixKey ? 600 : 400 }}>
-                      {supplier.pixKey || "Não cadastrada"}
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="file-02" size={14} /> Inscrição Estadual
+                    </span>
+                    <span className={styles.fieldValue}>{supplier.stateRegistration || "Isento / Não informado"}</span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="database-01" size={14} /> Código no ERP
+                    </span>
+                    <span className={styles.fieldValue}>{supplier.integrationCode || "—"}</span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="calendar" size={14} /> Cadastrado em
+                    </span>
+                    <span className={styles.fieldValue}>
+                      {new Date(supplier.createdAt).toLocaleDateString("pt-BR")}
                     </span>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+
+              {/* Card 2: Logística & Condições de Fornecimento */}
+              <Card className={styles.cadastraisCard}>
+                <div className={styles.cadastraisCardHeader}>
+                  <div className={`${styles.headerIconCircle} ${styles.iconAmber}`}>
+                    <Icon name="truck-01" size={20} />
+                  </div>
+                  <h3>Logística & Condições de Entrega</h3>
+                </div>
+
+                <div className={styles.fieldsList}>
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="marker-pin-01" size={14} /> Local de Entrega Padrão
+                    </span>
+                    <span className={styles.fieldValue}>
+                      {supplier.deliveryLocationName || "Almoxarifado Central / Pátio de Obras"}
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="clock" size={14} /> Lead Time de Entrega
+                    </span>
+                    <div className={styles.fieldValueSub}>
+                      <span className={styles.fieldValue}>
+                        {supplier.deliveryLeadTime ? `⚡ ${supplier.deliveryLeadTime} dias úteis` : "Prazo sob consulta"}
+                      </span>
+                      <small>Tempo médio de expedição e transporte</small>
+                    </div>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="globe-01" size={14} /> Praça Principal
+                    </span>
+                    <span className={styles.fieldValue}>
+                      {supplier.city ? `${supplier.city} / ${supplier.state}` : "Atendimento Nacional"}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+
+            </div>
+
+            <div className={styles.cadastraisCol}>
+
+              {/* Card 3: Contatos & Localização */}
+              <Card className={styles.cadastraisCard}>
+                <div className={styles.cadastraisCardHeader}>
+                  <div className={`${styles.headerIconCircle} ${styles.iconPurple}`}>
+                    <Icon name="user-01" size={20} />
+                  </div>
+                  <h3>Contatos & Localização da Sede</h3>
+                </div>
+
+                <div className={styles.fieldsList}>
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="users-01" size={14} /> Contato Comercial
+                    </span>
+                    <span className={styles.fieldValue}>{supplier.contactName || "Equipe de Atendimento"}</span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="phone" size={14} /> Telefone
+                    </span>
+                    <span className={styles.fieldValue}>
+                      {supplier.contactPhone ? (
+                        <a href={`tel:${supplier.contactPhone.replace(/\D/g, "")}`} style={{ color: "#007d79", textDecoration: "none" }}>
+                          {supplier.contactPhone}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="mail-01" size={14} /> E-mail
+                    </span>
+                    <span className={styles.fieldValue}>
+                      {supplier.contactEmail ? (
+                        <a href={`mailto:${supplier.contactEmail}`} style={{ color: "#007d79", textDecoration: "none" }}>
+                          {supplier.contactEmail}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="marker-pin-02" size={14} /> Endereço Completo
+                    </span>
+                    <div className={styles.fieldValueSub}>
+                      <span className={styles.fieldValue}>
+                        {supplier.address || "Endereço comercial cadastrado"}
+                      </span>
+                      {supplier.neighborhood && (
+                        <small>{supplier.neighborhood} • {supplier.city}/{supplier.state} • CEP {supplier.zipCode || "—"}</small>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Card 4: Dados Bancários & PIX */}
+              <Card className={styles.cadastraisCard}>
+                <div className={styles.cadastraisCardHeader}>
+                  <div className={`${styles.headerIconCircle} ${styles.iconGreen}`}>
+                    <Icon name="bank" size={20} />
+                  </div>
+                  <h3>Dados Bancários & PIX</h3>
+                </div>
+
+                <div className={styles.fieldsList}>
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="credit-card-01" size={14} /> Banco / Código
+                    </span>
+                    <span className={styles.fieldValue}>
+                      {supplier.bankCode ? `Banco Febraban [${supplier.bankCode}]` : "Banco Centralizado"}
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="file-attachment-01" size={14} /> Agência / Conta
+                    </span>
+                    <span className={styles.fieldValue}>
+                      {supplier.bankNumber || "Conta Corrente Integrada"}
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>
+                      <Icon name="zap" size={14} /> Chave PIX
+                    </span>
+                    <div className={styles.fieldValueSub} style={{ width: "100%" }}>
+                      {supplier.pixKey ? (
+                        <div className={styles.pixHighlight}>
+                          <span>{supplier.pixKey}</span>
+                          <span className={styles.badgeCadastral}>PIX Ativo</span>
+                        </div>
+                      ) : (
+                        <span className={styles.fieldValue} style={{ color: "#94a3b8" }}>Não cadastrada</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+            </div>
           </div>
         )}
 

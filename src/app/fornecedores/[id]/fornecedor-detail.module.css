@@ -541,3 +541,148 @@
 .linkAction:hover {
   text-decoration: underline;
 }
+
+/* ==========================================================================
+   Aba: Dados Cadastrais Ricos & Elegantes
+   ========================================================================== */
+
+.cadastraisGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.cadastraisCol {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cadastraisCard {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cadastraisCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 14px;
+}
+
+.cadastraisCardHeader h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.headerIconCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.iconBlue { background: #eff6ff; color: #2563eb; }
+.iconPurple { background: #faf5ff; color: #9333ea; }
+.iconGreen { background: #f0fdf4; color: #16a34a; }
+.iconAmber { background: #fffbeb; color: #d97706; }
+
+.fieldsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fieldRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.fieldRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  min-width: 140px;
+}
+
+.fieldLabel svg {
+  color: #94a3b8;
+}
+
+.fieldValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+  word-break: break-word;
+}
+
+.fieldValueSub {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.fieldValueSub small {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.pixHighlight {
+  background: #f0fdf9;
+  border: 1px solid #ccfbf1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pixHighlight span {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #007d79;
+}
+
+.badgeCadastral {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #16a34a;
+}
+
