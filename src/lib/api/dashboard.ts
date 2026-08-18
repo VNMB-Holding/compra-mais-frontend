@@ -31,14 +31,54 @@ export interface RecentRfqItem {
 }
 
 export interface SpendAnalyticsResponse {
-  totalSpend: number;
-  monthlyTrend: { month: string; spend: number }[];
-  byCategory: { category: string; spend: number }[];
+  monthlySpend: { name: string; value: number }[];
+  categories: {
+    categoria: string;
+    spendTotal: number;
+    pctTotal: number;
+    pedidos: number | string;
+    color: string;
+  }[];
+  suppliers: {
+    nome: string;
+    valor: number;
+    pct: number;
+  }[];
+  kpis: {
+    spendTotal?: string;
+    pedidosEmitidos?: string;
+    fornecedoresAtivos?: string;
+  };
 }
 
 export interface EconomyAnalyticsResponse {
-  totalEconomy: number;
-  monthlyTrend: { month: string; economy: number }[];
+  initiatives: {
+    iniciativa: string;
+    valor: number;
+    pct: number;
+  }[];
+  categories: {
+    categoria: string;
+    valor: number;
+    pct: number;
+    color: string;
+  }[];
+  suppliers: {
+    fornecedor: string;
+    valor: number;
+    pct: number;
+    itens: number | string;
+  }[];
+  details?: {
+    iniciativa: string;
+    categoria: string;
+    fornecedor: string;
+    valor: number;
+    data: string;
+  }[];
+  kpis: {
+    economiaGerada?: string;
+  };
 }
 
 function buildQs(tenantId?: string): string {

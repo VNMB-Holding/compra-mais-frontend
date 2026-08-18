@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "./economia.module.css";
 import {
   Card,
@@ -13,6 +13,10 @@ import {
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { useAuth } from "@/hooks/useAuth";
+import { dashboardApi, EconomyAnalyticsResponse } from "@/lib/api/dashboard";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions } from "@/lib/utils/tenant";
+import { logError } from "@/lib/utils/error";
 
 interface CategoryEconomy {
   categoria: string;
@@ -44,11 +48,42 @@ interface DetailEconomy {
 
 export default function EconomiaPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
   const [selectedUnidade, setSelectedUnidade] = useState<string>("all");
   const [exportingType, setExportingType] = useState<"PDF" | "XLS" | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [apiData, setApiData] = useState<EconomyAnalyticsResponse | null>(null);
+
+  const primaryCompanies = getPrimaryCompanyOptions(user);
+  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
+  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
+
+  const queryTenantId = useMemo(() => {
+    if (selectedBranchId !== "TODAS") return selectedBranchId;
+    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
+    return undefined;
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await dashboardApi.getEconomyAnalytics(queryTenantId);
+      setApiData(data);
+    } catch (err) {
+      logError("analytics/economia/fetchData", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [queryTenantId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleExport = (type: "PDF" | "XLS") => {
     setExportingType(type);
@@ -126,7 +161,94 @@ export default function EconomiaPage() {
     return factor;
   }, [selectedPeriod, selectedCategory, selectedSupplier, selectedUnidade]);
 
+  const categoriesData = useMemo(() => {
+    if (apiData?.categories && apiData.categories.length > 0) {
+      let filteredCats = apiData.categories.map((c, idx) => ({
+        categoria: c.categoria,
+        valor: c.valor,
+        pct: Number(c.pct.toFixed(1)),
+        color: c.color || ['#007d79', '#00a39e', '#7c3aed', '#db2777', '#64748b'][idx % 5],
+      }));
+      if (selectedCategory !== "all") {
+        filteredCats = filteredCats.filter((c) => c.categoria === selectedCategory);
+      }
+      return filteredCats;
+    }
+    if (filterFactor === 1.0) return baseCategories;
+    return baseCategories.map((item) => ({
+      ...item,
+      valor: Math.round(item.valor * filterFactor),
+    }));
+  }, [apiData, selectedCategory, baseCategories, filterFactor]);
+
+  const initiativesData = useMemo(() => {
+    if (apiData?.initiatives && apiData.initiatives.length > 0) {
+      return apiData.initiatives.map((i) => ({
+        iniciativa: i.iniciativa,
+        valor: i.valor,
+        pct: Number(i.pct.toFixed(1)),
+      }));
+    }
+    if (filterFactor === 1.0) return baseInitiatives;
+    return baseInitiatives.map((item) => ({
+      ...item,
+      valor: Math.round(item.valor * filterFactor),
+    }));
+  }, [apiData, baseInitiatives, filterFactor]);
+
+  const suppliersData = useMemo(() => {
+    if (apiData?.suppliers && apiData.suppliers.length > 0) {
+      let filteredSups = apiData.suppliers.map((s) => ({
+        fornecedor: s.fornecedor,
+        valor: s.valor,
+        pct: Number(s.pct.toFixed(1)),
+        itens: s.itens,
+      }));
+      if (selectedSupplier !== "all") {
+        filteredSups = filteredSups.filter((s) => s.fornecedor === selectedSupplier);
+      }
+      return filteredSups;
+    }
+    if (filterFactor === 1.0) return baseSuppliers;
+    return baseSuppliers.map((item) => ({
+      ...item,
+      valor: Math.round(item.valor * filterFactor),
+      itens: item.itens === "--" ? "--" : Math.max(1, Math.round(Number(item.itens) * filterFactor)),
+    }));
+  }, [apiData, selectedSupplier, baseSuppliers, filterFactor]);
+
+  const detailsData = useMemo(() => {
+    if (apiData?.details && apiData.details.length > 0) {
+      return apiData.details;
+    }
+    if (filterFactor === 1.0) return baseDetails;
+    return baseDetails.map((item) => ({
+      ...item,
+      valor: Math.round(item.valor * filterFactor),
+    }));
+  }, [apiData, baseDetails, filterFactor]);
+
+  const monthlyEconomyData = useMemo(() => {
+    return baseMonthlyEconomy.map((item) => ({
+      ...item,
+      value: Math.round(item.value * filterFactor),
+    }));
+  }, [baseMonthlyEconomy, filterFactor]);
+
   const kpis = useMemo(() => {
+    if (apiData?.kpis?.economiaGerada) {
+      return {
+        economiaGerada: apiData.kpis.economiaGerada,
+        economiaPct: "15,2%",
+        economiaPotencial: formatCurrency(Math.round(categoriesData.reduce((s, c) => s + c.valor, 0) * 0.35)),
+        negociacoesCount: String(suppliersData.length),
+        trendEconomia: "↑ 18,6%",
+        trendEconPct: "vs. spend de referência",
+        trendPotencial: "32,7% do potencial total",
+        trendNegociacoes: "↑ 9,1%",
+      };
+    }
+
     const isFiltered = filterFactor < 1.0;
     if (!isFiltered) {
       return {
@@ -137,7 +259,7 @@ export default function EconomiaPage() {
         trendEconomia: "↑ 18,6%",
         trendEconPct: "vs. spend de referência",
         trendPotencial: "32,7% do potencial total",
-        trendNegociacoes: "↑ 9,1%"
+        trendNegociacoes: "↑ 9,1%",
       };
     }
 
@@ -156,51 +278,9 @@ export default function EconomiaPage() {
       trendEconomia: "↑ 12,4%",
       trendEconPct: "vs. spend de referência",
       trendPotencial: `${potPct}% do potencial total`,
-      trendNegociacoes: "↑ 5,2%"
+      trendNegociacoes: "↑ 5,2%",
     };
-  }, [filterFactor]);
-
-  const monthlyEconomyData = useMemo(() => {
-    return baseMonthlyEconomy.map(item => ({
-      ...item,
-      value: Math.round(item.value * filterFactor)
-    }));
-  }, [baseMonthlyEconomy, filterFactor]);
-
-  const categoriesData = useMemo(() => {
-    if (filterFactor === 1.0) return baseCategories;
-    return baseCategories.map(item => ({
-      ...item,
-      valor: Math.round(item.valor * filterFactor)
-    }));
-  }, [baseCategories, filterFactor]);
-
-  const initiativesData = useMemo(() => {
-    if (filterFactor === 1.0) return baseInitiatives;
-    return baseInitiatives.map(item => ({
-      ...item,
-      valor: Math.round(item.valor * filterFactor)
-    }));
-  }, [baseInitiatives, filterFactor]);
-
-  const suppliersData = useMemo(() => {
-    if (filterFactor === 1.0) return baseSuppliers;
-    return baseSuppliers.map(item => ({
-      ...item,
-      valor: Math.round(item.valor * filterFactor),
-      itens: item.itens === "--" ? "--" : Math.max(1, Math.round(Number(item.itens) * filterFactor))
-    }));
-  }, [baseSuppliers, filterFactor]);
-
-  const detailsData = useMemo(() => {
-    if (filterFactor === 1.0) {
-      return baseDetails.map((item, idx) => idx === 4 ? { ...item, valor: 95000 } : item);
-    }
-    return baseDetails.map(item => ({
-      ...item,
-      valor: Math.round((item.iniciativa.startsWith("Renegociação") ? 95000 : item.valor) * filterFactor)
-    }));
-  }, [baseDetails, filterFactor]);
+  }, [apiData, categoriesData, suppliersData.length, filterFactor]);
 
   const totals = useMemo(() => {
     const categoriesSum = categoriesData.reduce((s, c) => s + c.valor, 0);

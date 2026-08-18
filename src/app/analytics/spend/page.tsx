@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "./spend.module.css";
 import {
   Card,
@@ -13,6 +13,10 @@ import {
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { useAuth } from "@/hooks/useAuth";
+import { dashboardApi, SpendAnalyticsResponse } from "@/lib/api/dashboard";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions } from "@/lib/utils/tenant";
+import { logError } from "@/lib/utils/error";
 
 interface SpendItem {
   categoria: string;
@@ -31,11 +35,42 @@ interface SupplierSpend {
 
 export default function SpendPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
   const [selectedUnidade, setSelectedUnidade] = useState<string>("all");
   const [exportingType, setExportingType] = useState<"PDF" | "XLS" | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [apiData, setApiData] = useState<SpendAnalyticsResponse | null>(null);
+
+  const primaryCompanies = getPrimaryCompanyOptions(user);
+  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
+  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
+
+  const queryTenantId = useMemo(() => {
+    if (selectedBranchId !== "TODAS") return selectedBranchId;
+    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
+    return undefined;
+  }, [selectedPrimaryCompanyId, selectedBranchId]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await dashboardApi.getSpendAnalytics(queryTenantId);
+      setApiData(data);
+    } catch (err) {
+      logError("analytics/spend/fetchData", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [queryTenantId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleExport = (type: "PDF" | "XLS") => {
     setExportingType(type);
@@ -95,7 +130,87 @@ export default function SpendPage() {
     return factor;
   }, [selectedPeriod, selectedCategory, selectedSupplier, selectedUnidade]);
 
+  const monthlySpendData = useMemo(() => {
+    if (apiData?.monthlySpend && apiData.monthlySpend.length > 0) {
+      return apiData.monthlySpend;
+    }
+    return baseMonthlySpend.map(item => ({
+      ...item,
+      value: Math.round(item.value * filterFactor)
+    }));
+  }, [apiData, baseMonthlySpend, filterFactor]);
+
+  const categoriesData = useMemo(() => {
+    if (apiData?.categories && apiData.categories.length > 0) {
+      let filteredCats = apiData.categories.map((c, i) => ({
+        categoria: c.categoria,
+        spendTotal: c.spendTotal,
+        pctTotal: Number(c.pctTotal.toFixed(1)),
+        pedidos: c.pedidos,
+        economiaPotencial: Math.round(c.spendTotal * 0.15),
+        color: c.color || ['#007d79', '#00a39e', '#004144', '#1192e8', '#0f62fe'][i % 5],
+      }));
+      if (selectedCategory !== "all") {
+        filteredCats = filteredCats.filter(c => c.categoria === selectedCategory);
+      }
+      return filteredCats;
+    }
+    if (filterFactor === 1.0) return baseCategories;
+    
+    return baseCategories.map(item => ({
+      ...item,
+      spendTotal: Math.round(item.spendTotal * filterFactor),
+      economiaPotencial: Math.round(item.economiaPotencial * filterFactor),
+      pedidos: item.pedidos === "--" ? "--" : Math.max(1, Math.round(Number(item.pedidos) * filterFactor))
+    }));
+  }, [apiData, selectedCategory, baseCategories, filterFactor]);
+
+  const suppliersData = useMemo(() => {
+    if (apiData?.suppliers && apiData.suppliers.length > 0) {
+      let filteredSups = apiData.suppliers;
+      if (selectedSupplier !== "all") {
+        filteredSups = filteredSups.filter(s => s.nome === selectedSupplier);
+      }
+      return filteredSups;
+    }
+    if (filterFactor === 1.0) return baseSuppliers;
+
+    return baseSuppliers.map(item => ({
+      ...item,
+      valor: Math.round(item.valor * filterFactor)
+    }));
+  }, [apiData, selectedSupplier, baseSuppliers, filterFactor]);
+
+  const totals = useMemo(() => {
+    const spendSum = categoriesData.reduce((s, c) => s + c.spendTotal, 0);
+    const econSum = categoriesData.reduce((s, c) => s + c.economiaPotencial, 0);
+    const pedidosSum = categoriesData.reduce((s, c) => s + (typeof c.pedidos === "number" ? c.pedidos : 0), 0);
+
+    return {
+      spendTotal: spendSum,
+      economiaPotencial: econSum,
+      pedidos: pedidosSum
+    };
+  }, [categoriesData]);
+
   const kpis = useMemo(() => {
+    if (apiData?.kpis?.spendTotal) {
+      const spendNum = totals.spendTotal;
+      const econNum = totals.economiaPotencial;
+      const pct = spendNum > 0 ? ((econNum / spendNum) * 100).toFixed(1) : "15.0";
+
+      return {
+        spendTotal: apiData.kpis.spendTotal,
+        economiaPotencial: formatCurrency(econNum),
+        pedidosEmitidos: apiData.kpis.pedidosEmitidos || String(totals.pedidos || 0),
+        fornecedoresAtivos: apiData.kpis.fornecedoresAtivos || String(suppliersData.length),
+        trendSpend: "↑ 18,6%",
+        trendEconomia: `${pct}% do spend total`,
+        trendPedidos: "↑ 9,1%",
+        trendFornecedores: "↑ 5,4%"
+      };
+    }
+
     const isFiltered = filterFactor < 1.0;
     if (!isFiltered) {
       return {
@@ -127,46 +242,7 @@ export default function SpendPage() {
       trendPedidos: "↑ 5,2%",
       trendFornecedores: "↑ 2,1%"
     };
-  }, [filterFactor]);
-
-  const monthlySpendData = useMemo(() => {
-    return baseMonthlySpend.map(item => ({
-      ...item,
-      value: Math.round(item.value * filterFactor)
-    }));
-  }, [baseMonthlySpend, filterFactor]);
-
-  const categoriesData = useMemo(() => {
-    if (filterFactor === 1.0) return baseCategories;
-    
-    return baseCategories.map(item => ({
-      ...item,
-      spendTotal: Math.round(item.spendTotal * filterFactor),
-      economiaPotencial: Math.round(item.economiaPotencial * filterFactor),
-      pedidos: item.pedidos === "--" ? "--" : Math.max(1, Math.round(Number(item.pedidos) * filterFactor))
-    }));
-  }, [baseCategories, filterFactor]);
-
-  const suppliersData = useMemo(() => {
-    if (filterFactor === 1.0) return baseSuppliers;
-
-    return baseSuppliers.map(item => ({
-      ...item,
-      valor: Math.round(item.valor * filterFactor)
-    }));
-  }, [baseSuppliers, filterFactor]);
-
-  const totals = useMemo(() => {
-    const spendSum = categoriesData.reduce((s, c) => s + c.spendTotal, 0);
-    const econSum = categoriesData.reduce((s, c) => s + c.economiaPotencial, 0);
-    const pedidosSum = categoriesData.reduce((s, c) => s + (typeof c.pedidos === "number" ? c.pedidos : 0), 0);
-
-    return {
-      spendTotal: spendSum,
-      economiaPotencial: econSum,
-      pedidos: pedidosSum
-    };
-  }, [categoriesData]);
+  }, [apiData, totals, suppliersData.length, filterFactor]);
 
   const handleClearFilters = () => {
     setSelectedPeriod("all");
