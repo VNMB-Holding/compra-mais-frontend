@@ -80,17 +80,35 @@ export default function DashboardPage() {
       setEconomyData(economyChart || []);
       setCategories(categoriesData || []);
 
-      const mapped: RFQRow[] = rfqsData.map((rfq) => ({
-        id: rfq.id,
-        codigo: rfq.code,
-        descricao: rfq.title || rfq.purchaseRequest?.description || "",
-        categoria: (rfq.purchaseRequest as any)?.category?.name || "Sem Categoria",
-        dataAbertura: formatDate(rfq.createdAt),
-        dataEncerramento: formatDate(rfq.closesAt),
-        tipoSegmento: "Menor Preço",
-        status: mapRfqStatus(rfq),
-        empresa: getTenantDisplayName(rfq.tenantId || rfq.purchaseRequest?.tenantId, user),
-      }));
+      const mapped: RFQRow[] = rfqsData.map((rfq) => {
+        const codigo = rfq.code || "";
+        const descricao = rfq.title || rfq.purchaseRequest?.description || "";
+        const categoria = (rfq.purchaseRequest as any)?.category?.name || "Sem Categoria";
+        const dataAbertura = formatDate(rfq.createdAt);
+        const dataEncerramento = formatDate(rfq.closesAt);
+        const tipoSegmento = "Menor Preço";
+        const status = mapRfqStatus(rfq);
+        const empresa = getTenantDisplayName(rfq.tenantId || rfq.purchaseRequest?.tenantId, user);
+
+        return {
+          id: rfq.id,
+          code: codigo,
+          codigo,
+          description: descricao,
+          descricao,
+          categoryName: categoria,
+          categoria,
+          openedAt: dataAbertura,
+          dataAbertura,
+          closesAt: dataEncerramento,
+          dataEncerramento,
+          segmentType: tipoSegmento,
+          tipoSegmento,
+          status,
+          companyName: empresa,
+          empresa,
+        };
+      });
       setRfqs(mapped);
     } catch (err) {
       logError("dashboard/fetchData", err);

@@ -7,49 +7,29 @@ export interface TenantOption {
 }
 
 /**
- * Verifica se o usuário pertence à VNMB Holding / Administrador VNMB
+ * Mantido por compatibilidade: todos os usuários agora têm acesso irrestrito aos seus tenants
  */
-export function isVnmbUser(user: User | null): boolean {
-  if (!user) return false;
-  const emailMatch = user.email?.toLowerCase().includes("vnmb");
-  const tenantMatch = user.availableTenants?.some((t) => t.name.toUpperCase().includes("VNMB"));
-  return Boolean(emailMatch || tenantMatch);
+export function isVnmbUser(_user: User | null): boolean {
+  return true;
 }
 
 /**
- * Verifica se o usuário é da VB AGRO Matriz
- */
-export function isVbAgroMatrizUser(user: User | null): boolean {
-  if (!user) return false;
-  if (isVnmbUser(user)) return false;
-  const currentTenant = user.availableTenants?.find((t) => t.id === user.tenantId);
-  if (currentTenant && currentTenant.name.toUpperCase().includes("VB AGRO") && currentTenant.type === "Matriz") {
-    return true;
-  }
-  return false;
-}
-
-/**
- * Retorna as Empresas Principais (Matrizes / Empresas do grupo)
+ * Retorna as Empresas Principais disponíveis para o usuário (Matrizes / Empresas do grupo)
  */
 export function getPrimaryCompanyOptions(user: User | null): TenantOption[] {
-  if (!user || !user.availableTenants) return [];
-
-  if (isVnmbUser(user)) {
-    // Retorna todas as Empresas / Matrizes do grupo (excluindo filiais secundárias do primeiro select)
-    const primary = user.availableTenants.filter(
-      (t) => t.type === "Matriz" || !t.type || !t.name.toUpperCase().includes("FILIAL")
-    );
-    return primary.length > 0 ? primary : user.availableTenants;
+  if (!user || !user.availableTenants || user.availableTenants.length === 0) {
+    if (user?.tenantId && user?.tenantName) {
+      return [{ id: user.tenantId, name: user.tenantName, type: "Matriz" }];
+    }
+    return [];
   }
 
-  // Se o usuário é VB Agro Matriz ou outra matriz, retorna sua matriz
-  const currentTenant = user.availableTenants.find((t) => t.id === user.tenantId);
-  if (currentTenant) {
-    return [currentTenant];
-  }
+  // Retorna todas as Empresas / Matrizes (separando filiais secundárias para o sub-seletor)
+  const primary = user.availableTenants.filter(
+    (t) => t.type === "Matriz" || !t.type || !t.name.toUpperCase().includes("FILIAL")
+  );
 
-  return user.availableTenants;
+  return primary.length > 0 ? primary : user.availableTenants;
 }
 
 /**

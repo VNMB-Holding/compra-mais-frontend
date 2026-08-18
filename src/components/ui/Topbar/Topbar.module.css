@@ -369,3 +369,20 @@
 .companyDropdownSectionHeader:first-child {
   border-top: none;
 }
+
+.emptyStateText {
+  margin: 0;
+  color: var(--text-muted, #64748b);
+}
+
+.companyStatic {
+  cursor: default;
+}
+
+.avatarBtn {
+  cursor: pointer;
+}
+
+.logoutItem {
+  color: var(--color-danger, #ef4444);
+}

@@ -12,23 +12,25 @@ import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
 interface PedidoRow {
   id: string;
   numero: string;
   fornecedor: string;
+  empresa: string;
   emissao: string;
   valorTotal: string;
   entrega: string;
   status: "Emitido" | "Faturado" | "Entregue";
 }
 
-function mapToRow(po: PurchaseOrder): PedidoRow {
+function mapToRow(po: PurchaseOrder, currentUser?: any): PedidoRow {
   return {
     id: po.id,
     numero: po.code,
     fornecedor: po.supplier?.corporateName || "—",
+    empresa: getTenantDisplayName(po.tenantId, currentUser),
     emissao: new Date(po.createdAt).toLocaleDateString("pt-BR"),
     valorTotal: formatCurrency(po.totalValue),
     entrega: new Date(po.estimatedDeliveryDate).toLocaleDateString("pt-BR"),
@@ -40,7 +42,7 @@ export default function PedidosPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [fornecedor, setFornecedor] = useState("Todas");
+  const [supplier, setSupplier] = useState("Todas");
   const [status, setStatus] = useState("Todos");
   const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export default function PedidosPage() {
       setError(null);
       setLoading(true);
       const data = await purchaseOrdersApi.list(queryTenantId);
-      const rows = data.map(mapToRow);
+      const rows = data.map((po) => mapToRow(po, user));
       setPedidos(rows);
       setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
     } catch (err) {
@@ -75,13 +77,13 @@ export default function PedidosPage() {
     } finally {
       setLoading(false);
     }
-  }, [queryTenantId]);
+  }, [queryTenantId, user]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const fornecedoresOptions = [
+  const supplierOptions = [
     { label: "Todos os fornecedores", value: "Todas" },
     ...Array.from(new Set(pedidos.map((p) => p.fornecedor)))
       .filter((f) => f !== "—")
@@ -96,7 +98,7 @@ export default function PedidosPage() {
   ];
 
   const filtered = pedidos.filter((p) => {
-    if (fornecedor !== "Todas" && p.fornecedor !== fornecedor) return false;
+    if (supplier !== "Todas" && p.fornecedor !== supplier) return false;
     if (status !== "Todos" && p.status !== status) return false;
     return true;
   });
@@ -107,6 +109,7 @@ export default function PedidosPage() {
   const columns: ColumnDef<PedidoRow>[] = [
     { header: "Número", cell: (row) => <span className={styles.boldCode}>{row.numero}</span> },
     { header: "Fornecedor", accessorKey: "fornecedor" },
+    { header: "Empresa / Unidade", accessorKey: "empresa" },
     { header: "Data de Emissão", accessorKey: "emissao" },
     { header: "Valor Total", cell: (row) => <strong>{row.valorTotal}</strong> },
     { header: "Entrega Prevista", accessorKey: "entrega" },
@@ -176,9 +179,9 @@ export default function PedidosPage() {
               />
             )}
             <Select
-              options={fornecedoresOptions}
-              value={fornecedor}
-              onChange={setFornecedor}
+              options={supplierOptions}
+              value={supplier}
+              onChange={setSupplier}
               icon="filter-lines"
               className={styles.customSelectFilter}
             />

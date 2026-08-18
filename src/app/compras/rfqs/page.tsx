@@ -31,15 +31,30 @@ function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
   const tenantId = rfq.purchaseRequest?.tenantId || rfq.tenantId;
   const empresaFilial = getTenantDisplayName(tenantId, currentUser);
 
+  const codigo = rfq.code || "";
+  const descricao = rfq.title || rfq.purchaseRequest?.description || "Sem descrição";
+  const categoria = (rfq.purchaseRequest as any)?.category?.name || rfq.purchaseRequest?.category || "Geral";
+  const dataAbertura = formatDate(rfq.createdAt);
+  const dataEncerramento = formatDate(rfq.closesAt);
+  const tipoSegmento = "Menor Preço";
+  const status = mapRfqStatus(rfq);
+
   return {
     id: rfq.id,
-    codigo: rfq.code,
-    descricao: rfq.title || rfq.purchaseRequest?.description || "Sem descrição",
-    categoria: (rfq.purchaseRequest as any)?.category?.name || rfq.purchaseRequest?.category || "Geral",
-    dataAbertura: formatDate(rfq.createdAt),
-    dataEncerramento: formatDate(rfq.closesAt),
-    tipoSegmento: "Menor Preço",
-    status: mapRfqStatus(rfq),
+    code: codigo,
+    codigo,
+    description: descricao,
+    descricao,
+    categoryName: categoria,
+    categoria,
+    openedAt: dataAbertura,
+    dataAbertura,
+    closesAt: dataEncerramento,
+    dataEncerramento,
+    segmentType: tipoSegmento,
+    tipoSegmento,
+    status,
+    companyName: empresaFilial,
     empresa: empresaFilial,
   };
 }
@@ -47,7 +62,7 @@ function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
 export default function RfqsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [categoria, setCategoria] = useState("Todas");
+  const [category, setCategory] = useState("Todas");
   const [status, setStatus] = useState("Todos");
   const [kpis, setKpis] = useState<RfqKpis | null>(null);
 
@@ -92,7 +107,7 @@ export default function RfqsPage() {
     fetchKpis();
   }, [selectedPrimaryCompanyId, selectedBranchId]);
 
-  const categoriasOptions = [
+  const categoryOptions = [
     { label: "Todas as categorias", value: "Todas" },
     ...Array.from(new Set(rfqs.map((r) => r.categoria)))
       .filter(Boolean)
@@ -109,7 +124,7 @@ export default function RfqsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = rfqs.filter((r) => {
-    if (categoria !== "Todas" && r.categoria !== categoria) return false;
+    if (category !== "Todas" && r.categoria !== category) return false;
     if (status !== "Todos" && r.status !== status) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
@@ -251,10 +266,10 @@ export default function RfqsPage() {
               />
             )}
             <Select
-              options={categoriasOptions}
-              value={categoria}
+              options={categoryOptions}
+              value={category}
               onChange={(val) => {
-                setCategoria(val);
+                setCategory(val);
                 setCurrentPage(1);
               }}
               icon="filter-lines"
@@ -283,7 +298,7 @@ export default function RfqsPage() {
             </div>
             <h4>Nenhuma cotação encontrada</h4>
             <p>Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente.</p>
-            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatus("Todos"); setCategoria("Todas"); }}>Limpar Filtros</Button>
+            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatus("Todos"); setCategory("Todas"); }}>Limpar Filtros</Button>
           </div>
         ) : (
           <>

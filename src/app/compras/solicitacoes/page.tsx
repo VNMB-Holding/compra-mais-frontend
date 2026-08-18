@@ -32,17 +32,33 @@ function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationR
     finalCategory = typeof pr.category === "object" ? (pr.category as any).name || "Geral" : pr.category;
   }
 
-  const empresaFilial = getTenantDisplayName(pr.tenantId, currentUser);
+  const empresaFilial = pr.corporateCompanyId 
+    ? `Empresa ${pr.corporateCompanyId}` 
+    : getTenantDisplayName(pr.tenantId, currentUser);
+
+  const codigo = pr.corporateCode ? `#${pr.corporateCode}` : pr.code || "";
+  const descricao = pr.description || pr.notes || "Solicitação de Compra";
+  const solicitante = pr.corporateRequester || pr.requesterName || formatUserDisplayName(pr.requesterId, currentUser);
+  const data = new Date(pr.createdAt).toLocaleDateString("pt-BR");
+  const status = STATUS_MAP[pr.status] || pr.status;
+  const prioridade = PRIORITY_MAP[pr.priority] || pr.priority;
 
   return {
     id: pr.id,
-    codigo: pr.code,
-    descricao: pr.description,
-    solicitante: pr.requesterName || formatUserDisplayName(pr.requesterId, currentUser),
-    data: new Date(pr.createdAt).toLocaleDateString("pt-BR"),
-    status: STATUS_MAP[pr.status] || pr.status,
-    prioridade: PRIORITY_MAP[pr.priority] || pr.priority,
+    code: codigo,
+    codigo,
+    description: descricao,
+    descricao,
+    requesterName: solicitante,
+    solicitante,
+    createdAt: data,
+    data,
+    status,
+    priority: prioridade,
+    prioridade,
+    categoryName: finalCategory,
     categoria: finalCategory,
+    companyName: empresaFilial,
     empresa: empresaFilial,
   };
 }
@@ -52,7 +68,7 @@ export default function SolicitacoesPage() {
 
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState("Todos");
-  const [prioridade, setPrioridade] = useState("Todos");
+  const [priority, setPriority] = useState("Todos");
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
 
   const primaryCompanies = getPrimaryCompanyOptions(user);
@@ -63,17 +79,17 @@ export default function SolicitacoesPage() {
   const showBranchFilter = branchCompanies.length > 0;
   const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
 
-  const queryTenantId = useMemo(() => {
+  const queryTenantId = React.useMemo(() => {
     if (selectedBranchId !== "TODAS") return selectedBranchId;
     if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
     return undefined;
   }, [selectedPrimaryCompanyId, selectedBranchId]);
 
-  const { data: rawList = [], isLoading: loadingRequests, error: queryError } = usePurchaseRequests(queryTenantId);
+  const { data: rawRequests = [], isLoading: loadingRequests, error: queryError } = usePurchaseRequests(queryTenantId);
 
   const solicitacoes: SolicitationRow[] = React.useMemo(() => {
-    return rawList.map((pr) => mapToRow(pr, user));
-  }, [rawList, user]);
+    return rawRequests.map((pr) => mapToRow(pr, user));
+  }, [rawRequests, user]);
 
   const loading = loadingRequests;
   const error = queryError ? getErrorMessage(queryError) : null;
@@ -99,15 +115,15 @@ export default function SolicitacoesPage() {
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
     { label: "Rascunho", value: "Rascunho" },
-    { label: "Aguardando aprovação", value: "Aguardando aprovação" },
+    { label: "Aguardando Aprovação", value: "Aguardando Aprovação" },
     { label: "Aprovada", value: "Aprovada" },
     { label: "Em Cotação", value: "Em Cotação" },
-    { label: "Atendida", value: "Atendida" },
+    { label: "Finalizada", value: "Finalizada" },
     { label: "Rejeitada", value: "Rejeitada" },
     { label: "Cancelada", value: "Cancelada" },
   ];
 
-  const prioridadesOptions = [
+  const priorityOptions = [
     { label: "Prioridade: Todas", value: "Todos" },
     { label: "Baixa", value: "Baixa" },
     { label: "Média", value: "Média" },
@@ -119,7 +135,7 @@ export default function SolicitacoesPage() {
 
   const filtered = solicitacoes.filter((s) => {
     if (statusFilter !== "Todos" && s.status !== statusFilter) return false;
-    if (prioridade !== "Todos" && s.prioridade !== prioridade) return false;
+    if (priority !== "Todos" && s.priority !== priority) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       const matchCodigo = s.codigo.toLowerCase().includes(q);
@@ -203,9 +219,7 @@ export default function SolicitacoesPage() {
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
-          <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/solicitacoes/nova")}>
-            <Icon name="plus" /> Nova Solicitação
-          </Button>
+          {/* Botão de nova solicitação ocultado: as solicitações são importadas via Corporate */}
         </div>
       </div>
 
@@ -275,10 +289,10 @@ export default function SolicitacoesPage() {
               className={styles.customSelectFilter}
             />
             <Select
-              options={prioridadesOptions}
-              value={prioridade}
+              options={priorityOptions}
+              value={priority}
               onChange={(val) => {
-                setPrioridade(val);
+                setPriority(val);
                 setCurrentPage(1);
               }}
               className={styles.customSelectFilter}
@@ -297,7 +311,7 @@ export default function SolicitacoesPage() {
             </div>
             <h4>Nenhuma solicitação encontrada</h4>
             <p>Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente.</p>
-            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatusFilter("Todos"); setPrioridade("Todos"); }}>Limpar Filtros</Button>
+            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatusFilter("Todos"); setPriority("Todos"); }}>Limpar Filtros</Button>
           </div>
         ) : (
           <>

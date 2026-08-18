@@ -201,7 +201,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                   ))
                 ) : (
                   <div className={styles.dropdownItem}>
-                    <p style={{ margin: 0, color: "#64748b" }}>Nenhuma notificação recente.</p>
+                    <p className={styles.emptyStateText}>Nenhuma notificação recente.</p>
                   </div>
                 )}
               </div>
@@ -237,7 +237,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                   ))
                 ) : (
                   <div className={styles.dropdownItem}>
-                    <p style={{ margin: 0, color: "#64748b" }}>Sem solicitações pendentes.</p>
+                    <p className={styles.emptyStateText}>Sem solicitações pendentes.</p>
                   </div>
                 )}
               </div>
@@ -247,7 +247,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
         {/* Display static company name */}
         <div className={styles.popupWrapper}>
-          <div className={styles.companySelector} style={{ cursor: "default" }}>
+          <div className={`${styles.companySelector} ${styles.companyStatic}`}>
             <Icon name="building-07" />
             {companyDisplay}
           </div>
@@ -256,10 +256,9 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         
         <div className={styles.popupWrapper}>
           <div 
-            className={styles.userAvatarSmall}
+            className={`${styles.userAvatarSmall} ${styles.avatarBtn}`}
             onClick={() => togglePopup("user")}
             title={userName}
-            style={{ cursor: "pointer" }}
           >
             {getInitials(userName)}
           </div>
@@ -284,7 +283,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                 <Icon name="settings-01" /> Administração & Permissões
               </div>
               <div className={styles.dropdownDivider} />
-              <div className={styles.dropdownItem} onClick={handleLogout} style={{ color: "#ef4444" }}>
+              <div className={`${styles.dropdownItem} ${styles.logoutItem}`} onClick={handleLogout}>
                 <Icon name="log-out-01" /> Sair
               </div>
             </div>
