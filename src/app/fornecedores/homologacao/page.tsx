@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, Loading, ErrorState, TableSkeleton, Badge } from "@/components/ui";
+import { Card, Icon, Select, ErrorState, TableSkeleton, Badge } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./homologacao.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { getStatusBadgeVariant } from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
@@ -18,8 +17,9 @@ interface HomologacaoRow {
   iniciais: string;
   fornecedor: string;
   cnpj: string;
-  categoria: string;
-  catIcon: string;
+  cidade: string;
+  estado: string;
+  localizacao: string;
   score: number;
   etapa: string;
   status: string;
@@ -36,14 +36,18 @@ function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
   const etapaStr = isHomologado ? "Homologação Concluída" : isUnderCert ? "Análise de dados públicos" : "Auditoria Cadastral";
 
   const updatedDate = s.updatedAt ? new Date(s.updatedAt) : s.createdAt ? new Date(s.createdAt) : new Date();
+  const cidade = s.city || "—";
+  const estado = s.state || "";
+  const localizacao = cidade !== "—" ? `${cidade}${estado ? ` / ${estado}` : ""}` : "Não informado";
 
   return {
     id: s.id,
     iniciais: (s.tradeName || s.corporateName || "FR").split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
     fornecedor: s.corporateName || s.tradeName || "Fornecedor",
     cnpj: s.cnpj,
-    categoria: s.segment || "Geral",
-    catIcon: getCategoryIcon((s.segment || "Geral") as any),
+    cidade,
+    estado,
+    localizacao,
     score: rawScore,
     etapa: etapaStr,
     status: statusStr,
@@ -53,21 +57,10 @@ function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
   };
 }
 
-const categoriasOptions = [
-  { label: "Categoria: Todas", value: "Todas" },
-  { label: "Serviços", value: "Serviços" },
-  { label: "Combustíveis", value: "Combustíveis" },
-  { label: "TI & Software", value: "TI & Software" },
-  { label: "MRO & Manutenção", value: "MRO & Manutenção" },
-  { label: "Logística", value: "Logística" },
-  { label: "Matérias-Primas", value: "Matérias-Primas" },
-  { label: "Geral", value: "Geral" },
-];
-
 const riscosOptions = [
-  { label: "Risco: Todas", value: "Todas" },
-  { label: "Baixo", value: "Baixo" },
-  { label: "Médio", value: "Médio" },
+  { label: "Risco: Todos", value: "Todas" },
+  { label: "Baixo Risco", value: "Baixo" },
+  { label: "Médio Risco", value: "Médio" },
   { label: "Crítico", value: "Crítico" },
 ];
 
@@ -82,7 +75,7 @@ export default function HomologacaoPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [categoria, setCategoria] = useState("Todas");
+  const [selectedUf, setSelectedUf] = useState("Todas");
   const [risco, setRisco] = useState("Todas");
   const [etapa, setEtapa] = useState("Todas");
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,6 +121,14 @@ export default function HomologacaoPage() {
     fetchData();
   }, [fetchData]);
 
+  const ufOptions = [
+    { label: "Todas as UF", value: "Todas" },
+    ...Array.from(new Set(fornecedores.map((f) => f.estado)))
+      .filter(Boolean)
+      .sort()
+      .map((uf) => ({ label: `Estado: ${uf}`, value: uf })),
+  ];
+
   const columns: ColumnDef<HomologacaoRow>[] = [
     {
       header: "Fornecedor",
@@ -142,11 +143,13 @@ export default function HomologacaoPage() {
       ),
     },
     {
-      header: "Categoria",
+      header: "Localização",
       cell: (row) => (
-        <div className={styles.iconTextCell}>
-          <Icon name={row.catIcon || "briefcase-01"} />
-          {row.categoria}
+        <div className={styles.doubleText}>
+          <strong style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <Icon name="marker-pin-01" size={14} style={{ color: "#0284c7" }} />
+            {row.localizacao}
+          </strong>
         </div>
       ),
     },
@@ -180,7 +183,7 @@ export default function HomologacaoPage() {
       cell: (row) => (
         <div className={styles.doubleText}>
           <strong>{row.etapa}</strong>
-          <span className={styles.linkText}>Ver detalhes</span>
+          <span className={styles.linkText}>Ver conformidade</span>
         </div>
       ),
     },
@@ -211,7 +214,7 @@ export default function HomologacaoPage() {
   ];
 
   const filtered = fornecedores.filter((f) => {
-    if (categoria !== "Todas" && f.categoria !== categoria) return false;
+    if (selectedUf !== "Todas" && f.estado !== selectedUf) return false;
     if (risco !== "Todas") {
       if (risco === "Baixo" && f.score <= 70) return false;
       if (risco === "Médio" && (f.score <= 30 || f.score > 70)) return false;
@@ -222,62 +225,68 @@ export default function HomologacaoPage() {
       const q = searchQuery.toLowerCase();
       const matchNome = f.fornecedor.toLowerCase().includes(q);
       const matchCnpj = f.cnpj.includes(q);
-      if (!matchNome && !matchCnpj) return false;
+      const matchLoc = f.localizacao.toLowerCase().includes(q);
+      if (!matchNome && !matchCnpj && !matchLoc) return false;
     }
     return true;
   });
 
   return (
     <div className={styles.pageContainer}>
+      
+      {/* Top Header */}
       <div className={styles.pageHeader}>
         <div>
-          <h1>Homologação de Fornecedores</h1>
-          <p>Acompanhe o gerenciamento, compliance e auditoria pública de fornecedores.</p>
+          <h1>Homologação & Compliance de Fornecedores</h1>
+          <p>Acompanhe o nível de conformidade fiscal, certidões públicas e risco de parceiros.</p>
         </div>
       </div>
 
+      {/* KPI Cards */}
       <div className={styles.kpiGrid}>
         <KpiCard
           title="Total cadastrados"
-          value={String(kpis?.total ?? fornecedores.length)}
-          icon="file-02"
-          description="Total Geral"
+          value={String(kpis?.total || fornecedores.length)}
+          icon="users-01"
+          description="Fornecedores no ERP"
           loading={loading}
         />
         <KpiCard
           title="Em homologação"
-          value={String(kpis?.underCertification ?? fornecedores.filter((f) => f.status === "Em análise").length)}
-          icon="search-md"
-          description="Processando"
+          value={String(kpis?.underCertification || fornecedores.filter((f) => f.status === "Em análise" || f.status === "Pendente").length)}
+          icon="clock"
+          description="Pendentes de análise"
           loading={loading}
         />
         <KpiCard
           title="Homologados"
-          value={String(kpis?.active ?? fornecedores.filter((f) => f.status === "Homologado").length)}
+          value={String(kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length)}
           icon="check-circle"
-          description="Ativos"
+          description="Aprovados / Regulares"
           loading={loading}
         />
         <KpiCard
-          title="Score Médio"
-          value={kpis?.avgPerformanceScore ? `${kpis.avgPerformanceScore}/10` : "9,5/10"}
+          title="Score Médio de Compliance"
+          value={`${kpis?.avgPerformanceScore || "9.5"} / 10`}
           icon="star-01"
-          description="Nota Geral"
+          description="Nível Excelente"
           loading={loading}
         />
       </div>
 
-      <Card noPadding className={styles.mainListCard}>
+      {/* Table Card */}
+      <Card className={styles.mainListCard}>
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <Icon name="search-md" />
+            <Icon name="search-lg" />
             <input
               type="text"
-              placeholder="Buscar fornecedor, CNPJ..."
+              placeholder="Buscar por Fornecedor, CNPJ ou Cidade..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
           <div className={styles.filtersGroup}>
             {showPrimaryCompanyFilter && (
               <Select
@@ -302,55 +311,48 @@ export default function HomologacaoPage() {
                   ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
                 ]}
                 value={selectedBranchId}
-                onChange={setSelectedBranchId}
+                onChange={(val) => setSelectedBranchId(val)}
                 icon="building-07"
                 className={styles.customSelectFilter}
               />
             )}
 
-            <Select
-              options={categoriasOptions}
-              value={categoria}
-              onChange={setCategoria}
-              icon="filter-lines"
-              className={styles.customSelectFilter}
-            />
+            {ufOptions.length > 2 && (
+              <Select
+                options={ufOptions}
+                value={selectedUf}
+                onChange={(val) => setSelectedUf(val)}
+                icon="marker-pin-01"
+                className={styles.customSelectFilter}
+              />
+            )}
+
             <Select
               options={riscosOptions}
               value={risco}
-              onChange={setRisco}
+              onChange={(val) => setRisco(val)}
               className={styles.customSelectFilter}
             />
+
             <Select
               options={etapasOptions}
               value={etapa}
-              onChange={setEtapa}
+              onChange={(val) => setEtapa(val)}
               className={styles.customSelectFilter}
             />
           </div>
         </div>
 
-        {error ? (
+        {loading ? (
+          <TableSkeleton rows={6} columns={5} />
+        ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
-        ) : loading ? (
-          <TableSkeleton rows={6} columns={6} />
         ) : (
-          <>
-            <DataTable
-              data={filtered}
-              columns={columns}
-              onRowClick={(row) => router.push(`/fornecedores/homologacao/${row.id}`)}
-            />
-
-            <div className={styles.tableFooter}>
-              <span>Mostrando {filtered.length} de {fornecedores.length} fornecedores</span>
-              <div className={styles.paginationControls}>
-                <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
-                <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-                <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
-              </div>
-            </div>
-          </>
+          <DataTable
+            data={filtered}
+            columns={columns}
+            onRowClick={(row) => router.push(`/fornecedores/homologacao/${row.id}`)}
+          />
         )}
       </Card>
     </div>

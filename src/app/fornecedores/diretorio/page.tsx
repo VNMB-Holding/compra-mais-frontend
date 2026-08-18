@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon, Select, Loading, ErrorState, TableSkeleton } from "@/components/ui";
+import { Card, Button, Icon, Select, ErrorState, TableSkeleton } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -11,53 +11,59 @@ import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 
 import { useAuth } from "@/hooks/useAuth";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
+import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 import { User } from "@/types/auth";
-import { getCategoryIcon } from "@/lib/utils/category-icon";
 
 interface FornecedorRow {
   id: string;
   iniciais: string;
   nome: string;
   cnpj: string;
-  empresa: string;
-  categoria: string;
-  catIcon: string;
+  cidade: string;
+  estado: string;
+  localizacao: string;
+  localizacaoSub: string;
+  contatoNome: string;
+  contatoInfo: string;
   status: string;
   statusSub: string;
   cor: "green" | "orange";
   nota: string;
   estrelas: number;
-  avaliacao: string;
-  avaliacaoSub: string;
   integrationCode: string;
 }
 
-function mapSupplierToRow(s: Supplier, currentUser?: User | null): FornecedorRow {
+function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRow {
   const isHomologado = s.status === "Active" || s.isActive === true;
-  const empresaFilial = getTenantDisplayName(s.tenantId, currentUser);
 
   const rawScore = s.performanceScore !== undefined && s.performanceScore !== null ? Number(s.performanceScore) : 9.5;
   const nota = rawScore > 0 ? rawScore.toFixed(1).replace(".", ",") : "-";
   const estrelas = rawScore > 0 ? Math.min(5, Math.max(1, Math.round(rawScore / 2))) : 5;
 
-  const updatedDate = s.updatedAt ? new Date(s.updatedAt) : s.createdAt ? new Date(s.createdAt) : new Date();
+  const cidade = s.city || "—";
+  const estado = s.state || "";
+  const localizacao = cidade !== "—" ? `${cidade}${estado ? ` / ${estado}` : ""}` : "Não informado";
+  const localizacaoSub = s.neighborhood || s.address || "";
+
+  const contatoNome = s.contactName || "Comercial";
+  const contatoInfo = s.contactPhone || s.contactEmail || "Sem telefone";
 
   return {
     id: s.id,
     iniciais: (s.corporateName || s.tradeName || "FR").substring(0, 2).toUpperCase(),
     nome: s.corporateName || s.tradeName || "Fornecedor",
     cnpj: s.cnpj,
-    empresa: empresaFilial,
-    categoria: s.segment || "Geral",
-    catIcon: getCategoryIcon((s.segment || "Geral") as any),
+    cidade,
+    estado,
+    localizacao,
+    localizacaoSub,
+    contatoNome,
+    contatoInfo,
     status: isHomologado ? "Homologado" : "Em homologação",
     statusSub: isHomologado ? "Ativo no ERP" : "Pendente",
     cor: isHomologado ? "green" : "orange",
     nota,
     estrelas,
-    avaliacao: updatedDate.toLocaleDateString("pt-BR"),
-    avaliacaoSub: `às ${updatedDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`,
     integrationCode: s.integrationCode || "—",
   };
 }
@@ -66,7 +72,7 @@ export default function FornecedoresListPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [categoria, setCategoria] = useState("Todas");
+  const [selectedUf, setSelectedUf] = useState("Todas");
   const [status, setStatus] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [fornecedores, setFornecedores] = useState<FornecedorRow[]>([]);
@@ -114,11 +120,12 @@ export default function FornecedoresListPage() {
     fetchData();
   }, [fetchData]);
 
-  const categoriasOptions = [
-    { label: "Todas as categorias", value: "Todas" },
-    ...Array.from(new Set(fornecedores.map((f) => f.categoria)))
+  const ufOptions = [
+    { label: "Todas as UF", value: "Todas" },
+    ...Array.from(new Set(fornecedores.map((f) => f.estado)))
       .filter(Boolean)
-      .map((c) => ({ label: c, value: c })),
+      .sort()
+      .map((uf) => ({ label: `Estado: ${uf}`, value: uf })),
   ];
 
   const statusOptions = [
@@ -128,15 +135,16 @@ export default function FornecedoresListPage() {
   ];
 
   const filtered = fornecedores.filter((f) => {
-    if (categoria !== "Todas" && f.categoria !== categoria) return false;
+    if (selectedUf !== "Todas" && f.estado !== selectedUf) return false;
     if (status !== "Todos" && f.status !== status) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       const matchNome = f.nome.toLowerCase().includes(q);
       const matchCnpj = f.cnpj.includes(q);
-      const matchEmpresa = f.empresa.toLowerCase().includes(q);
+      const matchLoc = f.localizacao.toLowerCase().includes(q);
+      const matchContato = f.contatoNome.toLowerCase().includes(q) || f.contatoInfo.toLowerCase().includes(q);
       const matchErp = f.integrationCode.toLowerCase().includes(q);
-      if (!matchNome && !matchCnpj && !matchEmpresa && !matchErp) return false;
+      if (!matchNome && !matchCnpj && !matchLoc && !matchContato && !matchErp) return false;
     }
     return true;
   });
@@ -171,16 +179,26 @@ export default function FornecedoresListPage() {
       ),
     },
     {
-      header: "Empresa / Unidade",
-      accessorKey: "empresa",
-      cell: (row) => <span style={{ fontSize: 13, color: "#475569" }}>{row.empresa}</span>,
+      header: "Localização / Praça",
+      cell: (row) => (
+        <div className={styles.doubleText}>
+          <strong style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <Icon name="marker-pin-01" size={14} style={{ color: "#0284c7" }} />
+            {row.localizacao}
+          </strong>
+          {row.localizacaoSub && <span style={{ fontSize: 11, color: "#64748b" }}>{row.localizacaoSub}</span>}
+        </div>
+      ),
     },
     {
-      header: "Categoria",
+      header: "Contato Principal",
       cell: (row) => (
-        <div className={styles.catCell}>
-          <Icon name={row.catIcon} />
-          {row.categoria}
+        <div className={styles.doubleText}>
+          <strong style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <Icon name="user-01" size={14} style={{ color: "#475569" }} />
+            {row.contatoNome}
+          </strong>
+          <span style={{ fontSize: 11, color: "#64748b" }}>{row.contatoInfo}</span>
         </div>
       ),
     },
@@ -206,15 +224,6 @@ export default function FornecedoresListPage() {
       ),
     },
     {
-      header: "Última Avaliação",
-      cell: (row) => (
-        <div className={styles.doubleText}>
-          <strong className={styles.dataTitle}>{row.avaliacao}</strong>
-          <span>{row.avaliacaoSub}</span>
-        </div>
-      ),
-    },
-    {
       header: "",
       width: "40px",
       cell: () => (
@@ -234,7 +243,7 @@ export default function FornecedoresListPage() {
       <div className={styles.pageHeader}>
         <div>
           <h1>Base de Fornecedores</h1>
-          <p>Consulte parceiros homologados e verifique o nível de performance atual.</p>
+          <p>Consulte parceiros homologados, localização, contatos e nível de performance.</p>
         </div>
         <div className={styles.headerActions}>
           <Button variant="secondary" onClick={() => router.push("/fornecedores/homologacao")}>
@@ -248,8 +257,8 @@ export default function FornecedoresListPage() {
         <KpiCard
           title="Fornecedores homologados"
           value={String(kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length)}
-          icon="users-01"
-          description="Ativos"
+          icon="check-circle"
+          description="Ativos no ERP"
           loading={loading}
         />
         <KpiCard
@@ -261,28 +270,28 @@ export default function FornecedoresListPage() {
         />
         <KpiCard
           title="Nota média de performance"
-          value="9,5"
+          value={kpis?.avgPerformanceScore || "9.5"}
           icon="star-01"
-          description="Entre homologados"
+          description="Excelente"
           loading={loading}
         />
         <KpiCard
           title="Cobertura no ERP"
-          value={`${fornecedores.length} Fornecedores`}
-          icon="shield-01"
+          value={String(kpis?.total || fornecedores.length)}
+          icon="shield-tick"
+          description="Fornecedores cadastrados"
           loading={loading}
         />
       </div>
 
-      {/* Main List Card */}
-      <Card noPadding className={styles.mainListCard}>
-        
+      {/* Table Card */}
+      <Card className={styles.mainListCard}>
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <Icon name="search-md" />
+            <Icon name="search-lg" />
             <input
               type="text"
-              placeholder="Buscar fornecedor, CNPJ ou cód. ERP..."
+              placeholder="Buscar por Fornecedor, CNPJ, Cód. ERP ou Cidade..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -290,6 +299,7 @@ export default function FornecedoresListPage() {
               }}
             />
           </div>
+
           <div className={styles.filtersGroup}>
             {showPrimaryCompanyFilter && (
               <Select
@@ -324,16 +334,18 @@ export default function FornecedoresListPage() {
               />
             )}
 
-            <Select
-              options={categoriasOptions}
-              value={categoria}
-              onChange={(val) => {
-                setCategoria(val);
-                setCurrentPage(1);
-              }}
-              icon="filter-lines"
-              className={styles.customSelectFilter}
-            />
+            {ufOptions.length > 2 && (
+              <Select
+                options={ufOptions}
+                value={selectedUf}
+                onChange={(val) => {
+                  setSelectedUf(val);
+                  setCurrentPage(1);
+                }}
+                icon="marker-pin-01"
+                className={styles.customSelectFilter}
+              />
+            )}
 
             <Select
               options={statusOptions}
