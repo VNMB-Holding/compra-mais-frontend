@@ -17,7 +17,7 @@ interface SearchItem {
 
 const SEARCH_ITEMS: SearchItem[] = [
   { id: "action-new-sol", title: "Criar Nova Solicitação de Compra", category: "Ações", description: "Iniciar uma nova demanda de compra interna", url: "/compras/solicitacoes/nova", icon: "shopping-cart-01", shortcut: "↵" },
-  { id: "action-new-supplier", title: "Cadastrar Novo Fornecedor", category: "Ações", description: "Cadastrar fornecedor e iniciar homologação", url: "/fornecedores/novo", icon: "plus", shortcut: "↵" },
+  // { id: "action-new-supplier", title: "Cadastrar Novo Fornecedor", category: "Ações", description: "Cadastrar fornecedor e iniciar homologação", url: "/fornecedores/novo", icon: "plus", shortcut: "↵" },
   { id: "action-new-rfq", title: "Criar Novo Processo de Cotação (RFQ)", category: "Ações", description: "Lançar cotação ao mercado para fornecedores", url: "/compras/rfqs/nova", icon: "send-01", shortcut: "↵" },
   { id: "action-export-reports", title: "Exportar Relatórios de Compras", category: "Ações", description: "Exportar dados de saving e performance em Excel/PDF", url: "/analytics/insights", icon: "download-01" },
   { id: "action-check-contracts", title: "Análise Jurídica de Contratos", category: "Ações", description: "Verificar pendências de assinatura e documentação", url: "/fornecedores/homologacao", icon: "shield-01" },

@@ -10,12 +10,34 @@ export interface Supplier {
   segment: string;
   categoryType?: CategoryType | string;
   stateRegistration?: string;
-  zipCode: string;
-  address: string;
-  contactEmail: string;
-  contactPhone: string;
+  zipCode?: string;
+  address?: string;
+  neighborhood?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  fax?: string;
   contactName?: string;
   status: "Active" | "Inactive" | "UnderCertification" | "Suspended" | "Pending";
+  isActive?: boolean;
+  foundationDate?: string;
+  isPublicAgency?: boolean;
+  suframa?: string;
+
+  // Informação bancária
+  bankNumber?: string;
+  bankCode?: string;
+  pixKey?: string;
+  registrationDate?: string;
+
+  // Locais de entrega
+  deliveryLocationName?: string;
+  deliveryLocationCode?: string;
+  deliveryLeadTime?: number;
+
+  // Integração / ERP
+  integrationCode?: string;
+  rawPayload?: any;
+
   performanceScore?: number;
   createdAt: string;
   updatedAt: string;

@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Icon, Select } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/hooks/useAuth";
+import { suppliersApi } from "@/lib/api/suppliers";
+import { getErrorMessage, logError } from "@/lib/utils/error";
 import styles from "./novo.module.css";
 
 const CATEGORIA_OPTIONS = [
@@ -57,11 +60,12 @@ const PAGAMENTO_OPTIONS = [
 export default function NovoFornecedorPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    razaoSocial: "",
-    nomeFantasia: "",
+    corporateName: "",
+    tradeName: "",
     cnpj: "",
     inscricaoEstadual: "",
     categoria: "Serviços",
@@ -138,7 +142,7 @@ export default function NovoFornecedorPage() {
   };
 
   const getInitials = () => {
-    const name = formData.nomeFantasia.trim() || formData.razaoSocial.trim();
+    const name = formData.tradeName.trim() || formData.corporateName.trim();
     if (!name) return "NF";
     const parts = name.split(/\s+/);
     if (parts.length > 1) {
@@ -147,7 +151,7 @@ export default function NovoFornecedorPage() {
     return name.slice(0, 2).toUpperCase();
   };
 
-  const isBasicInfoDone = formData.razaoSocial.trim() !== "" && formData.cnpj.length === 18;
+  const isBasicInfoDone = formData.corporateName.trim() !== "" && formData.cnpj.length === 18;
   const isCategoryDone = formData.categoria !== "";
   const isContactDone = formData.contatoEmail.includes("@") && formData.contatoTelefone.length >= 14;
   const isAddressDone = formData.cidade.trim() !== "" && formData.estado.trim() !== "";
@@ -156,7 +160,7 @@ export default function NovoFornecedorPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.razaoSocial.trim()) {
+    if (!formData.corporateName.trim()) {
       toast({
         title: "Erro no preenchimento",
         message: "Por favor, preencha a Razão Social do fornecedor.",
@@ -176,17 +180,47 @@ export default function NovoFornecedorPage() {
 
     setLoading(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const fullAddress = [
+        formData.logradouro.trim(),
+        formData.numero.trim() ? `nº ${formData.numero.trim()}` : "",
+        formData.complemento.trim() ? `(${formData.complemento.trim()})` : "",
+        formData.bairro.trim(),
+        formData.cidade.trim() ? `${formData.cidade.trim()} - ${formData.estado}` : "",
+      ].filter(Boolean).join(", ") || "Endereço comercial";
 
-    setLoading(false);
+      await suppliersApi.create({
+        tenantId: user?.tenantId,
+        corporateName: formData.corporateName.trim(),
+        tradeName: formData.tradeName.trim() || formData.corporateName.trim(),
+        cnpj: formData.cnpj.trim(),
+        segment: formData.categoria || "Geral",
+        stateRegistration: formData.inscricaoEstadual.trim() || undefined,
+        zipCode: formData.cep.trim() || "00000-000",
+        address: fullAddress,
+        contactName: formData.contatoNome.trim() || undefined,
+        contactEmail: formData.contatoEmail.trim() || "contato@fornecedor.com.br",
+        contactPhone: formData.contatoTelefone.trim() || "(00) 0000-0000",
+        status: "UnderCertification",
+      } as any);
 
-    toast({
-      title: "Fornecedor cadastrado!",
-      message: `O fornecedor ${formData.nomeFantasia || formData.razaoSocial} foi adicionado à base e iniciou a homologação.`,
-      variant: "success",
-    });
+      toast({
+        title: "Fornecedor cadastrado com sucesso!",
+        message: `O fornecedor ${formData.tradeName || formData.corporateName} foi cadastrado e iniciou a homologação.`,
+        variant: "success",
+      });
 
-    router.push("/fornecedores/diretorio");
+      router.push("/fornecedores/diretorio");
+    } catch (err) {
+      logError("fornecedores/novo/create", err);
+      toast({
+        title: "Erro ao cadastrar fornecedor",
+        message: getErrorMessage(err),
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getAvatarStyle = () => {
@@ -236,8 +270,8 @@ export default function NovoFornecedorPage() {
                     <label>Razão Social <span className="required-asterisk">*</span></label>
                     <input
                       className={styles.formControl}
-                      name="razaoSocial"
-                      value={formData.razaoSocial}
+                      name="corporateName"
+                      value={formData.corporateName}
                       onChange={handleTextChange}
                       placeholder="Ex: Fornecedor de Alimentos Alfa S.A."
                       required
@@ -251,8 +285,8 @@ export default function NovoFornecedorPage() {
                     <label>Nome Fantasia</label>
                     <input
                       className={styles.formControl}
-                      name="nomeFantasia"
-                      value={formData.nomeFantasia}
+                      name="tradeName"
+                      value={formData.tradeName}
                       onChange={handleTextChange}
                       placeholder="Ex: Alimentos Alfa"
                       disabled={loading}
@@ -578,7 +612,7 @@ export default function NovoFornecedorPage() {
                 {getInitials()}
               </div>
               <h3 className={styles.previewName}>
-                {formData.nomeFantasia.trim() || formData.razaoSocial.trim() || "Novo Fornecedor"}
+                {formData.tradeName.trim() || formData.corporateName.trim() || "Novo Fornecedor"}
               </h3>
               <p className={styles.previewCnpj}>
                 {formData.cnpj || "CNPJ pendente"}

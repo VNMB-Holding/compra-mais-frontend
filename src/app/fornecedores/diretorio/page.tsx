@@ -214,11 +214,13 @@ export default function FornecedoresListPage() {
           <h1>Base de Fornecedores</h1>
           <p>Consulte parceiros homologados e verifique o nível de performance atual.</p>
         </div>
+        {/* Cadastro manual desabilitado - Fornecedores importados via planilha/integração
         <div className={styles.headerActions}>
           <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/fornecedores/novo")}>
             <Icon name="plus" /> Adicionar fornecedor
           </Button>
         </div>
+        */}
       </div>
 
       <div className={styles.kpiGrid}>

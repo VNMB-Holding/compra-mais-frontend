@@ -15,8 +15,8 @@ export default function FornecedorDetailPage() {
 
   const { data: supplier, isLoading, isError } = useSupplier(supplierId);
 
-  const renderStars = (score: number) => {
-    const starCount = Math.min(5, Math.max(1, Math.round(score / 20)));
+  const renderStars = (scoreVal: number) => {
+    const starCount = Math.min(5, Math.max(1, Math.round(scoreVal / 2)));
     return (
       <div className={styles.starRow}>
         {[...Array(5)].map((_, i) => (
@@ -46,8 +46,8 @@ export default function FornecedorDetailPage() {
 
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || "FR";
   const hasScore = supplier.performanceScore !== undefined && supplier.performanceScore !== null;
-  const score = supplier.performanceScore ?? 0;
-  const scoreFormatted = hasScore ? (score / 10).toFixed(1).replace(".", ",") : "—";
+  const score = hasScore ? Number(supplier.performanceScore) : 0;
+  const scoreFormatted = hasScore ? score.toFixed(1).replace(".", ",") : "—";
   const statusLabel = supplier.status === "Active" ? "Homologado" : supplier.status === "Pending" ? "Pendente" : supplier.status;
   const statusVariant = supplier.status === "Active" ? "success" : supplier.status === "Pending" ? "warning" : "gray";
 
@@ -111,8 +111,8 @@ export default function FornecedorDetailPage() {
             </div>
             <div className={styles.titleRow}>
               {hasScore ? renderStars(score) : null}
-              <Badge variant={hasScore && score >= 80 ? "success" : hasScore && score >= 60 ? "primary" : "gray"} className={styles.badgeScore}>
-                {hasScore ? (score >= 80 ? "Excelente" : score >= 60 ? "Bom" : "Atenção") : "Sem avaliação"}
+              <Badge variant={hasScore && score >= 8 ? "success" : hasScore && score >= 6 ? "primary" : "gray"} className={styles.badgeScore}>
+                {hasScore ? (score >= 8 ? "Excelente" : score >= 6 ? "Bom" : "Atenção") : "Sem avaliação"}
               </Badge>
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function FornecedorDetailPage() {
           <>
             
             <div className={styles.kpiGrid}>
-              <KpiCard title="Score de Performance" value={`${score}/100`} icon="star-01" description="Avaliação geral" />
+              <KpiCard title="Score de Performance" value={hasScore ? `${scoreFormatted}/10` : "—"} icon="star-01" description="Avaliação geral" />
               <KpiCard title="Segmento / Categoria" value={supplier.segment || "Geral"} icon="tag-01" description="Ramo de atuação" />
               <KpiCard title="Situação Cadastral" value={statusLabel} icon="shield-tick" description="Status do contrato" />
               <KpiCard title="Data de Cadastro" value={new Date(supplier.createdAt).toLocaleDateString("pt-BR")} icon="calendar" description="Início da parceria" />
