@@ -1,75 +1,77 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading, ErrorState, TableSkeleton, Badge } from "@/components/ui";
+import { Button, Card, Icon, Select, TableSkeleton, Badge, ErrorState } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
 import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib/api/purchase-requests";
-import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
-import { SolicitationRow } from "@/types/domain";
-import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, PRIORITY_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
+import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { usePurchaseRequests } from "@/hooks/useQueries";
 
-function mapToRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationRow {
-  const itemCategories = pr.items?.map((i: any) => i.category).filter(Boolean) || [];
-  const uniqueCategories = Array.from(new Set(itemCategories));
+interface SolicitationCorporateRow {
+  id: string;
+  codigo: string;
+  descricao: string;
+  empresa: string;
+  centroCusto: string;
+  localEstoque: string;
+  solicitante: string;
+  qtdItens: number;
+  data: string;
+  status: string;
+  statusRaw: string;
+}
 
-  let finalCategory = "Geral";
-  if (uniqueCategories.length > 1) {
-    finalCategory = "Mista";
-  } else if (uniqueCategories.length === 1) {
-    finalCategory = uniqueCategories[0];
-  } else if (pr.category) {
-    finalCategory = typeof pr.category === "object" ? (pr.category as any).name || "Geral" : pr.category;
-  }
-
-  const empresaFilial = pr.corporateCompanyId 
-    ? `Empresa ${pr.corporateCompanyId}` 
+function mapToCorporateRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationCorporateRow {
+  const empresaFilial = pr.corporateColigada
+    ? `Coligada ${pr.corporateColigada} / Filial ${pr.corporateFilial || "1"}`
     : getTenantDisplayName(pr.tenantId, currentUser);
 
   const codigo = pr.corporateCode ? `#${pr.corporateCode}` : pr.code || "";
   const descricao = pr.description || pr.notes || "Solicitação de Compra";
+  const centroCusto = pr.costCenterCode
+    ? `${pr.costCenterCode} — ${pr.costCenterName || ""}`
+    : pr.costCenterName || "Geral";
+  const localEstoque = pr.corporateStockLocation || "Almoxarifado Geral";
   const solicitante = pr.corporateRequester || pr.requesterName || formatUserDisplayName(pr.requesterId, currentUser);
   const data = new Date(pr.createdAt).toLocaleDateString("pt-BR");
   const status = STATUS_MAP[pr.status] || pr.status;
-  const prioridade = PRIORITY_MAP[pr.priority] || pr.priority;
 
   return {
     id: pr.id,
-    code: codigo,
     codigo,
-    description: descricao,
     descricao,
-    requesterName: solicitante,
+    empresa: empresaFilial,
+    centroCusto,
+    localEstoque,
     solicitante,
-    createdAt: data,
+    qtdItens: pr.items?.length || 1,
     data,
     status,
-    priority: prioridade,
-    prioridade,
-    categoryName: finalCategory,
-    categoria: finalCategory,
-    companyName: empresaFilial,
-    empresa: empresaFilial,
+    statusRaw: pr.status,
   };
 }
 
 export default function SolicitacoesPage() {
   const router = useRouter();
-
   const { user } = useAuth();
+
   const [statusFilter, setStatusFilter] = useState("Todos");
-  const [priority, setPriority] = useState("Todos");
+  const [searchQuery, setSearchQuery] = useState("");
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
+
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const primaryCompanies = getPrimaryCompanyOptions(user);
   const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
@@ -87,8 +89,8 @@ export default function SolicitacoesPage() {
 
   const { data: rawRequests = [], isLoading: loadingRequests, error: queryError } = usePurchaseRequests(queryTenantId);
 
-  const solicitacoes: SolicitationRow[] = React.useMemo(() => {
-    return rawRequests.map((pr) => mapToRow(pr, user));
+  const solicitacoes: SolicitationCorporateRow[] = React.useMemo(() => {
+    return rawRequests.map((pr) => mapToCorporateRow(pr, user));
   }, [rawRequests, user]);
 
   const loading = loadingRequests;
@@ -97,12 +99,6 @@ export default function SolicitacoesPage() {
   useEffect(() => {
     async function fetchKpis() {
       try {
-        let queryTenantId: string | undefined = undefined;
-        if (selectedBranchId !== "TODAS") {
-          queryTenantId = selectedBranchId;
-        } else if (selectedPrimaryCompanyId !== "TODAS") {
-          queryTenantId = selectedPrimaryCompanyId;
-        }
         const kpisData = await purchaseRequestsApi.getKpis(queryTenantId);
         setKpis(kpisData);
       } catch (err) {
@@ -110,134 +106,199 @@ export default function SolicitacoesPage() {
       }
     }
     fetchKpis();
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
+  }, [queryTenantId]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
-    { label: "Rascunho", value: "Rascunho" },
-    { label: "Aguardando Aprovação", value: "Aguardando Aprovação" },
-    { label: "Aprovada", value: "Aprovada" },
+    { label: "Aprovada / Pronta p/ Cotação", value: "Aprovada" },
     { label: "Em Cotação", value: "Em Cotação" },
     { label: "Finalizada", value: "Finalizada" },
-    { label: "Rejeitada", value: "Rejeitada" },
     { label: "Cancelada", value: "Cancelada" },
   ];
 
-  const priorityOptions = [
-    { label: "Prioridade: Todas", value: "Todos" },
-    { label: "Baixa", value: "Baixa" },
-    { label: "Média", value: "Média" },
-    { label: "Alta", value: "Alta" },
-    { label: "Urgente", value: "Urgente" },
-  ];
-
-  const [searchQuery, setSearchQuery] = useState("");
-
   const filtered = solicitacoes.filter((s) => {
     if (statusFilter !== "Todos" && s.status !== statusFilter) return false;
-    if (priority !== "Todos" && s.priority !== priority) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       const matchCodigo = s.codigo.toLowerCase().includes(q);
       const matchDesc = s.descricao.toLowerCase().includes(q);
+      const matchCentro = s.centroCusto.toLowerCase().includes(q);
       const matchSolicitante = s.solicitante.toLowerCase().includes(q);
-      const matchCategoria = (s.categoria || "").toLowerCase().includes(q);
-      if (!matchCodigo && !matchDesc && !matchSolicitante && !matchCategoria) return false;
+      if (!matchCodigo && !matchDesc && !matchCentro && !matchSolicitante) return false;
     }
     return true;
   });
 
-  const columns: ColumnDef<SolicitationRow>[] = [
-    { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
-    { header: "Descrição", accessorKey: "descricao" },
-    { header: "Empresa / Unidade", accessorKey: "empresa" },
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const columns: ColumnDef<SolicitationCorporateRow>[] = [
     {
-      header: "Categoria",
-      cell: (row) => (
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#334155" }}>
-          <Icon name={getCategoryIcon(row.categoria)} size={16} />
-          <span>{row.categoria || "Geral"}</span>
-        </div>
-      )
+      header: "Nº SC Corporate",
+      cell: (row) => <span className={styles.boldCode}>{row.codigo}</span>,
+      width: "140px",
     },
-    { header: "Data", accessorKey: "data" },
     {
-      header: "Prioridade",
-      cell: (row) => {
-        const pClass =
-          row.prioridade === "Urgente" || row.prioridade === "Crítica"
-            ? styles.prioUrgent
-            : row.prioridade === "Alta"
-            ? styles.prioHigh
-            : row.prioridade === "Média"
-            ? styles.prioMedium
-            : styles.prioLow;
-        return (
-          <span className={`${styles.statusBadge} ${pClass}`}>
-            {row.prioridade}
-          </span>
-        );
-      }
+      header: "Descrição da Demanda",
+      accessorKey: "descricao",
+      cell: (row) => (
+        <div className={styles.doubleText}>
+          <strong style={{ fontSize: 13, color: "#0f172a" }}>{row.descricao}</strong>
+          <small style={{ color: "#64748b" }}>{row.qtdItens} item(ns) solicitado(s)</small>
+        </div>
+      ),
+    },
+    {
+      header: "Empresa / Filial",
+      accessorKey: "empresa",
+      cell: (row) => <span style={{ fontSize: 13, color: "#475569" }}>{row.empresa}</span>,
+    },
+    {
+      header: "Centro de Custo / Obra",
+      accessorKey: "centroCusto",
+      cell: (row) => <span style={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>{row.centroCusto}</span>,
+    },
+    {
+      header: "Local de Estoque",
+      accessorKey: "localEstoque",
+      cell: (row) => <span style={{ fontSize: 13, color: "#475569" }}>{row.localEstoque}</span>,
+    },
+    {
+      header: "Solicitante ERP",
+      accessorKey: "solicitante",
+      cell: (row) => <span style={{ fontSize: 13, color: "#334155" }}>{row.solicitante}</span>,
+    },
+    {
+      header: "Data Emissão",
+      accessorKey: "data",
+      cell: (row) => <span style={{ fontSize: 13, color: "#64748b" }}>{row.data}</span>,
+      width: "110px",
     },
     {
       header: "Status",
-      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
+      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>,
+      width: "140px",
     },
     {
       header: "",
       width: "40px",
       cell: () => (
         <button className={styles.iconBtn}>
-          <Icon name="share-03" />
+          <Icon name="dots-horizontal" size={16} />
         </button>
-      )
-    }
+      ),
+    },
   ];
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedRows = filtered.slice(startIndex, startIndex + itemsPerPage);
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
-  };
 
   return (
     <div className={styles.pageContainer}>
-
       <div className={styles.pageHeader}>
         <div>
           <h1>Solicitações de Compra</h1>
-          <p>Gerencie as demandas internas de materiais e serviços antes de abrir cotações.</p>
+          <p>Demandas e requisições sincronizadas do ERP Corporate para cotação e compras.</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnExport}><Icon name="download-01" /> Exportar</button>
-          {/* Botão de nova solicitação ocultado: as solicitações são importadas via Corporate */}
+          <Button variant="primary" onClick={() => router.push("/compras/rfqs/nova")}>
+            <Icon name="plus" size={16} /> Criar Cotação (RFQ)
+          </Button>
         </div>
       </div>
 
+      {showPrimaryCompanyFilter && (
+        <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "8px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#475569" }}>Empresa / Grupo:</span>
+            <select
+              value={selectedPrimaryCompanyId}
+              onChange={(e) => {
+                setSelectedPrimaryCompanyId(e.target.value);
+                setSelectedBranchId("TODAS");
+                setCurrentPage(1);
+              }}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: "1px solid #cbd5e1",
+                fontSize: "13px",
+                backgroundColor: "#fff",
+                color: "#1e293b",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="TODAS">Todas as empresas</option>
+              {primaryCompanies.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {showBranchFilter && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "#475569" }}>Filial:</span>
+              <select
+                value={selectedBranchId}
+                onChange={(e) => {
+                  setSelectedBranchId(e.target.value);
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  fontSize: "13px",
+                  backgroundColor: "#fff",
+                  color: "#1e293b",
+                  outline: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <option value="TODAS">Todas as filiais</option>
+                {branchCompanies.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* KPI Cards */}
       <div className={styles.kpiGrid}>
-        <KpiCard title="Total de solicitações" value={String(kpis?.total || 0)} icon="clipboard" description="Neste mês" loading={loading} />
-        <KpiCard title="Aguardando aprovação" value={String(kpis?.awaitingApproval || 0)} icon="hourglass-01" description="Pendente" loading={loading} />
-        <KpiCard title="Aprovadas" value={String(kpis?.approved || 0)} icon="check-circle" description="Prontas para cotar" loading={loading} />
-        <KpiCard title="Categorias" value={String(kpis?.categoryCount || 0)} icon="folder" loading={loading} />
+        <KpiCard
+          title="Total de Solicitações"
+          value={String(kpis?.total || rawRequests.length)}
+          icon="file-02"
+        />
+        <KpiCard
+          title="Prontas para Cotação"
+          value={String(kpis?.approved || rawRequests.filter((r) => r.status === "Approved").length)}
+          icon="check-circle"
+        />
+        <KpiCard
+          title="Em Cotação (RFQ)"
+          value={String(kpis?.inQuote || rawRequests.filter((r) => r.status === "InQuote").length)}
+          icon="clock"
+        />
+        <KpiCard
+          title="Finalizadas"
+          value={String(kpis?.finished || rawRequests.filter((r) => r.status === "Finished").length)}
+          icon="check-verified-01"
+        />
       </div>
 
+      {/* Tabela de Solicitações */}
       <Card noPadding className={styles.mainListCard}>
-
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <Icon name="search-md" />
-            <input 
-              type="text" 
-              placeholder="Buscar solicitação por código, descrição..." 
+            <Icon name="search-md" size={16} />
+            <input
+              type="text"
+              placeholder="Buscar por Nº SC, Centro de Custo, Solicitante ou Descrição..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -246,106 +307,55 @@ export default function SolicitacoesPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
-            {showPrimaryCompanyFilter && (
-              <Select
-                options={[
-                  { label: "Empresas: Todas", value: "TODAS" },
-                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedPrimaryCompanyId}
-                onChange={(val) => {
-                  setSelectedPrimaryCompanyId(val);
-                  setSelectedBranchId("TODAS");
-                  setCurrentPage(1);
-                }}
-                icon="building-07"
-                className={styles.customSelectFilter}
-              />
-            )}
-
-            {showBranchFilter && (
-              <Select
-                options={[
-                  { label: "Filiais: Todas", value: "TODAS" },
-                  ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedBranchId}
-                onChange={(val) => {
-                  setSelectedBranchId(val);
-                  setCurrentPage(1);
-                }}
-                icon="building-07"
-                className={styles.customSelectFilter}
-              />
-            )}
             <Select
               options={statusOptions}
               value={statusFilter}
-              onChange={(val) => {
-                setStatusFilter(val);
+              onChange={(v) => {
+                setStatusFilter(v);
                 setCurrentPage(1);
               }}
-              icon="filter-lines"
-              className={styles.customSelectFilter}
-            />
-            <Select
-              options={priorityOptions}
-              value={priority}
-              onChange={(val) => {
-                setPriority(val);
-                setCurrentPage(1);
-              }}
-              className={styles.customSelectFilter}
             />
           </div>
         </div>
 
-        {loading ? (
-          <TableSkeleton rows={6} columns={6} />
-        ) : error ? (
-          <ErrorState message={error} onRetry={() => window.location.reload()} />
-        ) : filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <Icon name="search-md" size={32} />
-            </div>
-            <h4>Nenhuma solicitação encontrada</h4>
-            <p>Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente.</p>
-            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatusFilter("Todos"); setPriority("Todos"); }}>Limpar Filtros</Button>
-          </div>
+        {error ? (
+          <ErrorState message={error} />
+        ) : loading ? (
+          <TableSkeleton rows={6} columns={8} />
         ) : (
           <>
-            <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/solicitacoes/${row.id}`)} />
+            <DataTable
+              columns={columns}
+              data={paginatedData}
+              onRowClick={(row) => router.push(`/compras/solicitacoes/${row.id}`)}
+            />
 
             <div className={styles.tableFooter}>
               <span>
-                Mostrando {filtered.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} solicitações
+                Mostrando {paginatedData.length} de {filtered.length} solicitações
               </span>
               <div className={styles.paginationControls}>
                 <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   className={styles.pageBtn}
-                  onClick={handlePrevPage}
-                  disabled={currentPage <= 1}
-                  style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
                 >
-                  <Icon name="chevron-left" />
+                  <Icon name="chevron-left" size={16} />
                 </button>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#475569", padding: "0 8px" }}>
+                <span style={{ fontSize: 13, color: "#475569", alignSelf: "center", margin: "0 8px" }}>
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
-                  className={styles.pageBtn}
-                  onClick={handleNextPage}
                   disabled={currentPage >= totalPages}
-                  style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={styles.pageBtn}
                 >
-                  <Icon name="chevron-right" />
+                  <Icon name="chevron-right" size={16} />
                 </button>
               </div>
             </div>
           </>
         )}
-
       </Card>
     </div>
   );

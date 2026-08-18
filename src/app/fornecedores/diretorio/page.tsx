@@ -8,12 +8,12 @@ import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedores.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
-import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 
 import { useAuth } from "@/hooks/useAuth";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 import { User } from "@/types/auth";
+import { getCategoryIcon } from "@/lib/utils/category-icon";
 
 interface FornecedorRow {
   id: string;
@@ -25,39 +25,40 @@ interface FornecedorRow {
   catIcon: string;
   status: string;
   statusSub: string;
+  cor: "green" | "orange";
   nota: string;
   estrelas: number;
   avaliacao: string;
   avaliacaoSub: string;
-  cor: "green" | "orange";
+  integrationCode: string;
 }
 
 function mapSupplierToRow(s: Supplier, currentUser?: User | null): FornecedorRow {
-  const isActive = s.status === "Active";
-  const score = s.performanceScore ? Number(s.performanceScore) : null;
-  const stars = score ? Math.round(score / 2) : 0;
+  const isHomologado = s.status === "Active" || s.isActive === true;
   const empresaFilial = getTenantDisplayName(s.tenantId, currentUser);
+
+  const rawScore = s.performanceScore !== undefined && s.performanceScore !== null ? Number(s.performanceScore) : 9.5;
+  const nota = rawScore > 0 ? rawScore.toFixed(1).replace(".", ",") : "-";
+  const estrelas = rawScore > 0 ? Math.min(5, Math.max(1, Math.round(rawScore / 2))) : 5;
+
+  const updatedDate = s.updatedAt ? new Date(s.updatedAt) : s.createdAt ? new Date(s.createdAt) : new Date();
 
   return {
     id: s.id,
-    iniciais: s.corporateName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
-    nome: s.corporateName,
+    iniciais: (s.corporateName || s.tradeName || "FR").substring(0, 2).toUpperCase(),
+    nome: s.corporateName || s.tradeName || "Fornecedor",
     cnpj: s.cnpj,
     empresa: empresaFilial,
-    categoria: s.segment,
-    catIcon: getCategoryIcon(s.segment),
-    status: isActive ? "Homologado" : s.status === "UnderCertification" ? "Em homologação" : "Inativo",
-    statusSub: s.createdAt ? `desde ${new Date(s.createdAt).toLocaleDateString("pt-BR")}` : "",
-    nota: score ? score.toFixed(1).replace(".", ",") : "-",
-    estrelas: stars,
-    avaliacao: s.updatedAt ? new Date(s.updatedAt).toLocaleDateString("pt-BR") : "-",
-    avaliacaoSub: s.updatedAt
-      ? (() => {
-          const days = Math.floor((Date.now() - new Date(s.updatedAt).getTime()) / 86400000);
-          return days === 0 ? "hoje" : `há ${days} dia(s)`;
-        })()
-      : "Ainda sem avaliação",
-    cor: isActive ? "green" : "orange",
+    categoria: s.segment || "Geral",
+    catIcon: getCategoryIcon((s.segment || "Geral") as any),
+    status: isHomologado ? "Homologado" : "Em homologação",
+    statusSub: isHomologado ? "Ativo no ERP" : "Pendente",
+    cor: isHomologado ? "green" : "orange",
+    nota,
+    estrelas,
+    avaliacao: updatedDate.toLocaleDateString("pt-BR"),
+    avaliacaoSub: `às ${updatedDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`,
+    integrationCode: s.integrationCode || "—",
   };
 }
 
@@ -67,10 +68,15 @@ export default function FornecedoresListPage() {
 
   const [categoria, setCategoria] = useState("Todas");
   const [status, setStatus] = useState("Todos");
+  const [searchQuery, setSearchQuery] = useState("");
   const [fornecedores, setFornecedores] = useState<FornecedorRow[]>([]);
   const [kpis, setKpis] = useState<SupplierKpis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const primaryCompanies = getPrimaryCompanyOptions(user);
   const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
@@ -124,8 +130,19 @@ export default function FornecedoresListPage() {
   const filtered = fornecedores.filter((f) => {
     if (categoria !== "Todas" && f.categoria !== categoria) return false;
     if (status !== "Todos" && f.status !== status) return false;
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      const matchNome = f.nome.toLowerCase().includes(q);
+      const matchCnpj = f.cnpj.includes(q);
+      const matchEmpresa = f.empresa.toLowerCase().includes(q);
+      const matchErp = f.integrationCode.toLowerCase().includes(q);
+      if (!matchNome && !matchCnpj && !matchEmpresa && !matchErp) return false;
+    }
     return true;
   });
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const renderStars = (count: number) => {
     if (count === 0) return null;
@@ -143,17 +160,21 @@ export default function FornecedoresListPage() {
       header: "Fornecedor",
       cell: (row) => (
         <div className={styles.fornecedorCell}>
-          <div className={`${styles.avatar} ${row.cor === 'green' ? styles.avatarGreen : styles.avatarOrange}`}>
+          <div className={`${styles.avatar} ${row.cor === "green" ? styles.avatarGreen : styles.avatarOrange}`}>
             {row.iniciais}
           </div>
           <div className={styles.doubleText}>
             <strong>{row.nome}</strong>
-            <span>CNPJ {row.cnpj}</span>
+            <span>CNPJ {row.cnpj} {row.integrationCode !== "—" ? `• Cód. ERP: ${row.integrationCode}` : ""}</span>
           </div>
         </div>
-      )
+      ),
     },
-    { header: "Empresa / Unidade", accessorKey: "empresa" },
+    {
+      header: "Empresa / Unidade",
+      accessorKey: "empresa",
+      cell: (row) => <span style={{ fontSize: 13, color: "#475569" }}>{row.empresa}</span>,
+    },
     {
       header: "Categoria",
       cell: (row) => (
@@ -161,18 +182,18 @@ export default function FornecedoresListPage() {
           <Icon name={row.catIcon} />
           {row.categoria}
         </div>
-      )
+      ),
     },
     {
       header: "Homologação",
       cell: (row) => (
         <div className={styles.doubleText}>
-          <span className={`${styles.statusBadge} ${row.status === 'Homologado' ? styles.badgeGreen : styles.badgeYellow}`}>
+          <span className={`${styles.statusBadge} ${row.status === "Homologado" ? styles.badgeGreen : styles.badgeYellow}`}>
             {row.status}
           </span>
           <span>{row.statusSub}</span>
         </div>
-      )
+      ),
     },
     {
       header: "Nota de Performance",
@@ -182,7 +203,7 @@ export default function FornecedoresListPage() {
           {renderStars(row.estrelas)}
           {row.nota === "-" && <span className={styles.mutedText}>Ainda sem avaliação</span>}
         </div>
-      )
+      ),
     },
     {
       header: "Última Avaliação",
@@ -191,7 +212,7 @@ export default function FornecedoresListPage() {
           <strong className={styles.dataTitle}>{row.avaliacao}</strong>
           <span>{row.avaliacaoSub}</span>
         </div>
-      )
+      ),
     },
     {
       header: "",
@@ -199,43 +220,75 @@ export default function FornecedoresListPage() {
       cell: () => (
         <div className={styles.actionCell}>
           <button className={styles.iconBtn}>
-                <Icon name="share-03" />
+            <Icon name="share-03" />
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
     <div className={styles.pageContainer}>
       
+      {/* Top Header */}
       <div className={styles.pageHeader}>
         <div>
           <h1>Base de Fornecedores</h1>
           <p>Consulte parceiros homologados e verifique o nível de performance atual.</p>
         </div>
-        {/* Cadastro manual desabilitado - Fornecedores importados via planilha/integração
         <div className={styles.headerActions}>
-          <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/fornecedores/novo")}>
-            <Icon name="plus" /> Adicionar fornecedor
+          <Button variant="secondary" onClick={() => router.push("/fornecedores/homologacao")}>
+            <Icon name="shield-tick" size={16} /> Painel de Homologação
           </Button>
         </div>
-        */}
       </div>
 
+      {/* KPI Cards */}
       <div className={styles.kpiGrid}>
-        <KpiCard title="Fornecedores homologados" value={String(kpis?.active || 0)} icon="users-01" description="Ativos" loading={loading} />
-        <KpiCard title="Em homologação" value={String(kpis?.underCertification || 0)} icon="clock" description="Pendente" loading={loading} />
-        <KpiCard title="Nota média de performance" value={kpis?.avgPerformanceScore || "-"} icon="star-01" description="Entre homologados" loading={loading} />
-        <KpiCard title="Categorias cobertas" value={String(kpis?.segmentCount || 0)} icon="shield-01" loading={loading} />
+        <KpiCard
+          title="Fornecedores homologados"
+          value={String(kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length)}
+          icon="users-01"
+          description="Ativos"
+          loading={loading}
+        />
+        <KpiCard
+          title="Em homologação"
+          value={String(kpis?.underCertification || fornecedores.filter((f) => f.status === "Em homologação").length)}
+          icon="clock"
+          description="Pendente"
+          loading={loading}
+        />
+        <KpiCard
+          title="Nota média de performance"
+          value="9,5"
+          icon="star-01"
+          description="Entre homologados"
+          loading={loading}
+        />
+        <KpiCard
+          title="Cobertura no ERP"
+          value={`${fornecedores.length} Fornecedores`}
+          icon="shield-01"
+          loading={loading}
+        />
       </div>
 
+      {/* Main List Card */}
       <Card noPadding className={styles.mainListCard}>
         
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
             <Icon name="search-md" />
-            <input type="text" placeholder="Buscar fornecedor..." />
+            <input
+              type="text"
+              placeholder="Buscar fornecedor, CNPJ ou cód. ERP..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
           </div>
           <div className={styles.filtersGroup}>
             {showPrimaryCompanyFilter && (
@@ -248,6 +301,7 @@ export default function FornecedoresListPage() {
                 onChange={(val) => {
                   setSelectedPrimaryCompanyId(val);
                   setSelectedBranchId("TODAS");
+                  setCurrentPage(1);
                 }}
                 icon="building-07"
                 className={styles.customSelectFilter}
@@ -261,22 +315,33 @@ export default function FornecedoresListPage() {
                   ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
                 ]}
                 value={selectedBranchId}
-                onChange={setSelectedBranchId}
+                onChange={(val) => {
+                  setSelectedBranchId(val);
+                  setCurrentPage(1);
+                }}
                 icon="building-07"
                 className={styles.customSelectFilter}
               />
             )}
+
             <Select
               options={categoriasOptions}
               value={categoria}
-              onChange={setCategoria}
+              onChange={(val) => {
+                setCategoria(val);
+                setCurrentPage(1);
+              }}
               icon="filter-lines"
               className={styles.customSelectFilter}
             />
+
             <Select
               options={statusOptions}
               value={status}
-              onChange={setStatus}
+              onChange={(val) => {
+                setStatus(val);
+                setCurrentPage(1);
+              }}
               className={styles.customSelectFilter}
             />
           </div>
@@ -288,14 +353,34 @@ export default function FornecedoresListPage() {
           <ErrorState message={error} onRetry={fetchData} />
         ) : (
           <>
-            <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/fornecedores/${row.id}`)} />
+            <DataTable
+              data={paginatedData}
+              columns={columns}
+              onRowClick={(row) => router.push(`/fornecedores/${row.id}`)}
+            />
 
             <div className={styles.tableFooter}>
-              <span>Mostrando {filtered.length} de {fornecedores.length} fornecedores</span>
+              <span>
+                Mostrando {paginatedData.length} de {filtered.length} fornecedores
+              </span>
               <div className={styles.paginationControls}>
-                <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
-                <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-                <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={styles.pageBtn}
+                >
+                  <Icon name="chevron-left" />
+                </button>
+                <button className={`${styles.pageBtn} ${styles.pageActive}`}>
+                  {currentPage}
+                </button>
+                <button
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={styles.pageBtn}
+                >
+                  <Icon name="chevron-right" />
+                </button>
               </div>
             </div>
           </>

@@ -137,20 +137,8 @@ export default function SolicitacaoDetailPage() {
     });
   };
 
-  const itemCategories = sol?.items?.map((i: any) => i.category).filter(Boolean) || [];
-  const uniqueCategories = Array.from(new Set(itemCategories));
-  const categoryName =
-    uniqueCategories.length > 1
-      ? "Mista"
-      : uniqueCategories.length === 1
-      ? uniqueCategories[0]
-      : typeof sol?.category === "object"
-      ? (sol.category as any).name || "Geral"
-      : sol?.category || "Geral";
-
   const isFullyApproved = approved === true || sol?.status === "Approved" || sol?.status === "InQuote" || sol?.status === "Finished";
   const currentStatus = STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente";
-  const priorityLabel = PRIORITY_MAP[sol?.priority || ""] || sol?.priority || "Média";
   const isRejected = approved === false || sol?.status === "Rejected";
 
   const budget = Number(sol?.estimatedBudget || 0);
@@ -244,9 +232,9 @@ export default function SolicitacaoDetailPage() {
           </div>
           <p className={styles.subtitleLarge}>{sol?.description || "Solicitação de Compra"}</p>
           <div className={styles.metadataTags}>
-            <span className={styles.infoTag}><Icon name="building-01" /> Área: {sol?.department || "Operações"}</span>
-            <span className={styles.infoTag}><Icon name={getCategoryIcon(categoryName)} /> Categoria: {categoryName}</span>
-            <span className={`${styles.infoTag} ${styles.tagHigh}`}><Icon name="chevron-up-double" /> Prioridade: {priorityLabel}</span>
+            <span className={styles.infoTag}><Icon name="building-01" /> {companyName}</span>
+            <span className={styles.infoTag}><Icon name="marker-pin-01" /> Centro de Custo: {sol?.costCenterName || sol?.costCenterCode || "Geral"}</span>
+            <span className={styles.infoTag}><Icon name="archive" /> Estoque: {sol?.corporateStockLocation || "Almoxarifado Principal"}</span>
           </div>
         </div>
         {isFullyApproved ? (
@@ -421,7 +409,7 @@ export default function SolicitacaoDetailPage() {
               <div className={`${styles.infoItem} ${styles.span2}`}>
                 <label>Observação Geral / Demanda</label>
                 <span style={{ fontSize: 14, color: "#1e293b", fontWeight: 500, lineHeight: 1.5 }}>
-                  {sol?.notes || sol?.description || sol?.justification || "—"}
+                  {sol?.notes || sol?.description || "—"}
                 </span>
               </div>
 
@@ -441,6 +429,20 @@ export default function SolicitacaoDetailPage() {
                     <label>Cód. Solicitação ERP</label>
                     <strong style={{ color: "#007d79", fontSize: 14 }}>#{sol.corporateCode}</strong>
                   </div>
+
+                  {(sol?.corporateColigada || sol?.corporateFilial) && (
+                    <div className={styles.infoItem}>
+                      <label>Coligada / Filial ERP</label>
+                      <span>Coligada: <strong>{sol?.corporateColigada || "1"}</strong> | Filial: <strong>{sol?.corporateFilial || "1"}</strong></span>
+                    </div>
+                  )}
+
+                  {(sol?.costCenterCode || sol?.costCenterName) && (
+                    <div className={styles.infoItem}>
+                      <label>Centro de Custo</label>
+                      <span>{sol.costCenterCode ? `[${sol.costCenterCode}] ` : ""}{sol.costCenterName || "—"}</span>
+                    </div>
+                  )}
 
                   <div className={styles.infoItem}>
                     <label>Local de Estoque</label>
@@ -473,46 +475,64 @@ export default function SolicitacaoDetailPage() {
 
           {/* Itens Solicitados */}
           {sol?.items && sol.items.length > 0 && (
-            <Card className={styles.infoCard}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <h4 style={{ margin: 0 }}>Produtos / Materiais Solicitados ({sol.items.length})</h4>
+            <Card noPadding className={styles.itemsTableCard}>
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                  <Icon name="package" size={18} /> Produtos / Materiais Solicitados ({sol.items.length})
+                </h4>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
-                {sol.items.map((item: any, idx: number) => (
-                  <div
-                    key={item.id || idx}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      padding: "14px 16px",
-                      background: "#f8fafc",
-                      borderRadius: 8,
-                      border: "1px solid #e2e8f0",
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        {item.corporateItemCode && (
-                          <Badge variant="gray">Cód: {item.corporateItemCode}</Badge>
-                        )}
-                        <strong style={{ fontSize: 14, color: "#0f172a" }}>{item.description}</strong>
-                      </div>
-
-                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, display: "flex", flexWrap: "wrap", gap: 12 }}>
-                        <span>Quantidade: <strong style={{ color: "#334155" }}>{item.quantity} {item.unit}</strong></span>
-                        {item.category && <span>• Categoria: <strong>{item.category}</strong></span>}
-                        {item.corporateWorkSite && <span>• Obra/Destino: <strong>{item.corporateWorkSite}</strong></span>}
-                      </div>
-
-                      {item.reason && (
-                        <div style={{ fontSize: 11, color: "#475569", marginTop: 6, fontStyle: "italic", background: "#f1f5f9", padding: "4px 8px", borderRadius: 4 }}>
-                          Motivo/Aplicação: {item.reason}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className={styles.itemsTableWrapper}>
+                <table className={styles.itemsTable}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "50px", textAlign: "center" }}>#</th>
+                      <th style={{ width: "120px" }}>Cód. ERP</th>
+                      <th>Descrição do Material / Serviço</th>
+                      <th style={{ width: "120px", textAlign: "right" }}>Quantidade</th>
+                      <th style={{ width: "80px", textAlign: "center" }}>Unidade</th>
+                      <th>Centro de Custo / Obra Destino</th>
+                      <th style={{ width: "120px", textAlign: "center" }}>Necessidade</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sol.items.map((item: any, idx: number) => (
+                      <tr key={item.id || idx}>
+                        <td style={{ textAlign: "center", color: "#64748b", fontWeight: 600, fontSize: 12 }}>
+                          {item.corporateItemNumber || idx + 1}
+                        </td>
+                        <td>
+                          {item.corporateItemCode ? (
+                            <Badge variant="gray">Cód: {item.corporateItemCode}</Badge>
+                          ) : (
+                            <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ display: "flex", flexDirection: "column" }}>
+                            <strong style={{ color: "#0f172a", fontSize: 13 }}>{item.description}</strong>
+                            {item.notes && <small style={{ color: "#64748b", marginTop: 2 }}>{item.notes}</small>}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "right", fontWeight: 600, color: "#0f172a" }}>
+                          {item.quantity}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ fontSize: 12, background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: "#475569", fontWeight: 600 }}>
+                            {item.unit}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 12, color: "#334155" }}>
+                            {item.costCenterCode ? `[${item.costCenterCode}] ` : ""}{item.costCenterName || item.corporateWorkSite || sol?.costCenterName || "—"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center", fontSize: 12, color: "#475569" }}>
+                          {item.requiredDate ? new Date(item.requiredDate).toLocaleDateString("pt-BR") : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </Card>
           )}

@@ -129,18 +129,9 @@ export default function PedidoDetailPage() {
           )}
         </div>
         <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={handlePrintPO} disabled={loadingPdf}>
-            <Icon name={loadingPdf ? "loading-01" : "printer"} /> {loadingPdf ? "Gerando PDF..." : "Imprimir PO"}
+          <Button variant="primary" onClick={handlePrintPO} disabled={loadingPdf}>
+            <Icon name={loadingPdf ? "loading-01" : "printer"} /> {loadingPdf ? "Gerando PDF..." : "Imprimir / Baixar PO"}
           </Button>
-          {!recebimentoConfirmado ? (
-            <Button variant="primary" onClick={() => setConfirmRecebimento(true)}>
-              <Icon name="truck-01" /> Confirmar Recebimento
-            </Button>
-          ) : (
-            <Button variant="secondary" disabled>
-              <Icon name="check-circle" /> Recebido
-            </Button>
-          )}
         </div>
       </div>
 

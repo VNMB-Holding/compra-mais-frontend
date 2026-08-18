@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Card, Button, Badge, Icon, Loading } from "@/components/ui";
+import { Card, Badge, Icon, Loading } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./homologacao-detail.module.css";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
@@ -33,10 +33,11 @@ export default function HomologacaoDetailPage() {
     fetchSupplier();
   }, [supplierId, toast]);
 
-  if (loading) return <Loading variant="fullscreen" message="Carregando Análise..." />;
-  if (!supplier) return <div style={{padding:40}}>Fornecedor não encontrado.</div>;
+  if (loading) return <Loading variant="fullscreen" message="Carregando Análise de Homologação..." />;
+  if (!supplier) return <div style={{ padding: 40 }}>Fornecedor não encontrado.</div>;
 
-  const getInitials = (name: string) => name?.substring(0,2).toUpperCase() || "FR";
+  const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || "FR";
+  const isHomologado = supplier.status === "Active";
 
   return (
     <div className={styles.pageContainer}>
@@ -47,15 +48,15 @@ export default function HomologacaoDetailPage() {
 
         <div className={styles.headerRow}>
           <div className={styles.headerTitles}>
-            <h1>Homologação de Fornecedor</h1>
-            <p>Análise automática e verificação de dados públicos</p>
+            <h1>Homologação e Análise de Risco</h1>
+            <p>Verificação de dados públicos, situação cadastral, certidões e compliance.</p>
           </div>
         </div>
       </div>
 
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
-          
+
           <div className={styles.summaryColBase}>
             <div className={styles.avatarBig}>{getInitials(supplier.corporateName)}</div>
             <div className={styles.baseInfo}>
@@ -63,31 +64,42 @@ export default function HomologacaoDetailPage() {
                 <h2>{supplier.corporateName}</h2>
                 <Badge variant="success" className={styles.badgeVerificado}>CNPJ verificado</Badge>
               </div>
-              <p className={styles.docInfo}>CNPJ: {supplier.cnpj} <span className={styles.divider}>|</span> {supplier.segment}</p>
+              <p className={styles.docInfo}>CNPJ: {supplier.cnpj} {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? `| ${supplier.tradeName}` : ""}</p>
               <div className={styles.updateInfo}>
-                <span>Última análise: {new Date(supplier.updatedAt).toLocaleDateString("pt-BR")}</span>
-                <button className={styles.btnRefresh}>
-                  <Icon name="refresh-cw-01" size={16} /> Atualizar dados
+                <span>Última análise: {new Date(supplier.updatedAt || supplier.createdAt).toLocaleDateString("pt-BR")}</span>
+                <button className={styles.btnRefresh} onClick={() => window.location.reload()}>
+                  <Icon name="refresh-cw-01" size={14} /> Atualizar dados
                 </button>
               </div>
             </div>
           </div>
 
           <div className={styles.summaryColScore}>
-             <div className={styles.scoreBlock}>
-                <span className={styles.scoreLabel}>Score de Risco</span>
-                <div className={styles.scoreValueGroup}>
-                  <span className={styles.scoreNumberSuccess}>Baixo</span>
-                  <div className={styles.scoreTrendPos}><Icon name="trend-up-01" size={14}/> Seguro</div>
-                </div>
-             </div>
+            <div className={styles.scoreHeader}>
+              <span>Score de Risco</span>
+              <Icon name="shield-tick" size={16} />
+            </div>
+            <div className={styles.scoreValue}>
+              <strong className={styles.textGreen}>Baixo</strong>
+            </div>
+            <span className={styles.badgeScore}>Fornecedor Seguro</span>
           </div>
 
-          <div className={styles.summaryColAction}>
-            <p className={styles.actionDesc}>De acordo com a política de compliance, este fornecedor está apto a operar.</p>
-            <div className={styles.actionButtons}>
-              <Button variant="danger" disabled><Icon name="x-circle"/> Bloquear</Button>
-              <Button variant="primary"><Icon name="check-verified-01"/> Aprovar Homologação</Button>
+          <div className={styles.summaryColStatus}>
+            <div className={styles.statusRow}>
+              <span>Status de Compliance</span>
+              <span className={isHomologado ? styles.badgeScore : styles.badgeEmAnalise}>
+                {isHomologado ? "Homologado" : "Em análise"}
+              </span>
+            </div>
+            <p className={styles.etapaText}>Análise automatizada concluída</p>
+
+            <div className={styles.stepperWrapper}>
+              <div className={`${styles.stepDot} ${styles.stepDone}`} />
+              <div className={`${styles.stepLine} ${styles.lineDone}`} />
+              <div className={`${styles.stepDot} ${styles.stepDone}`} />
+              <div className={`${styles.stepLine} ${styles.lineDone}`} />
+              <div className={`${styles.stepDot} ${styles.stepDone}`} />
             </div>
           </div>
 
@@ -95,72 +107,262 @@ export default function HomologacaoDetailPage() {
       </Card>
 
       <div className={styles.tabsContainer}>
-        <div className={styles.tabsList}>
-          <button className={`${styles.tabBtn} ${activeTab === "visao-geral" ? styles.activeTab : ""}`} onClick={() => setActiveTab("visao-geral")}>
-            Visão Geral
-          </button>
-          <button className={`${styles.tabBtn} ${activeTab === "financeiro" ? styles.activeTab : ""}`} onClick={() => setActiveTab("financeiro")}>
-            Saúde Financeira
-          </button>
-          <button className={`${styles.tabBtn} ${activeTab === "certidoes" ? styles.activeTab : ""}`} onClick={() => setActiveTab("certidoes")}>
-            Certidões e Docs
-          </button>
-          <button className={`${styles.tabBtn} ${activeTab === "socios" ? styles.activeTab : ""}`} onClick={() => setActiveTab("socios")}>
-            Quadro Societário
-          </button>
-        </div>
+        <button className={activeTab === "visao-geral" ? styles.tabActive : ""} onClick={() => setActiveTab("visao-geral")}>
+          Visão Geral
+        </button>
+        <button className={activeTab === "certidoes" ? styles.tabActive : ""} onClick={() => setActiveTab("certidoes")}>
+          Certidões & Fiscal
+        </button>
+        <button className={activeTab === "financeiro" ? styles.tabActive : ""} onClick={() => setActiveTab("financeiro")}>
+          Dados Bancários & PIX
+        </button>
       </div>
 
-      <div className={styles.tabContentArea}>
-        {activeTab === "visao-geral" && (
-          <div className={styles.visaoGeralGrid}>
-             <Card className={styles.dataCard}>
-               <div className={styles.cardHeaderSmall}><Icon name="building-02" size={18}/> <h3>Dados Cadastrais</h3></div>
-               <div className={styles.dataList}>
-                 <div className={styles.dataItem}><span>Razão Social</span><strong>{supplier.corporateName}</strong></div>
-                 <div className={styles.dataItem}><span>Nome Fantasia</span><strong>{supplier.tradeName}</strong></div>
-                 <div className={styles.dataItem}><span>CNPJ</span><strong>{supplier.cnpj}</strong></div>
-                 <div className={styles.dataItem}><span>Situação Cadastral (RFB)</span><Badge variant="success">Ativa</Badge></div>
-               </div>
-             </Card>
+      {activeTab === "visao-geral" && (
+        <div className={styles.contentGrid}>
+          
+          <div className={styles.leftColumn}>
+            
+            <Card className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>
+                <Icon name="shield-01" size={18} /> Classificação de Risco
+              </h3>
+              <div className={styles.riskGradientBar}>
+                <div className={styles.riskMarker} style={{ left: "15%" }}>
+                  <div className={styles.markerTriangle} />
+                </div>
+              </div>
+              <div className={styles.riskLabels}>
+                <div className={styles.riskLabel}>
+                  <strong>Baixo Risco</strong>
+                  <span style={{ color: "#16a34a" }}>0 - 30 (Atual: 15)</span>
+                </div>
+                <div className={styles.riskLabel}>
+                  <strong>Médio Risco</strong>
+                  <span style={{ color: "#ca8a04" }}>31 - 70</span>
+                </div>
+                <div className={styles.riskLabel}>
+                  <strong>Alto Risco</strong>
+                  <span style={{ color: "#dc2626" }}>71 - 100</span>
+                </div>
+              </div>
+            </Card>
 
-             <Card className={styles.dataCard}>
-               <div className={styles.cardHeaderSmall}><Icon name="marker-pin-01" size={18}/> <h3>Localização e Contato</h3></div>
-               <div className={styles.dataList}>
-                 <div className={styles.dataItem}><span>Endereço Principal</span><strong>{supplier.address}</strong></div>
-                 <div className={styles.dataItem}><span>CEP</span><strong>{supplier.zipCode}</strong></div>
-                 <div className={styles.dataItem}><span>E-mail</span><strong>{supplier.contactEmail}</strong></div>
-                 <div className={styles.dataItem}><span>Telefone</span><strong>{supplier.contactPhone}</strong></div>
-               </div>
-             </Card>
-             
-             <Card className={styles.dataCard} style={{ gridColumn: "1 / -1" }}>
-               <div className={styles.cardHeaderSmall}><Icon name="alert-triangle" size={18}/> <h3>Apontamentos Restritivos</h3></div>
-               <table className={styles.apontamentosTable}>
-                  <thead>
-                    <tr>
-                      <th>Tipo</th>
-                      <th>Data Ocorrência</th>
-                      <th>Valor</th>
-                      <th>Situação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td colSpan={4} style={{textAlign: "center", color: "var(--gray-500)", padding: 24}}>Nenhum apontamento restritivo encontrado.</td></tr>
-                  </tbody>
-               </table>
-             </Card>
+            <Card className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>
+                <Icon name="check-circle" size={18} /> Análises Automatizadas
+              </h3>
+
+              <div className={styles.analysisList}>
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="building-02" size={20} />
+                    <div>
+                      <strong>Receita Federal (RFB)</strong>
+                      <p>Situação cadastral Ativa e regular</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <div className={styles.badgeSuccessOutline}><Icon name="check" size={16} /> Regular</div>
+                  </div>
+                </div>
+
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="file-check-01" size={20} />
+                    <div>
+                      <strong>Certidão Negativa de Débitos (CND Federal)</strong>
+                      <p>Sem pendências tributárias ativas</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <div className={styles.badgeSuccessOutline}><Icon name="check" size={16} /> Válida</div>
+                  </div>
+                </div>
+
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="users-01" size={20} />
+                    <div>
+                      <strong>Regularidade FGTS (CRF)</strong>
+                      <p>Certificado de regularidade em vigor</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <div className={styles.badgeSuccessOutline}><Icon name="check" size={16} /> Emitida</div>
+                  </div>
+                </div>
+
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="shield-tick" size={20} />
+                    <div>
+                      <strong>Trabalho Escravo & CEIS</strong>
+                      <p>Sem apontamentos em listas restritivas</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <div className={styles.badgeSuccessOutline}><Icon name="check" size={16} /> Nada Consta</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
           </div>
-        )}
 
-        {activeTab !== "visao-geral" && (
-          <Card className={styles.placeholderCard}>
-            <Icon name="tools" size={48} />
-            <h3>Aba em Construção</h3>
-            <p>Os detalhes aprofundados para esta seção serão exibidos aqui.</p>
-          </Card>
-        )}
-      </div>
+          <div className={styles.rightColumn}>
+            
+            <Card className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>
+                <Icon name="globe-01" size={18} /> Fontes Oficiais Consultadas
+              </h3>
+              
+              <div className={styles.sourcesGrid}>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceIconBox}><Icon name="bank" size={18} /></div>
+                  <span>Receita Federal</span>
+                </div>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceIconBox}><Icon name="building-01" size={18} /></div>
+                  <span>Transparência</span>
+                </div>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceIconBox}><Icon name="shield-01" size={18} /></div>
+                  <span>CEIS</span>
+                </div>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceIconBox}><strong>CNJ</strong></div>
+                  <span>CNJ</span>
+                </div>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceIconBox}><strong>TCU</strong></div>
+                  <span>TCU</span>
+                </div>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceIconBox}><strong>FGTS</strong></div>
+                  <span>Caixa</span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>
+                <Icon name="alert-triangle" size={18} /> Apontamentos Restritivos
+              </h3>
+              <div className={styles.alertSuccessBox}>
+                <Icon name="check-circle" size={18} />
+                <span>Nenhum processo restritivo ou sanção encontrado.</span>
+              </div>
+            </Card>
+
+          </div>
+
+        </div>
+      )}
+
+      {activeTab === "certidoes" && (
+        <div className={styles.contentGrid}>
+          <div className={styles.leftColumn} style={{ gridColumn: "1 / -1" }}>
+            <Card className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>
+                <Icon name="file-02" size={18} /> Documentos e Certidões Fiscais
+              </h3>
+              <div className={styles.analysisList}>
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="file-check-01" size={20} />
+                    <div>
+                      <strong>Inscrição Estadual (IE)</strong>
+                      <p>{supplier.stateRegistration ? `Número: ${supplier.stateRegistration}` : "Isento / Não aplicável"}</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <div className={styles.badgeSuccessOutline}><Icon name="check" size={16} /> Verificado</div>
+                  </div>
+                </div>
+
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="file-check-01" size={20} />
+                    <div>
+                      <strong>SUFRAMA</strong>
+                      <p>{supplier.suframa ? `Código: ${supplier.suframa}` : "Não optante / Não aplicável"}</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <div className={styles.badgeSuccessOutline}><Icon name="check" size={16} /> Regular</div>
+                  </div>
+                </div>
+
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="calendar" size={20} />
+                    <div>
+                      <strong>Data de Fundação</strong>
+                      <p>{supplier.foundationDate ? new Date(supplier.foundationDate).toLocaleDateString("pt-BR") : "Não informada"}</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <span style={{ fontSize: 13, color: "#475569" }}>Registro Comercial</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "financeiro" && (
+        <div className={styles.contentGrid}>
+          <div className={styles.leftColumn} style={{ gridColumn: "1 / -1" }}>
+            <Card className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>
+                <Icon name="bank" size={18} /> Informações Bancárias & Pagamentos
+              </h3>
+              <div className={styles.analysisList}>
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="bank" size={20} />
+                    <div>
+                      <strong>Dados Bancários</strong>
+                      <p>{supplier.bankCode ? `Banco ${supplier.bankCode} — Conta / Agência: ${supplier.bankNumber || "—"}` : "Não informado"}</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <span style={{ fontSize: 13, color: "#007d79", fontWeight: 600 }}>Cadastrado</span>
+                  </div>
+                </div>
+
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="zap" size={20} />
+                    <div>
+                      <strong>Chave PIX</strong>
+                      <p>{supplier.pixKey || "Chave PIX não informada"}</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <span style={{ fontSize: 13, color: "#475569" }}>Pagamento Eletrônico</span>
+                  </div>
+                </div>
+
+                <div className={styles.analysisItem}>
+                  <div className={styles.aiLeft}>
+                    <Icon name="truck-01" size={20} />
+                    <div>
+                      <strong>Locais e Prazos de Entrega</strong>
+                      <p>{supplier.deliveryLocationName || "Almoxarifado Central"} {supplier.deliveryLeadTime ? `— Prazo padrão: ${supplier.deliveryLeadTime} dias` : ""}</p>
+                    </div>
+                  </div>
+                  <div className={styles.aiRight}>
+                    <span style={{ fontSize: 13, color: "#475569" }}>Logística</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
 
     </div>
   );

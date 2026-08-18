@@ -275,12 +275,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                   <small>{userRole}</small>
                 </div>
               </div>
-              <div className={styles.dropdownDivider} />
               <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/perfil"); }}>
                 <Icon name="user" /> Meu Perfil
-              </div>
-              <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/administracao"); }}>
-                <Icon name="settings-01" /> Administração & Permissões
               </div>
               <div className={styles.dropdownDivider} />
               <div className={`${styles.dropdownItem} ${styles.logoutItem}`} onClick={handleLogout}>

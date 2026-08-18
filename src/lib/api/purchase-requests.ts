@@ -5,26 +5,21 @@ export interface PurchaseRequest {
   tenantId: string;
   code: string;
   description: string;
-  requesterId: string;
+  requesterId?: string;
   requesterName?: string;
-  department?: string;
-  purchaseType?: string;
-  paymentTerms?: string;
-  preferredSupplier?: string;
   notes?: string;
-  category: string;
-  justification: string;
   estimatedBudget: number;
-  deliveryLocation: string;
-  deadline: string;
-  priority: "Low" | "Medium" | "High" | "Urgent" | "Critical";
   status: "Draft" | "AwaitingApproval" | "Approved" | "Rejected" | "InQuote" | "Finished" | "Pending" | "UnderAnalysis" | "Cancelled";
   corporateCode?: string;
+  corporateColigada?: string;
+  corporateFilial?: string;
   corporateCompanyId?: string;
   corporateRequester?: string;
   corporateStockLocation?: string;
   corporateOriginReq?: string;
   corporateIntegration?: string;
+  costCenterCode?: string;
+  costCenterName?: string;
   source?: string;
   rawPayload?: any;
   createdAt: string;
@@ -50,21 +45,20 @@ export interface RequestItem {
   quantity: number;
   unit: string;
   estimatedUnitPrice?: number;
-  costCenter?: string;
+  costCenterCode?: string;
+  costCenterName?: string;
   requiredDate?: string;
   corporateItemCode?: string;
   corporateItemNumber?: number;
   corporateWorkSite?: string;
-  reason?: string;
-  brand?: string;
 }
 
 export interface PurchaseRequestKpis {
   total: number;
   awaitingApproval: number;
   approved: number;
-  rejected: number;
-  categoryCount: number;
+  inQuote: number;
+  finished: number;
 }
 
 export const purchaseRequestsApi = {

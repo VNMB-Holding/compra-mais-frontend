@@ -116,9 +116,9 @@ export default function NewRfqPage() {
           const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => ({
             id: r.id,
             titulo: r.description,
-            area: r.department || "Operações",
-            solicitante: r.requesterName || formatUserDisplayName(r.requesterId, user),
-            prioridade: r.priority === "Critical" ? "Critica" : r.priority === "High" ? "Alta" : r.priority === "Medium" ? "Media" : "Baixa",
+            area: r.costCenterName || r.costCenterCode || "Operações",
+            solicitante: r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
+            prioridade: "Media",
             valorEstimado: Number(r.estimatedBudget) || 0,
             itens: (r.items || []).map((it, idx) => ({
               id: idx + 1,
@@ -128,7 +128,7 @@ export default function NewRfqPage() {
             })),
             incoterm: "CIF",
             condicaoPagamento: "30 dias DDL",
-            observacoes: r.justification || "",
+            observacoes: r.notes || "",
           }));
 
           setRequestsApi(mappedReqs);

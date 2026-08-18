@@ -11,6 +11,9 @@ export interface PurchaseOrder {
   estimatedDeliveryDate: string;
   shippingType?: "CIF" | "FOB" | "EXW" | "DDP";
   status: "AwaitingSignature" | "Signed" | "InTransit" | "Delivered" | "Cancelled" | "Sent" | "Processing";
+  corporateCode?: string;
+  corporateColigada?: string;
+  corporateFilial?: string;
   createdAt: string;
   updatedAt: string;
   supplier?: {

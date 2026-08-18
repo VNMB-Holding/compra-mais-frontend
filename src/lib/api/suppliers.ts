@@ -7,12 +7,12 @@ export interface Supplier {
   corporateName: string;
   tradeName: string;
   cnpj: string;
-  segment: string;
-  categoryType?: CategoryType | string;
   stateRegistration?: string;
   zipCode?: string;
   address?: string;
   neighborhood?: string;
+  city?: string;
+  state?: string;
   contactEmail?: string;
   contactPhone?: string;
   fax?: string;
@@ -33,12 +33,13 @@ export interface Supplier {
   deliveryLocationName?: string;
   deliveryLocationCode?: string;
   deliveryLeadTime?: number;
+  performanceScore?: number;
+  segment?: string;
 
   // Integração / ERP
   integrationCode?: string;
   rawPayload?: any;
 
-  performanceScore?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,9 +47,11 @@ export interface Supplier {
 export interface SupplierKpis {
   total: number;
   active: number;
-  underCertification: number;
-  avgPerformanceScore: string | null;
-  segmentCount: number;
+  withPix: number;
+  withBank: number;
+  underCertification?: number;
+  avgPerformanceScore?: string;
+  segmentCount?: number;
 }
 
 export const suppliersApi = {

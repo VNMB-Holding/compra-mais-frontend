@@ -104,16 +104,6 @@ export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarPro
         </Link>
 
         {user?.role === "solicitante" ? solicitanteMenu : procuristMenu}
-
-        {user?.role === "admin" && (
-          <div className={styles.navSection}>
-            <div className={styles.sectionTitle}>SISTEMA</div>
-            <Link href="/administracao" className={`${styles.navItem} ${isActive("/administracao") ? styles.active : ""}`}>
-              <Icon name="settings-01" />
-              <span className={styles.navText}>Administração</span>
-            </Link>
-          </div>
-        )}
       </div>
 
       <div className={styles.sidebarFooter}>
