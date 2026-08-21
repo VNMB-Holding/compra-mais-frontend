@@ -65,8 +65,8 @@ export default function EconomiaPage() {
     try {
       setLoading(true);
       const [economyData, monthlyData] = await Promise.all([
-        dashboardApi.getEconomyAnalytics(queryCompanyCode, selectedCategory, selectedSupplier),
-        dashboardApi.getMonthlyEconomy(queryCompanyCode).catch(() => []),
+        dashboardApi.getEconomyAnalytics(queryCompanyCode, selectedCategory, selectedSupplier, selectedPeriod),
+        dashboardApi.getMonthlyEconomy(queryCompanyCode, selectedPeriod).catch(() => []),
       ]);
       setApiData({
         ...economyData,
@@ -77,7 +77,7 @@ export default function EconomiaPage() {
     } finally {
       setLoading(false);
     }
-  }, [queryCompanyCode, selectedCategory, selectedSupplier]);
+  }, [queryCompanyCode, selectedCategory, selectedSupplier, selectedPeriod]);
 
 
   useEffect(() => {
@@ -227,13 +227,18 @@ export default function EconomiaPage() {
       
       <div className={styles.filterRow}>
         <div className={styles.filterInput}>
-          <div className={styles.dateRangeBox}>
-            <span>
-              <Icon name="calendar" size={16} style={{ color: "#94a3b8" }} />
-              01/05/2024 - 31/05/2025
-            </span>
-            <Icon name="chevron-down" size={16} style={{ color: "#94a3b8" }} />
-          </div>
+          <Select
+            options={[
+              { value: "all", label: "Período: Todo o histórico" },
+              { value: "30d", label: "Últimos 30 dias" },
+              { value: "90d", label: "Últimos 90 dias" },
+              { value: "12m", label: "Últimos 12 meses" },
+              { value: "2026", label: "Ano Vigente (2026)" },
+            ]}
+            value={selectedPeriod}
+            onChange={setSelectedPeriod}
+            icon="calendar"
+          />
         </div>
 
         <div className={styles.filterInput}>

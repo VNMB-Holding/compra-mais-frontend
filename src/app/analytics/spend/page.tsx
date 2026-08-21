@@ -51,14 +51,14 @@ export default function SpendPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await dashboardApi.getSpendAnalytics(queryCompanyCode, selectedCategory, selectedSupplier);
+      const data = await dashboardApi.getSpendAnalytics(queryCompanyCode, selectedCategory, selectedSupplier, selectedPeriod);
       setApiData(data);
     } catch (err) {
       logError("analytics/spend/fetchData", err);
     } finally {
       setLoading(false);
     }
-  }, [queryCompanyCode, selectedCategory, selectedSupplier]);
+  }, [queryCompanyCode, selectedCategory, selectedSupplier, selectedPeriod]);
 
 
   useEffect(() => {
@@ -194,13 +194,18 @@ export default function SpendPage() {
       
       <div className={styles.filterRow}>
         <div className={styles.filterInput}>
-          <div className={styles.dateRangeBox}>
-            <span>
-              <Icon name="calendar" size={16} style={{ color: "#94a3b8" }} />
-              01/05/2024 - 31/05/2025
-            </span>
-            <Icon name="chevron-down" size={16} style={{ color: "#94a3b8" }} />
-          </div>
+          <Select
+            options={[
+              { value: "all", label: "Período: Todo o histórico" },
+              { value: "30d", label: "Últimos 30 dias" },
+              { value: "90d", label: "Últimos 90 dias" },
+              { value: "12m", label: "Últimos 12 meses" },
+              { value: "2026", label: "Ano Vigente (2026)" },
+            ]}
+            value={selectedPeriod}
+            onChange={setSelectedPeriod}
+            icon="calendar"
+          />
         </div>
 
         <div className={styles.filterInput}>

@@ -95,24 +95,33 @@ export const dashboardApi = {
 
   getCategories: (tenantId?: string) => apiClient.get<CategoryBreakdown[]>(`/api/dashboard/categories${buildQs(tenantId)}`),
 
-  getMonthlyEconomy: (tenantId?: string) => apiClient.get<MonthlyEconomy[]>(`/api/dashboard/monthly-economy${buildQs(tenantId)}`),
+  getMonthlyEconomy: (tenantId?: string, period?: string) => {
+    const params = new URLSearchParams();
+    const valid = cleanTenantParam(tenantId);
+    if (valid) params.append("companyCode", valid);
+    if (period && period !== 'all') params.append("period", period);
+    const qs = params.toString();
+    return apiClient.get<MonthlyEconomy[]>(`/api/dashboard/monthly-economy${qs ? `?${qs}` : ''}`);
+  },
 
-  getSpendAnalytics: (companyCode?: string, category?: string, supplier?: string) => {
+  getSpendAnalytics: (companyCode?: string, category?: string, supplier?: string, period?: string) => {
     const params = new URLSearchParams();
     const valid = cleanTenantParam(companyCode);
     if (valid) params.append("companyCode", valid);
     if (category && category !== 'all' && category !== 'Todas') params.append("category", category);
     if (supplier && supplier !== 'all' && supplier !== 'Todos') params.append("supplier", supplier);
+    if (period && period !== 'all') params.append("period", period);
     const qs = params.toString();
     return apiClient.get<SpendAnalyticsResponse>(`/api/dashboard/analytics/spend${qs ? `?${qs}` : ''}`);
   },
 
-  getEconomyAnalytics: (companyCode?: string, category?: string, supplier?: string) => {
+  getEconomyAnalytics: (companyCode?: string, category?: string, supplier?: string, period?: string) => {
     const params = new URLSearchParams();
     const valid = cleanTenantParam(companyCode);
     if (valid) params.append("companyCode", valid);
     if (category && category !== 'all' && category !== 'Todas') params.append("category", category);
     if (supplier && supplier !== 'all' && supplier !== 'Todos') params.append("supplier", supplier);
+    if (period && period !== 'all') params.append("period", period);
     const qs = params.toString();
     return apiClient.get<EconomyAnalyticsResponse>(`/api/dashboard/analytics/economia${qs ? `?${qs}` : ''}`);
   },
