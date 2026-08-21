@@ -58,11 +58,28 @@ export interface RfqKpis {
   proposalCount: number;
 }
 
+export interface RfqListParams {
+  tenantId?: string;
+  companyCode?: string;
+  status?: string;
+  category?: string;
+  search?: string;
+}
+
 export const rfqsApi = {
-  list: (tenantId?: string) => {
-    const validTenant = cleanTenantParam(tenantId);
+  list: (paramsOrTenant?: string | RfqListParams) => {
     const params = new URLSearchParams();
-    if (validTenant) params.append("tenantId", validTenant);
+    if (typeof paramsOrTenant === 'string') {
+      const validTenant = cleanTenantParam(paramsOrTenant);
+      if (validTenant) params.append("companyCode", validTenant);
+    } else if (paramsOrTenant) {
+      const code = paramsOrTenant.companyCode || paramsOrTenant.tenantId;
+      const validCode = cleanTenantParam(code);
+      if (validCode) params.append("companyCode", validCode);
+      if (paramsOrTenant.status && paramsOrTenant.status !== 'Todos') params.append("status", paramsOrTenant.status);
+      if (paramsOrTenant.category && paramsOrTenant.category !== 'Todas') params.append("category", paramsOrTenant.category);
+      if (paramsOrTenant.search && paramsOrTenant.search.trim() !== '') params.append("search", paramsOrTenant.search.trim());
+    }
     const qs = params.toString();
     return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ''}`);
   },

@@ -11,6 +11,8 @@ export interface PurchaseOrder {
   estimatedDeliveryDate: string;
   shippingType?: "CIF" | "FOB" | "EXW" | "DDP";
   status: "AwaitingSignature" | "Signed" | "InTransit" | "Delivered" | "Cancelled" | "Sent" | "Processing";
+  companyCode?: string;
+  filialCode?: string;
   corporateCode?: string;
   corporateColigada?: string;
   corporateFilial?: string;
@@ -35,11 +37,28 @@ export interface OrderItem {
   totalPrice?: number;
 }
 
+export interface PurchaseOrderListParams {
+  tenantId?: string;
+  companyCode?: string;
+  status?: string;
+  supplier?: string;
+  search?: string;
+}
+
 export const purchaseOrdersApi = {
-  list: (tenantId?: string) => {
-    const validTenant = cleanTenantParam(tenantId);
+  list: (paramsOrTenant?: string | PurchaseOrderListParams) => {
     const params = new URLSearchParams();
-    if (validTenant) params.append("tenantId", validTenant);
+    if (typeof paramsOrTenant === 'string') {
+      const validTenant = cleanTenantParam(paramsOrTenant);
+      if (validTenant) params.append("companyCode", validTenant);
+    } else if (paramsOrTenant) {
+      const code = paramsOrTenant.companyCode || paramsOrTenant.tenantId;
+      const validCode = cleanTenantParam(code);
+      if (validCode) params.append("companyCode", validCode);
+      if (paramsOrTenant.status && paramsOrTenant.status !== 'Todos') params.append("status", paramsOrTenant.status);
+      if (paramsOrTenant.supplier && paramsOrTenant.supplier !== 'Todas' && paramsOrTenant.supplier !== 'Todos') params.append("supplier", paramsOrTenant.supplier);
+      if (paramsOrTenant.search && paramsOrTenant.search.trim() !== '') params.append("search", paramsOrTenant.search.trim());
+    }
     const qs = params.toString();
     return apiClient.get<PurchaseOrder[]>(`/api/purchase-orders${qs ? `?${qs}` : ''}`);
   },

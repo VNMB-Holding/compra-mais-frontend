@@ -10,6 +10,8 @@ export interface PurchaseRequest {
   notes?: string;
   estimatedBudget: number;
   status: "Draft" | "AwaitingApproval" | "Approved" | "Rejected" | "InQuote" | "Finished" | "Pending" | "UnderAnalysis" | "Cancelled";
+  companyCode?: string;
+  filialCode?: string;
   corporateCode?: string;
   corporateColigada?: string;
   corporateFilial?: string;
@@ -61,11 +63,26 @@ export interface PurchaseRequestKpis {
   finished: number;
 }
 
+export interface PurchaseRequestListParams {
+  tenantId?: string;
+  companyCode?: string;
+  status?: string;
+  search?: string;
+}
+
 export const purchaseRequestsApi = {
-  list: (tenantId?: string) => {
-    const validTenant = cleanTenantParam(tenantId);
+  list: (paramsOrTenant?: string | PurchaseRequestListParams) => {
     const params = new URLSearchParams();
-    if (validTenant) params.append("tenantId", validTenant);
+    if (typeof paramsOrTenant === 'string') {
+      const validTenant = cleanTenantParam(paramsOrTenant);
+      if (validTenant) params.append("companyCode", validTenant);
+    } else if (paramsOrTenant) {
+      const code = paramsOrTenant.companyCode || paramsOrTenant.tenantId;
+      const validCode = cleanTenantParam(code);
+      if (validCode) params.append("companyCode", validCode);
+      if (paramsOrTenant.status && paramsOrTenant.status !== 'Todos') params.append("status", paramsOrTenant.status);
+      if (paramsOrTenant.search && paramsOrTenant.search.trim() !== '') params.append("search", paramsOrTenant.search.trim());
+    }
     const qs = params.toString();
     return apiClient.get<PurchaseRequest[]>(`/api/purchase-requests${qs ? `?${qs}` : ''}`);
   },

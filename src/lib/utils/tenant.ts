@@ -1,9 +1,17 @@
 import { User } from "@/types/auth";
+import {
+  COMPANY_BRANCHES,
+  COMPANY_BY_CODE_MAP,
+  COMPANY_BY_ACRONYM_MAP,
+  findCompanyBranch,
+} from "@/lib/constants/companies";
 
 export interface TenantOption {
   id: string;
   name: string;
   type?: "Matriz" | "Filial";
+  code?: string;
+  acronym?: string;
 }
 
 /**
@@ -14,59 +22,116 @@ export function isVnmbUser(_user: User | null): boolean {
 }
 
 /**
- * Retorna as Empresas Principais disponíveis para o usuário (Matrizes / Empresas do grupo)
+ * Retorna opções de filtro unificadas para todas as páginas (Todas + 10 Unidades VB Agro)
  */
-export function getPrimaryCompanyOptions(user: User | null): TenantOption[] {
-  if (!user || !user.availableTenants || user.availableTenants.length === 0) {
-    if (user?.tenantId && user?.tenantName) {
-      return [{ id: user.tenantId, name: user.tenantName, type: "Matriz" }];
-    }
-    return [];
+export function getCompanyFilterOptions(): { label: string; value: string }[] {
+  return [
+    { label: "Unidade: Todas as Unidades", value: "TODAS" },
+    ...COMPANY_BRANCHES.map((b) => ({
+      label: `${b.code} - ${b.name} (${b.acronym})`,
+      value: b.code,
+    })),
+  ];
+}
+
+/**
+ * Retorna as Empresas / Filiais disponíveis para seleção nos filtros e formulários
+ */
+export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
+  return COMPANY_BRANCHES.map((b) => ({
+    id: b.code,
+    name: `${b.name} (${b.acronym})`,
+    type: b.code === "2313" ? "Matriz" : "Filial",
+    code: b.code,
+    acronym: b.acronym,
+  }));
+}
+
+
+/**
+ * Retorna as Filiais da empresa
+ */
+export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?: string): TenantOption[] {
+  if (selectedCompanyId && selectedCompanyId !== "TODAS" && selectedCompanyId !== "2313") {
+    return COMPANY_BRANCHES.filter((b) => b.code === selectedCompanyId).map((b) => ({
+      id: b.code,
+      name: `${b.name} (${b.acronym})`,
+      type: "Filial",
+      code: b.code,
+      acronym: b.acronym,
+    }));
   }
 
-  // Retorna todas as Empresas / Matrizes (separando filiais secundárias para o sub-seletor)
-  const primary = user.availableTenants.filter(
-    (t) => t.type === "Matriz" || !t.type || !t.name.toUpperCase().includes("FILIAL")
-  );
-
-  return primary.length > 0 ? primary : user.availableTenants;
+  return COMPANY_BRANCHES.filter((b) => b.code !== "2313").map((b) => ({
+    id: b.code,
+    name: `${b.name} (${b.acronym})`,
+    type: "Filial",
+    code: b.code,
+    acronym: b.acronym,
+  }));
 }
 
 /**
- * Retorna as Filiais de uma determinada empresa selecionada (ex: VB AGRO)
- */
-export function getBranchCompanyOptions(user: User | null, selectedCompanyId: string): TenantOption[] {
-  if (!user || !user.availableTenants || !selectedCompanyId || selectedCompanyId === "TODAS") return [];
-
-  const selectedTenant = user.availableTenants.find((t) => t.id === selectedCompanyId);
-  if (!selectedTenant) return [];
-
-  // Extrai o nome base (ex: "VB AGRO")
-  const baseName = selectedTenant.name.replace(/\s*(Matriz|Filial.*)$/i, "").trim().toUpperCase();
-
-  // Encontra todas as filiais associadas a essa empresa
-  return user.availableTenants.filter(
-    (t) => t.id !== selectedCompanyId && t.name.toUpperCase().includes(baseName)
-  );
-}
-
-/**
- * Retorna o nome amigável da Empresa/Unidade com base no tenantId do registro e do usuário logado
+ * Retorna o nome amigável da Empresa/Unidade com base no tenantId/código ERP
  */
 export function getTenantDisplayName(tenantId?: string, user?: User | null): string {
-  if (!tenantId) {
-    return user?.tenantName || "—";
+  if (!tenantId || tenantId === "TODAS") {
+    return "VB AGRO LTDA";
   }
 
-  // 1. Tenta encontrar na lista de tenants do usuário por ID exato
+  // 1. Tenta mapear diretamente pelos códigos ou siglas corporativas cadastradas
+  const branch = findCompanyBranch(tenantId);
+  if (branch) {
+    return `${branch.name} (${branch.acronym})`;
+  }
+
+  // 2. Se for nome de tenant ou ID
+  if (tenantId.toUpperCase().includes("VNMB")) {
+    return "VB AGRO LTDA";
+  }
+
+  // 3. Tenta encontrar na lista de tenants do usuário por ID exato se não for VNMB
   const foundInUser = user?.availableTenants?.find((t) => t.id === tenantId);
-  if (foundInUser) return foundInUser.name;
-
-  // 2. Se for o mesmo tenantId do usuário logado
-  if (user?.tenantId === tenantId && user?.tenantName) {
-    return user.tenantName;
+  if (foundInUser) {
+    const matchInUser = findCompanyBranch(foundInUser.name) || findCompanyBranch(foundInUser.id);
+    if (matchInUser) return `${matchInUser.name} (${matchInUser.acronym})`;
+    if (!foundInUser.name.toUpperCase().includes("VNMB")) return foundInUser.name;
   }
 
-  // 3. Fallback para o tenantName do usuário logado ou travessão
-  return user?.tenantName || "—";
+  return "VB AGRO LTDA";
 }
+
+/**
+ * Formata o nome completo da filial/empresa a partir dos campos do ERP (Coligada/Filial) ou TenantId
+ */
+export function formatCorporateBranch(
+  coligada?: string | number,
+  filial?: string | number,
+  tenantId?: string,
+  user?: User | null
+): string {
+  const filialStr = filial !== undefined && filial !== null ? String(filial).trim() : "";
+  if (filialStr) {
+    const branch = findCompanyBranch(filialStr);
+    if (branch) {
+      return `${branch.name} (${branch.acronym})`;
+    }
+  }
+
+  if (tenantId) {
+    const branch = findCompanyBranch(tenantId);
+    if (branch) {
+      return `${branch.name} (${branch.acronym})`;
+    }
+    const resolved = getTenantDisplayName(tenantId, user);
+    if (resolved && !resolved.toUpperCase().includes("VNMB")) return resolved;
+  }
+
+  if (coligada && filialStr) {
+    return `Coligada ${coligada} / Filial ${filialStr}`;
+  }
+
+  return "VB AGRO LTDA";
+}
+
+

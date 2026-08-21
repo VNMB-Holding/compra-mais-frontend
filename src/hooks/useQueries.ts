@@ -1,28 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { purchaseRequestsApi, PurchaseRequest, RequestItem } from "@/lib/api/purchase-requests";
-import { rfqsApi } from "@/lib/api/rfqs";
-import { suppliersApi } from "@/lib/api/suppliers";
-import { purchaseOrdersApi } from "@/lib/api/purchase-orders";
+import { purchaseRequestsApi, PurchaseRequest, RequestItem, PurchaseRequestListParams } from "@/lib/api/purchase-requests";
+import { rfqsApi, RfqListParams } from "@/lib/api/rfqs";
+import { suppliersApi, SupplierListParams } from "@/lib/api/suppliers";
+import { purchaseOrdersApi, PurchaseOrderListParams } from "@/lib/api/purchase-orders";
 import { categoriesApi } from "@/lib/api/categories";
 import { dashboardApi } from "@/lib/api/dashboard";
 
 export const QUERY_KEYS = {
-  purchaseRequests: (tenantId?: string) => ["purchase-requests", "list", tenantId] as const,
+  purchaseRequests: (params?: string | PurchaseRequestListParams) => ["purchase-requests", "list", params] as const,
   purchaseRequest: (id: string) => ["purchase-requests", "detail", id] as const,
-  rfqs: (tenantId?: string) => ["rfqs", "list", tenantId] as const,
+  rfqs: (params?: string | RfqListParams) => ["rfqs", "list", params] as const,
   rfq: (id: string) => ["rfqs", "detail", id] as const,
-  suppliers: ["suppliers"] as const,
+  suppliers: (params?: SupplierListParams) => ["suppliers", "list", params] as const,
   supplier: (id: string) => ["suppliers", "detail", id] as const,
-  purchaseOrders: (tenantId?: string) => ["purchase-orders", "list", tenantId] as const,
+  purchaseOrders: (params?: string | PurchaseOrderListParams) => ["purchase-orders", "list", params] as const,
   purchaseOrder: (id: string) => ["purchase-orders", "detail", id] as const,
   categories: ["categories"] as const,
   dashboardKpis: ["dashboard-kpis"] as const,
 };
 
-export function usePurchaseRequests(tenantId?: string) {
+export function usePurchaseRequests(paramsOrTenant?: string | PurchaseRequestListParams) {
   return useQuery({
-    queryKey: QUERY_KEYS.purchaseRequests(tenantId),
-    queryFn: () => purchaseRequestsApi.list(tenantId),
+    queryKey: QUERY_KEYS.purchaseRequests(paramsOrTenant),
+    queryFn: () => purchaseRequestsApi.list(paramsOrTenant),
     staleTime: 1000 * 30,
   });
 }
@@ -47,10 +47,10 @@ export function useCreatePurchaseRequest() {
   });
 }
 
-export function useRfqs(tenantId?: string) {
+export function useRfqs(paramsOrTenant?: string | RfqListParams) {
   return useQuery({
-    queryKey: QUERY_KEYS.rfqs(tenantId),
-    queryFn: () => rfqsApi.list(tenantId),
+    queryKey: QUERY_KEYS.rfqs(paramsOrTenant),
+    queryFn: () => rfqsApi.list(paramsOrTenant),
     staleTime: 1000 * 30,
   });
 }
@@ -71,10 +71,10 @@ export function useDashboardKpis() {
   });
 }
 
-export function useSuppliers() {
+export function useSuppliers(params?: SupplierListParams) {
   return useQuery({
-    queryKey: QUERY_KEYS.suppliers,
-    queryFn: () => suppliersApi.list(),
+    queryKey: QUERY_KEYS.suppliers(params),
+    queryFn: () => suppliersApi.list(params),
     staleTime: 1000 * 60,
   });
 }
@@ -87,10 +87,10 @@ export function useSupplier(id: string) {
   });
 }
 
-export function usePurchaseOrders(tenantId?: string) {
+export function usePurchaseOrders(paramsOrTenant?: string | PurchaseOrderListParams) {
   return useQuery({
-    queryKey: QUERY_KEYS.purchaseOrders(tenantId),
-    queryFn: () => purchaseOrdersApi.list(tenantId),
+    queryKey: QUERY_KEYS.purchaseOrders(paramsOrTenant),
+    queryFn: () => purchaseOrdersApi.list(paramsOrTenant),
     staleTime: 1000 * 30,
   });
 }

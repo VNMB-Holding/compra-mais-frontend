@@ -54,11 +54,34 @@ export interface SupplierKpis {
   segmentCount?: number;
 }
 
+export interface SupplierListParams {
+  tenantId?: string;
+  status?: string;
+  state?: string;
+  segment?: string;
+  search?: string;
+}
+
 export const suppliersApi = {
-  list: (tenantId?: string) => {
-    const validTenant = cleanTenantParam(tenantId);
+  list: (paramsOrTenant?: string | SupplierListParams) => {
     const params = new URLSearchParams();
-    if (validTenant) params.append("tenantId", validTenant);
+    if (typeof paramsOrTenant === 'string') {
+      const validTenant = cleanTenantParam(paramsOrTenant);
+      if (validTenant) params.append("tenantId", validTenant);
+    } else if (paramsOrTenant) {
+      if (paramsOrTenant.status && paramsOrTenant.status !== 'Todos' && paramsOrTenant.status !== 'all') {
+        params.append("status", paramsOrTenant.status);
+      }
+      if (paramsOrTenant.state && paramsOrTenant.state !== 'Todos' && paramsOrTenant.state !== 'all') {
+        params.append("state", paramsOrTenant.state);
+      }
+      if (paramsOrTenant.segment && paramsOrTenant.segment !== 'Todos' && paramsOrTenant.segment !== 'all') {
+        params.append("segment", paramsOrTenant.segment);
+      }
+      if (paramsOrTenant.search && paramsOrTenant.search.trim() !== '') {
+        params.append("search", paramsOrTenant.search.trim());
+      }
+    }
     const qs = params.toString();
     return apiClient.get<Supplier[]>(`/api/suppliers${qs ? `?${qs}` : ''}`);
   },

@@ -52,6 +52,7 @@ export interface SpendAnalyticsResponse {
 }
 
 export interface EconomyAnalyticsResponse {
+  monthlyEconomy?: { name: string; value: number }[];
   initiatives: {
     iniciativa: string;
     valor: number;
@@ -78,12 +79,13 @@ export interface EconomyAnalyticsResponse {
   }[];
   kpis: {
     economiaGerada?: string;
+    economiaPct?: string;
   };
 }
 
 function buildQs(tenantId?: string): string {
   const valid = cleanTenantParam(tenantId);
-  return valid ? `?tenantId=${encodeURIComponent(valid)}` : '';
+  return valid ? `?companyCode=${encodeURIComponent(valid)}` : '';
 }
 
 export const dashboardApi = {
@@ -95,7 +97,24 @@ export const dashboardApi = {
 
   getMonthlyEconomy: (tenantId?: string) => apiClient.get<MonthlyEconomy[]>(`/api/dashboard/monthly-economy${buildQs(tenantId)}`),
 
-  getSpendAnalytics: (tenantId?: string) => apiClient.get<SpendAnalyticsResponse>(`/api/dashboard/analytics/spend${buildQs(tenantId)}`),
-  getEconomyAnalytics: (tenantId?: string) => apiClient.get<EconomyAnalyticsResponse>(`/api/dashboard/analytics/economia${buildQs(tenantId)}`),
+  getSpendAnalytics: (companyCode?: string, category?: string, supplier?: string) => {
+    const params = new URLSearchParams();
+    const valid = cleanTenantParam(companyCode);
+    if (valid) params.append("companyCode", valid);
+    if (category && category !== 'all' && category !== 'Todas') params.append("category", category);
+    if (supplier && supplier !== 'all' && supplier !== 'Todos') params.append("supplier", supplier);
+    const qs = params.toString();
+    return apiClient.get<SpendAnalyticsResponse>(`/api/dashboard/analytics/spend${qs ? `?${qs}` : ''}`);
+  },
+
+  getEconomyAnalytics: (companyCode?: string, category?: string, supplier?: string) => {
+    const params = new URLSearchParams();
+    const valid = cleanTenantParam(companyCode);
+    if (valid) params.append("companyCode", valid);
+    if (category && category !== 'all' && category !== 'Todas') params.append("category", category);
+    if (supplier && supplier !== 'all' && supplier !== 'Todos') params.append("supplier", supplier);
+    const qs = params.toString();
+    return apiClient.get<EconomyAnalyticsResponse>(`/api/dashboard/analytics/economia${qs ? `?${qs}` : ''}`);
+  },
 };
 

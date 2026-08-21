@@ -119,18 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             let tenantName = updatedUser.tenantName;
             let currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
 
-            const isVnmb = updatedUser.email?.toLowerCase().includes("vnmb");
-            if (!currentTenantObj && isVnmb && availableTenants.length > 0) {
-              currentTenantObj = availableTenants.find((t: any) => t.name.toUpperCase().includes("VNMB")) || availableTenants[0];
-              if (currentTenantObj) tenantId = currentTenantObj.id;
-            } else if (!currentTenantObj && availableTenants.length > 0) {
-              currentTenantObj = availableTenants[0];
-              tenantId = currentTenantObj.id;
-            }
-
-            if (currentTenantObj) {
+            if (!tenantName && currentTenantObj) {
               tenantName = currentTenantObj.name;
             }
+
+
 
             const enrichedUser: User = {
               ...updatedUser,
@@ -206,19 +199,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       let currentTenantObj = availableTenants.find((t) => t.id === tenantId);
-      const isVnmb = (email || "").toLowerCase().includes("vnmb");
 
-      if (!currentTenantObj && isVnmb && availableTenants.length > 0) {
-        currentTenantObj = availableTenants.find((t: any) => t.name.toUpperCase().includes("VNMB")) || availableTenants[0];
-        if (currentTenantObj) tenantId = currentTenantObj.id;
-      } else if (!currentTenantObj && availableTenants.length > 0) {
-        currentTenantObj = availableTenants[0];
-        tenantId = currentTenantObj.id;
-      }
-
-      if (currentTenantObj) {
+      if (!tenantName && currentTenantObj) {
         tenantName = currentTenantObj.name;
       }
+
+
 
       const role = mapApiRole(meRoles);
 
