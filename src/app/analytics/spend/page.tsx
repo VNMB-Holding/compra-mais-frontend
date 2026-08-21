@@ -15,7 +15,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, SpendAnalyticsResponse } from "@/lib/api/dashboard";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions } from "@/lib/utils/tenant";
+import { getCompanyFilterOptions } from "@/lib/utils/tenant";
 import { logError } from "@/lib/utils/error";
 
 interface SpendItem {
@@ -39,34 +39,27 @@ export default function SpendPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
-  const [selectedUnidade, setSelectedUnidade] = useState<string>("all");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [exportingType, setExportingType] = useState<"PDF" | "XLS" | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [apiData, setApiData] = useState<SpendAnalyticsResponse | null>(null);
 
-  const primaryCompanies = getPrimaryCompanyOptions(user);
-  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
-  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
-
-  const queryTenantId = useMemo(() => {
-    if (selectedBranchId !== "TODAS") return selectedBranchId;
-    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
-    return undefined;
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
+  const companyOptions = getCompanyFilterOptions();
+  const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await dashboardApi.getSpendAnalytics(queryTenantId);
+      const data = await dashboardApi.getSpendAnalytics(queryCompanyCode, selectedCategory, selectedSupplier);
       setApiData(data);
     } catch (err) {
       logError("analytics/spend/fetchData", err);
     } finally {
       setLoading(false);
     }
-  }, [queryTenantId]);
+  }, [queryCompanyCode, selectedCategory, selectedSupplier]);
+
 
   useEffect(() => {
     fetchData();
@@ -84,102 +77,36 @@ export default function SpendPage() {
     }, 1500);
   };
 
-  const baseMonthlySpend = useMemo(() => [
-    { name: "mai/24", value: 720 },
-    { name: "jun/24", value: 1100 },
-    { name: "jul/24", value: 740 },
-    { name: "ago/24", value: 830 },
-    { name: "set/24", value: 1150 },
-    { name: "out/24", value: 1300 },
-    { name: "nov/24", value: 1050 },
-    { name: "dez/24", value: 1150 },
-    { name: "jan/25", value: 980 },
-    { name: "fev/25", value: 1220 },
-    { name: "mar/25", value: 1100 },
-    { name: "abr/25", value: 1290 },
-    { name: "mai/25", value: 1720 }
-  ], []);
-
-  const baseCategories = useMemo<SpendItem[]>(() => [
-    { categoria: "Matéria-prima", spendTotal: 4125000, pctTotal: 33.1, pedidos: 18, economiaPotencial: 620000, color: "#007d79" },
-    { categoria: "Serviços", spendTotal: 2980000, pctTotal: 23.9, pedidos: 12, economiaPotencial: 410000, color: "#00a39e" },
-    { categoria: "Embalagens", spendTotal: 1850000, pctTotal: 14.8, pedidos: 9, economiaPotencial: 265000, color: "#7c3aed" },
-    { categoria: "Manutenção", spendTotal: 1320000, pctTotal: 10.6, pedidos: 5, economiaPotencial: 198000, color: "#db2777" },
-    { categoria: "TI e Software", spendTotal: 1050000, pctTotal: 8.4, pedidos: 4, economiaPotencial: 143000, color: "#64748b" },
-    { categoria: "Outros", spendTotal: 1133000, pctTotal: 9.2, pedidos: "--", economiaPotencial: 260000, color: "#cbd5e1" }
-  ], []);
-
-  const baseSuppliers = useMemo<SupplierSpend[]>(() => [
-    { nome: "Fornecedor Alfa Ltda.", valor: 2145000, pct: 17.2 },
-    { nome: "Fornecedor Beta S.A.", valor: 1530000, pct: 12.3 },
-    { nome: "Fornecedor Gama Ltda.", valor: 1120000, pct: 9.0 },
-    { nome: "Fornecedor Delta S.A.", valor: 980000, pct: 7.9 },
-    { nome: "Fornecedor Épsilon Ltda.", valor: 875000, pct: 7.0 },
-    { nome: "Outros (151)", valor: 5808000, pct: 46.6 }
-  ], []);
-
-  const filterFactor = useMemo(() => {
-    let factor = 1.0;
-    if (selectedCategory !== "all") factor *= 0.35;
-    if (selectedSupplier !== "all") factor *= 0.2;
-    if (selectedUnidade !== "all") factor *= 0.45;
-    if (selectedPeriod !== "all") {
-      if (selectedPeriod === "30") factor *= 0.12;
-      if (selectedPeriod === "90") factor *= 0.32;
-    }
-    return factor;
-  }, [selectedPeriod, selectedCategory, selectedSupplier, selectedUnidade]);
-
   const monthlySpendData = useMemo(() => {
-    if (apiData?.monthlySpend && apiData.monthlySpend.length > 0) {
-      return apiData.monthlySpend;
-    }
-    return baseMonthlySpend.map(item => ({
-      ...item,
-      value: Math.round(item.value * filterFactor)
-    }));
-  }, [apiData, baseMonthlySpend, filterFactor]);
+    return apiData?.monthlySpend || [];
+  }, [apiData]);
 
-  const categoriesData = useMemo(() => {
-    if (apiData?.categories && apiData.categories.length > 0) {
-      let filteredCats = apiData.categories.map((c, i) => ({
-        categoria: c.categoria,
-        spendTotal: c.spendTotal,
-        pctTotal: Number(c.pctTotal.toFixed(1)),
-        pedidos: c.pedidos,
-        economiaPotencial: Math.round(c.spendTotal * 0.15),
-        color: c.color || ['#007d79', '#00a39e', '#004144', '#1192e8', '#0f62fe'][i % 5],
-      }));
-      if (selectedCategory !== "all") {
-        filteredCats = filteredCats.filter(c => c.categoria === selectedCategory);
-      }
-      return filteredCats;
-    }
-    if (filterFactor === 1.0) return baseCategories;
+  const categoriesData = useMemo<SpendItem[]>(() => {
+    if (!apiData?.categories || apiData.categories.length === 0) return [];
     
-    return baseCategories.map(item => ({
-      ...item,
-      spendTotal: Math.round(item.spendTotal * filterFactor),
-      economiaPotencial: Math.round(item.economiaPotencial * filterFactor),
-      pedidos: item.pedidos === "--" ? "--" : Math.max(1, Math.round(Number(item.pedidos) * filterFactor))
-    }));
-  }, [apiData, selectedCategory, baseCategories, filterFactor]);
-
-  const suppliersData = useMemo(() => {
-    if (apiData?.suppliers && apiData.suppliers.length > 0) {
-      let filteredSups = apiData.suppliers;
-      if (selectedSupplier !== "all") {
-        filteredSups = filteredSups.filter(s => s.nome === selectedSupplier);
-      }
-      return filteredSups;
+    let list = apiData.categories;
+    if (selectedCategory !== "all") {
+      list = list.filter((c) => c.categoria === selectedCategory);
     }
-    if (filterFactor === 1.0) return baseSuppliers;
-
-    return baseSuppliers.map(item => ({
-      ...item,
-      valor: Math.round(item.valor * filterFactor)
+    return list.map((c, i) => ({
+      categoria: c.categoria,
+      spendTotal: c.spendTotal,
+      pctTotal: Number(c.pctTotal.toFixed(1)),
+      pedidos: c.pedidos,
+      economiaPotencial: Math.round(c.spendTotal * 0.12),
+      color: c.color || ['#007d79', '#00a39e', '#004144', '#1192e8', '#0f62fe', '#7c3aed'][i % 6],
     }));
-  }, [apiData, selectedSupplier, baseSuppliers, filterFactor]);
+  }, [apiData, selectedCategory]);
+
+  const suppliersData = useMemo<SupplierSpend[]>(() => {
+    if (!apiData?.suppliers || apiData.suppliers.length === 0) return [];
+    
+    let list = apiData.suppliers;
+    if (selectedSupplier !== "all") {
+      list = list.filter((s) => s.nome === selectedSupplier);
+    }
+    return list;
+  }, [apiData, selectedSupplier]);
 
   const totals = useMemo(() => {
     const spendSum = categoriesData.reduce((s, c) => s + c.spendTotal, 0);
@@ -194,61 +121,44 @@ export default function SpendPage() {
   }, [categoriesData]);
 
   const kpis = useMemo(() => {
-    if (apiData?.kpis?.spendTotal) {
-      const spendNum = totals.spendTotal;
-      const econNum = totals.economiaPotencial;
-      const pct = spendNum > 0 ? ((econNum / spendNum) * 100).toFixed(1) : "15.0";
-
-      return {
-        spendTotal: apiData.kpis.spendTotal,
-        economiaPotencial: formatCurrency(econNum),
-        pedidosEmitidos: apiData.kpis.pedidosEmitidos || String(totals.pedidos || 0),
-        fornecedoresAtivos: apiData.kpis.fornecedoresAtivos || String(suppliersData.length),
-        trendSpend: "↑ 18,6%",
-        trendEconomia: `${pct}% do spend total`,
-        trendPedidos: "↑ 9,1%",
-        trendFornecedores: "↑ 5,4%"
-      };
-    }
-
-    const isFiltered = filterFactor < 1.0;
-    if (!isFiltered) {
-      return {
-        spendTotal: "R$ 12.458.000",
-        economiaPotencial: "R$ 1.896.000",
-        pedidosEmitidos: "48",
-        fornecedoresAtivos: "156",
-        trendSpend: "↑ 18,6%",
-        trendEconomia: "15,2% do spend total",
-        trendPedidos: "↑ 9,1%",
-        trendFornecedores: "↑ 5,4%"
-      };
-    }
-
-    const spendVal = Math.round(12458000 * filterFactor);
-    const econVal = Math.round(1896000 * filterFactor);
-    const pedidosVal = Math.max(1, Math.round(48 * filterFactor));
-    const fornecedoresVal = Math.max(1, Math.round(156 * filterFactor));
-
-    const pct = ((econVal / spendVal) * 100).toFixed(1);
+    const totalSpend = totals.spendTotal;
+    const totalEcon = totals.economiaPotencial;
+    const pct = totalSpend > 0 ? ((totalEcon / totalSpend) * 100).toFixed(1) : "0.0";
 
     return {
-      spendTotal: formatCurrency(spendVal),
-      economiaPotencial: formatCurrency(econVal),
-      pedidosEmitidos: String(pedidosVal),
-      fornecedoresAtivos: String(fornecedoresVal),
-      trendSpend: "↑ 12,4%",
+      spendTotal: apiData?.kpis?.spendTotal || formatCurrency(totalSpend),
+      economiaPotencial: formatCurrency(totalEcon),
+      pedidosEmitidos: apiData?.kpis?.pedidosEmitidos || String(totals.pedidos),
+      fornecedoresAtivos: apiData?.kpis?.fornecedoresAtivos || String(suppliersData.length),
+      trendSpend: totalSpend > 0 ? "Em conformidade" : "Sem movimentação",
       trendEconomia: `${pct}% do spend total`,
-      trendPedidos: "↑ 5,2%",
-      trendFornecedores: "↑ 2,1%"
+      trendPedidos: "Emitidos no período",
+      trendFornecedores: "Ativos na base"
     };
-  }, [apiData, totals, suppliersData.length, filterFactor]);
+  }, [apiData, totals, suppliersData.length]);
+
+  const categoryOptions = useMemo(() => [
+    { value: "all", label: "Todas as Categorias" },
+    ...Array.from(new Set((apiData?.categories || []).map((c) => c.categoria))).map((cat) => ({
+      value: cat,
+      label: cat,
+    })),
+  ], [apiData]);
+
+  const supplierOptions = useMemo(() => [
+    { value: "all", label: "Todos os Fornecedores" },
+    ...Array.from(new Set((apiData?.suppliers || []).map((s) => s.nome))).map((sup) => ({
+      value: sup,
+      label: sup,
+    })),
+  ], [apiData]);
+
 
   const handleClearFilters = () => {
     setSelectedPeriod("all");
     setSelectedCategory("all");
     setSelectedSupplier("all");
-    setSelectedUnidade("all");
+    setSelectedCompanyId("TODAS");
     toast({
       variant: "info",
       title: "Filtros Limpos",
@@ -295,14 +205,7 @@ export default function SpendPage() {
 
         <div className={styles.filterInput}>
           <Select
-            options={[
-              { value: "all", label: "Todas" },
-              { value: "MRO", label: "MRO" },
-              { value: "Combustíveis", label: "Combustíveis" },
-              { value: "Serviços", label: "Serviços" },
-              { value: "Embalagens", label: "Embalagens" },
-              { value: "TI", label: "TI e Software" }
-            ]}
+            options={categoryOptions}
             value={selectedCategory}
             onChange={setSelectedCategory}
           />
@@ -310,12 +213,7 @@ export default function SpendPage() {
 
         <div className={styles.filterInput}>
           <Select
-            options={[
-              { value: "all", label: "Todos" },
-              { value: "alfa", label: "Fornecedor Alfa Ltda." },
-              { value: "beta", label: "Fornecedor Beta S.A." },
-              { value: "gama", label: "Fornecedor Gama Ltda." }
-            ]}
+            options={supplierOptions}
             value={selectedSupplier}
             onChange={setSelectedSupplier}
           />
@@ -323,22 +221,22 @@ export default function SpendPage() {
 
         <div className={styles.filterInput}>
           <Select
-            options={[
-              { value: "all", label: "Todas as Empresas" },
-              ...(user?.availableTenants || []).map((t) => ({
-                value: t.id,
-                label: t.name,
-              })),
-            ]}
-            value={selectedPrimaryCompanyId === "TODAS" ? "all" : selectedPrimaryCompanyId}
-            onChange={(val) => {
-              setSelectedPrimaryCompanyId(val === "all" ? "TODAS" : val);
-              setSelectedUnidade(val);
-            }}
+            options={companyOptions}
+            value={selectedCompanyId}
+            onChange={setSelectedCompanyId}
+            icon="building-07"
           />
         </div>
 
-        <button className={styles.clearButton} onClick={handleClearFilters}>
+        <button 
+          className={styles.clearButton} 
+          onClick={() => {
+            setSelectedPeriod("all");
+            setSelectedCategory("all");
+            setSelectedSupplier("all");
+            setSelectedCompanyId("TODAS");
+          }}
+        >
           <Icon name="refresh-ccw-01" size={16} /> Limpar filtros
         </button>
       </div>

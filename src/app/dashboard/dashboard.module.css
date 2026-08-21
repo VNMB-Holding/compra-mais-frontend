@@ -5,6 +5,14 @@
   width: 100%;
 }
 
+.pageHeaderSimple {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .pageHeaderSimple h1 {
   font-size: 28px;
   font-weight: 700;
@@ -241,7 +249,7 @@
 
 .legName {
   flex-grow: 1;
-  white-content: nowrap;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }

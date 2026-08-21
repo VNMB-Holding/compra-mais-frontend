@@ -13,6 +13,7 @@ import {
   PieChart,
   UrgentQuoteCard,
   Icon,
+  Select,
   Loading,
   ErrorState,
   TableSkeleton
@@ -22,13 +23,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, DashboardKpis, CategoryBreakdown, MonthlyEconomy } from "@/lib/api/dashboard";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { getCompanyFilterOptions, getTenantDisplayName } from "@/lib/utils/tenant";
 
 import { RFQRow } from "@/types/domain";
 import { mapRfqStatus, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatCurrency } from "@/lib/utils/format-display";
-import { getTenantDisplayName } from "@/lib/utils/tenant";
-
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 
 const PIE_COLORS = ["#007d79", "#7c3aed", "#db2777", "#64748b", "#f59e0b", "#10b981"];
 
@@ -44,6 +43,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("Todas");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [kpis, setKpis] = useState<DashboardKpis | null>(null);
   const [rfqs, setRfqs] = useState<RFQRow[]>([]);
   const [economyData, setEconomyData] = useState<MonthlyEconomy[]>([]);
@@ -51,34 +51,24 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const primaryCompanies = getPrimaryCompanyOptions(user);
-  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
-
-  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
-  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
-  const showBranchFilter = branchCompanies.length > 0;
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
-
-  const queryTenantId = React.useMemo(() => {
-    if (selectedBranchId !== "TODAS") return selectedBranchId;
-    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
-    return undefined;
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
+  const companyOptions = getCompanyFilterOptions();
+  const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
       const [kpisData, rfqsData, economyChart, categoriesData] = await Promise.all([
-        dashboardApi.getKpis(queryTenantId).catch(() => null),
-        rfqsApi.list(queryTenantId).catch(() => []),
-        dashboardApi.getMonthlyEconomy(queryTenantId).catch(() => []),
-        dashboardApi.getCategories(queryTenantId).catch(() => []),
+        dashboardApi.getKpis(queryCompanyCode).catch(() => null),
+        rfqsApi.list(queryCompanyCode).catch(() => []),
+        dashboardApi.getMonthlyEconomy(queryCompanyCode).catch(() => []),
+        dashboardApi.getCategories(queryCompanyCode).catch(() => []),
       ]);
 
       setKpis(kpisData);
       setEconomyData(economyChart || []);
       setCategories(categoriesData || []);
+
 
       const mapped: RFQRow[] = rfqsData.map((rfq) => {
         const codigo = rfq.code || "";
@@ -116,7 +106,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [queryTenantId, user]);
+  }, [queryCompanyCode, user]);
 
   useEffect(() => {
     fetchData();
@@ -180,8 +170,18 @@ export default function DashboardPage() {
     <div className={styles.viewDashboard}>
       
       <div className={styles.pageHeaderSimple}>
-        <h1>Bom dia, {firstName}. <span className={styles.wave}>👋</span></h1>
-        <p>Aqui está o panorama das suas operações de suprimentos hoje.</p>
+        <div>
+          <h1>Bom dia, {firstName}. <span className={styles.wave}>👋</span></h1>
+          <p>Aqui está o panorama das suas operações de suprimentos hoje.</p>
+        </div>
+        <div style={{ minWidth: 260 }}>
+          <Select
+            options={companyOptions}
+            value={selectedCompanyId}
+            onChange={setSelectedCompanyId}
+            icon="building-07"
+          />
+        </div>
       </div>
 
       <div className={styles.heroBanner}>
