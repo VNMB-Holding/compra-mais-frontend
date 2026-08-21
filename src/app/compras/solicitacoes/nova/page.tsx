@@ -12,6 +12,8 @@ import styles from "./solicitacoes-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { useCreatePurchaseRequest } from "@/hooks/useQueries";
+import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
+
 
 function ApprovalModal({
   title,
@@ -130,25 +132,22 @@ export default function NovaSolicitacaoPage() {
     if (user?.department) setDepartment(user.department);
   }, [user]);
 
-  const [targetTenantId, setTargetTenantId] = useState<string>(user?.tenantId || "");
-
-  useEffect(() => {
-    if (user?.tenantId && !targetTenantId) {
-      setTargetTenantId(user.tenantId);
-    }
-  }, [user, targetTenantId]);
+  const [targetTenantId, setTargetTenantId] = useState<string>("2313");
 
   const tenantOptions = useMemo(() => {
-    if (!user?.availableTenants || user.availableTenants.length === 0) return [];
-    return user.availableTenants.map((t) => ({
-      label: t.name,
-      value: t.id,
+    return COMPANY_BRANCHES.map((b) => ({
+      label: `${b.name} (${b.acronym})`,
+      value: b.code,
     }));
-  }, [user]);
+  }, []);
 
   const selectedTenantName = useMemo(() => {
-    return user?.availableTenants?.find((t) => t.id === targetTenantId)?.name || "Empresa Logada";
-  }, [user, targetTenantId]);
+    const fromBranch = findCompanyBranch(targetTenantId);
+    if (fromBranch) return `${fromBranch.name} (${fromBranch.acronym})`;
+    return "VB AGRO LTDA (BRD)";
+  }, [targetTenantId]);
+
+
 
   const [purchaseType, setPurchaseType] = useState("Material recorrente");
   const [justification, setJustification] = useState("");

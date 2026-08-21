@@ -12,9 +12,9 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
+import { getCompanyFilterOptions, formatCorporateBranch, getTenantDisplayName } from "@/lib/utils/tenant";
 
-import { RFQRow } from "@/types/domain";
+import { RfqRow } from "@/types/domain";
 import { useRfqs } from "@/hooks/useQueries";
 import { mapRfqStatus } from "@/lib/constants/status";
 
@@ -27,22 +27,25 @@ function formatDate(dateStr: string | null | undefined): string {
   }
 }
 
-function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
-  const tenantId = rfq.purchaseRequest?.tenantId || rfq.tenantId;
-  const empresaFilial = getTenantDisplayName(tenantId, currentUser);
+function mapToRow(rfq: Rfq, currentUser?: any): RfqRow {
+  const pr = rfq.purchaseRequest;
+  const empresa = formatCorporateBranch(
+    (pr as any)?.corporateColigada,
+    (pr as any)?.corporateFilial || (pr as any)?.filialCode || (pr as any)?.companyCode,
+    rfq.tenantId,
+    currentUser
+  );
 
-  const codigo = rfq.code || "";
-  const descricao = rfq.title || rfq.purchaseRequest?.description || "Sem descrição";
-  const categoria = (rfq.purchaseRequest as any)?.category?.name || rfq.purchaseRequest?.category || "Geral";
+  const status = mapRfqStatus(rfq);
   const dataAbertura = formatDate(rfq.createdAt);
   const dataEncerramento = formatDate(rfq.closesAt);
-  const tipoSegmento = "Menor Preço";
-  const status = mapRfqStatus(rfq);
+  const descricao = rfq.title || rfq.purchaseRequest?.description || "Processo de Cotação";
+  const categoria = (rfq.purchaseRequest as any)?.costCenterName || (rfq.purchaseRequest as any)?.category || "Geral";
 
   return {
     id: rfq.id,
-    code: codigo,
-    codigo,
+    code: rfq.code,
+    codigo: rfq.code,
     description: descricao,
     descricao,
     categoryName: categoria,
@@ -51,11 +54,11 @@ function mapToRow(rfq: Rfq, currentUser: User | null): RFQRow {
     dataAbertura,
     closesAt: dataEncerramento,
     dataEncerramento,
-    segmentType: tipoSegmento,
-    tipoSegmento,
+    segmentType: "Menor Preço",
+    tipoSegmento: "Menor Preço",
     status,
-    companyName: empresaFilial,
-    empresa: empresaFilial,
+    companyName: empresa,
+    empresa,
   };
 }
 
@@ -64,25 +67,23 @@ export default function RfqsPage() {
   const { user } = useAuth();
   const [category, setCategory] = useState("Todas");
   const [status, setStatus] = useState("Todos");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [kpis, setKpis] = useState<RfqKpis | null>(null);
 
-  const primaryCompanies = getPrimaryCompanyOptions(user);
-  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
+  const companyOptions = getCompanyFilterOptions();
+  const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
-  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
-  const showBranchFilter = branchCompanies.length > 0;
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
+  const queryParams = React.useMemo(() => ({
+    companyCode: queryCompanyCode,
+    status: status !== "Todos" ? status : undefined,
+    category: category !== "Todas" ? category : undefined,
+    search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+  }), [queryCompanyCode, status, category, searchQuery]);
 
-  const queryTenantId = React.useMemo(() => {
-    if (selectedBranchId !== "TODAS") return selectedBranchId;
-    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
-    return undefined;
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
+  const { data: rawRfqs = [], isLoading: loadingRfqs, error: queryError } = useRfqs(queryParams);
 
-  const { data: rawRfqs = [], isLoading: loadingRfqs, error: queryError } = useRfqs(queryTenantId);
-
-  const rfqs: RFQRow[] = React.useMemo(() => {
+  const rfqs: RfqRow[] = React.useMemo(() => {
     return rawRfqs.map((rfq) => mapToRow(rfq, user));
   }, [rawRfqs, user]);
 
@@ -92,20 +93,14 @@ export default function RfqsPage() {
   useEffect(() => {
     async function fetchKpis() {
       try {
-        let queryTenantId: string | undefined = undefined;
-        if (selectedBranchId !== "TODAS") {
-          queryTenantId = selectedBranchId;
-        } else if (selectedPrimaryCompanyId !== "TODAS") {
-          queryTenantId = selectedPrimaryCompanyId;
-        }
-        const kpisData = await rfqsApi.getKpis(queryTenantId);
+        const kpisData = await rfqsApi.getKpis(queryCompanyCode);
         setKpis(kpisData);
       } catch (err) {
         logError("rfqs/kpis", err);
       }
     }
     fetchKpis();
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
+  }, [queryCompanyCode]);
 
   const categoryOptions = [
     { label: "Todas as categorias", value: "Todas" },
@@ -117,26 +112,14 @@ export default function RfqsPage() {
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
     { label: "Aberta", value: "Aberta" },
+    { label: "Em análise", value: "Em análise" },
     { label: "Encerrando hoje", value: "Encerrando hoje" },
     { label: "Encerrada", value: "Encerrada" },
   ];
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const filtered = rfqs;
 
-  const filtered = rfqs.filter((r) => {
-    if (category !== "Todas" && r.categoria !== category) return false;
-    if (status !== "Todos" && r.status !== status) return false;
-    if (searchQuery.trim() !== "") {
-      const q = searchQuery.toLowerCase();
-      const matchCodigo = r.codigo.toLowerCase().includes(q);
-      const matchDesc = r.descricao.toLowerCase().includes(q);
-      const matchCategoria = r.categoria.toLowerCase().includes(q);
-      if (!matchCodigo && !matchDesc && !matchCategoria) return false;
-    }
-    return true;
-  });
-
-  const columns: ColumnDef<RFQRow>[] = [
+  const columns: ColumnDef<RfqRow>[] = [
     { header: "Código", cell: (row) => <span className={styles.boldCode}>{row.codigo}</span> },
     { header: "Descrição", accessorKey: "descricao" },
     { header: "Empresa / Unidade", accessorKey: "empresa" },
@@ -233,38 +216,16 @@ export default function RfqsPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
-            {showPrimaryCompanyFilter && (
-              <Select
-                options={[
-                  { label: "Empresas: Todas", value: "TODAS" },
-                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedPrimaryCompanyId}
-                onChange={(val) => {
-                  setSelectedPrimaryCompanyId(val);
-                  setSelectedBranchId("TODAS");
-                  setCurrentPage(1);
-                }}
-                icon="building-07"
-                className={styles.customSelectFilter}
-              />
-            )}
-
-            {showBranchFilter && (
-              <Select
-                options={[
-                  { label: "Filiais: Todas", value: "TODAS" },
-                  ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedBranchId}
-                onChange={(val) => {
-                  setSelectedBranchId(val);
-                  setCurrentPage(1);
-                }}
-                icon="building-07"
-                className={styles.customSelectFilter}
-              />
-            )}
+            <Select
+              options={companyOptions}
+              value={selectedCompanyId}
+              onChange={(val) => {
+                setSelectedCompanyId(val);
+                setCurrentPage(1);
+              }}
+              icon="building-07"
+              className={styles.customSelectFilter}
+            />
             <Select
               options={categoryOptions}
               value={category}

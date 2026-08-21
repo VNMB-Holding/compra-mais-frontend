@@ -12,8 +12,10 @@ import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
 import { getApprovalChainForRequest } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
-import { getTenantDisplayName } from "@/lib/utils/tenant";
+import { getTenantDisplayName, formatCorporateBranch } from "@/lib/utils/tenant";
+import { findCompanyBranch } from "@/lib/constants/companies";
 import { PRIORITY_MAP, PURCHASE_REQUEST_STATUS_MAP as STATUS_LABEL_MAP } from "@/lib/constants/status";
+
 import { usePurchaseRequest, useApprovePurchaseRequest, useRejectPurchaseRequest } from "@/hooks/useQueries";
 
 type DialogType = "approve" | "reject" | null;
@@ -142,8 +144,9 @@ export default function SolicitacaoDetailPage() {
   const isRejected = approved === false || sol?.status === "Rejected";
 
   const budget = Number(sol?.estimatedBudget || 0);
-  const companyName = getTenantDisplayName(sol?.tenantId, user);
+  const companyName = formatCorporateBranch(sol?.corporateColigada, sol?.corporateFilial, sol?.tenantId, user);
   const chain = getApprovalChainForRequest(companyName, budget);
+
 
   const pendingHistoryCount = sol?.approvalHistories?.length || 0;
   const currentPendingLevel = chain[pendingHistoryCount];
@@ -430,12 +433,24 @@ export default function SolicitacaoDetailPage() {
                     <strong style={{ color: "#007d79", fontSize: 14 }}>#{sol.corporateCode}</strong>
                   </div>
 
-                  {(sol?.corporateColigada || sol?.corporateFilial) && (
-                    <div className={styles.infoItem}>
-                      <label>Coligada / Filial ERP</label>
-                      <span>Coligada: <strong>{sol?.corporateColigada || "1"}</strong> | Filial: <strong>{sol?.corporateFilial || "1"}</strong></span>
-                    </div>
-                  )}
+                  {(sol?.corporateColigada || sol?.corporateFilial) && (() => {
+                    const branch = findCompanyBranch(sol?.corporateFilial);
+                    return (
+                      <div className={styles.infoItem}>
+                        <label>Unidade ERP (Filial / Coligada)</label>
+                        <span>
+                          {branch ? (
+                            <>
+                              <strong>{branch.name}</strong> ({branch.acronym}) — Cód. <strong>{sol?.corporateFilial || branch.code}</strong>
+                            </>
+                          ) : (
+                            <>Coligada: <strong>{sol?.corporateColigada || "1"}</strong> | Filial: <strong>{sol?.corporateFilial || "1"}</strong></>
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
 
                   {(sol?.costCenterCode || sol?.costCenterName) && (
                     <div className={styles.infoItem}>

@@ -10,9 +10,9 @@ import styles from "./pedidos.module.css";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tenant";
 import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
 
 interface PedidoRow {
   id: string;
@@ -22,19 +22,30 @@ interface PedidoRow {
   emissao: string;
   valorTotal: string;
   entrega: string;
-  status: "Emitido" | "Faturado" | "Entregue";
+  status: string;
 }
 
 function mapToRow(po: PurchaseOrder, currentUser?: any): PedidoRow {
+  const empresaFilial = formatCorporateBranch(po.corporateColigada, po.corporateFilial || po.filialCode || po.companyCode, po.tenantId, currentUser);
+
+  const numero = po.code ? `${po.code}` : po.id.slice(0, 8);
+  const fornecedor = po.supplier?.tradeName || po.supplier?.corporateName || "—";
+  const emissao = new Date(po.createdAt).toLocaleDateString("pt-BR");
+  const valorTotal = formatCurrency(Number(po.totalValue));
+  const entrega = po.estimatedDeliveryDate
+    ? new Date(po.estimatedDeliveryDate).toLocaleDateString("pt-BR")
+    : "—";
+  const status = STATUS_MAP[po.status] || po.status;
+
   return {
     id: po.id,
-    numero: po.code,
-    fornecedor: po.supplier?.corporateName || "—",
-    empresa: getTenantDisplayName(po.tenantId, currentUser),
-    emissao: new Date(po.createdAt).toLocaleDateString("pt-BR"),
-    valorTotal: formatCurrency(po.totalValue),
-    entrega: new Date(po.estimatedDeliveryDate).toLocaleDateString("pt-BR"),
-    status: STATUS_MAP[po.status] || "Emitido",
+    numero,
+    fornecedor,
+    empresa: empresaFilial,
+    emissao,
+    valorTotal,
+    entrega,
+    status,
   };
 }
 
@@ -42,31 +53,28 @@ export default function PedidosPage() {
   const router = useRouter();
   const { user } = useAuth();
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [supplier, setSupplier] = useState("Todas");
   const [status, setStatus] = useState("Todos");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const primaryCompanies = getPrimaryCompanyOptions(user);
-  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
-  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
-  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
-  const showBranchFilter = branchCompanies.length > 0;
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
-
-  const queryTenantId = React.useMemo(() => {
-    if (selectedBranchId !== "TODAS") return selectedBranchId;
-    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
-    return undefined;
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
+  const companyOptions = getCompanyFilterOptions();
+  const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
-      const data = await purchaseOrdersApi.list(queryTenantId);
+      const data = await purchaseOrdersApi.list({
+        companyCode: queryCompanyCode,
+        status: status !== "Todos" ? status : undefined,
+        supplier: supplier !== "Todas" ? supplier : undefined,
+        search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+      });
       const rows = data.map((po) => mapToRow(po, user));
       setPedidos(rows);
       setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
@@ -77,7 +85,7 @@ export default function PedidosPage() {
     } finally {
       setLoading(false);
     }
-  }, [queryTenantId, user]);
+  }, [queryCompanyCode, status, supplier, searchQuery, user]);
 
   useEffect(() => {
     fetchData();
@@ -92,16 +100,14 @@ export default function PedidosPage() {
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
-    { label: "Emitido", value: "Emitido" },
-    { label: "Faturado", value: "Faturado" },
+    { label: "Aguardando assinatura", value: "Aguardando assinatura" },
+    { label: "Assinado", value: "Assinado" },
+    { label: "Enviado", value: "Enviado" },
     { label: "Entregue", value: "Entregue" },
+    { label: "Cancelado", value: "Cancelado" },
   ];
 
-  const filtered = pedidos.filter((p) => {
-    if (supplier !== "Todas" && p.fornecedor !== supplier) return false;
-    if (status !== "Todos" && p.status !== status) return false;
-    return true;
-  });
+  const filtered = pedidos;
 
   const entregueCount = pedidos.filter((p) => p.status === "Entregue").length;
   const pendentCount = pedidos.filter((p) => p.status !== "Entregue").length;
@@ -150,41 +156,30 @@ export default function PedidosPage() {
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
             <Icon name="search-md" />
-            <input type="text" placeholder="Buscar pedido..." />
+            <input
+              type="text"
+              placeholder="Buscar por número, fornecedor ou unidade..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
           <div className={styles.filtersGroup}>
-            {showPrimaryCompanyFilter && (
-              <Select
-                options={[
-                  { label: "Empresa: Todas", value: "TODAS" },
-                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedPrimaryCompanyId}
-                onChange={(val) => {
-                  setSelectedPrimaryCompanyId(val);
-                  setSelectedBranchId("TODAS");
-                }}
-                className={styles.customSelectFilter}
-              />
-            )}
-            {showBranchFilter && (
-              <Select
-                options={[
-                  { label: "Filial: Todas", value: "TODAS" },
-                  ...branchCompanies.map((b) => ({ label: b.name, value: b.id })),
-                ]}
-                value={selectedBranchId}
-                onChange={setSelectedBranchId}
-                className={styles.customSelectFilter}
-              />
-            )}
             <Select
-              options={supplierOptions}
-              value={supplier}
-              onChange={setSupplier}
-              icon="filter-lines"
+              options={companyOptions}
+              value={selectedCompanyId}
+              onChange={setSelectedCompanyId}
+              icon="building-07"
               className={styles.customSelectFilter}
             />
+            {supplierOptions.length > 2 && (
+              <Select
+                options={supplierOptions}
+                value={supplier}
+                onChange={setSupplier}
+                icon="filter-lines"
+                className={styles.customSelectFilter}
+              />
+            )}
             <Select
               options={statusOptions}
               value={status}

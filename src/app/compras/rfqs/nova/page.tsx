@@ -714,8 +714,8 @@ export default function NewRfqPage() {
                     <label>Incoterm (Frete) <span className="required-asterisk">*</span></label>
                     <Select
                       options={[
-                        { label: "CIF — Custos e frete pagos pelo fornecedor", value: "CIF" },
-                        { label: "FOB — Frete por conta da VNMB", value: "FOB" },
+                        { label: "CIF — Frete incluso pelo Fornecedor", value: "CIF" },
+                        { label: "FOB — Frete por conta do Comprador", value: "FOB" },
                         { label: "EXW — Retirada na planta do fornecedor", value: "EXW" }
                       ]}
                       value={incoterm}

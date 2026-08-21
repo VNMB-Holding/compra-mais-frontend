@@ -11,7 +11,7 @@ import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser, getTenantDisplayName } from "@/lib/utils/tenant";
+import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tenant";
 
 import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
@@ -32,9 +32,7 @@ interface SolicitationCorporateRow {
 }
 
 function mapToCorporateRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationCorporateRow {
-  const empresaFilial = pr.corporateColigada
-    ? `Coligada ${pr.corporateColigada} / Filial ${pr.corporateFilial || "1"}`
-    : getTenantDisplayName(pr.tenantId, currentUser);
+  const empresaFilial = formatCorporateBranch(pr.corporateColigada, pr.corporateFilial || pr.filialCode || pr.companyCode, pr.tenantId, currentUser);
 
   const codigo = pr.corporateCode ? `#${pr.corporateCode}` : pr.code || "";
   const descricao = pr.description || pr.notes || "Solicitação de Compra";
@@ -67,27 +65,24 @@ export default function SolicitacoesPage() {
 
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
 
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const primaryCompanies = getPrimaryCompanyOptions(user);
-  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
+  const companyOptions = getCompanyFilterOptions();
 
-  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
-  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
-  const showBranchFilter = branchCompanies.length > 0;
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
+  const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
-  const queryTenantId = React.useMemo(() => {
-    if (selectedBranchId !== "TODAS") return selectedBranchId;
-    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
-    return undefined;
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
+  const queryParams = React.useMemo(() => ({
+    companyCode: queryCompanyCode,
+    status: statusFilter !== "Todos" ? statusFilter : undefined,
+    search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+  }), [queryCompanyCode, statusFilter, searchQuery]);
 
-  const { data: rawRequests = [], isLoading: loadingRequests, error: queryError } = usePurchaseRequests(queryTenantId);
+  const { data: rawRequests = [], isLoading: loadingRequests, error: queryError } = usePurchaseRequests(queryParams);
 
   const solicitacoes: SolicitationCorporateRow[] = React.useMemo(() => {
     return rawRequests.map((pr) => mapToCorporateRow(pr, user));
@@ -99,14 +94,15 @@ export default function SolicitacoesPage() {
   useEffect(() => {
     async function fetchKpis() {
       try {
-        const kpisData = await purchaseRequestsApi.getKpis(queryTenantId);
+        const kpisData = await purchaseRequestsApi.getKpis(queryCompanyCode);
         setKpis(kpisData);
       } catch (err) {
         logError("solicitacoes/kpis", err);
       }
     }
     fetchKpis();
-  }, [queryTenantId]);
+  }, [queryCompanyCode]);
+
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
@@ -116,18 +112,7 @@ export default function SolicitacoesPage() {
     { label: "Cancelada", value: "Cancelada" },
   ];
 
-  const filtered = solicitacoes.filter((s) => {
-    if (statusFilter !== "Todos" && s.status !== statusFilter) return false;
-    if (searchQuery.trim() !== "") {
-      const q = searchQuery.toLowerCase();
-      const matchCodigo = s.codigo.toLowerCase().includes(q);
-      const matchDesc = s.descricao.toLowerCase().includes(q);
-      const matchCentro = s.centroCusto.toLowerCase().includes(q);
-      const matchSolicitante = s.solicitante.toLowerCase().includes(q);
-      if (!matchCodigo && !matchDesc && !matchCentro && !matchSolicitante) return false;
-    }
-    return true;
-  });
+  const filtered = solicitacoes;
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -144,7 +129,6 @@ export default function SolicitacoesPage() {
       cell: (row) => (
         <div className={styles.doubleText}>
           <strong style={{ fontSize: 13, color: "#0f172a" }}>{row.descricao}</strong>
-          <small style={{ color: "#64748b" }}>{row.qtdItens} item(ns) solicitado(s)</small>
         </div>
       ),
     },
@@ -152,11 +136,6 @@ export default function SolicitacoesPage() {
       header: "Empresa / Filial",
       accessorKey: "empresa",
       cell: (row) => <span style={{ fontSize: 13, color: "#475569" }}>{row.empresa}</span>,
-    },
-    {
-      header: "Centro de Custo / Obra",
-      accessorKey: "centroCusto",
-      cell: (row) => <span style={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>{row.centroCusto}</span>,
     },
     {
       header: "Local de Estoque",
@@ -204,70 +183,6 @@ export default function SolicitacoesPage() {
         </div>
       </div>
 
-      {showPrimaryCompanyFilter && (
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "8px", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "#475569" }}>Empresa / Grupo:</span>
-            <select
-              value={selectedPrimaryCompanyId}
-              onChange={(e) => {
-                setSelectedPrimaryCompanyId(e.target.value);
-                setSelectedBranchId("TODAS");
-                setCurrentPage(1);
-              }}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "6px",
-                border: "1px solid #cbd5e1",
-                fontSize: "13px",
-                backgroundColor: "#fff",
-                color: "#1e293b",
-                outline: "none",
-                cursor: "pointer",
-              }}
-            >
-              <option value="TODAS">Todas as empresas</option>
-              {primaryCompanies.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {showBranchFilter && (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "#475569" }}>Filial:</span>
-              <select
-                value={selectedBranchId}
-                onChange={(e) => {
-                  setSelectedBranchId(e.target.value);
-                  setCurrentPage(1);
-                }}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                  fontSize: "13px",
-                  backgroundColor: "#fff",
-                  color: "#1e293b",
-                  outline: "none",
-                  cursor: "pointer",
-                }}
-              >
-                <option value="TODAS">Todas as filiais</option>
-                {branchCompanies.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* KPI Cards */}
       <div className={styles.kpiGrid}>
         <KpiCard
           title="Total de Solicitações"
@@ -291,14 +206,13 @@ export default function SolicitacoesPage() {
         />
       </div>
 
-      {/* Tabela de Solicitações */}
       <Card noPadding className={styles.mainListCard}>
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
             <Icon name="search-md" size={16} />
             <input
               type="text"
-              placeholder="Buscar por Nº SC, Centro de Custo, Solicitante ou Descrição..."
+              placeholder="Buscar por Nº SC, Solicitante ou Descrição..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -307,6 +221,15 @@ export default function SolicitacoesPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
+            <Select
+              options={companyOptions}
+              value={selectedCompanyId}
+              onChange={(v) => {
+                setSelectedCompanyId(v);
+                setCurrentPage(1);
+              }}
+              icon="building-07"
+            />
             <Select
               options={statusOptions}
               value={statusFilter}
