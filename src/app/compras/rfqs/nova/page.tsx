@@ -38,6 +38,8 @@ interface FornecedorConvidado {
   id: string;
   nome: string;
   cnpj: string;
+  segmento?: string;
+  isHomologado?: boolean;
   selecionado: boolean;
 }
 
@@ -89,6 +91,12 @@ export default function NewRfqPage() {
   const [itens, setItens] = useState<ItemCotacao[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
 
+  // Estados de busca e paginação de fornecedores para grandes bases (18k+)
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const [supplierFilterTab, setSupplierFilterTab] = useState<"todos" | "selecionados" | "homologados">("todos");
+  const [supplierPage, setSupplierPage] = useState(1);
+  const SUPPLIERS_PER_PAGE = 8;
+
   const [requestsApi, setRequestsApi] = useState<Solicitacao[]>(SOLICITACOES_DISPONIVEIS);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -139,8 +147,10 @@ export default function NewRfqPage() {
         if (sups && sups.length > 0) {
           const mappedSups: FornecedorConvidado[] = sups.map((s) => ({
             id: s.id,
-            nome: s.corporateName,
+            nome: s.corporateName || s.tradeName,
             cnpj: s.cnpj,
+            segmento: s.segment || "Geral",
+            isHomologado: s.status === "Active" || s.isActive === true,
             selecionado: false,
           }));
           setFornecedores(mappedSups);
@@ -240,7 +250,47 @@ export default function NewRfqPage() {
     [fornecedores]
   );
 
+  const removeSupplier = (id: string) => {
+    setFornecedores((cur) =>
+      cur.map((f) => (f.id === id ? { ...f, selecionado: false } : f))
+    );
+  };
 
+  const clearAllSuppliers = () => {
+    setFornecedores((cur) =>
+      cur.map((f) => ({ ...f, selecionado: false }))
+    );
+  };
+
+  const filteredFornecedores = useMemo(() => {
+    let list = fornecedores;
+    if (supplierFilterTab === "selecionados") {
+      list = list.filter((f) => f.selecionado);
+    } else if (supplierFilterTab === "homologados") {
+      list = list.filter((f) => f.isHomologado);
+    }
+
+    if (supplierSearch.trim()) {
+      const q = supplierSearch.toLowerCase().trim();
+      list = list.filter((f) =>
+        f.nome.toLowerCase().includes(q) ||
+        f.cnpj.toLowerCase().includes(q) ||
+        (f.segmento && f.segmento.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [fornecedores, supplierFilterTab, supplierSearch]);
+
+  const totalSupplierPages = Math.max(1, Math.ceil(filteredFornecedores.length / SUPPLIERS_PER_PAGE));
+  const paginatedFornecedores = useMemo(() => {
+    const start = (supplierPage - 1) * SUPPLIERS_PER_PAGE;
+    return filteredFornecedores.slice(start, start + SUPPLIERS_PER_PAGE);
+  }, [filteredFornecedores, supplierPage]);
+
+  // Reset de página ao buscar ou mudar tab
+  useEffect(() => {
+    setSupplierPage(1);
+  }, [supplierSearch, supplierFilterTab]);
 
   const solicitacaoPreview = requestsApi.find((s: Solicitacao) => s.id === solicitacaoSelecionada);
 
@@ -673,28 +723,136 @@ export default function NewRfqPage() {
                   </div>
                 </div>
 
-                <div className={styles.fornecedoresList}>
-                  {fornecedores.map((f) => (
-                    <label
-                      key={f.id}
-                      className={`${styles.fornecedorRow} ${f.selecionado ? styles.fornecedorSelecionado : ""}`}
+                {/* Selected Suppliers Tray (Visible whenever at least 1 supplier is selected) */}
+                {fornecedoresSelecionados.length > 0 && (
+                  <div className={styles.selectedTray}>
+                    <div className={styles.selectedTrayHeader}>
+                      <span>Fornecedores Selecionados ({fornecedoresSelecionados.length})</span>
+                      <button type="button" className={styles.clearSelectionBtn} onClick={clearAllSuppliers}>
+                        Limpar seleção
+                      </button>
+                    </div>
+                    <div className={styles.chipsContainer}>
+                      {fornecedoresSelecionados.map((f) => (
+                        <div key={f.id} className={styles.supplierChip}>
+                          <span>{f.nome}</span>
+                          <button
+                            type="button"
+                            className={styles.chipRemoveBtn}
+                            onClick={() => removeSupplier(f.id)}
+                            title="Remover convite"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Search & Filter Toolbar */}
+                <div className={styles.supplierFilterToolbar}>
+                  <div className={styles.supplierSearchInput}>
+                    <Icon name="search-sm" size={16} className={styles.searchIconInside} />
+                    <input
+                      type="text"
+                      placeholder="Buscar por Razão Social, Nome Fantasia ou CNPJ..."
+                      value={supplierSearch}
+                      onChange={(e) => setSupplierSearch(e.target.value)}
+                    />
+                  </div>
+
+                  <div className={styles.filterTabs}>
+                    <button
+                      type="button"
+                      className={`${styles.filterTabBtn} ${supplierFilterTab === "todos" ? styles.filterTabBtnActive : ""}`}
+                      onClick={() => setSupplierFilterTab("todos")}
                     >
-                      <input
-                        type="checkbox"
-                        checked={f.selecionado}
-                        onChange={() => toggleFornecedor(f.id)}
-                        className={styles.fornecedorCheck}
-                      />
-                      <div className={styles.fornecedorInfo}>
-                        <strong>{f.nome}</strong>
-                        <span>{f.cnpj}</span>
-                      </div>
-                      {f.selecionado && (
-                        <span className={styles.fornecedorBadge}>Convidado</span>
-                      )}
-                    </label>
-                  ))}
+                      Todos ({fornecedores.length.toLocaleString("pt-BR")})
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.filterTabBtn} ${supplierFilterTab === "selecionados" ? styles.filterTabBtnActive : ""}`}
+                      onClick={() => setSupplierFilterTab("selecionados")}
+                    >
+                      Selecionados ({fornecedoresSelecionados.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.filterTabBtn} ${supplierFilterTab === "homologados" ? styles.filterTabBtnActive : ""}`}
+                      onClick={() => setSupplierFilterTab("homologados")}
+                    >
+                      Homologados
+                    </button>
+                  </div>
                 </div>
+
+                {/* Supplier Paginated List */}
+                {paginatedFornecedores.length > 0 ? (
+                  <div className={styles.fornecedoresList}>
+                    {paginatedFornecedores.map((f) => (
+                      <label
+                        key={f.id}
+                        className={`${styles.fornecedorRow} ${f.selecionado ? styles.fornecedorSelecionado : ""}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={f.selecionado}
+                          onChange={() => toggleFornecedor(f.id)}
+                          className={styles.fornecedorCheck}
+                        />
+                        <div className={styles.fornecedorInfo}>
+                          <div className={styles.fornecedorTitleRow}>
+                            <strong>{f.nome}</strong>
+                            {f.segmento && <span className={styles.segmentTag}>{f.segmento}</span>}
+                          </div>
+                          <span>CNPJ: {f.cnpj} {f.isHomologado ? "• Homologado" : ""}</span>
+                        </div>
+                        {f.selecionado && (
+                          <span className={styles.fornecedorBadge}>
+                            <Icon name="check-circle" size={14} /> Convidado
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: "30px 20px", textAlign: "center", background: "#f8fafc", borderRadius: 8, border: "1px dashed #cbd5e1", color: "#64748b" }}>
+                    <Icon name="search-sm" size={24} style={{ margin: "0 auto 6px", display: "block", color: "#94a3b8" }} />
+                    <strong style={{ display: "block", color: "#0f172a" }}>Nenhum fornecedor encontrado</strong>
+                    <span style={{ fontSize: 13 }}>Tente buscar por outro termo ou limpe os filtros.</span>
+                  </div>
+                )}
+
+                {/* Pagination Controls */}
+                {filteredFornecedores.length > SUPPLIERS_PER_PAGE && (
+                  <div className={styles.supplierPaginationBar}>
+                    <span>
+                      Exibindo {(supplierPage - 1) * SUPPLIERS_PER_PAGE + 1} - {Math.min(supplierPage * SUPPLIERS_PER_PAGE, filteredFornecedores.length)} de {filteredFornecedores.length.toLocaleString("pt-BR")} fornecedores
+                    </span>
+                    <div className={styles.paginationControls}>
+                      <button
+                        type="button"
+                        className={styles.pageBtn}
+                        disabled={supplierPage <= 1}
+                        onClick={() => setSupplierPage((p) => Math.max(1, p - 1))}
+                      >
+                        ← Anterior
+                      </button>
+                      <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                        {supplierPage} / {totalSupplierPages}
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.pageBtn}
+                        disabled={supplierPage >= totalSupplierPages}
+                        onClick={() => setSupplierPage((p) => Math.min(totalSupplierPages, p + 1))}
+                      >
+                        Próxima →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </section>
             )}
 

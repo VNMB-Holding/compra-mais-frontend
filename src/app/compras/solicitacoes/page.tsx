@@ -245,6 +245,15 @@ export default function SolicitacoesPage() {
           <ErrorState message={error} />
         ) : loading ? (
           <TableSkeleton rows={6} columns={8} />
+        ) : filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <Icon name="file-search-02" size={32} />
+            </div>
+            <h4>Nenhuma solicitação encontrada</h4>
+            <p>Não encontramos registros com os filtros aplicados. Tente alterar os critérios de busca.</p>
+            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatusFilter("Todos"); setSelectedCompanyId("TODAS"); }}>Limpar Filtros</Button>
+          </div>
         ) : (
           <>
             <DataTable

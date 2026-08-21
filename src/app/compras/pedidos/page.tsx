@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, Loading, ErrorState, TableSkeleton, Badge } from "@/components/ui";
+import { Card, Icon, Select, Loading, ErrorState, TableSkeleton, Badge, Button } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -107,7 +107,13 @@ export default function PedidosPage() {
     { label: "Cancelado", value: "Cancelado" },
   ];
 
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const filtered = pedidos;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const entregueCount = pedidos.filter((p) => p.status === "Entregue").length;
   const pendentCount = pedidos.filter((p) => p.status !== "Entregue").length;
@@ -160,14 +166,20 @@ export default function PedidosPage() {
               type="text"
               placeholder="Buscar por número, fornecedor ou unidade..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <div className={styles.filtersGroup}>
             <Select
               options={companyOptions}
               value={selectedCompanyId}
-              onChange={setSelectedCompanyId}
+              onChange={(val) => {
+                setSelectedCompanyId(val);
+                setCurrentPage(1);
+              }}
               icon="building-07"
               className={styles.customSelectFilter}
             />
@@ -175,7 +187,10 @@ export default function PedidosPage() {
               <Select
                 options={supplierOptions}
                 value={supplier}
-                onChange={setSupplier}
+                onChange={(val) => {
+                  setSupplier(val);
+                  setCurrentPage(1);
+                }}
                 icon="filter-lines"
                 className={styles.customSelectFilter}
               />
@@ -183,7 +198,10 @@ export default function PedidosPage() {
             <Select
               options={statusOptions}
               value={status}
-              onChange={setStatus}
+              onChange={(val) => {
+                setStatus(val);
+                setCurrentPage(1);
+              }}
               className={styles.customSelectFilter}
             />
           </div>
@@ -193,16 +211,41 @@ export default function PedidosPage() {
           <TableSkeleton rows={6} columns={6} />
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
+        ) : filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <Icon name="package" size={32} />
+            </div>
+            <h4>Nenhum pedido encontrado</h4>
+            <p>Não encontramos pedidos com os filtros aplicados. Tente alterar os critérios de busca.</p>
+            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatus("Todos"); setSupplier("Todas"); setSelectedCompanyId("TODAS"); }}>Limpar Filtros</Button>
+          </div>
         ) : (
           <>
-            <DataTable data={filtered} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />
+            <DataTable data={paginatedData} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />
 
             <div className={styles.tableFooter}>
-              <span>Mostrando {filtered.length} de {pedidos.length} pedidos</span>
+              <span>Mostrando {paginatedData.length} de {filtered.length} pedidos</span>
               <div className={styles.paginationControls}>
-                <button className={styles.pageBtn}><Icon name="chevron-left" /></button>
-                <button className={`${styles.pageBtn} ${styles.pageActive}`}>1</button>
-                <button className={styles.pageBtn}><Icon name="chevron-right" /></button>
+                <button
+                  className={styles.pageBtn}
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+                >
+                  <Icon name="chevron-left" />
+                </button>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#475569", padding: "0 8px" }}>
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  className={styles.pageBtn}
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+                >
+                  <Icon name="chevron-right" />
+                </button>
               </div>
             </div>
           </>

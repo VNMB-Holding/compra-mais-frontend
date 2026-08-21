@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, ErrorState, TableSkeleton, Badge } from "@/components/ui";
+import { Card, Icon, Select, ErrorState, TableSkeleton, Badge, Button } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./homologacao.module.css";
@@ -32,8 +32,8 @@ function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
   const rawScore = s.performanceScore ? Math.round(Number(s.performanceScore) * 10) : 85;
   const isHomologado = s.status === "Active" || s.isActive === true;
   const isUnderCert = s.status === "UnderCertification";
-  const statusStr = isHomologado ? "Homologado" : isUnderCert ? "Em análise" : "Pendente";
-  const etapaStr = isHomologado ? "Homologação Concluída" : isUnderCert ? "Análise de dados públicos" : "Auditoria Cadastral";
+  const statusStr = isHomologado ? "Conforme" : isUnderCert ? "Em Auditoria" : "Apontamento";
+  const etapaStr = isHomologado ? "Monitoramento Ativo" : isUnderCert ? "Varredura Periódica" : "Apontamento Fiscal";
 
   const updatedDate = s.updatedAt ? new Date(s.updatedAt) : s.createdAt ? new Date(s.createdAt) : new Date();
   const cidade = s.city || "—";
@@ -65,10 +65,10 @@ const riscosOptions = [
 ];
 
 const etapasOptions = [
-  { label: "Etapa: Todas", value: "Todas" },
-  { label: "Homologação Concluída", value: "Homologação Concluída" },
-  { label: "Análise de dados públicos", value: "Análise de dados públicos" },
-  { label: "Auditoria Cadastral", value: "Auditoria Cadastral" },
+  { label: "Status: Todos", value: "Todas" },
+  { label: "Conforme", value: "Conforme" },
+  { label: "Em Auditoria", value: "Em Auditoria" },
+  { label: "Apontamento", value: "Apontamento" },
 ];
 
 export default function HomologacaoPage() {
@@ -216,6 +216,10 @@ export default function HomologacaoPage() {
     },
   ];
 
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const filtered = fornecedores.filter((f) => {
     if (selectedUf !== "Todas" && f.estado !== selectedUf) return false;
     if (risco !== "Todas") {
@@ -234,6 +238,9 @@ export default function HomologacaoPage() {
     return true;
   });
 
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className={styles.pageContainer}>
       
@@ -242,6 +249,11 @@ export default function HomologacaoPage() {
         <div>
           <h1>Homologação & Compliance de Fornecedores</h1>
           <p>Acompanhe o nível de conformidade fiscal, certidões públicas e risco de parceiros.</p>
+        </div>
+        <div className={styles.headerActions}>
+          <Button variant="primary" onClick={() => router.push("/fornecedores/novo")}>
+            <Icon name="plus" size={16} /> Novo Fornecedor
+          </Button>
         </div>
       </div>
 
@@ -286,7 +298,10 @@ export default function HomologacaoPage() {
               type="text"
               placeholder="Buscar por Fornecedor, CNPJ ou Cidade..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
 
@@ -294,7 +309,10 @@ export default function HomologacaoPage() {
             <Select
               options={etapaOptions}
               value={etapa}
-              onChange={(val) => setEtapa(val)}
+              onChange={(val) => {
+                setEtapa(val);
+                setCurrentPage(1);
+              }}
               className={styles.customSelectFilter}
             />
 
@@ -306,7 +324,10 @@ export default function HomologacaoPage() {
                 { label: "Crítico", value: "Crítico" },
               ]}
               value={risco}
-              onChange={(val) => setRisco(val)}
+              onChange={(val) => {
+                setRisco(val);
+                setCurrentPage(1);
+              }}
               className={styles.customSelectFilter}
             />
 
@@ -314,7 +335,10 @@ export default function HomologacaoPage() {
               <Select
                 options={ufOptions}
                 value={selectedUf}
-                onChange={(val) => setSelectedUf(val)}
+                onChange={(val) => {
+                  setSelectedUf(val);
+                  setCurrentPage(1);
+                }}
                 icon="marker-pin-01"
                 className={styles.customSelectFilter}
               />
@@ -327,11 +351,40 @@ export default function HomologacaoPage() {
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
         ) : (
-          <DataTable
-            data={filtered}
-            columns={columns}
-            onRowClick={(row) => router.push(`/fornecedores/homologacao/${row.id}`)}
-          />
+          <>
+            <DataTable
+              data={paginatedData}
+              columns={columns}
+              onRowClick={(row) => router.push(`/fornecedores/homologacao/${row.id}`)}
+            />
+
+            <div className={styles.tableFooter}>
+              <span>
+                Mostrando {paginatedData.length} de {filtered.length} fornecedores
+              </span>
+              <div className={styles.paginationControls}>
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={styles.pageBtn}
+                  style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+                >
+                  <Icon name="chevron-left" />
+                </button>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#475569", padding: "0 8px" }}>
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={styles.pageBtn}
+                  style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+                >
+                  <Icon name="chevron-right" />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </Card>
     </div>
