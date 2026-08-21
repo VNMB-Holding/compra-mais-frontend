@@ -89,8 +89,17 @@ export default function HomologacaoPage() {
     try {
       setError(null);
       setLoading(true);
+      const statusMap: Record<string, string> = {
+        "Homologado": "Active",
+        "Em análise": "UnderCertification",
+        "Pendente": "UnderCertification",
+      };
       const [suppliers, kpisData] = await Promise.all([
-        suppliersApi.list().catch(() => []),
+        suppliersApi.list({
+          status: etapa !== "Todas" ? (statusMap[etapa] || etapa) : undefined,
+          state: selectedUf !== "Todas" ? selectedUf : undefined,
+          search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+        }).catch(() => []),
         suppliersApi.getKpis().catch(() => null),
       ]);
       setFornecedores((suppliers || []).map(mapSupplierToHomologacao));
@@ -101,7 +110,7 @@ export default function HomologacaoPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [etapa, selectedUf, searchQuery]);
 
   useEffect(() => {
     fetchData();
