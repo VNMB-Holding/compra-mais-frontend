@@ -80,20 +80,6 @@ export default function HomologacaoPage() {
   const [etapa, setEtapa] = useState("Todas");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const primaryCompanies = getPrimaryCompanyOptions(user);
-  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
-
-  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
-  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
-  const showBranchFilter = branchCompanies.length > 0;
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
-
-  const queryTenantId = React.useMemo(() => {
-    if (selectedBranchId !== "TODAS") return selectedBranchId;
-    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
-    return undefined;
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
-
   const [fornecedores, setFornecedores] = useState<HomologacaoRow[]>([]);
   const [kpis, setKpis] = useState<SupplierKpis | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,8 +90,8 @@ export default function HomologacaoPage() {
       setError(null);
       setLoading(true);
       const [suppliers, kpisData] = await Promise.all([
-        suppliersApi.list(queryTenantId).catch(() => []),
-        suppliersApi.getKpis(queryTenantId).catch(() => null),
+        suppliersApi.list().catch(() => []),
+        suppliersApi.getKpis().catch(() => null),
       ]);
       setFornecedores((suppliers || []).map(mapSupplierToHomologacao));
       setKpis(kpisData);
@@ -115,19 +101,27 @@ export default function HomologacaoPage() {
     } finally {
       setLoading(false);
     }
-  }, [queryTenantId]);
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  const etapaOptions = [
+    { label: "Status: Todos", value: "Todas" },
+    { label: "Homologado", value: "Homologado" },
+    { label: "Em análise", value: "Em análise" },
+    { label: "Pendente", value: "Pendente" },
+  ];
+
   const ufOptions = [
-    { label: "Todas as UF", value: "Todas" },
+    { label: "Estado: Todos (UF)", value: "Todas" },
     ...Array.from(new Set(fornecedores.map((f) => f.estado)))
       .filter(Boolean)
       .sort()
-      .map((uf) => ({ label: `Estado: ${uf}`, value: uf })),
+      .map((uf) => ({ label: `UF: ${uf}`, value: uf })),
   ];
+
 
   const columns: ColumnDef<HomologacaoRow>[] = [
     {
@@ -288,34 +282,24 @@ export default function HomologacaoPage() {
           </div>
 
           <div className={styles.filtersGroup}>
-            {showPrimaryCompanyFilter && (
-              <Select
-                options={[
-                  { label: "Empresas: Todas", value: "TODAS" },
-                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedPrimaryCompanyId}
-                onChange={(val) => {
-                  setSelectedPrimaryCompanyId(val);
-                  setSelectedBranchId("TODAS");
-                }}
-                icon="building-07"
-                className={styles.customSelectFilter}
-              />
-            )}
+            <Select
+              options={etapaOptions}
+              value={etapa}
+              onChange={(val) => setEtapa(val)}
+              className={styles.customSelectFilter}
+            />
 
-            {showBranchFilter && (
-              <Select
-                options={[
-                  { label: "Filiais: Todas", value: "TODAS" },
-                  ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedBranchId}
-                onChange={(val) => setSelectedBranchId(val)}
-                icon="building-07"
-                className={styles.customSelectFilter}
-              />
-            )}
+            <Select
+              options={[
+                { label: "Risco: Todos", value: "Todas" },
+                { label: "Baixo Risco", value: "Baixo" },
+                { label: "Médio Risco", value: "Médio" },
+                { label: "Crítico", value: "Crítico" },
+              ]}
+              value={risco}
+              onChange={(val) => setRisco(val)}
+              className={styles.customSelectFilter}
+            />
 
             {ufOptions.length > 2 && (
               <Select
@@ -326,20 +310,6 @@ export default function HomologacaoPage() {
                 className={styles.customSelectFilter}
               />
             )}
-
-            <Select
-              options={riscosOptions}
-              value={risco}
-              onChange={(val) => setRisco(val)}
-              className={styles.customSelectFilter}
-            />
-
-            <Select
-              options={etapasOptions}
-              value={etapa}
-              onChange={(val) => setEtapa(val)}
-              className={styles.customSelectFilter}
-            />
           </div>
         </div>
 

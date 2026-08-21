@@ -62,7 +62,6 @@ export default function HomologacaoDetailPage() {
             <div className={styles.baseInfo}>
               <div className={styles.titleRow}>
                 <h2>{supplier.corporateName}</h2>
-                <Badge variant="success" className={styles.badgeVerificado}>CNPJ verificado</Badge>
               </div>
               <p className={styles.docInfo}>CNPJ: {supplier.cnpj} {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? `| ${supplier.tradeName}` : ""}</p>
               <div className={styles.updateInfo}>

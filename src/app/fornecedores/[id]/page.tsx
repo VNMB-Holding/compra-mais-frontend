@@ -75,12 +75,6 @@ export default function FornecedorDetailPage() {
             <button className={styles.btnOutline} onClick={() => router.push(`/fornecedores/homologacao/${supplier.id}`)}>
               <Icon name="shield-tick" size={16} /> Auditoria & Compliance
             </button>
-            <button className={styles.btnOutline}>
-              <Icon name="file-02" size={16} /> Documentos
-            </button>
-            <Button variant="primary" className={styles.btnPrimary}>
-              <Icon name="clock-refresh" size={16} /> Histórico Comercial
-            </Button>
           </div>
         </div>
       </div>
@@ -97,7 +91,6 @@ export default function FornecedorDetailPage() {
             <div className={styles.baseInfo}>
               <div className={styles.titleRow}>
                 <h2>{supplier.corporateName}</h2>
-                <Badge variant="success" className={styles.badgeVerificado}>CNPJ verificado</Badge>
               </div>
               <p className={styles.docInfo}>
                 CNPJ: <strong>{supplier.cnpj}</strong> {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? `• ${supplier.tradeName}` : ""}
@@ -123,9 +116,6 @@ export default function FornecedorDetailPage() {
             </div>
             <div className={styles.titleRow}>
               {renderStars(score)}
-              <Badge variant={score >= 8 ? "success" : score >= 6 ? "primary" : "gray"} className={styles.badgeScore}>
-                {score >= 8 ? "Excelente" : score >= 6 ? "Bom" : "Regular"}
-              </Badge>
             </div>
           </div>
 
@@ -270,9 +260,6 @@ export default function FornecedorDetailPage() {
                     </span>
                     <div className={styles.fieldValueSub}>
                       <span className={styles.fieldValue}>{supplier.cnpj}</span>
-                      <span className={styles.badgeCadastral}>
-                        <Icon name="check" size={12} /> Cadastro Regular
-                      </span>
                     </div>
                   </div>
 

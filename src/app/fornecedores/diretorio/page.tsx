@@ -30,6 +30,7 @@ interface FornecedorRow {
   cor: "green" | "orange";
   nota: string;
   estrelas: number;
+  categoria: string;
   integrationCode: string;
 }
 
@@ -64,6 +65,7 @@ function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRo
     cor: isHomologado ? "green" : "orange",
     nota,
     estrelas,
+    categoria: s.segment || "Geral",
     integrationCode: s.integrationCode || "—",
   };
 }
@@ -72,6 +74,7 @@ export default function FornecedoresListPage() {
   const router = useRouter();
   const { user } = useAuth();
 
+  const [selectedSegment, setSelectedSegment] = useState("Todos");
   const [selectedUf, setSelectedUf] = useState("Todas");
   const [status, setStatus] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,27 +87,23 @@ export default function FornecedoresListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const primaryCompanies = getPrimaryCompanyOptions(user);
-  const showPrimaryCompanyFilter = primaryCompanies.length > 1 || isVnmbUser(user);
-
-  const [selectedPrimaryCompanyId, setSelectedPrimaryCompanyId] = useState<string>("TODAS");
-  const branchCompanies = getBranchCompanyOptions(user, selectedPrimaryCompanyId);
-  const showBranchFilter = branchCompanies.length > 0;
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("TODAS");
-
-  const queryTenantId = React.useMemo(() => {
-    if (selectedBranchId !== "TODAS") return selectedBranchId;
-    if (selectedPrimaryCompanyId !== "TODAS") return selectedPrimaryCompanyId;
-    return undefined;
-  }, [selectedPrimaryCompanyId, selectedBranchId]);
-
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
+      const statusMap: Record<string, string> = {
+        "Homologado": "Active",
+        "Em homologação": "UnderCertification",
+        "Inativo": "Inactive",
+      };
       const [suppliers, kpisData] = await Promise.all([
-        suppliersApi.list(queryTenantId).catch(() => []),
-        suppliersApi.getKpis(queryTenantId).catch(() => null),
+        suppliersApi.list({
+          status: status !== "Todos" ? (statusMap[status] || status) : undefined,
+          state: selectedUf !== "Todas" ? selectedUf : undefined,
+          segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
+          search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+        }).catch(() => []),
+        suppliersApi.getKpis().catch(() => null),
       ]);
       setFornecedores((suppliers || []).map((s) => mapSupplierToRow(s, user)));
       setKpis(kpisData);
@@ -114,40 +113,37 @@ export default function FornecedoresListPage() {
     } finally {
       setLoading(false);
     }
-  }, [queryTenantId, user]);
+  }, [user, status, selectedUf, selectedSegment, searchQuery]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  const segmentOptions = [
+    { label: "Segmento: Todos", value: "Todos" },
+    ...Array.from(new Set(fornecedores.map((f) => f.categoria)))
+      .filter(Boolean)
+      .sort()
+      .map((seg) => ({ label: seg, value: seg })),
+  ];
+
   const ufOptions = [
-    { label: "Todas as UF", value: "Todas" },
+    { label: "Estado: Todos (UF)", value: "Todas" },
     ...Array.from(new Set(fornecedores.map((f) => f.estado)))
       .filter(Boolean)
       .sort()
-      .map((uf) => ({ label: `Estado: ${uf}`, value: uf })),
+      .map((uf) => ({ label: `UF: ${uf}`, value: uf })),
   ];
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
     { label: "Homologado", value: "Homologado" },
     { label: "Em homologação", value: "Em homologação" },
+    { label: "Inativo", value: "Inativo" },
   ];
 
-  const filtered = fornecedores.filter((f) => {
-    if (selectedUf !== "Todas" && f.estado !== selectedUf) return false;
-    if (status !== "Todos" && f.status !== status) return false;
-    if (searchQuery.trim() !== "") {
-      const q = searchQuery.toLowerCase();
-      const matchNome = f.nome.toLowerCase().includes(q);
-      const matchCnpj = f.cnpj.includes(q);
-      const matchLoc = f.localizacao.toLowerCase().includes(q);
-      const matchContato = f.contatoNome.toLowerCase().includes(q) || f.contatoInfo.toLowerCase().includes(q);
-      const matchErp = f.integrationCode.toLowerCase().includes(q);
-      if (!matchNome && !matchCnpj && !matchLoc && !matchContato && !matchErp) return false;
-    }
-    return true;
-  });
+  const filtered = fornecedores;
+
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -245,11 +241,6 @@ export default function FornecedoresListPage() {
           <h1>Base de Fornecedores</h1>
           <p>Consulte parceiros homologados, localização, contatos e nível de performance.</p>
         </div>
-        <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={() => router.push("/fornecedores/homologacao")}>
-            <Icon name="shield-tick" size={16} /> Painel de Homologação
-          </Button>
-        </div>
       </div>
 
       {/* KPI Cards */}
@@ -301,35 +292,15 @@ export default function FornecedoresListPage() {
           </div>
 
           <div className={styles.filtersGroup}>
-            {showPrimaryCompanyFilter && (
+            {segmentOptions.length > 2 && (
               <Select
-                options={[
-                  { label: "Empresas: Todas", value: "TODAS" },
-                  ...primaryCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedPrimaryCompanyId}
+                options={segmentOptions}
+                value={selectedSegment}
                 onChange={(val) => {
-                  setSelectedPrimaryCompanyId(val);
-                  setSelectedBranchId("TODAS");
+                  setSelectedSegment(val);
                   setCurrentPage(1);
                 }}
-                icon="building-07"
-                className={styles.customSelectFilter}
-              />
-            )}
-
-            {showBranchFilter && (
-              <Select
-                options={[
-                  { label: "Filiais: Todas", value: "TODAS" },
-                  ...branchCompanies.map((c) => ({ label: c.name, value: c.id })),
-                ]}
-                value={selectedBranchId}
-                onChange={(val) => {
-                  setSelectedBranchId(val);
-                  setCurrentPage(1);
-                }}
-                icon="building-07"
+                icon="filter-lines"
                 className={styles.customSelectFilter}
               />
             )}
