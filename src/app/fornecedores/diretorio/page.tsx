@@ -75,7 +75,7 @@ export default function FornecedoresListPage() {
   const { user } = useAuth();
 
   const [selectedSegment, setSelectedSegment] = useState("Todos");
-  const [selectedUf, setSelectedUf] = useState("Todas");
+  const [selectedCity, setSelectedCity] = useState("Todas");
   const [status, setStatus] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [fornecedores, setFornecedores] = useState<FornecedorRow[]>([]);
@@ -99,7 +99,7 @@ export default function FornecedoresListPage() {
       const [suppliers, kpisData] = await Promise.all([
         suppliersApi.list({
           status: status !== "Todos" ? (statusMap[status] || status) : undefined,
-          state: selectedUf !== "Todas" ? selectedUf : undefined,
+          city: selectedCity !== "Todas" ? selectedCity : undefined,
           segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
         }).catch(() => []),
@@ -113,7 +113,7 @@ export default function FornecedoresListPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, status, selectedUf, selectedSegment, searchQuery]);
+  }, [user, status, selectedCity, selectedSegment, searchQuery]);
 
   useEffect(() => {
     fetchData();
@@ -127,12 +127,12 @@ export default function FornecedoresListPage() {
       .map((seg) => ({ label: seg, value: seg })),
   ];
 
-  const ufOptions = [
-    { label: "Estado: Todos (UF)", value: "Todas" },
-    ...Array.from(new Set(fornecedores.map((f) => f.estado)))
-      .filter(Boolean)
+  const cityOptions = [
+    { label: "Cidade: Todas", value: "Todas" },
+    ...Array.from(new Set(fornecedores.map((f) => f.cidade)))
+      .filter((c) => c && c !== "—")
       .sort()
-      .map((uf) => ({ label: `UF: ${uf}`, value: uf })),
+      .map((c) => ({ label: `Cidade: ${c}`, value: c })),
   ];
 
   const statusOptions = [
@@ -142,7 +142,7 @@ export default function FornecedoresListPage() {
     { label: "Inativo", value: "Inativo" },
   ];
 
-  const filtered = fornecedores;
+  const filtered = [...fornecedores].sort((a, b) => a.nome.localeCompare(b.nome));
 
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
@@ -199,24 +199,15 @@ export default function FornecedoresListPage() {
       ),
     },
     {
-      header: "Homologação",
-      cell: (row) => (
-        <div className={styles.doubleText}>
-          <span className={`${styles.statusBadge} ${row.status === "Homologado" ? styles.badgeGreen : styles.badgeYellow}`}>
-            {row.status}
-          </span>
-          <span>{row.statusSub}</span>
-        </div>
-      ),
+      header: "Segmento",
+      accessorKey: "categoria",
     },
     {
-      header: "Nota de Performance",
+      header: "Status",
       cell: (row) => (
-        <div className={styles.notaCell}>
-          <strong className={row.nota !== "-" ? styles.textGreen : ""}>{row.nota}</strong>
-          {renderStars(row.estrelas)}
-          {row.nota === "-" && <span className={styles.mutedText}>Ainda sem avaliação</span>}
-        </div>
+        <span className={`${styles.statusBadge} ${row.status === "Homologado" ? styles.badgeGreen : styles.badgeYellow}`}>
+          {row.status}
+        </span>
       ),
     },
     {
@@ -305,12 +296,12 @@ export default function FornecedoresListPage() {
               />
             )}
 
-            {ufOptions.length > 2 && (
+            {cityOptions.length > 2 && (
               <Select
-                options={ufOptions}
-                value={selectedUf}
+                options={cityOptions}
+                value={selectedCity}
                 onChange={(val) => {
-                  setSelectedUf(val);
+                  setSelectedCity(val);
                   setCurrentPage(1);
                 }}
                 icon="marker-pin-01"
@@ -334,6 +325,15 @@ export default function FornecedoresListPage() {
           <TableSkeleton rows={6} columns={6} />
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
+        ) : filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <Icon name="building-07" size={32} />
+            </div>
+            <h4>Nenhum fornecedor encontrado</h4>
+            <p>Não encontramos fornecedores com os filtros aplicados. Tente alterar os critérios de busca.</p>
+            <Button variant="secondary" onClick={() => { setSearchQuery(""); setSelectedSegment("Todos"); setSelectedCity("Todas"); setStatus("Todos"); }}>Limpar Filtros</Button>
+          </div>
         ) : (
           <>
             <DataTable
