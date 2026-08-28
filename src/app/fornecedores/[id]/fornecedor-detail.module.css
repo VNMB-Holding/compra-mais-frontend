@@ -33,26 +33,47 @@
 .headerRow {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
-.headerTitles h1 {
-  font-size: 26px;
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.titleRow h1 {
+  font-size: 28px;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
-}
-
-.headerTitles p {
   margin: 0;
-  color: #64748b;
-  font-size: 14px;
 }
 
-.headerActions {
+.subtitleLarge {
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 12px 0;
+}
+
+.metadataTags {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+  margin-top: 14px;
+}
+
+.infoTag {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btnOutline {

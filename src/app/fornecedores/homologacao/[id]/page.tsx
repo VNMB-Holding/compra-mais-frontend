@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Card, Icon, Loading } from "@/components/ui";
+import { Card, Badge, Icon, Button, Loading, Skeleton, CardSkeleton } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./homologacao-detail.module.css";
 import { suppliersApi, homologacaoApi, Supplier, SupplierScreeningResult } from "@/lib/api/suppliers";
@@ -83,7 +83,22 @@ export default function HomologacaoDetailPage() {
     }
   };
 
-  if (loading) return <Loading variant="fullscreen" message="Carregando Auditoria de Homologação..." />;
+  if (loading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: "20px 0" }}>
+        <div style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+          <Skeleton variant="title" width="40%" height={28} />
+          <Skeleton variant="text" width="60%" />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          <CardSkeleton height={180} />
+          <CardSkeleton height={180} />
+          <CardSkeleton height={180} />
+        </div>
+      </div>
+    );
+  }
+
   if (!supplier) return <div style={{ padding: 40 }}>Fornecedor não encontrado.</div>;
 
   const isHomologado = supplier.status === "Active" || supplier.isActive === true;

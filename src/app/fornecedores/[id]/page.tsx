@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Badge, Card, Icon, Button, Loading } from "@/components/ui";
+import { Badge, Card, Icon, Button, Loading, Skeleton, KpiCardSkeleton, CardSkeleton } from "@/components/ui";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./fornecedor-detail.module.css";
 import { useSupplier } from "@/hooks/useQueries";
@@ -32,7 +32,28 @@ export default function FornecedorDetailPage() {
   };
 
   if (isLoading) {
-    return <Loading variant="fullscreen" message="Carregando perfil do fornecedor..." />;
+    return (
+      <div className={styles.pageContainer}>
+        <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
+          <Icon name="arrow-left" size={16} /> Voltar ao diretório
+        </button>
+        <div style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+          <Skeleton variant="title" width="35%" height={28} />
+          <Skeleton variant="text" width="25%" style={{ marginBottom: 14 }} />
+          <div style={{ display: "flex", gap: 12 }}>
+            <Skeleton width={130} height={28} />
+            <Skeleton width={130} height={28} />
+            <Skeleton width={130} height={28} />
+          </div>
+        </div>
+        <div className={styles.kpiGrid} style={{ marginTop: 24 }}>
+          <KpiCardSkeleton />
+          <KpiCardSkeleton />
+          <KpiCardSkeleton />
+          <KpiCardSkeleton />
+        </div>
+      </div>
+    );
   }
 
   if (isError || !supplier) {
@@ -67,14 +88,28 @@ export default function FornecedorDetailPage() {
         </button>
 
         <div className={styles.headerRow}>
-          <div className={styles.headerTitles}>
-            <h1>Detalhes do Fornecedor</h1>
-            <p>Perfil de performance, dados cadastrais, bancários e histórico comercial do parceiro.</p>
-          </div>
-          <div className={styles.headerActions}>
-            <button className={styles.btnOutline} onClick={() => router.push(`/fornecedores/homologacao/${supplier.id}`)}>
-              <Icon name="shield-tick" size={16} /> Auditoria & Compliance
-            </button>
+          <div>
+            <div className={styles.titleRow}>
+              <h1>{supplier.corporateName}</h1>
+              <Badge variant={statusVariant}>{statusLabel}</Badge>
+            </div>
+            <p className={styles.subtitleLarge}>
+              {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? supplier.tradeName : "Parceiro Comercial Homologado"}
+            </p>
+            <div className={styles.metadataTags}>
+              <span className={styles.infoTag}>
+                <Icon name="file-01" /> CNPJ: {supplier.cnpj}
+              </span>
+              <span className={styles.infoTag}>
+                <Icon name="marker-pin-01" /> {supplier.city ? `${supplier.city} / ${supplier.state || ""}` : "Brasil"}
+              </span>
+              <span className={styles.infoTag}>
+                <Icon name="briefcase-01" /> {supplier.segment || "Geral"}
+              </span>
+              <span className={styles.infoTag}>
+                <Icon name="tag-01" /> Cód. ERP: {supplier.integrationCode || "—"}
+              </span>
+            </div>
           </div>
         </div>
       </div>

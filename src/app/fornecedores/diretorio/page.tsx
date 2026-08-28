@@ -102,8 +102,8 @@ export default function FornecedoresListPage() {
           city: selectedCity !== "Todas" ? selectedCity : undefined,
           segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
-        }).catch(() => []),
-        suppliersApi.getKpis().catch(() => null),
+        }),
+        suppliersApi.getKpis(),
       ]);
       setFornecedores((suppliers || []).map((s) => mapSupplierToRow(s, user)));
       setKpis(kpisData);

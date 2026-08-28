@@ -187,20 +187,20 @@ export default function NovoFornecedorPage() {
         formData.complemento.trim() ? `(${formData.complemento.trim()})` : "",
         formData.bairro.trim(),
         formData.cidade.trim() ? `${formData.cidade.trim()} - ${formData.estado}` : "",
-      ].filter(Boolean).join(", ") || "Endereço comercial";
+      ].filter(Boolean).join(", ") || undefined;
 
       await suppliersApi.create({
         tenantId: user?.tenantId,
         corporateName: formData.corporateName.trim(),
         tradeName: formData.tradeName.trim() || formData.corporateName.trim(),
         cnpj: formData.cnpj.trim(),
-        segment: formData.categoria || "Geral",
+        segment: formData.categoria || undefined,
         stateRegistration: formData.inscricaoEstadual.trim() || undefined,
-        zipCode: formData.cep.trim() || "00000-000",
+        zipCode: formData.cep.trim() || undefined,
         address: fullAddress,
         contactName: formData.contatoNome.trim() || undefined,
-        contactEmail: formData.contatoEmail.trim() || "contato@fornecedor.com.br",
-        contactPhone: formData.contatoTelefone.trim() || "(00) 0000-0000",
+        contactEmail: formData.contatoEmail.trim() || undefined,
+        contactPhone: formData.contatoTelefone.trim() || undefined,
         status: "UnderCertification",
       } as any);
 

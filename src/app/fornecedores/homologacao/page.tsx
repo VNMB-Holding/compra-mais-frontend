@@ -99,8 +99,8 @@ export default function HomologacaoPage() {
           status: etapa !== "Todas" ? (statusMap[etapa] || etapa) : undefined,
           state: selectedUf !== "Todas" ? selectedUf : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
-        }).catch(() => []),
-        suppliersApi.getKpis().catch(() => null),
+        }),
+        suppliersApi.getKpis(),
       ]);
       setFornecedores((suppliers || []).map(mapSupplierToHomologacao));
       setKpis(kpisData);
