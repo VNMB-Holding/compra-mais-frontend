@@ -9,7 +9,8 @@ import {
   Select,
   Icon,
   Loading,
-  ExportButton
+  ExportButton,
+  ChartSkeleton
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -66,7 +67,7 @@ export default function EconomiaPage() {
       setLoading(true);
       const [economyData, monthlyData] = await Promise.all([
         dashboardApi.getEconomyAnalytics(queryCompanyCode, selectedCategory, selectedSupplier, selectedPeriod),
-        dashboardApi.getMonthlyEconomy(queryCompanyCode, selectedPeriod).catch(() => []),
+        dashboardApi.getMonthlyEconomy(queryCompanyCode, selectedPeriod),
       ]);
       setApiData({
         ...economyData,
@@ -346,64 +347,72 @@ export default function EconomiaPage() {
 
       
       <div className={styles.middleGrid}>
-        <div className={styles.chartCard}>
-          <div className={styles.cardHeader}>
-            <div className={styles.cardTitle}>
-              Evolução da economia gerada
-              <Icon name="help-circle" size={14} className={styles.infoIcon} />
+        {loading ? (
+          <ChartSkeleton type="area" height={320} />
+        ) : (
+          <div className={styles.chartCard}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>
+                Evolução da economia gerada
+                <Icon name="help-circle" size={14} className={styles.infoIcon} />
+              </div>
+              <select className={styles.chartSelect} defaultValue="mensal">
+                <option value="mensal">Mensal</option>
+                <option value="trimestral">Trimestral</option>
+              </select>
             </div>
-            <select className={styles.chartSelect} defaultValue="mensal">
-              <option value="mensal">Mensal</option>
-              <option value="trimestral">Trimestral</option>
-            </select>
-          </div>
-          <div className={styles.chartWrapper}>
-            <AreaChart
-              data={monthlyEconomyData}
-              color="#007d79"
-              valueFormatter={(v) => `R$ ${v}k`}
-              label1="Economia"
-              height={220}
-            />
-          </div>
-        </div>
-
-        <div className={styles.chartCard}>
-          <div className={styles.cardHeader}>
-            <div className={styles.cardTitle}>
-              Economia por categoria
-              <Icon name="help-circle" size={14} className={styles.infoIcon} />
-            </div>
-          </div>
-          <div className={styles.donutRow}>
-            <div className={styles.donutBox}>
-              <PieChart
-                data={categoriesData.map(c => ({
-                  name: c.categoria,
-                  value: c.pct,
-                  color: c.color
-                }))}
+            <div className={styles.chartWrapper}>
+              <AreaChart
+                data={monthlyEconomyData}
+                color="#007d79"
+                valueFormatter={(v) => `R$ ${v}k`}
+                label1="Economia"
+                height={220}
               />
             </div>
-            <div className={styles.legendList}>
-              {categoriesData.map((item, index) => (
-                <div key={index} className={styles.legendItem}>
-                  <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
-                  <span className={styles.legendName}>{item.categoria}</span>
-                  <span className={styles.legendValue}>{formatCurrency(item.valor)}</span>
-                  <span className={styles.legendPct}>{item.pct.toFixed(1)}%</span>
+          </div>
+        )}
+
+        {loading ? (
+          <ChartSkeleton type="donut" height={320} />
+        ) : (
+          <div className={styles.chartCard}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>
+                Economia por categoria
+                <Icon name="help-circle" size={14} className={styles.infoIcon} />
+              </div>
+            </div>
+            <div className={styles.donutRow}>
+              <div className={styles.donutBox}>
+                <PieChart
+                  data={categoriesData.map(c => ({
+                    name: c.categoria,
+                    value: c.pct,
+                    color: c.color
+                  }))}
+                />
+              </div>
+              <div className={styles.legendList}>
+                {categoriesData.map((item, index) => (
+                  <div key={index} className={styles.legendItem}>
+                    <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
+                    <span className={styles.legendName}>{item.categoria}</span>
+                    <span className={styles.legendValue}>{formatCurrency(item.valor)}</span>
+                    <span className={styles.legendPct}>{item.pct.toFixed(1)}%</span>
+                  </div>
+                ))}
+                <div className={styles.legendDivider} />
+                <div className={styles.legendTotalRow}>
+                  <span />
+                  <span>Total</span>
+                  <span className={styles.legendValue}>{formatCurrency(totals.categories)}</span>
+                  <span className={styles.legendPct}>100%</span>
                 </div>
-              ))}
-              <div className={styles.legendDivider} />
-              <div className={styles.legendTotalRow}>
-                <span />
-                <span>Total</span>
-                <span className={styles.legendValue}>{formatCurrency(totals.categories)}</span>
-                <span className={styles.legendPct}>100%</span>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className={`${styles.chartCard} styles.initiativeCard`}>
           <div className={styles.cardHeader}>
