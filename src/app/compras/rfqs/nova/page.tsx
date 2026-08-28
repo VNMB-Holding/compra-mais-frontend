@@ -104,16 +104,8 @@ export default function NewRfqPage() {
     async function loadApiData() {
       try {
         const [reqs, sups] = await Promise.all([
-          purchaseRequestsApi.list().catch((err) => { 
-            logError("rfqs/nova/purchaseRequests", err); 
-            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar as solicitações aprovadas." });
-            return [] as PurchaseRequest[]; 
-          }),
-          suppliersApi.list().catch((err) => { 
-            logError("rfqs/nova/suppliers", err); 
-            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar a lista de fornecedores." });
-            return [] as Supplier[]; 
-          }),
+          purchaseRequestsApi.list(),
+          suppliersApi.list(),
         ]);
 
         if (reqs && reqs.length > 0) {
@@ -160,9 +152,9 @@ export default function NewRfqPage() {
       } catch (e) {
         logError("rfqs/nova/loadApiData", e);
         toast({
-          variant: "warning",
-          title: "Aviso",
-          message: "Não foi possível carregar todos os dados. Algumas opções podem estar indisponíveis.",
+          variant: "error",
+          title: "Erro ao Carregar Dados",
+          message: getErrorMessage(e) || "Não foi possível carregar as solicitações e fornecedores para abertura de cotação.",
         });
       } finally {
         setLoadingData(false);

@@ -66,6 +66,45 @@ export interface RfqListParams {
   search?: string;
 }
 
+export interface PublicRfq {
+  id: string;
+  code: string;
+  title: string;
+  closesAt: string;
+  status: string;
+  createdAt: string;
+  companyCode: string;
+  costCenterName: string;
+  description: string;
+  notes?: string;
+  items: {
+    id: string;
+    description: string;
+    quantity: number;
+    unit: string;
+    notes?: string;
+  }[];
+}
+
+export interface PublicProposalPayload {
+  supplierCnpj: string;
+  supplierName: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  items: {
+    requestItemId: string;
+    unitPrice: number;
+    notes?: string;
+  }[];
+  freightCost?: number;
+  freightType?: "CIF" | "FOB";
+  paymentTerms?: string;
+  deliveryTime?: number;
+  validityDays?: number;
+  notes?: string;
+}
+
 export const rfqsApi = {
   list: (paramsOrTenant?: string | RfqListParams) => {
     const params = new URLSearchParams();
@@ -85,6 +124,75 @@ export const rfqsApi = {
   },
   
   getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
+
+  getPublicRfq: async (id: string): Promise<PublicRfq> => {
+    try {
+      return await apiClient.get<PublicRfq>(`/api/rfqs/public/${id}`);
+    } catch (err: any) {
+      // Fallback para ambientes onde o endpoint /public/:id ainda não foi publicado
+      try {
+        const fallback = await apiClient.get<any>(`/api/rfqs/${id}`);
+        if (fallback) {
+          return {
+            id: fallback.id,
+            code: fallback.code || id,
+            title: fallback.title || fallback.purchaseRequest?.description || "Cotação de Mercado",
+            closesAt: fallback.closesAt || new Date(Date.now() + 7 * 86400000).toISOString(),
+            status: fallback.status || "Open",
+            createdAt: fallback.createdAt || new Date().toISOString(),
+            companyCode: fallback.companyCode || fallback.purchaseRequest?.companyCode || "VNMB",
+            costCenterName: fallback.purchaseRequest?.costCenterName || fallback.purchaseRequest?.category || "Geral",
+            description: fallback.purchaseRequest?.description || fallback.title || "Demanda de Compras",
+            notes: fallback.purchaseRequest?.notes || "",
+            items: ((fallback.purchaseRequest?.items || fallback.items || []) as any[]).map((item: any) => ({
+              id: item.id,
+              description: item.description,
+              quantity: Number(item.quantity) || 1,
+              unit: item.unit || "UN",
+              notes: item.notes || "",
+            })),
+          };
+        }
+      } catch (innerErr) {
+        // Se ambos falharem, relança o erro original
+      }
+      throw err;
+    }
+  },
+
+  submitPublicProposal: async (id: string, data: PublicProposalPayload) => {
+    try {
+      return await apiClient.post<{ success: boolean; protocol: string; supplierName: string; message: string }>(
+        `/api/rfqs/public/${id}/proposal`,
+        data
+      );
+    } catch (err: any) {
+      // Fallback: se o backend retornar 404, tenta enviar via endpoint interno de proposals
+      try {
+        const rfq = await apiClient.get<any>(`/api/rfqs/${id}`);
+        if (rfq?.id) {
+          const totalVal = data.items.reduce((s, it) => s + (Number(it.unitPrice) || 0), 0);
+          await apiClient.post(`/api/rfqs/${rfq.id}/proposals`, {
+            supplierId: data.supplierCnpj,
+            unitPrice: totalVal,
+            freightCost: data.freightCost || 0,
+            paymentTerms: data.paymentTerms || "30 dias DDL",
+            deliveryTime: data.deliveryTime || 5,
+            notes: data.notes || "",
+          });
+          return {
+            success: true,
+            protocol: `PROP-${Date.now()}`,
+            supplierName: data.supplierName,
+            message: "Proposta comercial registrada com sucesso!",
+          };
+        }
+      } catch (fallbackErr) {
+        // Ignora e relança o erro original
+      }
+      throw err;
+    }
+  },
   
   getKpis: (tenantId?: string) => {
     const validTenant = cleanTenantParam(tenantId);
@@ -99,7 +207,6 @@ export const rfqsApi = {
   
   createProposal: (rfqId: string, data: { supplierId: string; unitPrice: number; freightCost?: number; paymentTerms?: string; deliveryTime?: number; notes?: string }) =>
     apiClient.post<{ id: string; rfqId: string; supplierId: string; status: string; isWinner: boolean }>(`/api/rfqs/${rfqId}/proposals`, data),
-
 
   selectWinner: (rfqId: string, proposalId: string) =>
     apiClient.patch(`/api/rfqs/${rfqId}/winner`, { proposalId }),

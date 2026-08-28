@@ -136,3 +136,16 @@ export function useRejectPurchaseRequest() {
     },
   });
 }
+
+export function useUpdatePurchaseOrderStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status, notes }: { id: string; status: any; notes?: string }) =>
+      purchaseOrdersApi.updateStatus(id, status, notes),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.purchaseOrder(variables.id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboardKpis });
+    },
+  });
+}

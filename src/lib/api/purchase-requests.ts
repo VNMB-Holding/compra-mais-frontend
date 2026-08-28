@@ -86,9 +86,9 @@ export const purchaseRequestsApi = {
     const qs = params.toString();
     return apiClient.get<PurchaseRequest[]>(`/api/purchase-requests${qs ? `?${qs}` : ''}`);
   },
-  
+
   getById: (id: string) => apiClient.get<PurchaseRequest>(`/api/purchase-requests/${id}`),
-  
+
   getKpis: (tenantId?: string) => {
     const validTenant = cleanTenantParam(tenantId);
     const params = new URLSearchParams();
@@ -96,10 +96,19 @@ export const purchaseRequestsApi = {
     const qs = params.toString();
     return apiClient.get<PurchaseRequestKpis>(`/api/purchase-requests/kpis${qs ? `?${qs}` : ''}`);
   },
-  
+
   create: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
     apiClient.post<PurchaseRequest>("/api/purchase-requests", data),
-  
+
   updateStatus: (id: string, status: PurchaseRequest["status"], comments?: string) =>
     apiClient.patch<PurchaseRequest>(`/api/purchase-requests/${id}/status`, { status, comments }),
+
+  getApprovalByToken: (token: string) =>
+    apiClient.get<any>(`/api/purchase-requests/approval-link/${token}`),
+
+  approveByToken: (token: string, comments?: string) =>
+    apiClient.post<any>(`/api/purchase-requests/approval-link/${token}/approve`, { comments }),
+
+  rejectByToken: (token: string, comments?: string) =>
+    apiClient.post<any>(`/api/purchase-requests/approval-link/${token}/reject`, { comments }),
 };

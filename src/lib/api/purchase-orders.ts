@@ -65,5 +65,8 @@ export const purchaseOrdersApi = {
 
   getById: (id: string) => apiClient.get<PurchaseOrder>(`/api/purchase-orders/${id}`),
 
+  updateStatus: (id: string, status: PurchaseOrder["status"], notes?: string) =>
+    apiClient.patch<PurchaseOrder>(`/api/purchase-orders/${id}/status`, { status, notes }),
+
   generatePdf: (id: string) => apiClient.getRaw(`/api/purchase-orders/${id}/pdf`),
 };

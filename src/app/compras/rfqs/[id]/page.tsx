@@ -7,6 +7,8 @@ import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkelet
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
+import { useAuth } from "@/hooks/useAuth";
+import { getTenantDisplayName } from "@/lib/utils/tenant";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 
@@ -250,6 +252,7 @@ export default function RfqDetailPage() {
   const [pendingVencedorId, setPendingVencedorId] = useState<string | null>(null);
 
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function load() {
@@ -324,6 +327,7 @@ export default function RfqDetailPage() {
   const closesAt = rfq?.closesAt
     ? new Date(rfq.closesAt).toLocaleDateString("pt-BR")
     : "—";
+  const companyName = getTenantDisplayName(rfq?.tenantId || rfq?.purchaseRequest?.tenantId, user);
 
   const badgeVariant =
     stage === "approval" ? "warning" : stage === "analysis" ? "primary" : "success";
@@ -479,19 +483,54 @@ export default function RfqDetailPage() {
       </button>
 
       <div className={styles.pageHeader}>
-        <div className={styles.headerTitles}>
-          <span className={styles.eyebrow}>
-            Origem: {originCode} · Encerra em: {closesAt}
-          </span>
+        <div>
           <div className={styles.titleRow}>
             <h1>{rfqCode}</h1>
             <Badge variant={badgeVariant}>{badgeLabel}</Badge>
           </div>
           <p className={styles.subtitleLarge}>{rfqTitle}</p>
+          <div className={styles.metadataTags}>
+            <span className={styles.infoTag}>
+              <Icon name="building-01" /> {companyName}
+            </span>
+            <span className={styles.infoTag}>
+              <Icon name="file-01" /> Demanda: {originCode}
+            </span>
+            <span className={styles.infoTag}>
+              <Icon name="clock" /> Encerra em: {closesAt}
+            </span>
+            <span className={styles.infoTag}>
+              <Icon name="users-01" /> {recebidas.length} de {propostas.length} Propostas Recebidas
+            </span>
+          </div>
         </div>
         <div className={styles.headerActions}>
-          <Button variant="secondary" className={styles.scopeBtn}>
-            <Icon name="file-04" /> Ver escopo e anexos
+          <Button
+            variant="secondary"
+            onClick={() => {
+              const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
+              navigator.clipboard.writeText(url);
+              toast({
+                variant: "success",
+                title: "Link Copiado!",
+                message: "O link público para preenchimento de proposta foi copiado para sua área de transferência.",
+              });
+            }}
+          >
+            <Icon name="link-01" /> Copiar Link do Fornecedor
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => {
+              const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
+              const text = encodeURIComponent(
+                `Olá! Segue o link para envio da sua proposta comercial referente à cotação *${rfqCode} - ${rfqTitle}*:\n\n${url}\n\nPor favor, preencha os preços e condições no link acima.`
+              );
+              window.open(`https://wa.me/?text=${text}`, "_blank");
+            }}
+          >
+            <Icon name="message-square-02" /> Enviar WhatsApp
           </Button>
         </div>
       </div>
@@ -609,12 +648,55 @@ export default function RfqDetailPage() {
           </Card>
         )}
 
+        {/* Card de Link Direto para o Fornecedor */}
+        <Card style={{ marginBottom: 20, background: "#f0fdfa", border: "1px solid #ccfbf1", padding: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 8, background: "#007d79", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="link-01" size={20} />
+              </div>
+              <div>
+                <strong style={{ display: "block", color: "#004144", fontSize: 14 }}>Link de Cotação Externa para Fornecedores</strong>
+                <span style={{ fontSize: 12, color: "#0f766e" }}>Envie este link para qualquer fornecedor preencher valores, prazos e condições comerciais sem login.</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
+                  navigator.clipboard.writeText(url);
+                  toast({
+                    variant: "success",
+                    title: "Link Copiado!",
+                    message: "Link da cotação copiado com sucesso.",
+                  });
+                }}
+              >
+                <Icon name="copy-01" /> Copiar Link
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
+                  const text = encodeURIComponent(
+                    `Olá! Segue o link para envio da sua proposta comercial referente à cotação *${rfqCode} - ${rfqTitle}*:\n\n${url}\n\nPor favor, preencha os preços e condições no link acima.`
+                  );
+                  window.open(`https://wa.me/?text=${text}`, "_blank");
+                }}
+              >
+                <Icon name="message-square-02" /> WhatsApp
+              </Button>
+            </div>
+          </div>
+        </Card>
+
         <div className={styles.coletaHeader}>
           <h2 className={styles.coletaTitulo}>
-            Fornecedores Convidados
+            Fornecedores & Propostas
             {propostas.length === 0 && (
               <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8", marginLeft: 8 }}>
-                Nenhum fornecedor convidado
+                Aguardando envio de propostas
               </span>
             )}
           </h2>

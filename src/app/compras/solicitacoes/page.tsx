@@ -67,6 +67,7 @@ export default function SolicitacoesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
+  const [loadingKpis, setLoadingKpis] = useState(true);
 
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,11 +94,14 @@ export default function SolicitacoesPage() {
 
   useEffect(() => {
     async function fetchKpis() {
+      setLoadingKpis(true);
       try {
         const kpisData = await purchaseRequestsApi.getKpis(queryCompanyCode);
         setKpis(kpisData);
       } catch (err) {
         logError("solicitacoes/kpis", err);
+      } finally {
+        setLoadingKpis(false);
       }
     }
     fetchKpis();
@@ -186,23 +190,27 @@ export default function SolicitacoesPage() {
       <div className={styles.kpiGrid}>
         <KpiCard
           title="Total de Solicitações"
-          value={String(kpis?.total || rawRequests.length)}
+          value={String(kpis?.total ?? rawRequests.length)}
           icon="file-02"
+          loading={loadingKpis}
         />
         <KpiCard
           title="Prontas para Cotação"
-          value={String(kpis?.approved || rawRequests.filter((r) => r.status === "Approved").length)}
+          value={String(kpis?.approved ?? rawRequests.filter((r) => r.status === "Approved").length)}
           icon="check-circle"
+          loading={loadingKpis}
         />
         <KpiCard
           title="Em Cotação (RFQ)"
-          value={String(kpis?.inQuote || rawRequests.filter((r) => r.status === "InQuote").length)}
+          value={String(kpis?.inQuote ?? rawRequests.filter((r) => r.status === "InQuote").length)}
           icon="clock"
+          loading={loadingKpis}
         />
         <KpiCard
           title="Finalizadas"
-          value={String(kpis?.finished || rawRequests.filter((r) => r.status === "Finished").length)}
+          value={String(kpis?.finished ?? rawRequests.filter((r) => r.status === "Finished").length)}
           icon="check-verified-01"
+          loading={loadingKpis}
         />
       </div>
 
