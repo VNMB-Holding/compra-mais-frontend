@@ -10,13 +10,14 @@ import {
   Tabs, 
   KpiCard, 
   LineChart, 
-  PieChart,
-  UrgentQuoteCard,
-  Icon,
-  Select,
-  Loading,
-  ErrorState,
-  TableSkeleton
+  PieChart, 
+  UrgentQuoteCard, 
+  Icon, 
+  Select, 
+  Loading, 
+  ErrorState, 
+  TableSkeleton, 
+  ChartSkeleton 
 } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,13 +57,11 @@ export default function DashboardPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      setError(null);
-      setLoading(true);
       const [kpisData, rfqsData, economyChart, categoriesData] = await Promise.all([
-        dashboardApi.getKpis(queryCompanyCode).catch(() => null),
-        rfqsApi.list(queryCompanyCode).catch(() => []),
-        dashboardApi.getMonthlyEconomy(queryCompanyCode).catch(() => []),
-        dashboardApi.getCategories(queryCompanyCode).catch(() => []),
+        dashboardApi.getKpis(queryCompanyCode),
+        rfqsApi.list(queryCompanyCode),
+        dashboardApi.getMonthlyEconomy(queryCompanyCode),
+        dashboardApi.getCategories(queryCompanyCode),
       ]);
 
       setKpis(kpisData);
@@ -73,7 +72,11 @@ export default function DashboardPage() {
       const mapped: RFQRow[] = rfqsData.map((rfq) => {
         const codigo = rfq.code || "";
         const descricao = rfq.title || rfq.purchaseRequest?.description || "";
-        const categoria = (rfq.purchaseRequest as any)?.category?.name || "Sem Categoria";
+        const centroCustoOuAlmoxarifado = (rfq.purchaseRequest as any)?.costCenterName || 
+          (rfq.purchaseRequest as any)?.corporateStockLocation || 
+          (rfq.purchaseRequest as any)?.costCenterCode || 
+          (rfq.purchaseRequest as any)?.category?.name || 
+          "Almoxarifado Geral";
         const dataAbertura = formatDate(rfq.createdAt);
         const dataEncerramento = formatDate(rfq.closesAt);
         const tipoSegmento = "Menor Preço";
@@ -86,8 +89,8 @@ export default function DashboardPage() {
           codigo,
           description: descricao,
           descricao,
-          categoryName: categoria,
-          categoria,
+          categoryName: centroCustoOuAlmoxarifado,
+          categoria: centroCustoOuAlmoxarifado,
           openedAt: dataAbertura,
           dataAbertura,
           closesAt: dataEncerramento,
@@ -214,7 +217,7 @@ export default function DashboardPage() {
           icon="trend-up-01" 
           linkLabel="Ver detalhes" 
           loading={loading}
-          onClick={() => router.push("/compras/rfqs")}
+          onClick={() => router.push("/analytics/economia")}
         />
         <KpiCard 
           title="Pedidos emitidos" 
@@ -243,54 +246,61 @@ export default function DashboardPage() {
               code: rfqMaisUrgente.codigo,
               comprador: firstName,
               quantity: "",
-              category: rfqMaisUrgente.categoria,
+              costCenter: rfqMaisUrgente.categoria,
               type: rfqMaisUrgente.tipoSegmento,
               timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
-              imageUrl: "/images/bg-tubo-card.png",
             }} 
             onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.id}`)} 
           />
         )}
 
-        <Card className={styles.chartCard}>
-          <div className={styles.cardHeader}>
-            <h4>Economia potencial</h4>
-            <span className={styles.subtitle}>Evolução mensal</span>
-          </div>
-          <div className={styles.chartValue}>
-            <h3>{lastEconomy ? formatCurrency(lastEconomy.value) : "—"}</h3>
-          </div>
-          <div className={styles.chartWrapperElement}>
-            <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
-          </div>
-          <button className={styles.cardLink} onClick={() => router.push("/compras/rfqs")}>
-            Ver evolução completa <Icon name="arrow-right" size={16} />
-          </button>
-        </Card>
+        {loading ? (
+          <ChartSkeleton type="line" height={320} />
+        ) : (
+          <Card className={styles.chartCard}>
+            <div className={styles.cardHeader}>
+              <h4>Economia potencial</h4>
+              <span className={styles.subtitle}>Evolução mensal</span>
+            </div>
+            <div className={styles.chartValue}>
+              <h3>{lastEconomy ? formatCurrency(lastEconomy.value) : "—"}</h3>
+            </div>
+            <div className={styles.chartWrapperElement}>
+              <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
+            </div>
+            <button className={styles.cardLink} onClick={() => router.push("/analytics/economia")}>
+              Ver evolução completa <Icon name="arrow-right" size={16} />
+            </button>
+          </Card>
+        )}
 
-        <Card className={styles.chartCard}>
-          <div className={styles.cardHeader}>
-            <h4>Top categorias</h4>
-            <span className={styles.subtitle}>Por volume de RFQs</span>
-          </div>
-          <div className={styles.donutChartContainer}>
-            <div className={styles.donutGraphicBox}>
-              <PieChart data={topCategoriasData} />
+        {loading ? (
+          <ChartSkeleton type="donut" height={320} />
+        ) : (
+          <Card className={styles.chartCard}>
+            <div className={styles.cardHeader}>
+              <h4>Demandas por Almoxarifado</h4>
+              <span className={styles.subtitle}>Volume por local de estoque</span>
             </div>
-            <div className={styles.donutLegend}>
-              {topCategoriasData.map((item, index) => (
-                <div key={index} className={styles.legItem}>
-                  <span className={styles.dot} style={{ backgroundColor: item.color }}></span>
-                  <span className={styles.legName}>{item.name}</span>
-                  <span className={styles.pct}>{item.value}%</span>
-                </div>
-              ))}
+            <div className={styles.donutChartContainer}>
+              <div className={styles.donutGraphicBox}>
+                <PieChart data={topCategoriasData} />
+              </div>
+              <div className={styles.donutLegend}>
+                {topCategoriasData.map((item, index) => (
+                  <div key={index} className={styles.legItem}>
+                    <span className={styles.dot} style={{ backgroundColor: item.color }}></span>
+                    <span className={styles.legName}>{item.name}</span>
+                    <span className={styles.pct}>{item.value}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          <button className={styles.cardLink} onClick={() => router.push("/configuracoes/categorias")}>
-            Ver todas as categorias <Icon name="arrow-right" size={16} />
-          </button>
-        </Card>
+            <button className={styles.cardLink} onClick={() => router.push("/compras/solicitacoes")}>
+              Ver solicitações de compra <Icon name="arrow-right" size={16} />
+            </button>
+          </Card>
+        )}
       </div>
 
       <Card noPadding className={styles.tableCard}>
