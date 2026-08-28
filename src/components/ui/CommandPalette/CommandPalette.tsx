@@ -20,7 +20,6 @@ const SEARCH_ITEMS: SearchItem[] = [
   // { id: "action-new-supplier", title: "Cadastrar Novo Fornecedor", category: "Ações", description: "Cadastrar fornecedor e iniciar homologação", url: "/fornecedores/novo", icon: "plus", shortcut: "↵" },
   { id: "action-new-rfq", title: "Criar Novo Processo de Cotação (RFQ)", category: "Ações", description: "Lançar cotação ao mercado para fornecedores", url: "/compras/rfqs/nova", icon: "send-01", shortcut: "↵" },
   { id: "action-export-reports", title: "Exportar Relatórios de Compras", category: "Ações", description: "Exportar dados de saving e performance em Excel/PDF", url: "/analytics/insights", icon: "download-01" },
-  { id: "action-check-contracts", title: "Análise Jurídica de Contratos", category: "Ações", description: "Verificar pendências de assinatura e documentação", url: "/fornecedores/homologacao", icon: "shield-01" },
   { id: "action-active-orders", title: "Ver Pedidos em Andamento", category: "Ações", description: "Acompanhar recebimento e entregas de insumos", url: "/compras/pedidos", icon: "truck-01" },
   { id: "action-profile-settings", title: "Configurações da Conta", category: "Ações", description: "Gerenciar preferências, senha e dados do usuário", url: "/perfil", icon: "settings-01" },
   { id: "action-system-help", title: "Suporte & Central de Ajuda", category: "Ações", description: "Falar com nosso time de atendimento ou ler tutoriais", url: "/dashboard", icon: "help-circle" },
@@ -28,7 +27,6 @@ const SEARCH_ITEMS: SearchItem[] = [
   
   { id: "page-dashboard", title: "Dashboard Principal", category: "Páginas", description: "Visão geral de cotações, solicitações e KPIs", url: "/dashboard", icon: "home-01" },
   { id: "page-suppliers-list", title: "Base de Fornecedores", category: "Páginas", description: "Diretório de parceiros e notas de performance", url: "/fornecedores/diretorio", icon: "users-01" },
-  { id: "page-homologation", title: "Fila de Homologação", category: "Páginas", description: "Status de homologação e análise jurídica", url: "/fornecedores/homologacao", icon: "shield-01" },
   { id: "page-sols", title: "Solicitações de Compra", category: "Páginas", description: "Lista de demandas de compra internas", url: "/compras/solicitacoes", icon: "list" },
   { id: "page-rfqs", title: "Processos de Cotação (RFQs)", category: "Páginas", description: "Listagem de RFQs ativas e propostas", url: "/compras/rfqs", icon: "send-03" },
   { id: "page-orders", title: "Pedidos de Compra", category: "Páginas", description: "Ordens de compra enviadas para fornecedores", url: "/compras/pedidos", icon: "clipboard-check" },

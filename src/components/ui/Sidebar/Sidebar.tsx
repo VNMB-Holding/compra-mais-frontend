@@ -58,10 +58,6 @@ export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarPro
           <Icon name="users-01" />
           <span className={styles.navText}>Diretório</span>
         </Link>
-        <Link href="/fornecedores/homologacao" className={`${styles.navItem} ${isActive("/fornecedores/homologacao") ? styles.active : ""}`}>
-          <Icon name="check-verified-01" />
-          <span className={styles.navText}>Homologação</span>
-        </Link>
       </div>
 
       <div className={styles.navSection}>

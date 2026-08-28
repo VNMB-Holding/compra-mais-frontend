@@ -12,17 +12,23 @@ export default function UnauthorizedPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.iconContainer}>
-          <Icon name="lock" size={64} />
+          <Icon name="lock-01" size={32} />
         </div>
 
-        <h1>Acesso negado</h1>
+        <div className={styles.badgeWrapper}>
+          <span className={styles.statusBadge}>
+            <Icon name="shield-tick" size={13} /> Segurança & Alçadas
+          </span>
+        </div>
+
+        <h1>Acesso restrito</h1>
         <p>
-          Você não tem permissão para acessar esta página. Se acredita que isso é um erro, entre em contato com o administrador.
+          Seu usuário não possui as permissões necessárias para acessar este módulo. Se acredita que isto é um erro, contate o administrador da plataforma Compra+.
         </p>
 
         <div className={styles.actions}>
           <Button variant="primary" onClick={() => router.push("/dashboard")}>
-            <Icon name="chevron-left" /> Voltar ao início
+            <Icon name="home-01" /> Voltar ao Início
           </Button>
         </div>
       </div>

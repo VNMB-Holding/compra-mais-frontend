@@ -119,5 +119,75 @@ export function KpiCardSkeleton({ hasLink = false }: { hasLink?: boolean }) {
   );
 }
 
+export interface ChartSkeletonProps {
+  type?: "bar" | "line" | "donut" | "pie" | "area";
+  height?: number | string;
+  showHeader?: boolean;
+  barsCount?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const BAR_HEIGHTS = [45, 80, 60, 95, 40, 70, 85, 55, 65, 75, 90, 50];
+
+export function ChartSkeleton({
+  type = "bar",
+  height = 320,
+  showHeader = true,
+  barsCount = 7,
+  className = "",
+  style = {},
+}: ChartSkeletonProps) {
+  const isDonut = type === "donut" || type === "pie";
+
+  return (
+    <div
+      className={`${styles.chartCard} ${className}`}
+      style={{ height, ...style }}
+    >
+      {showHeader && (
+        <div className={styles.chartHeader}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "60%" }}>
+            <Skeleton variant="title" width="60%" height={18} style={{ margin: 0 }} />
+            <Skeleton variant="text" width="40%" height={12} style={{ margin: 0 }} />
+          </div>
+          <Skeleton variant="rectangular" width={100} height={32} style={{ borderRadius: 6 }} />
+        </div>
+      )}
+
+      {isDonut ? (
+        <div className={styles.chartDonutContainer}>
+          <div className={styles.donutRing} />
+          <div className={styles.donutLegend}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className={styles.legendRow}>
+                <div className={styles.legendDot} />
+                <Skeleton variant="text" width={80 + (i % 2) * 30} height={12} style={{ margin: 0 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className={styles.chartBody}>
+          <div className={styles.chartBarsContainer}>
+            {Array.from({ length: barsCount }).map((_, idx) => {
+              const barHeight = BAR_HEIGHTS[idx % BAR_HEIGHTS.length];
+              return (
+                <div key={idx} className={styles.chartBarWrapper}>
+                  <div
+                    className={styles.chartBar}
+                    style={{ height: `${barHeight}%` }}
+                  />
+                  <div className={`${styles.skeleton} ${styles.chartXLabel}`} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default Skeleton;
 

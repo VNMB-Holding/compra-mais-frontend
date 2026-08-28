@@ -64,7 +64,7 @@ export function ProtectedLayout({ children, allowedRoles, requiredScopes }: Prot
   }, [isLoading, isAuthenticated, user, allowedRoles, requiredScopes, router, pathname]);
 
   if (isLoading || !canRender) {
-    return <Loading variant="fullscreen" message="Verificando acesso..." />;
+    return null;
   }
 
   return <>{children}</>;

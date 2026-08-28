@@ -13,10 +13,14 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const [helpOpen, setHelpOpen] = useState(false);
   const pathname = usePathname();
 
-  const noLayoutPages = ["/login", "/unauthorized", "/solicitar-acesso"];
-  const shouldShowLayout = !noLayoutPages.includes(pathname);
+  const isStandalone = 
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/unauthorized") ||
+    pathname.startsWith("/solicitar-acesso") ||
+    pathname.startsWith("/aprovacao") ||
+    pathname.startsWith("/cotacao");
 
-  if (!shouldShowLayout) {
+  if (isStandalone) {
     return <>{children}</>;
   }
 
