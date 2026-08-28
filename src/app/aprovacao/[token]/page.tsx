@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Card, Button, Badge, Icon, Loading, ErrorState } from '@/components/ui';
+import { Card, Button, Badge, Icon, Loading, ErrorState, Skeleton } from '@/components/ui';
 import styles from './aprovacao.module.css';
+
+import { purchaseRequestsApi } from '@/lib/api/purchase-requests';
 
 interface Item {
   description: string;
@@ -41,16 +43,9 @@ export default function AprovacaoPage() {
   useEffect(() => {
     if (!token) return;
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-    fetch(`${backendUrl}/api/purchase-requests/approval-link/${token}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error('Link de aprovação inválido ou expirado.');
-        }
-        return res.json();
-      })
-      .then((data) => {
+    purchaseRequestsApi
+      .getApprovalByToken(token)
+      .then((data: any) => {
         setDetails(data);
         if (data.status === 'APPROVED') {
           setCompleted(true);
@@ -58,8 +53,8 @@ export default function AprovacaoPage() {
           setRejected(true);
         }
       })
-      .catch((err) => {
-        setError(err.message || 'Erro ao carregar dados da aprovação.');
+      .catch((err: any) => {
+        setError(err.message || 'Link de aprovação inválido ou expirado.');
       })
       .finally(() => {
         setLoading(false);
@@ -70,17 +65,7 @@ export default function AprovacaoPage() {
     if (!token) return;
     setSubmitting(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const res = await fetch(`${backendUrl}/api/purchase-requests/approval-link/${token}/approve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'APPROVE' }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Falha ao registrar aprovação.');
-      }
-
+      await purchaseRequestsApi.approveByToken(token);
       setCompleted(true);
     } catch (err: any) {
       alert(err.message || 'Erro ao aprovar solicitação.');
@@ -97,17 +82,7 @@ export default function AprovacaoPage() {
     }
     setSubmitting(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const res = await fetch(`${backendUrl}/api/purchase-requests/approval-link/${token}/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments: rejectionReason.trim() }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Falha ao registrar recusa.');
-      }
-
+      await purchaseRequestsApi.rejectByToken(token, rejectionReason.trim());
       setRejected(true);
     } catch (err: any) {
       alert(err.message || 'Erro ao recusar solicitação.');
@@ -118,184 +93,220 @@ export default function AprovacaoPage() {
 
   if (loading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.cardWrapper}>
-          <Card style={{ padding: '48px', textAlign: 'center' }}>
-            <Loading variant="inline" message="Carregando solicitação de aprovação..." size="large" />
-          </Card>
-        </div>
+      <div className={styles.portalContainer}>
+        <header className={styles.portalHeader}>
+          <div className={styles.brandArea}>
+            <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logo} />
+            <span className={styles.badgePortal}>
+              <Icon name="shield-tick" size={13} /> Portal de Assinatura Digital
+            </span>
+          </div>
+        </header>
+        <main className={styles.mainContent}>
+          <div className={styles.card}>
+            <div className={styles.cardBody}>
+              <Skeleton variant="title" width="40%" height={28} style={{ marginBottom: 12 }} />
+              <Skeleton variant="text" width="60%" style={{ marginBottom: 24 }} />
+              <Skeleton variant="rectangular" height={160} style={{ borderRadius: 12, marginBottom: 20 }} />
+              <Skeleton variant="rectangular" height={44} style={{ borderRadius: 8 }} />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   if (error || !details) {
     return (
-      <div className={styles.container}>
-        <div className={styles.cardWrapper}>
-          <Card>
-            <ErrorState
-              title="Link Indisponível"
-              message={error || 'Não foi possível carregar os dados desta aprovação.'}
-            />
-          </Card>
-        </div>
+      <div className={styles.portalContainer}>
+        <header className={styles.portalHeader}>
+          <div className={styles.brandArea}>
+            <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logo} />
+            <span className={styles.badgePortal}>
+              <Icon name="shield-tick" size={13} /> Portal de Assinatura Digital
+            </span>
+          </div>
+        </header>
+        <main className={styles.mainContent}>
+          <div className={styles.card}>
+            <div className={styles.cardBody}>
+              <ErrorState
+                title="Link Indisponível ou Expirado"
+                message={error || 'Não foi possível carregar os dados desta aprovação. O link pode ter sido finalizado ou expirado.'}
+              />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.cardWrapper}>
-        <Card>
-          <div className={styles.cardHeader}>
-            <div>
-              <div className={styles.badgeTag}>
-                <Icon name="check-circle" size={14} /> Portal de Aprovações
-              </div>
-              <h1 className={styles.title}>Solicitação #{details.code}</h1>
-              <p className={styles.subtitle}>
-                Aprovador: <strong>{details.approverName}</strong> ({details.approverRole})
-              </p>
-            </div>
-            <Badge variant={completed ? 'success' : rejected ? 'danger' : 'warning'}>
-              {completed ? 'Aprovada' : rejected ? 'Recusada' : 'Aguardando Aprovação'}
-            </Badge>
-          </div>
+    <div className={styles.portalContainer}>
+      {/* Header Institucional do Portal */}
+      <header className={styles.portalHeader}>
+        <div className={styles.brandArea}>
+          <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logo} />
+          <span className={styles.badgePortal}>
+            <Icon name="shield-tick" size={13} /> Portal de Assinatura Digital
+          </span>
+        </div>
+      </header>
 
-          {completed ? (
-            <div className={styles.successBox}>
-              <div className={styles.successIcon}>
-                <Icon name="check" size={28} />
-              </div>
-              <h2 className={styles.successTitle}>Aprovação Confirmada!</h2>
-              <p className={styles.successText}>
-                Sua assinatura eletrônica e os dados de auditoria (IP e Timestamp) foram gravados com sucesso no histórico da solicitação.
-              </p>
-            </div>
-          ) : rejected ? (
-            <div className={styles.successBox} style={{ borderColor: 'var(--color-danger, #ef4444)' }}>
-              <div className={styles.successIcon} style={{ background: '#fee2e2', color: '#dc2626' }}>
-                <Icon name="close" size={28} />
-              </div>
-              <h2 className={styles.successTitle} style={{ color: '#dc2626' }}>Solicitação Recusada</h2>
-              <p className={styles.successText}>
-                A recusa desta demanda foi registrada com sucesso no histórico da solicitação.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className={styles.infoGrid}>
-                <div className={styles.spanFull}>
-                  <span className={styles.label}>Descrição da Demanda</span>
-                  <span className={styles.value}>{details.description}</span>
-                </div>
-                <div>
-                  <span className={styles.label}>Departamento</span>
-                  <span className={styles.value}>{details.department}</span>
-                </div>
-                <div>
-                  <span className={styles.label}>Valor Estimado</span>
-                  <span className={styles.valueHighlight}>
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(details.estimatedBudget)}
-                  </span>
-                </div>
-                <div className={styles.spanFull}>
-                  <span className={styles.label}>Justificativa</span>
-                  <span className={styles.value}>{details.justification}</span>
-                </div>
-              </div>
+      <main className={styles.mainContent}>
+        <div className={styles.card}>
+          <div className={styles.accentBar} />
 
-              {details.items && details.items.length > 0 && (
-                <div className={styles.itemsSection}>
-                  <h3 className={styles.sectionTitle}>Itens da Solicitação ({details.items.length})</h3>
-                  <div className={styles.itemsList}>
-                    {details.items.map((item, idx) => (
-                      <div key={idx} className={styles.itemRow}>
-                        <div>
-                          <div className={styles.itemDesc}>{item.description}</div>
-                          <div className={styles.itemMeta}>
-                            Qtd: <strong>{item.quantity} {item.unit}</strong>
+          <div className={styles.cardBody}>
+            {/* Cabeçalho do Card */}
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.titleRow}>
+                  <h1>Solicitação #{details.code}</h1>
+                  <Badge variant={completed ? 'success' : rejected ? 'gray' : 'warning'}>
+                    {completed ? 'Aprovada' : rejected ? 'Recusada' : 'Aguardando Assinatura'}
+                  </Badge>
+                </div>
+                <p className={styles.approverText}>
+                  Aprovador Designado: <strong>{details.approverName}</strong> · <span className={styles.roleText}>{details.approverRole}</span>
+                </p>
+              </div>
+            </div>
+
+            {completed ? (
+              <div className={styles.resultStateBox}>
+                <div className={styles.successIconWrapper}>
+                  <Icon name="check-circle" size={32} />
+                </div>
+                <h2>Aprovação Confirmada com Sucesso!</h2>
+                <p>
+                  Sua assinatura eletrônica e os registros de auditoria foram gravados no fluxo de compras. A solicitação segue para a próxima alçada / cotação.
+                </p>
+              </div>
+            ) : rejected ? (
+              <div className={styles.resultStateBox}>
+                <div className={styles.rejectIconWrapper}>
+                  <Icon name="x-circle" size={32} />
+                </div>
+                <h2 style={{ color: '#dc2626' }}>Solicitação Recusada</h2>
+                <p>
+                  A recusa desta demanda foi registrada formalmente no histórico da solicitação com a sua justificativa.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Grid de Detalhamento da Demanda */}
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItemFull}>
+                    <label>Descrição da Demanda</label>
+                    <p className={styles.demandTitle}>{details.description}</p>
+                  </div>
+
+                  <div className={styles.detailItem}>
+                    <label>Departamento / Centro</label>
+                    <span>{details.department || "Geral"}</span>
+                  </div>
+
+                  <div className={styles.detailItem}>
+                    <label>Valor Estimado</label>
+                    <strong className={styles.budgetValue}>
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(details.estimatedBudget)}
+                    </strong>
+                  </div>
+
+                  {details.justification && (
+                    <div className={styles.detailItemFull}>
+                      <label>Justificativa da Aquisição</label>
+                      <p className={styles.justificationText}>{details.justification}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Lista de Itens */}
+                {details.items && details.items.length > 0 && (
+                  <div className={styles.itemsBlock}>
+                    <div className={styles.itemsBlockHeader}>
+                      <h4><Icon name="package" size={16} /> Itens da Demanda ({details.items.length})</h4>
+                    </div>
+                    <div className={styles.itemsList}>
+                      {details.items.map((item, idx) => (
+                        <div key={idx} className={styles.itemCard}>
+                          <div className={styles.itemInfo}>
+                            <strong>{item.description}</strong>
+                            <small>Quantidade: {item.quantity} {item.unit}</small>
                           </div>
+                          <span className={styles.itemTotal}>
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.estimatedUnitPrice * item.quantity)}
+                          </span>
                         </div>
-                        <div className={styles.itemPrice}>
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.estimatedUnitPrice * item.quantity)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {showRejectInput && (
-                <div style={{ marginTop: '16px', marginBottom: '8px' }}>
-                  <label className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>Motivo da Recusa *</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Descreva o motivo pelo qual esta solicitação está sendo recusada..."
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: '1px solid #d1d5db',
-                      fontSize: '14px',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                    }}
-                  />
-                </div>
-              )}
-
-              <div className={styles.actionBox}>
-                {!showRejectInput ? (
-                  <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-                    <Button
-                      variant="primary"
-                      className={styles.btnApprove}
-                      onClick={handleApprove}
-                      disabled={submitting}
-                      style={{ flex: 1 }}
-                    >
-                      <Icon name="check" /> {submitting ? 'Registrando...' : 'Confirmar e Assinar'}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowRejectInput(true)}
-                      disabled={submitting}
-                      style={{ color: '#dc2626', borderColor: '#fca5a5' }}
-                    >
-                      <Icon name="close" /> Recusar Demanda
-                    </Button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-                    <Button
-                      variant="primary"
-                      onClick={handleReject}
-                      disabled={submitting}
-                      style={{ background: '#dc2626', borderColor: '#dc2626', flex: 1 }}
-                    >
-                      <Icon name="close" /> {submitting ? 'Enviando Recusa...' : 'Confirmar Recusa'}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowRejectInput(false)}
-                      disabled={submitting}
-                    >
-                      Cancelar
-                    </Button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                <div className={styles.auditFooter}>
-                  <Icon name="shield-tick" size={14} /> Assinatura protegida com registro de IP, data e hora de auditoria.
+                {/* Input de Justificativa de Recusa */}
+                {showRejectInput && (
+                  <div className={styles.rejectInputArea}>
+                    <label>Informe o motivo da recusa *</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Descreva por que esta solicitação está sendo rejeitada..."
+                      value={rejectionReason}
+                      onChange={(e) => setRejectionReason(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {/* Bloco de Ações e Assinatura */}
+                <div className={styles.actionsContainer}>
+                  {!showRejectInput ? (
+                    <div className={styles.actionButtonsRow}>
+                      <Button
+                        variant="primary"
+                        onClick={handleApprove}
+                        disabled={submitting}
+                        className={styles.approveBtn}
+                      >
+                        <Icon name="check" /> {submitting ? 'Assinando eletronicamente...' : 'Confirmar e Assinar'}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowRejectInput(true)}
+                        disabled={submitting}
+                        className={styles.rejectBtn}
+                      >
+                        <Icon name="x-close" /> Recusar Demanda
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className={styles.actionButtonsRow}>
+                      <Button
+                        variant="primary"
+                        onClick={handleReject}
+                        disabled={submitting}
+                        style={{ background: '#dc2626', borderColor: '#dc2626', flex: 1 }}
+                      >
+                        <Icon name="x-close" /> {submitting ? 'Gravando recusa...' : 'Confirmar Recusa'}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowRejectInput(false)}
+                        disabled={submitting}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className={styles.securityFooter}>
+                    <Icon name="shield-tick" size={14} /> Assinatura digital com registro de IP, geolocalização e data/hora de auditoria.
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </Card>
-      </div>
+              </>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,0 +1,362 @@
+.portalContainer {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  color: #0f172a;
+  font-family: inherit;
+}
+
+.portalHeader {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 14px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brandArea {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 30px;
+  width: auto;
+}
+
+.portalSecurityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #007d79;
+  background: #f0fdf9;
+  border: 1px solid #ccfbf1;
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+
+.portalMain {
+  flex: 1;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 20px 64px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.titleRow h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.subtitleLarge {
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 12px 0;
+}
+
+.metadataTags {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.infoTag {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.infoTag svg {
+  color: #007d79;
+}
+
+.sectionCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sectionHeader h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sectionIcon {
+  color: #007d79;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.inputField {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #ffffff;
+  transition: all 0.2s;
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: #007d79;
+  box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.15);
+}
+
+.textareaField {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #ffffff;
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.textareaField:focus {
+  outline: none;
+  border-color: #007d79;
+  box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.15);
+}
+
+.itemsTableWrapper {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.itemsTable th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.itemsTable td {
+  padding: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.itemDesc strong {
+  display: block;
+  color: #0f172a;
+}
+
+.itemDesc span {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.priceInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 160px;
+}
+
+.pricePrefix {
+  position: absolute;
+  left: 10px;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.priceInput {
+  width: 100%;
+  padding: 8px 10px 8px 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.priceInput:focus {
+  outline: none;
+  border-color: #007d79;
+  box-shadow: 0 0 0 2px rgba(0, 125, 121, 0.2);
+}
+
+.subtotalText {
+  font-weight: 600;
+  color: #007d79;
+  font-size: 0.9375rem;
+}
+
+.summaryBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  border-top: 2px solid #e2e8f0;
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.totalValue {
+  color: #007d79;
+  font-size: 1.375rem;
+}
+
+.actionFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.submitBtn {
+  background: #007d79;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 125, 121, 0.25);
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #005f5c;
+  transform: translateY(-1px);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Success Card */
+.successCard {
+  text-align: center;
+  padding: 48px 32px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: 40px auto;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+}
+
+.protocolBadge {
+  display: inline-block;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 16px 0;
+}
