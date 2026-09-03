@@ -77,13 +77,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
     }
   }, [isAuthenticated]);
 
-  const getAvailableCompanies = () => {
-    return user?.availableTenants || [];
-  };
-
-  const availableCompanies = getAvailableCompanies();
-  const canSwitchCompany = availableCompanies.length > 1;
-
   const topbarRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -247,11 +240,11 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        {/* Display static company name */}
-        <div className={styles.popupWrapper}>
-          <div className={`${styles.companySelector} ${styles.companyStatic}`}>
-            <Icon name="building-07" />
-            {companyDisplay}
+        {/* Empresa do perfil do usuário logado */}
+        <div className={styles.companyBadgeWrapper}>
+          <div className={styles.companyStaticBadge} title={`Empresa ativa: ${companyDisplay}`}>
+            <Icon name="building-07" size={16} />
+            <span className={styles.companyNameText}>{companyDisplay}</span>
           </div>
         </div>
 

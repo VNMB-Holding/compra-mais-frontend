@@ -148,29 +148,37 @@
   border: 2px solid white;
 }
 
-.companySelector {
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
-  font-size: 13px;
-  font-weight: 600; 
-  cursor: pointer; 
-  padding-left: 20px; 
+.companyBadgeWrapper {
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
   border-left: 1px solid var(--border, #e2e8f0);
-  color: var(--text-main, #0f172a);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.companySelector:hover {
+.companyStaticBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: #f8fafc;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.companyStaticBadge svg {
   color: var(--primary, #007d79);
 }
 
-.companySelector span {
-  transition: transform 0.2s ease;
-}
-
-.rotate {
-  transform: rotate(180deg);
+.companyNameText {
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .userAvatarSmall {
