@@ -291,3 +291,39 @@
 }
 
 .rowActions:hover { color: #0f172a; }
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.emptyState h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.emptyState p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px 0;
+  max-width: 400px;
+  line-height: 1.4;
+}

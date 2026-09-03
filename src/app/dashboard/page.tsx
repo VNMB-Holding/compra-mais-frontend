@@ -313,6 +313,17 @@ export default function DashboardPage() {
           <TableSkeleton rows={5} columns={5} />
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
+        ) : filteredRfqs.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <Icon name="search-md" size={28} />
+            </div>
+            <h4>Nenhuma cotação nesta visualização</h4>
+            <p>Não há processos de cotação com o status "{activeTab}".</p>
+            <Button variant="secondary" onClick={() => setActiveTab("Todas")}>
+              Ver Todas as Cotações
+            </Button>
+          </div>
         ) : (
           <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
         )}
