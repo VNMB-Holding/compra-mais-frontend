@@ -131,7 +131,42 @@
 
 .filtersGroup {
   display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+.densityToggle {
+  display: flex;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.densityBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.densityBtn:hover {
+  color: #0f172a;
+}
+
+.activeDensity {
+  background: #ffffff;
+  color: #007d79;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .customSelectFilter {

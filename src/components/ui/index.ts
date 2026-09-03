@@ -22,6 +22,8 @@ export { default as ExportButton } from './ExportButton/ExportButton';
 export { default as Stepper } from './Stepper/Stepper';
 export { default as ErrorState } from './ErrorState/ErrorState';
 export { default as Skeleton, TableSkeleton, CardSkeleton, KpiCardSkeleton, ChartSkeleton } from './Skeleton/Skeleton';
+export { default as QuickDetailDrawer } from './QuickDetailDrawer/QuickDetailDrawer';
+export type { QuickDetailDrawerProps } from './QuickDetailDrawer/QuickDetailDrawer';
 
 
 

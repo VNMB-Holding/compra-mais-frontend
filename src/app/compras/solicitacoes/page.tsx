@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, TableSkeleton, Badge, ErrorState } from "@/components/ui";
+import { 
+  Button, 
+  Card, 
+  Icon, 
+  Select, 
+  TableSkeleton, 
+  Badge, 
+  ErrorState, 
+  QuickDetailDrawer 
+} from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -69,9 +78,11 @@ export default function SolicitacoesPage() {
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
 
-  // Paginação
+  // Paginação e densidade
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [density, setDensity] = useState<"normal" | "compact">("normal");
+  const [selectedDrawerRequest, setSelectedDrawerRequest] = useState<PurchaseRequest | null>(null);
+  const itemsPerPage = density === "compact" ? 15 : 10;
 
   const companyOptions = getCompanyFilterOptions();
 
@@ -164,10 +175,18 @@ export default function SolicitacoesPage() {
     },
     {
       header: "",
-      width: "40px",
-      cell: () => (
-        <button className={styles.iconBtn}>
-          <Icon name="dots-horizontal" size={16} />
+      width: "60px",
+      cell: (row) => (
+        <button
+          className={styles.iconBtn}
+          title="Ver detalhes rápidos"
+          onClick={(e) => {
+            e.stopPropagation();
+            const matched = rawRequests.find((r) => r.id === row.id);
+            if (matched) setSelectedDrawerRequest(matched);
+          }}
+        >
+          <Icon name="eye" size={16} />
         </button>
       ),
     },
@@ -229,6 +248,25 @@ export default function SolicitacoesPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
+            <div className={styles.densityToggle} title="Densidade da tabela">
+              <button
+                type="button"
+                className={`${styles.densityBtn} ${density === "normal" ? styles.activeDensity : ""}`}
+                onClick={() => setDensity("normal")}
+                title="Visualização padrão"
+              >
+                <Icon name="rows-01" size={14} /> Normal
+              </button>
+              <button
+                type="button"
+                className={`${styles.densityBtn} ${density === "compact" ? styles.activeDensity : ""}`}
+                onClick={() => setDensity("compact")}
+                title="Visualização compacta com mais linhas"
+              >
+                <Icon name="grid-01" size={14} /> Compacto
+              </button>
+            </div>
+
             <Select
               options={companyOptions}
               value={selectedCompanyId}
@@ -267,7 +305,11 @@ export default function SolicitacoesPage() {
             <DataTable
               columns={columns}
               data={paginatedData}
-              onRowClick={(row) => router.push(`/compras/solicitacoes/${row.id}`)}
+              density={density}
+              onRowClick={(row) => {
+                const matched = rawRequests.find((r) => r.id === row.id);
+                if (matched) setSelectedDrawerRequest(matched);
+              }}
             />
 
             <div className={styles.tableFooter}>
@@ -297,6 +339,97 @@ export default function SolicitacoesPage() {
           </>
         )}
       </Card>
+
+      {/* Drawer de Detalhes Rápidos */}
+      {selectedDrawerRequest && (
+        <QuickDetailDrawer
+          open={!!selectedDrawerRequest}
+          onClose={() => setSelectedDrawerRequest(null)}
+          title={selectedDrawerRequest.code || `#${selectedDrawerRequest.corporateCode || selectedDrawerRequest.id}`}
+          subtitle={selectedDrawerRequest.description || "Solicitação de Compra"}
+          badge={
+            <Badge variant={getStatusBadgeVariant(STATUS_MAP[selectedDrawerRequest.status] || selectedDrawerRequest.status)}>
+              {STATUS_MAP[selectedDrawerRequest.status] || selectedDrawerRequest.status}
+            </Badge>
+          }
+          primaryActionLabel="Abrir Detalhes Completos"
+          onPrimaryAction={() => router.push(`/compras/solicitacoes/${selectedDrawerRequest.id}`)}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Informações Gerais */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, background: "#f8fafc", padding: 16, borderRadius: 8, border: "1px solid #e2e8f0" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Unidade / Empresa</span>
+                <strong style={{ fontSize: 13, color: "#0f172a" }}>
+                  {formatCorporateBranch(selectedDrawerRequest.corporateColigada, selectedDrawerRequest.corporateFilial || selectedDrawerRequest.filialCode, selectedDrawerRequest.tenantId, user)}
+                </strong>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Solicitante</span>
+                <span style={{ fontSize: 13, color: "#0f172a" }}>
+                  {selectedDrawerRequest.corporateRequester || selectedDrawerRequest.requesterName || formatUserDisplayName(selectedDrawerRequest.requesterId, user)}
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Centro de Custo</span>
+                <span style={{ fontSize: 13, color: "#334155" }}>
+                  {selectedDrawerRequest.costCenterCode ? `[${selectedDrawerRequest.costCenterCode}] ` : ""}{selectedDrawerRequest.costCenterName || "Geral"}
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Local de Estoque</span>
+                <span style={{ fontSize: 13, color: "#334155" }}>
+                  {selectedDrawerRequest.corporateStockLocation || "Almoxarifado Geral"}
+                </span>
+              </div>
+              {selectedDrawerRequest.notes && (
+                <div style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Justificativa / Observação</span>
+                  <span style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.4 }}>{selectedDrawerRequest.notes}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Tabela Rápida de Itens */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#334155", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="package" size={16} /> Itens da Solicitação ({selectedDrawerRequest.items?.length || 0})
+              </h4>
+              {selectedDrawerRequest.items && selectedDrawerRequest.items.length > 0 ? (
+                <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ background: "#f1f5f9", textAlign: "left", color: "#475569" }}>
+                        <th style={{ padding: "8px 12px", width: "40px", textAlign: "center" }}>#</th>
+                        <th style={{ padding: "8px 12px" }}>Item / Material</th>
+                        <th style={{ padding: "8px 12px", textAlign: "right", width: "80px" }}>Qtd</th>
+                        <th style={{ padding: "8px 12px", textAlign: "center", width: "60px" }}>Un</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedDrawerRequest.items.map((item, idx) => (
+                        <tr key={item.id || idx} style={{ borderTop: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "8px 12px", textAlign: "center", color: "#64748b", fontWeight: 600 }}>{idx + 1}</td>
+                          <td style={{ padding: "8px 12px" }}>
+                            <strong style={{ color: "#0f172a", display: "block" }}>{item.description}</strong>
+                            {item.corporateItemCode && <small style={{ color: "#64748b" }}>Cód: {item.corporateItemCode}</small>}
+                          </td>
+                          <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "#0f172a" }}>{item.quantity}</td>
+                          <td style={{ padding: "8px 12px", textAlign: "center", color: "#475569" }}>{item.unit || "UN"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ padding: 16, background: "#f8fafc", borderRadius: 8, textAlign: "center", color: "#64748b", fontSize: 13 }}>
+                  Nenhum item específico listado nesta solicitação.
+                </div>
+              )}
+            </div>
+          </div>
+        </QuickDetailDrawer>
+      )}
     </div>
   );
 }

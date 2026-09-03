@@ -12,12 +12,15 @@ interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
   onRowClick?: (row: T) => void;
+  density?: "normal" | "compact";
 }
 
-export function DataTable<T>({ columns, data, onRowClick }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, onRowClick, density = "normal" }: DataTableProps<T>) {
+  const isCompact = density === "compact";
+
   return (
     <div className={styles.tableResponsive}>
-      <table className={styles.dataTable}>
+      <table className={`${styles.dataTable} ${isCompact ? styles.compact : ""}`}>
         <thead>
           <tr>
             {columns.map((col, idx) => (
