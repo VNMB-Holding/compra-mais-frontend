@@ -1,5 +1,5 @@
-const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://vnmb-identity-api.onrender.com";
-const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://identiity.vnmbholding.com";
+const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com").replace(/\/+$/, "");
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
