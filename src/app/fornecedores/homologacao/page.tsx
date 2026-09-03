@@ -57,19 +57,7 @@ function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
   };
 }
 
-const riscosOptions = [
-  { label: "Risco: Todos", value: "Todas" },
-  { label: "Baixo Risco", value: "Baixo" },
-  { label: "Médio Risco", value: "Médio" },
-  { label: "Crítico", value: "Crítico" },
-];
 
-const etapasOptions = [
-  { label: "Status: Todos", value: "Todas" },
-  { label: "Conforme", value: "Conforme" },
-  { label: "Em Auditoria", value: "Em Auditoria" },
-  { label: "Apontamento", value: "Apontamento" },
-];
 
 export default function HomologacaoPage() {
   const router = useRouter();
@@ -90,9 +78,9 @@ export default function HomologacaoPage() {
       setError(null);
       setLoading(true);
       const statusMap: Record<string, string> = {
-        "Homologado": "Active",
-        "Em análise": "UnderCertification",
-        "Pendente": "UnderCertification",
+        "Conforme": "Active",
+        "Em Auditoria": "UnderCertification",
+        "Apontamento": "Inactive",
       };
       const [suppliers, kpisData] = await Promise.all([
         suppliersApi.list({
@@ -118,9 +106,9 @@ export default function HomologacaoPage() {
 
   const etapaOptions = [
     { label: "Status: Todos", value: "Todas" },
-    { label: "Homologado", value: "Homologado" },
-    { label: "Em análise", value: "Em análise" },
-    { label: "Pendente", value: "Pendente" },
+    { label: "Conforme", value: "Conforme" },
+    { label: "Em Auditoria", value: "Em Auditoria" },
+    { label: "Apontamento", value: "Apontamento" },
   ];
 
   const ufOptions = [
@@ -216,7 +204,6 @@ export default function HomologacaoPage() {
     },
   ];
 
-  // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -227,7 +214,7 @@ export default function HomologacaoPage() {
       if (risco === "Médio" && (f.score <= 30 || f.score > 70)) return false;
       if (risco === "Crítico" && f.score > 30) return false;
     }
-    if (etapa !== "Todas" && f.etapa !== etapa) return false;
+    if (etapa !== "Todas" && f.status !== etapa && f.etapa !== etapa) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       const matchNome = f.fornecedor.toLowerCase().includes(q);
@@ -243,12 +230,10 @@ export default function HomologacaoPage() {
 
   return (
     <div className={styles.pageContainer}>
-      
-      {/* Top Header */}
       <div className={styles.pageHeader}>
         <div>
           <h1>Homologação & Compliance de Fornecedores</h1>
-          <p>Acompanhe o nível de conformidade fiscal, certidões públicas e risco de parceiros.</p>
+          <p>Varredura de risco e conformidade fiscal e trabalhista.</p>
         </div>
         <div className={styles.headerActions}>
           <Button variant="primary" onClick={() => router.push("/fornecedores/novo")}>
@@ -257,7 +242,6 @@ export default function HomologacaoPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className={styles.kpiGrid}>
         <KpiCard
           title="Total cadastrados"
@@ -289,7 +273,6 @@ export default function HomologacaoPage() {
         />
       </div>
 
-      {/* Table Card */}
       <Card className={styles.mainListCard}>
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
