@@ -23,6 +23,7 @@ import AdminAlcadaModal, {
 import AdminEmpresaModal, {
   EmpresaFormData,
 } from "@/components/AdminEmpresaModal/AdminEmpresaModal";
+import { COMPANY_BRANCHES } from "@/lib/constants/companies";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./administracao.module.css";
 
@@ -123,41 +124,17 @@ const INITIAL_USERS: UserRow[] = [
   },
 ];
 
-const INITIAL_EMPRESAS: EmpresaRow[] = [
-  {
-    id: "1",
-    corporateName: "NMB Holdings S.A.",
-    tradeName: "NMB Holding",
-    cnpj: "12.345.678/0001-90",
-    segmento: "Transporte e Logística",
-    inscricaoEstadual: "123.456.789.000",
-    cep: "01310-100",
-    endereco: "Av. Paulista, 1000 - Bela Vista, São Paulo - SP",
-    status: "Ativa",
-  },
-  {
-    id: "2",
-    corporateName: "Mineradora Ouro Preto Ltda",
-    tradeName: "Ouro Preto Min.",
-    cnpj: "98.765.432/0001-10",
-    segmento: "Mineração",
-    inscricaoEstadual: "987.654.321.000",
-    cep: "35400-000",
-    endereco: "Rod. MG-030, km 45 - Ouro Preto - MG",
-    status: "Ativa",
-  },
-  {
-    id: "3",
-    corporateName: "Agro Sul Exportações S.A.",
-    tradeName: "AgroSul",
-    cnpj: "45.678.901/0001-23",
-    segmento: "Agronegócio",
-    inscricaoEstadual: "ISENTO",
-    cep: "85800-000",
-    endereco: "Rua das Catenárias, 200 - Cascavel - PR",
-    status: "Ativa",
-  },
-];
+const INITIAL_EMPRESAS: EmpresaRow[] = COMPANY_BRANCHES.map((b) => ({
+  id: b.code,
+  corporateName: b.name,
+  tradeName: `${b.unitName} (${b.acronym})`,
+  cnpj: `04.288.752/${b.code.padStart(4, "0")}-10`,
+  segmento: "Agronegócio e Suprimentos",
+  inscricaoEstadual: "13.456.789-0",
+  cep: "78000-000",
+  endereco: `Unidade Operacional ${b.unitName}`,
+  status: "Ativa",
+}));
 
 const INITIAL_ALCADAS: AlcadaRow[] = [
   {
@@ -842,27 +819,49 @@ export default function AdministracaoPage() {
                 </div>
               </div>
 
-              <DataTable
-                data={filteredUsers}
-                columns={userColumns}
-              />
-
-              <div className={styles.tableFooter}>
-                <span>
-                  Mostrando {filteredUsers.length} de {users.length} usuários
-                </span>
-                <div className={styles.paginationControls}>
-                  <button className={styles.pageBtn}>
-                    <Icon name="chevron-left" size={14} />
-                  </button>
-                  <button className={`${styles.pageBtn} ${styles.pageActive}`}>
-                    1
-                  </button>
-                  <button className={styles.pageBtn}>
-                    <Icon name="chevron-right" size={14} />
-                  </button>
+              {filteredUsers.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>
+                    <Icon name="search-md" size={28} />
+                  </div>
+                  <h4>Nenhum usuário encontrado</h4>
+                  <p>Não encontramos nenhum usuário com os filtros de busca aplicados.</p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setUserSearch("");
+                      setRoleFilter("todos");
+                      setStatusFilter("todos");
+                    }}
+                  >
+                    Limpar Filtros
+                  </Button>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <DataTable
+                    data={filteredUsers}
+                    columns={userColumns}
+                  />
+
+                  <div className={styles.tableFooter}>
+                    <span>
+                      Mostrando {filteredUsers.length} de {users.length} usuários
+                    </span>
+                    <div className={styles.paginationControls}>
+                      <button className={styles.pageBtn}>
+                        <Icon name="chevron-left" size={14} />
+                      </button>
+                      <button className={`${styles.pageBtn} ${styles.pageActive}`}>
+                        1
+                      </button>
+                      <button className={styles.pageBtn}>
+                        <Icon name="chevron-right" size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </Card>
           </>
         )}
@@ -1025,13 +1024,31 @@ export default function AdministracaoPage() {
                 {/* Cadastro manual de empresa desabilitado: sincronizado via Identity/Corporate */}
               </div>
 
-              <DataTable data={filteredEmpresas} columns={empresaColumns} />
+              {filteredEmpresas.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>
+                    <Icon name="building-07" size={28} />
+                  </div>
+                  <h4>Nenhuma empresa encontrada</h4>
+                  <p>Não encontramos registros para a busca "{empresaSearch}".</p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setEmpresaSearch("")}
+                  >
+                    Limpar Busca
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <DataTable data={filteredEmpresas} columns={empresaColumns} />
 
-              <div className={styles.tableFooter}>
-                <span>
-                  Mostrando {filteredEmpresas.length} de {empresas.length} empresas
-                </span>
-              </div>
+                  <div className={styles.tableFooter}>
+                    <span>
+                      Mostrando {filteredEmpresas.length} de {empresas.length} empresas
+                    </span>
+                  </div>
+                </>
+              )}
             </Card>
           </>
         )}

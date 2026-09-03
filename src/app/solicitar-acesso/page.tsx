@@ -3,13 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui";
+import { COMPANY_BRANCHES } from "@/lib/constants/companies";
 import styles from "./solicitar-acesso.module.css";
-
-const EMPRESAS_DISPONIVEIS = [
-  { id: "1", corporateName: "NMB Holdings S.A.", cnpj: "12.345.678/0001-90" },
-  { id: "2", corporateName: "Mineradora Ouro Preto Ltda", cnpj: "98.765.432/0001-10" },
-  { id: "3", corporateName: "Agro Sul Exportações S.A.", cnpj: "45.678.901/0001-23" },
-];
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -45,7 +40,7 @@ export default function SolicitarAcessoPage() {
     e.preventDefault();
     setError("");
     if (!formData.empresaId) {
-      setError("Por favor, selecione a empresa à qual você pertence.");
+      setError("Por favor, selecione a empresa/unidade à qual você pertence.");
       return;
     }
     setLoading(true);
@@ -55,8 +50,8 @@ export default function SolicitarAcessoPage() {
     setSubmitted(true);
   };
 
-  const selectedEmpresa = EMPRESAS_DISPONIVEIS.find(
-    (e) => e.id === formData.empresaId
+  const selectedEmpresa = COMPANY_BRANCHES.find(
+    (e) => e.code === formData.empresaId
   );
 
   if (submitted) {
@@ -165,17 +160,17 @@ export default function SolicitarAcessoPage() {
                   required
                   className={`${styles.selectInput} ${!formData.empresaId ? styles.selectInputEmpty : ""}`}
                 >
-                  <option value="" disabled>Selecione a empresa...</option>
-                  {EMPRESAS_DISPONIVEIS.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.corporateName}
+                  <option value="" disabled>Selecione a empresa ou filial...</option>
+                  {COMPANY_BRANCHES.map((emp) => (
+                    <option key={emp.code} value={emp.code}>
+                      {emp.code} — {emp.name} ({emp.acronym})
                     </option>
                   ))}
                 </select>
               </div>
               {selectedEmpresa && (
                 <span className={styles.cnpjHint}>
-                  CNPJ: {selectedEmpresa.cnpj}
+                  Unidade: {selectedEmpresa.unitName} • Cód. ERP: {selectedEmpresa.code}
                 </span>
               )}
             </div>
