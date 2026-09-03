@@ -37,6 +37,7 @@ export interface SpendAnalyticsResponse {
     spendTotal: number;
     pctTotal: number;
     pedidos: number | string;
+    economiaPotencial?: number;
     color: string;
   }[];
   suppliers: {

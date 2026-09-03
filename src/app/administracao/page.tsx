@@ -830,8 +830,8 @@ export default function AdministracaoPage() {
                     variant="secondary"
                     onClick={() => {
                       setUserSearch("");
-                      setRoleFilter("todos");
-                      setStatusFilter("todos");
+                      setRoleFilter("Todos");
+                      setStatusFilter("Todos");
                     }}
                   >
                     Limpar Filtros

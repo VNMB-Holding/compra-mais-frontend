@@ -162,12 +162,12 @@ export default function EconomiaPage() {
     const totalEcon = totals.economiaGerada;
     return {
       economiaGerada: apiData?.kpis?.economiaGerada || formatCurrency(totalEcon),
-      economiaPct: apiData?.kpis?.economiaPct || (totalEcon > 0 ? "15,2%" : "0,0%"),
-      economiaPotencial: formatCurrency(Math.round(totalEcon * 1.35)),
+      economiaPct: apiData?.kpis?.economiaPct || (totals.suppliers > 0 ? `${((totalEcon / totals.suppliers) * 10).toFixed(1)}%` : "0,0%"),
+      economiaPotencial: formatCurrency(totalEcon),
       negociacoesCount: String(suppliersData.length),
       trendEconomia: totalEcon > 0 ? "Economia calculada" : "Sem movimentação",
       trendEconPct: "vs. spend de referência",
-      trendPotencial: "Potencial consolidado",
+      trendPotencial: "Saving total consolidado",
       trendNegociacoes: "Fornecedores negociados",
     };
   }, [apiData, totals, suppliersData.length]);

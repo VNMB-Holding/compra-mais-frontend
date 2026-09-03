@@ -94,7 +94,7 @@ export default function SpendPage() {
       spendTotal: c.spendTotal,
       pctTotal: Number(c.pctTotal.toFixed(1)),
       pedidos: c.pedidos,
-      economiaPotencial: Math.round(c.spendTotal * 0.12),
+      economiaPotencial: typeof c.economiaPotencial === "number" ? Math.round(c.economiaPotencial) : 0,
       color: c.color || ['#007d79', '#00a39e', '#004144', '#1192e8', '#0f62fe', '#7c3aed'][i % 6],
     }));
   }, [apiData, selectedCategory]);

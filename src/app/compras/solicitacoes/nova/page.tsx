@@ -616,7 +616,7 @@ export default function NovaSolicitacaoPage() {
                   <div className={styles.formGroup} style={{ flex: 2 }}>
                     <label>Local de entrega / Planta <span className="required-asterisk">*</span></label>
                     <div className="geoapify-autocomplete-wrapper" style={{ position: "relative", zIndex: 10 }}>
-                      <GeoapifyContext apiKey="2259d519a04e42bcbf5003b9366404a0">
+                      <GeoapifyContext apiKey={process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || "2259d519a04e42bcbf5003b9366404a0"}>
                         <GeoapifyGeocoderAutocomplete
                           placeholder="Digite o local de entrega..."
                           lang="pt"
