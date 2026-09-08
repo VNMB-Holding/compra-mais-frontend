@@ -87,14 +87,56 @@ export default function EconomiaPage() {
 
   const handleExport = (type: "PDF" | "XLS") => {
     setExportingType(type);
-    setTimeout(() => {
-      setExportingType(null);
+    try {
+      const rows: string[][] = [
+        ["Iniciativa / Detalhe", "Categoria", "Fornecedor", "Valor Economizado (R$)", "Data"],
+        ...(apiData?.details || []).map((d) => [
+          d.iniciativa,
+          d.categoria,
+          d.fornecedor,
+          Number(d.valor || 0).toFixed(2),
+          d.data,
+        ]),
+        [],
+        ["Categoria", "Valor Economizado (R$)", "% do Total de Savings"],
+        ...categoriesData.map((c) => [
+          c.categoria,
+          c.valor.toFixed(2),
+          `${c.pct}%`,
+        ]),
+        [],
+        ["Fornecedor", "Valor Economizado (R$)", "% do Total", "Itens Negociados"],
+        ...suppliersData.map((s) => [
+          s.fornecedor,
+          s.valor.toFixed(2),
+          `${s.pct}%`,
+          String(s.itens),
+        ]),
+      ];
+
+      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `relatorio_savings_economia_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       toast({
         variant: "success",
-        title: "Download Iniciado!",
-        message: `O relatório de Savings (${type}) foi gerado e baixado com sucesso.`
+        title: "Download Concluído",
+        message: `O relatório de Economia & Savings foi exportado com sucesso.`
       });
-    }, 1500);
+    } catch (err) {
+      toast({
+        variant: "error",
+        title: "Erro na exportação",
+        message: "Não foi possível gerar a exportação."
+      });
+    } finally {
+      setExportingType(null);
+    }
   };
 
   const monthlyEconomyData = useMemo(() => {

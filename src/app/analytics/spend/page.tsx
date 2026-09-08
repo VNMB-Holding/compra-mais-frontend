@@ -68,14 +68,48 @@ export default function SpendPage() {
 
   const handleExport = (type: "PDF" | "XLS") => {
     setExportingType(type);
-    setTimeout(() => {
-      setExportingType(null);
+    try {
+      const rows: string[][] = [
+        ["Categoria", "Spend Total (R$)", "% Total", "Pedidos", "Economia Potencial (R$)"],
+        ...categoriesData.map((c) => [
+          c.categoria,
+          c.spendTotal.toFixed(2),
+          `${c.pctTotal}%`,
+          String(c.pedidos),
+          c.economiaPotencial.toFixed(2),
+        ]),
+        [],
+        ["Fornecedor", "Valor Gasto (R$)", "% do Total"],
+        ...suppliersData.map((s) => [
+          s.nome,
+          s.valor.toFixed(2),
+          `${s.pct}%`,
+        ]),
+      ];
+
+      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `relatorio_spend_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       toast({
         variant: "success",
-        title: "Download Iniciado!",
-        message: `O relatório de Spend (${type}) foi gerado e baixado com sucesso.`
+        title: "Download Concluído",
+        message: `O relatório analítico de Spend foi exportado com sucesso.`
       });
-    }, 1500);
+    } catch (err) {
+      toast({
+        variant: "error",
+        title: "Erro na exportação",
+        message: "Não foi possível gerar o arquivo de exportação."
+      });
+    } finally {
+      setExportingType(null);
+    }
   };
 
   const monthlySpendData = useMemo(() => {

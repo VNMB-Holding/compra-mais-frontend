@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./relatorios.module.css";
 import { Card, Button, Badge, Icon, Select, SearchInput } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { getCompanyFilterOptions } from "@/lib/utils/tenant";
+import { dashboardApi } from "@/lib/api/dashboard";
 import { usePurchaseOrders, usePurchaseRequests, useRfqs } from "@/hooks/useQueries";
 
 interface ReportTemplate {
@@ -74,33 +75,40 @@ export default function RelatoriosPage() {
 
   const companyOptions = getCompanyFilterOptions();
 
-  const [history, setHistory] = useState<GeneratedReport[]>([
-    {
-      id: "REL-2026-001",
-      name: "Relatório de Pedidos de Compra - Q1 2026",
-      format: "CSV",
-      date: new Date(Date.now() - 3600000 * 4).toLocaleDateString("pt-BR"),
-      size: "245 KB",
-      status: "Disponível",
-      data: [],
-    },
-    {
-      id: "REL-2026-002",
-      name: "Análise de Spend por Centro de Custo",
-      format: "CSV",
-      date: new Date(Date.now() - 3600000 * 24).toLocaleDateString("pt-BR"),
-      size: "180 KB",
-      status: "Disponível",
-      data: [],
-    },
-  ]);
+  const [history, setHistory] = useState<GeneratedReport[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("compra_mais_reports_history");
+      if (stored) {
+        setHistory(JSON.parse(stored));
+      }
+    } catch {
+    }
+  }, []);
+
+  const saveHistory = (updated: GeneratedReport[]) => {
+    setHistory(updated);
+    try {
+      localStorage.setItem("compra_mais_reports_history", JSON.stringify(updated));
+    } catch {
+    }
+  };
 
   const downloadCSV = (filename: string, rows: string[][]) => {
+    if (!rows || rows.length === 0) {
+      toast({
+        variant: "warning",
+        title: "Relatório vazio",
+        message: "Não há dados para exportar neste relatório.",
+      });
+      return;
+    }
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(";")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${filename}.csv`);
+    link.setAttribute("download", `${filename.endsWith(".csv") ? filename : `${filename}.csv`}`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -109,66 +117,72 @@ export default function RelatoriosPage() {
   const handleGenerateReport = async (template: ReportTemplate) => {
     setGenerating(template.id);
     try {
-      await new Promise((r) => setTimeout(r, 600));
-
       let rows: string[][] = [];
       let filename = `Relatorio_${template.type}_${Date.now()}`;
+      let reportName = `${template.title} (${selectedCompany === "TODAS" ? "Geral" : selectedCompany})`;
 
-      if (template.type === "orders") {
-        filename = "Relatorio_Pedidos_Compra";
-        rows = [
-          ["Código", "Fornecedor", "CNPJ", "Valor Total (R$)", "Condição Pagamento", "Frete", "Status", "Data Emissão"],
-          ...orders.map((po) => [
-            po.code || po.id,
-            po.supplier?.tradeName || po.supplier?.corporateName || "—",
-            po.supplier?.cnpj || "—",
-            String(po.totalValue || 0),
-            po.paymentTerms || "—",
-            po.shippingType || "CIF",
-            po.status || "—",
-            po.createdAt ? new Date(po.createdAt).toLocaleDateString("pt-BR") : "—",
-          ]),
-        ];
-      } else if (template.type === "spend") {
-        filename = "Relatorio_Spend_Analitico";
-        rows = [
-          ["ID Solicitação", "Descrição", "Centro de Custo", "Empresa", "Valor Estimado (R$)", "Status", "Data"],
-          ...requests.map((r) => [
-            r.code || r.id,
-            r.description || "—",
-            r.costCenterName || r.costCenterCode || "Geral",
-            r.companyCode || "Matriz",
-            String(r.estimatedBudget || 0),
-            r.status || "—",
-            r.createdAt ? new Date(r.createdAt).toLocaleDateString("pt-BR") : "—",
-          ]),
-        ];
-      } else if (template.type === "rfqs") {
-        filename = "Relatorio_Cotacoes_RFQs";
-        rows = [
-          ["Código RFQ", "Título", "Status", "Data Fechamento", "Data Criação"],
-          ...rfqs.map((rfq) => [
-            rfq.code || rfq.id,
-            rfq.title || "—",
-            rfq.status || "—",
-            rfq.closesAt ? new Date(rfq.closesAt).toLocaleDateString("pt-BR") : "—",
-            rfq.createdAt ? new Date(rfq.createdAt).toLocaleDateString("pt-BR") : "—",
-          ]),
-        ];
-      } else {
-        filename = "Relatorio_Economia_Savings";
-        rows = [
-          ["Mês/Ano", "Economia Registrada (R$)", "Tipo", "Observação"],
-          ["Janeiro/2026", "48500", "Negociação RFQ", "Desconto por volume de aço"],
-          ["Fevereiro/2026", "62300", "Equalização Frete", "Consolidação logística CIF"],
-        ];
+      try {
+        const res = await dashboardApi.generateReport(template.type, selectedCompany !== "TODAS" ? selectedCompany : undefined);
+        if (res && res.rows && res.rows.length > 0) {
+          rows = res.rows;
+          filename = res.filename || filename;
+          reportName = res.name || reportName;
+        }
+      } catch {
+        if (template.type === "orders") {
+          filename = "Relatorio_Pedidos_Compra";
+          rows = [
+            ["Código", "Fornecedor", "CNPJ", "Valor Total (R$)", "Condição Pagamento", "Frete", "Status", "Data Emissão"],
+            ...orders.map((po) => [
+              po.code || po.id,
+              po.supplier?.tradeName || po.supplier?.corporateName || "—",
+              po.supplier?.cnpj || "—",
+              String(po.totalValue || 0),
+              po.paymentTerms || "—",
+              po.shippingType || "CIF",
+              po.status || "—",
+              po.createdAt ? new Date(po.createdAt).toLocaleDateString("pt-BR") : "—",
+            ]),
+          ];
+        } else if (template.type === "spend") {
+          filename = "Relatorio_Spend_Analitico";
+          rows = [
+            ["ID Solicitação", "Descrição", "Centro de Custo", "Empresa", "Valor Estimado (R$)", "Status", "Data"],
+            ...requests.map((r) => [
+              r.code || r.id,
+              r.description || "—",
+              r.costCenterName || r.costCenterCode || "Geral",
+              r.companyCode || "Matriz",
+              String(r.estimatedBudget || 0),
+              r.status || "—",
+              r.createdAt ? new Date(r.createdAt).toLocaleDateString("pt-BR") : "—",
+            ]),
+          ];
+        } else if (template.type === "rfqs") {
+          filename = "Relatorio_Cotacoes_RFQs";
+          rows = [
+            ["Código RFQ", "Título", "Status", "Data Fechamento", "Data Criação"],
+            ...rfqs.map((rfq) => [
+              rfq.code || rfq.id,
+              rfq.title || "—",
+              rfq.status || "—",
+              rfq.closesAt ? new Date(rfq.closesAt).toLocaleDateString("pt-BR") : "—",
+              rfq.createdAt ? new Date(rfq.createdAt).toLocaleDateString("pt-BR") : "—",
+            ]),
+          ];
+        } else {
+          filename = "Relatorio_Economia_Savings";
+          rows = [
+            ["Iniciativa", "Categoria", "Fornecedor", "Valor Economizado (R$)", "Data"],
+          ];
+        }
       }
 
       downloadCSV(filename, rows);
 
       const newReport: GeneratedReport = {
         id: `REL-${String(Date.now()).slice(-6)}`,
-        name: `${template.title} (${selectedCompany === "TODAS" ? "Geral" : selectedCompany})`,
+        name: reportName,
         format: "CSV",
         date: new Date().toLocaleDateString("pt-BR"),
         size: `${Math.max(12, Math.round(rows.length * 0.4))} KB`,
@@ -176,12 +190,12 @@ export default function RelatoriosPage() {
         data: rows,
       };
 
-      setHistory((prev) => [newReport, ...prev]);
+      saveHistory([newReport, ...history]);
 
       toast({
         variant: "success",
-        title: "Relatório exportado com sucesso!",
-        message: `O arquivo ${filename}.csv foi baixado para o seu dispositivo.`,
+        title: "Relatório gerado pelo servidor!",
+        message: `O arquivo ${filename}.csv foi baixado com sucesso.`,
       });
     } catch (e) {
       toast({
@@ -301,27 +315,48 @@ export default function RelatoriosPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredHistory.map((item) => (
-                <tr key={item.id}>
-                  <td><strong>{item.id}</strong></td>
-                  <td>{item.name}</td>
-                  <td><Badge variant="gray">{item.format}</Badge></td>
-                  <td>{item.date}</td>
-                  <td>{item.size}</td>
-                  <td><Badge variant="success">{item.status}</Badge></td>
-                  <td style={{ textAlign: "center" }}>
-                    <button
-                      className={styles.actionBtn}
-                      title="Baixar novamente"
-                      onClick={() => {
-                        toast({ variant: "info", title: "Download iniciado", message: `Baixando ${item.name}` });
-                      }}
-                    >
-                      <Icon name="download-01" size={16} />
-                    </button>
+              {filteredHistory.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "40px 16px", color: "var(--text-tertiary)" }}>
+                    Nenhum relatório gerado recentemente neste dispositivo. Selecione um modelo acima e clique em &quot;Gerar e Baixar CSV&quot;.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredHistory.map((item) => (
+                  <tr key={item.id}>
+                    <td><strong>{item.id}</strong></td>
+                    <td>{item.name}</td>
+                    <td><Badge variant="gray">{item.format}</Badge></td>
+                    <td>{item.date}</td>
+                    <td>{item.size}</td>
+                    <td><Badge variant="success">{item.status}</Badge></td>
+                    <td style={{ textAlign: "center" }}>
+                      <button
+                        className={styles.actionBtn}
+                        title="Baixar novamente"
+                        onClick={() => {
+                          if (item.data && item.data.length > 0) {
+                            downloadCSV(item.name.replace(/\s+/g, "_"), item.data);
+                            toast({
+                              variant: "success",
+                              title: "Download Iniciado",
+                              message: `Baixando arquivo de ${item.name}`,
+                            });
+                          } else {
+                            toast({
+                              variant: "warning",
+                              title: "Dados indisponíveis",
+                              message: "Este relatório não possui linhas armazenadas para reexportação.",
+                            });
+                          }
+                        }}
+                      >
+                        <Icon name="download-01" size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
