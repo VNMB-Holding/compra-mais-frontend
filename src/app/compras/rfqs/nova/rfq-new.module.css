@@ -231,11 +231,11 @@ textarea.formControl {
 
 
 .gateWrapper {
-  max-width: 900px;
   width: 100%;
 }
 
 .gateCard {
+  width: 100%;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: #fff;
@@ -543,6 +543,36 @@ textarea.formControl {
   justify-content: flex-end;
   gap: 12px;
   background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .gateHeader {
+    padding: 18px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .gateBody {
+    padding: 20px;
+  }
+  .gateGovernanceBar {
+    padding: 14px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .gateActions {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .gateActions {
+    flex-direction: column-reverse;
+  }
+  .gateActions button {
+    width: 100%;
+  }
 }
 
 

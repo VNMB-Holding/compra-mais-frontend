@@ -296,7 +296,6 @@ export default function NewRfqPage() {
 
         <div className={styles.pageHeader}>
           <div>
-            <span className={styles.eyebrow}>Compras externas</span>
             <h1>Nova Cotação (RFQ)</h1>
             <p>
               Uma cotação sempre parte de uma demanda interna aprovada. Selecione a solicitação de
@@ -483,7 +482,6 @@ export default function NewRfqPage() {
 
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>Compras externas</span>
           <h1>Nova Cotação (RFQ)</h1>
           <p>
             Configure o processo de cotação, selecione fornecedores e defina os parâmetros de
