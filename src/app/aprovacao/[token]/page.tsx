@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Card, Button, Badge, Icon, Loading, ErrorState, Skeleton } from '@/components/ui';
+import { useToast } from '@/contexts/ToastContext';
 import styles from './aprovacao.module.css';
 
 import { purchaseRequestsApi } from '@/lib/api/purchase-requests';
@@ -61,14 +62,25 @@ export default function AprovacaoPage() {
       });
   }, [token]);
 
+  const { toast } = useToast();
+
   const handleApprove = async () => {
     if (!token) return;
     setSubmitting(true);
     try {
       await purchaseRequestsApi.approveByToken(token);
       setCompleted(true);
+      toast({
+        variant: "success",
+        title: "Demanda Aprovada",
+        message: "Assinatura registrada com sucesso.",
+      });
     } catch (err: any) {
-      alert(err.message || 'Erro ao aprovar solicitação.');
+      toast({
+        variant: "error",
+        title: "Erro ao aprovar",
+        message: err.message || "Erro ao aprovar solicitação.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -77,15 +89,28 @@ export default function AprovacaoPage() {
   const handleReject = async () => {
     if (!token) return;
     if (!rejectionReason.trim()) {
-      alert('Por favor, informe a justificativa da recusa.');
+      toast({
+        variant: "warning",
+        title: "Campo obrigatório",
+        message: "Por favor, informe a justificativa da recusa.",
+      });
       return;
     }
     setSubmitting(true);
     try {
       await purchaseRequestsApi.rejectByToken(token, rejectionReason.trim());
       setRejected(true);
+      toast({
+        variant: "info",
+        title: "Demanda Recusada",
+        message: "A recusa da solicitação foi registrada.",
+      });
     } catch (err: any) {
-      alert(err.message || 'Erro ao recusar solicitação.');
+      toast({
+        variant: "error",
+        title: "Erro ao recusar",
+        message: err.message || "Erro ao recusar solicitação.",
+      });
     } finally {
       setSubmitting(false);
     }

@@ -10,6 +10,7 @@ import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getStatusBadgeVariant } from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/contexts/ToastContext";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 
 interface HomologacaoRow {
@@ -62,6 +63,7 @@ function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
 export default function HomologacaoPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const [selectedUf, setSelectedUf] = useState("Todas");
   const [risco, setRisco] = useState("Todas");
@@ -194,9 +196,30 @@ export default function HomologacaoPage() {
     {
       header: "",
       width: "40px",
-      cell: () => (
-        <div className={styles.actionCell}>
-          <button className={styles.iconBtn}>
+      cell: (row) => (
+        <div className={styles.actionCell} onClick={(e) => e.stopPropagation()}>
+          <button
+            className={styles.iconBtn}
+            title="Copiar link do dossiê"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                const url = `${window.location.origin}/fornecedores/homologacao/${row.id}`;
+                navigator.clipboard.writeText(url).then(() => {
+                  toast({
+                    variant: "success",
+                    title: "Link Copiado!",
+                    message: `Link do dossiê de ${row.fornecedor} copiado para a área de transferência.`,
+                  });
+                }).catch(() => {
+                  toast({
+                    variant: "info",
+                    title: "Dossiê",
+                    message: url,
+                  });
+                });
+              }
+            }}
+          >
             <Icon name="share-03" />
           </button>
         </div>

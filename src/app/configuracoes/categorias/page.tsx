@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { categoriesApi, Category } from "@/lib/api/categories";
-import { Button, Icon, ErrorState, TableSkeleton } from "@/components/ui";
+import { Button, Icon, ErrorState, TableSkeleton, ConfirmDialog } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./page.module.css";
@@ -61,10 +61,13 @@ export default function CategoriasAdminPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja deletar esta categoria?")) return;
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
     try {
-      await categoriesApi.remove(id);
+      await categoriesApi.remove(deleteId);
+      setDeleteId(null);
       fetchCategories();
       toast({
         variant: "success",
@@ -79,6 +82,10 @@ export default function CategoriasAdminPage() {
         message: getErrorMessage(err),
       });
     }
+  };
+
+  const handleDelete = (id: string) => {
+    setDeleteId(id);
   };
 
   return (
@@ -175,6 +182,17 @@ export default function CategoriasAdminPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteId)}
+        variant="danger"
+        title="Excluir Categoria"
+        message="Tem certeza que deseja deletar esta categoria? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, excluir"
+        cancelLabel="Cancelar"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }

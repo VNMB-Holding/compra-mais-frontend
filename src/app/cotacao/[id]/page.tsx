@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import styles from "./cotacao.module.css";
-import { Icon, Loading, ErrorState, Skeleton, CardSkeleton, Badge } from "@/components/ui";
+import { Icon, Loading, ErrorState, Skeleton, CardSkeleton, Badge, ConfirmDialog } from "@/components/ui";
+import { useToast } from "@/contexts/ToastContext";
 import { rfqsApi, PublicRfq, PublicProposalPayload } from "@/lib/api/rfqs";
 import { formatCurrency } from "@/lib/utils/format-display";
 
@@ -83,22 +84,11 @@ export default function CotacaoFornecedorPage() {
     return itemsSubtotal + freight;
   }, [itemsSubtotal, freightCost, freightType]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const { toast } = useToast();
+  const [confirmZeroPriceOpen, setConfirmZeroPriceOpen] = useState(false);
+
+  const executeSubmit = async () => {
     if (!rfq) return;
-
-    if (!supplierCnpj.trim() || !supplierName.trim()) {
-      alert("Por favor, preencha o CNPJ e a Razão Social da sua empresa.");
-      return;
-    }
-
-    const unquotedItems = (rfq.items || []).filter((item) => !itemPrices[item.id] || itemPrices[item.id] <= 0);
-    if (unquotedItems.length > 0) {
-      if (!confirm(`Atenção: ${unquotedItems.length} item(ns) estão com valor R$ 0,00. Deseja enviar a proposta assim mesmo?`)) {
-        return;
-      }
-    }
-
     try {
       setSubmitting(true);
       const payload: PublicProposalPayload = {
@@ -124,11 +114,43 @@ export default function CotacaoFornecedorPage() {
         protocol: res.protocol,
         supplierName: res.supplierName || supplierName,
       });
+      toast({
+        variant: "success",
+        title: "Proposta Enviada!",
+        message: "Sua proposta comercial foi protocolada com sucesso.",
+      });
     } catch (err: any) {
-      alert(err.message || "Erro ao registrar proposta comercial. Verifique os dados e tente novamente.");
+      toast({
+        variant: "error",
+        title: "Erro no envio",
+        message: err.message || "Erro ao registrar proposta comercial. Verifique os dados e tente novamente.",
+      });
     } finally {
       setSubmitting(false);
+      setConfirmZeroPriceOpen(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rfq) return;
+
+    if (!supplierCnpj.trim() || !supplierName.trim()) {
+      toast({
+        variant: "warning",
+        title: "Dados Incompletos",
+        message: "Por favor, preencha o CNPJ e a Razão Social da sua empresa.",
+      });
+      return;
+    }
+
+    const unquotedItems = (rfq.items || []).filter((item) => !itemPrices[item.id] || itemPrices[item.id] <= 0);
+    if (unquotedItems.length > 0) {
+      setConfirmZeroPriceOpen(true);
+      return;
+    }
+
+    await executeSubmit();
   };
 
   if (loading) {
@@ -469,6 +491,17 @@ export default function CotacaoFornecedorPage() {
           </div>
         </form>
       </main>
+
+      <ConfirmDialog
+        open={confirmZeroPriceOpen}
+        variant="warning"
+        title="Itens com Valor Zerado"
+        message="Atenção: Existem itens na sua proposta com valor R$ 0,00. Deseja enviar a proposta comercial mesmo assim?"
+        confirmLabel="Sim, enviar proposta"
+        cancelLabel="Revisar valores"
+        onConfirm={executeSubmit}
+        onCancel={() => setConfirmZeroPriceOpen(false)}
+      />
     </div>
   );
 }
