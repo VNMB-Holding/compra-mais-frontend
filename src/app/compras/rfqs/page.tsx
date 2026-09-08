@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading, ErrorState, Badge, TableSkeleton } from "@/components/ui";
+import { Button, Card, Icon, Select, Loading, ErrorState, EmptyState, Badge, TableSkeleton } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -253,14 +253,33 @@ export default function RfqsPage() {
         ) : error ? (
           <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <Icon name="search-md" size={32} />
-            </div>
-            <h4>Nenhuma cotação encontrada</h4>
-            <p>Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente.</p>
-            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatus("Todos"); setCategory("Todas"); }}>Limpar Filtros</Button>
-          </div>
+          <EmptyState
+            illustration={searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS" ? "no-search" : "orders-empty"}
+            title={searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS" ? "Nenhuma cotação encontrada" : "Nenhuma cotação cadastrada"}
+            description={
+              searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS"
+                ? "Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente."
+                : "Inicie um novo processo de cotação para convidar fornecedores e coletar propostas."
+            }
+            action={
+              searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS"
+                ? {
+                    label: "Limpar Filtros",
+                    variant: "secondary",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setStatus("Todos");
+                      setCategory("Todas");
+                      setSelectedCompanyId("TODAS");
+                    },
+                  }
+                : {
+                    label: "Nova Cotação",
+                    icon: "plus",
+                    onClick: () => router.push("/compras/rfqs/nova"),
+                  }
+            }
+          />
         ) : (
           <>
             <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />

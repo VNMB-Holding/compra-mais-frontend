@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, Loading, ErrorState, TableSkeleton, Badge, Button } from "@/components/ui";
+import { Card, Icon, Select, Loading, ErrorState, EmptyState, TableSkeleton, Badge, Button } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -212,14 +212,29 @@ export default function PedidosPage() {
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
         ) : filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <Icon name="package" size={32} />
-            </div>
-            <h4>Nenhum pedido encontrado</h4>
-            <p>Não encontramos pedidos com os filtros aplicados. Tente alterar os critérios de busca.</p>
-            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatus("Todos"); setSupplier("Todas"); setSelectedCompanyId("TODAS"); }}>Limpar Filtros</Button>
-          </div>
+          <EmptyState
+            illustration={searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS" ? "no-search" : "box-empty"}
+            title={searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS" ? "Nenhum pedido encontrado" : "Nenhum pedido gerado"}
+            description={
+              searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS"
+                ? "Não encontramos pedidos com os filtros aplicados. Tente alterar os critérios de busca."
+                : "Quando uma cotação for finalizada e o mapa comparativo for aprovado, os pedidos de compra aparecerão aqui."
+            }
+            action={
+              searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS"
+                ? {
+                    label: "Limpar Filtros",
+                    variant: "secondary",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setStatus("Todos");
+                      setSupplier("Todas");
+                      setSelectedCompanyId("TODAS");
+                    },
+                  }
+                : undefined
+            }
+          />
         ) : (
           <>
             <DataTable data={paginatedData} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />

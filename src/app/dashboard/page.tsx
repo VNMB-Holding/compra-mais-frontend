@@ -16,6 +16,7 @@ import {
   Select, 
   Loading, 
   ErrorState, 
+  EmptyState,
   TableSkeleton, 
   ChartSkeleton 
 } from "@/components/ui";
@@ -314,16 +315,30 @@ export default function DashboardPage() {
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
         ) : filteredRfqs.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <Icon name="search-md" size={28} />
-            </div>
-            <h4>Nenhuma cotação nesta visualização</h4>
-            <p>Não há processos de cotação com o status "{activeTab}".</p>
-            <Button variant="secondary" onClick={() => setActiveTab("Todas")}>
-              Ver Todas as Cotações
-            </Button>
-          </div>
+          <EmptyState
+            illustration={activeTab !== "Todas" ? "no-search" : "orders-empty"}
+            title={activeTab !== "Todas" ? "Nenhuma cotação nesta visualização" : "Nenhuma cotação recente"}
+            description={
+              activeTab !== "Todas"
+                ? `Não há processos de cotação com o status "${activeTab}".`
+                : "Quando as cotações forem abertas, elas serão listadas em tempo real aqui."
+            }
+            action={
+              activeTab !== "Todas"
+                ? {
+                    label: "Ver Todas as Cotações",
+                    variant: "secondary",
+                    onClick: () => setActiveTab("Todas"),
+                  }
+                : {
+                    label: "Nova Cotação",
+                    icon: "plus",
+                    onClick: () => router.push("/compras/rfqs/nova"),
+                  }
+            }
+            size="sm"
+            compact
+          />
         ) : (
           <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
         )}

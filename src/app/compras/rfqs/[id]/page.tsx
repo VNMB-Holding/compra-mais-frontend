@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton, EmptyState } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
@@ -709,10 +709,12 @@ export default function RfqDetailPage() {
 
         <div className={styles.propostasList}>
           {propostas.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 24px", color: "#94a3b8" }}>
-              <Icon name="users-01" size={40} />
-              <p style={{ marginTop: 12, fontSize: 14 }}>Nenhum fornecedor foi convidado para esta RFQ.</p>
-            </div>
+            <EmptyState
+              illustration="no-suppliers"
+              title="Nenhum fornecedor convidado"
+              description="Convide fornecedores parceiros para enviarem suas propostas e cotações para esta demanda."
+              size="sm"
+            />
           ) : (
             propostas.map((p) => (
               <PropostaCard
@@ -735,13 +737,17 @@ export default function RfqDetailPage() {
         <Header />
 
         {recebidas.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 24px", color: "#94a3b8" }}>
-            <Icon name="file-search-02" size={40} />
-            <p style={{ marginTop: 12 }}>Nenhuma proposta recebida para comparar.</p>
-            <Button variant="secondary" style={{ marginTop: 16 }} onClick={() => setStage("proposal")}>
-              Voltar para coleta
-            </Button>
-          </div>
+          <EmptyState
+            illustration="mailbox-empty"
+            title="Nenhuma proposta recebida"
+            description="Ainda não há cotações enviadas pelos fornecedores para gerar o mapa comparativo."
+            action={{
+              label: "Voltar para coleta",
+              variant: "secondary",
+              onClick: () => setStage("proposal"),
+            }}
+            size="sm"
+          />
         ) : (
           <>
             <div className={styles.rfqMetricsGrid}>

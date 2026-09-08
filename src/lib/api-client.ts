@@ -69,8 +69,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     ...(customHeaders as Record<string, string>),
   };
 
+  const isRefreshEndpoint = endpoint.includes("/auth/refresh");
   const token = getStoredToken();
-  if (token) {
+  if (token && !isRefreshEndpoint) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 

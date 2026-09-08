@@ -10,6 +10,7 @@ import {
   TableSkeleton, 
   Badge, 
   ErrorState, 
+  EmptyState,
   QuickDetailDrawer 
 } from "@/components/ui";
 
@@ -78,11 +79,10 @@ export default function SolicitacoesPage() {
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
 
-  // Paginação e densidade
+  // Paginação
   const [currentPage, setCurrentPage] = useState(1);
-  const [density, setDensity] = useState<"normal" | "compact">("normal");
   const [selectedDrawerRequest, setSelectedDrawerRequest] = useState<PurchaseRequest | null>(null);
-  const itemsPerPage = density === "compact" ? 15 : 10;
+  const itemsPerPage = 10;
 
   const companyOptions = getCompanyFilterOptions();
 
@@ -248,25 +248,6 @@ export default function SolicitacoesPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
-            <div className={styles.densityToggle} title="Densidade da tabela">
-              <button
-                type="button"
-                className={`${styles.densityBtn} ${density === "normal" ? styles.activeDensity : ""}`}
-                onClick={() => setDensity("normal")}
-                title="Visualização padrão"
-              >
-                <Icon name="rows-01" size={14} /> Normal
-              </button>
-              <button
-                type="button"
-                className={`${styles.densityBtn} ${density === "compact" ? styles.activeDensity : ""}`}
-                onClick={() => setDensity("compact")}
-                title="Visualização compacta com mais linhas"
-              >
-                <Icon name="grid-01" size={14} /> Compacto
-              </button>
-            </div>
-
             <Select
               options={companyOptions}
               value={selectedCompanyId}
@@ -292,20 +273,33 @@ export default function SolicitacoesPage() {
         ) : loading ? (
           <TableSkeleton rows={6} columns={8} />
         ) : filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <Icon name="file-search-02" size={32} />
-            </div>
-            <h4>Nenhuma solicitação encontrada</h4>
-            <p>Não encontramos registros com os filtros aplicados. Tente alterar os critérios de busca.</p>
-            <Button variant="secondary" onClick={() => { setSearchQuery(""); setStatusFilter("Todos"); setSelectedCompanyId("TODAS"); }}>Limpar Filtros</Button>
-          </div>
+          <EmptyState
+            illustration={rawRequests.length === 0 ? "cart-empty" : "no-search"}
+            title={rawRequests.length === 0 ? "Nenhuma solicitação sincronizada" : "Nenhuma solicitação encontrada"}
+            description={
+              rawRequests.length === 0
+                ? "As solicitações de compra são integradas e sincronizadas automaticamente a partir do ERP Corporate."
+                : "Não encontramos registros com os filtros aplicados. Tente alterar os critérios de busca."
+            }
+            action={
+              rawRequests.length === 0
+                ? undefined
+                : {
+                    label: "Limpar Filtros",
+                    variant: "secondary",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setStatusFilter("Todos");
+                      setSelectedCompanyId("TODAS");
+                    },
+                  }
+            }
+          />
         ) : (
           <>
             <DataTable
               columns={columns}
               data={paginatedData}
-              density={density}
               onRowClick={(row) => {
                 const matched = rawRequests.find((r) => r.id === row.id);
                 if (matched) setSelectedDrawerRequest(matched);

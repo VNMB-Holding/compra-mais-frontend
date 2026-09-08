@@ -24,6 +24,28 @@ function mapApiRole(roles: string[]): UserRole {
   return "solicitante";
 }
 
+function parseJwtExp(token: string): number | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length === 3) {
+      const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      const payload = JSON.parse(jsonPayload);
+      if (payload && typeof payload.exp === "number") {
+        return payload.exp * 1000;
+      }
+    }
+  } catch {
+    // fallback se não conseguir parsear
+  }
+  return null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -42,6 +64,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setTokenProvider(() => accessToken);
+  }, [accessToken]);
+
+  // Renovação proativa em background antes da expiração do JWT
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const refreshSilently = async () => {
+      const currentRefresh =
+        refreshTokenRef.current ||
+        (typeof window !== "undefined" ? localStorage.getItem("compra_refresh_token") : null);
+      if (!currentRefresh) return;
+
+      try {
+        const res = await refreshTokenApi(currentRefresh);
+        const newAccess = res.access_token;
+        const newRefresh = res.refresh_token || currentRefresh;
+
+        setAccessToken(newAccess);
+        setRefreshToken(newRefresh);
+        setTokenProvider(() => newAccess);
+
+        if (userRef.current) {
+          saveSession(newAccess, newRefresh, userRef.current);
+        }
+      } catch (err) {
+        logError("AuthContext/proactiveRefresh", err);
+      }
+    };
+
+    const expMs = parseJwtExp(accessToken);
+    let delayMs = 45 * 60 * 1000;
+
+    if (expMs) {
+      const timeUntilExp = expMs - Date.now();
+      delayMs = Math.max(5000, timeUntilExp - 5 * 60 * 1000);
+    }
+
+    const timer = setTimeout(() => {
+      refreshSilently();
+    }, delayMs);
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        const currentExpMs = parseJwtExp(accessToken);
+        if (currentExpMs && currentExpMs - Date.now() < 5 * 60 * 1000) {
+          refreshSilently();
+        }
+      }
+    };
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
+    };
   }, [accessToken]);
 
   useEffect(() => {

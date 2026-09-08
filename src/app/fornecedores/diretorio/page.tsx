@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon, Select, ErrorState, TableSkeleton } from "@/components/ui";
+import { Card, Button, Icon, Select, ErrorState, EmptyState, TableSkeleton } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -326,14 +326,29 @@ export default function FornecedoresListPage() {
         ) : error ? (
           <ErrorState message={error} onRetry={fetchData} />
         ) : filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <Icon name="building-07" size={32} />
-            </div>
-            <h4>Nenhum fornecedor encontrado</h4>
-            <p>Não encontramos fornecedores com os filtros aplicados. Tente alterar os critérios de busca.</p>
-            <Button variant="secondary" onClick={() => { setSearchQuery(""); setSelectedSegment("Todos"); setSelectedCity("Todas"); setStatus("Todos"); }}>Limpar Filtros</Button>
-          </div>
+          <EmptyState
+            illustration={searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos" ? "no-search" : "no-suppliers"}
+            title={searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos" ? "Nenhum fornecedor encontrado" : "Nenhum fornecedor cadastrado"}
+            description={
+              searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos"
+                ? "Não encontramos fornecedores com os filtros aplicados. Tente alterar os critérios de busca."
+                : "A base de parceiros e fornecedores é sincronizada e integrada automaticamente a partir do ERP Corporate."
+            }
+            action={
+              searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos"
+                ? {
+                    label: "Limpar Filtros",
+                    variant: "secondary",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setSelectedSegment("Todos");
+                      setSelectedCity("Todas");
+                      setStatus("Todos");
+                    },
+                  }
+                : undefined
+            }
+          />
         ) : (
           <>
             <DataTable

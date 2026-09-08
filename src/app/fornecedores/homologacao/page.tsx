@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, ErrorState, TableSkeleton, Badge, Button } from "@/components/ui";
+import { Card, Icon, Select, ErrorState, TableSkeleton, Badge } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./homologacao.module.css";
@@ -257,11 +257,6 @@ export default function HomologacaoPage() {
         <div>
           <h1>Homologação & Compliance de Fornecedores</h1>
           <p>Varredura de risco e conformidade fiscal e trabalhista.</p>
-        </div>
-        <div className={styles.headerActions}>
-          <Button variant="primary" onClick={() => router.push("/fornecedores/novo")}>
-            <Icon name="plus" size={16} /> Novo Fornecedor
-          </Button>
         </div>
       </div>
 

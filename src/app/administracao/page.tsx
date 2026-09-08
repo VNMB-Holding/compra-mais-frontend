@@ -11,6 +11,7 @@ import {
   KpiCard,
   Select,
   ConfirmDialog,
+  EmptyState,
 } from "@/components/ui";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import AdminUserModal, {
@@ -820,23 +821,22 @@ export default function AdministracaoPage() {
               </div>
 
               {filteredUsers.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>
-                    <Icon name="search-md" size={28} />
-                  </div>
-                  <h4>Nenhum usuário encontrado</h4>
-                  <p>Não encontramos nenhum usuário com os filtros de busca aplicados.</p>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
+                <EmptyState
+                  illustration="no-users"
+                  title="Nenhum usuário encontrado"
+                  description="Não encontramos nenhum usuário com os filtros de busca aplicados."
+                  action={{
+                    label: "Limpar Filtros",
+                    variant: "secondary",
+                    onClick: () => {
                       setUserSearch("");
                       setRoleFilter("Todos");
                       setStatusFilter("Todos");
-                    }}
-                  >
-                    Limpar Filtros
-                  </Button>
-                </div>
+                    },
+                  }}
+                  size="sm"
+                  compact
+                />
               ) : (
                 <>
                   <DataTable
@@ -1025,19 +1025,18 @@ export default function AdministracaoPage() {
               </div>
 
               {filteredEmpresas.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>
-                    <Icon name="building-07" size={28} />
-                  </div>
-                  <h4>Nenhuma empresa encontrada</h4>
-                  <p>Não encontramos registros para a busca "{empresaSearch}".</p>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setEmpresaSearch("")}
-                  >
-                    Limpar Busca
-                  </Button>
-                </div>
+                <EmptyState
+                  illustration="no-search"
+                  title="Nenhuma empresa encontrada"
+                  description={`Não encontramos registros para a busca "${empresaSearch}".`}
+                  action={{
+                    label: "Limpar Busca",
+                    variant: "secondary",
+                    onClick: () => setEmpresaSearch(""),
+                  }}
+                  size="sm"
+                  compact
+                />
               ) : (
                 <>
                   <DataTable data={filteredEmpresas} columns={empresaColumns} />

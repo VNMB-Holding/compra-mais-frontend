@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Icon, Select, Badge, Skeleton } from "@/components/ui";
+import { Card, Button, Icon, Select, Badge, Skeleton, EmptyState } from "@/components/ui";
 
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
@@ -324,149 +324,171 @@ export default function NewRfqPage() {
               </Badge>
             </div>
 
-            <div className={styles.gateBody}>
-              <div className={styles.gateSelectGroup}>
-                <label className={styles.gateLabel}>
-                  Solicitação de Compra Aprovada <span className="required-asterisk">*</span>
-                </label>
-                {loadingData ? (
-                  <Skeleton height={44} width="100%" />
-                ) : (
-                  <Select
-                    options={requestsApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
-                    value={solicitacaoSelecionada}
-                    onChange={setSolicitacaoSelecionada}
-                    placeholder="Selecione uma solicitação aprovada..."
-                  />
-                )}
+            {loadingData ? (
+              <div className={styles.gateBody} style={{ padding: "40px 24px" }}>
+                <Skeleton height={48} width="100%" />
               </div>
-
-              {/* Fila de demandas prontas (se nenhuma selecionada) */}
-              {!solicitacaoPreview && requestsApi.length > 0 && (
-                <>
-                  <div className={styles.gateCardsDivider}>
-                    <span>Ou selecione diretamente na fila de demandas</span>
+            ) : requestsApi.length === 0 ? (
+              <div style={{ padding: "32px 16px" }}>
+                <EmptyState
+                  illustration="cart-empty"
+                  title="Nenhuma solicitação aprovada disponível"
+                  description="Para abrir uma cotação (RFQ), é necessário vincular uma demanda interna com aprovação concluída. Quando novas solicitações forem aprovadas no ERP Corporate ou pela governança interna, elas estarão disponíveis aqui para cotação."
+                  action={{
+                    label: "Ver Solicitações",
+                    variant: "secondary",
+                    onClick: () => router.push("/compras/solicitacoes"),
+                  }}
+                  secondaryAction={{
+                    label: "Voltar para Cotações",
+                    variant: "secondary",
+                    onClick: () => router.push("/compras/rfqs"),
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className={styles.gateBody}>
+                  <div className={styles.gateSelectGroup}>
+                    <label className={styles.gateLabel}>
+                      Solicitação de Compra Aprovada <span className="required-asterisk">*</span>
+                    </label>
+                    <Select
+                      options={requestsApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
+                      value={solicitacaoSelecionada}
+                      onChange={setSolicitacaoSelecionada}
+                      placeholder="Selecione uma solicitação aprovada..."
+                    />
                   </div>
 
-                  <div className={styles.quickRequestsGrid}>
-                    {requestsApi.slice(0, 4).map((s) => (
-                      <div
-                        key={s.id}
-                        className={`${styles.quickRequestCard} ${solicitacaoSelecionada === s.id ? styles.quickRequestCardActive : ""}`}
-                        onClick={() => setSolicitacaoSelecionada(s.id)}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <div className={styles.quickCardHeader}>
-                          <span className={styles.quickCardId}>{s.id}</span>
-                          <Badge
-                            variant={PRIORITY_BADGE_CONFIG[s.prioridade]?.variant ?? "gray"}
-                            icon={PRIORITY_BADGE_CONFIG[s.prioridade]?.icon ?? "info-circle"}
+                  {/* Fila de demandas prontas (se nenhuma selecionada) */}
+                  {!solicitacaoPreview && requestsApi.length > 0 && (
+                    <>
+                      <div className={styles.gateCardsDivider}>
+                        <span>Ou selecione diretamente na fila de demandas</span>
+                      </div>
+
+                      <div className={styles.quickRequestsGrid}>
+                        {requestsApi.slice(0, 4).map((s) => (
+                          <div
+                            key={s.id}
+                            className={`${styles.quickRequestCard} ${solicitacaoSelecionada === s.id ? styles.quickRequestCardActive : ""}`}
+                            onClick={() => setSolicitacaoSelecionada(s.id)}
+                            role="button"
+                            tabIndex={0}
                           >
-                            {s.prioridade}
-                          </Badge>
-                        </div>
-                        <p className={styles.quickCardTitle}>{s.titulo}</p>
-                        <div className={styles.quickCardMeta}>
-                          <span>{s.area || "Geral"} • {s.itens.length} {s.itens.length === 1 ? "item" : "itens"}</span>
-                          <span className={styles.quickCardValue}>{formatCurrency(s.valorEstimado)}</span>
-                        </div>
+                            <div className={styles.quickCardHeader}>
+                              <span className={styles.quickCardId}>{s.id}</span>
+                              <Badge
+                                variant={PRIORITY_BADGE_CONFIG[s.prioridade]?.variant ?? "gray"}
+                                icon={PRIORITY_BADGE_CONFIG[s.prioridade]?.icon ?? "info-circle"}
+                              >
+                                {s.prioridade}
+                              </Badge>
+                            </div>
+                            <p className={styles.quickCardTitle}>{s.titulo}</p>
+                            <div className={styles.quickCardMeta}>
+                              <span>{s.area || "Geral"} • {s.itens.length} {s.itens.length === 1 ? "item" : "itens"}</span>
+                              <span className={styles.quickCardValue}>{formatCurrency(s.valorEstimado)}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                    </>
+                  )}
 
-              {/* Preview detalhado quando uma solicitação é selecionada */}
-              {solicitacaoPreview && (
-                <div className={styles.gatePreview}>
-                  <div className={styles.gatePreviewHeader}>
-                    <div>
-                      <div className={styles.gatePreviewIdGroup}>
-                        <span className={styles.gatePreviewId}>{solicitacaoPreview.id}</span>
-                        <Badge
-                          variant={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"}
-                          icon={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.icon ?? "info-circle"}
+                  {/* Preview detalhado quando uma solicitação é selecionada */}
+                  {solicitacaoPreview && (
+                    <div className={styles.gatePreview}>
+                      <div className={styles.gatePreviewHeader}>
+                        <div>
+                          <div className={styles.gatePreviewIdGroup}>
+                            <span className={styles.gatePreviewId}>{solicitacaoPreview.id}</span>
+                            <Badge
+                              variant={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"}
+                              icon={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.icon ?? "info-circle"}
+                            >
+                              {solicitacaoPreview.prioridade}
+                            </Badge>
+                          </div>
+                          <p className={styles.gatePreviewTitle}>{solicitacaoPreview.titulo}</p>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          onClick={() => setSolicitacaoSelecionada("")}
                         >
-                          {solicitacaoPreview.prioridade}
-                        </Badge>
+                          Trocar
+                        </Button>
                       </div>
-                      <p className={styles.gatePreviewTitle}>{solicitacaoPreview.titulo}</p>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setSolicitacaoSelecionada("")}
-                    >
-                      Trocar
-                    </Button>
-                  </div>
 
-                  <dl className={styles.gatePreviewMeta}>
-                    <div>
-                      <dt>Área Requisitante</dt>
-                      <dd>{solicitacaoPreview.area || "Geral"}</dd>
-                    </div>
-                    <div>
-                      <dt>Solicitante</dt>
-                      <dd>{solicitacaoPreview.solicitante}</dd>
-                    </div>
-                    <div>
-                      <dt>Total de Itens</dt>
-                      <dd>{solicitacaoPreview.itens.length} {solicitacaoPreview.itens.length === 1 ? "item" : "itens"}</dd>
-                    </div>
-                    <div>
-                      <dt>Valor Estimado</dt>
-                      <dd>{formatCurrency(solicitacaoPreview.valorEstimado)}</dd>
-                    </div>
-                  </dl>
+                      <dl className={styles.gatePreviewMeta}>
+                        <div>
+                          <dt>Área Requisitante</dt>
+                          <dd>{solicitacaoPreview.area || "Geral"}</dd>
+                        </div>
+                        <div>
+                          <dt>Solicitante</dt>
+                          <dd>{solicitacaoPreview.solicitante}</dd>
+                        </div>
+                        <div>
+                          <dt>Total de Itens</dt>
+                          <dd>{solicitacaoPreview.itens.length} {solicitacaoPreview.itens.length === 1 ? "item" : "itens"}</dd>
+                        </div>
+                        <div>
+                          <dt>Valor Estimado</dt>
+                          <dd>{formatCurrency(solicitacaoPreview.valorEstimado)}</dd>
+                        </div>
+                      </dl>
 
-                  <ul className={styles.gatePreviewItens}>
-                    {solicitacaoPreview.itens.map((item: any) => (
-                      <li key={item.id}>
-                        <Icon name="package" size={14} />
-                        <span>
-                          <strong>{item.descricao}</strong> — {item.qtd.toLocaleString("pt-BR")} {item.unidade}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                      <ul className={styles.gatePreviewItens}>
+                        {solicitacaoPreview.itens.map((item: any) => (
+                          <li key={item.id}>
+                            <Icon name="package" size={14} />
+                            <span>
+                              <strong>{item.descricao}</strong> — {item.qtd.toLocaleString("pt-BR")} {item.unidade}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Barra de Governança Integrada */}
-            <div className={styles.gateGovernanceBar}>
-              <div className={styles.gateGovernanceItem}>
-                <Icon name="shield-tick" size={15} />
-                <span><strong>Rastreabilidade</strong> vinculada à demanda aprovada</span>
-              </div>
-              <div className={styles.gateGovernanceItem}>
-                <Icon name="zap-fast" size={15} />
-                <span><strong>Automação</strong> de itens e escopo técnico</span>
-              </div>
-              <div className={styles.gateGovernanceItem}>
-                <Icon name="check-verified-02" size={15} />
-                <span><strong>Conformidade</strong> com alçadas e auditoria</span>
-              </div>
-            </div>
+                {/* Barra de Governança Integrada */}
+                <div className={styles.gateGovernanceBar}>
+                  <div className={styles.gateGovernanceItem}>
+                    <Icon name="shield-tick" size={15} />
+                    <span><strong>Rastreabilidade</strong> vinculada à demanda aprovada</span>
+                  </div>
+                  <div className={styles.gateGovernanceItem}>
+                    <Icon name="zap-fast" size={15} />
+                    <span><strong>Automação</strong> de itens e escopo técnico</span>
+                  </div>
+                  <div className={styles.gateGovernanceItem}>
+                    <Icon name="check-verified-02" size={15} />
+                    <span><strong>Conformidade</strong> com alçadas e auditoria</span>
+                  </div>
+                </div>
 
-            {/* Ações */}
-            <div className={styles.gateActions}>
-              <button
-                className={styles.btnCancel}
-                onClick={() => router.push("/compras/rfqs")}
-              >
-                Cancelar
-              </button>
-              <Button
-                variant="primary"
-                className={styles.btnSubmit}
-                onClick={handleConfirmarSolicitacao}
-                disabled={!solicitacaoSelecionada}
-              >
-                <Icon name="arrow-right" /> Continuar com esta solicitação
-              </Button>
-            </div>
+                {/* Ações */}
+                <div className={styles.gateActions}>
+                  <button
+                    className={styles.btnCancel}
+                    onClick={() => router.push("/compras/rfqs")}
+                  >
+                    Cancelar
+                  </button>
+                  <Button
+                    variant="primary"
+                    className={styles.btnSubmit}
+                    onClick={handleConfirmarSolicitacao}
+                    disabled={!solicitacaoSelecionada}
+                  >
+                    <Icon name="arrow-right" /> Continuar com esta solicitação
+                  </Button>
+                </div>
+              </>
+            )}
           </Card>
         </div>
       </div>

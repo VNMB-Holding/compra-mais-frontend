@@ -84,7 +84,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
           
           
           <div className={styles.supportGrid}>
-            <a href="https://wa.me/5581999999999?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20Compra%2B" target="_blank" rel="noopener noreferrer" className={styles.supportCard}>
+            <a href="https://wa.me/5511986055544?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20Compra%2B" target="_blank" rel="noopener noreferrer" className={styles.supportCard}>
               <div className={styles.supportCardHeader}>
                 <div className={`${styles.supportIconWrap} ${styles.whatsappBg}`}>
                   <Icon name="message-square-02" className={styles.supportIcon} />
@@ -95,7 +95,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
               <span className={styles.cardAction}>Iniciar conversa <Icon name="arrow-right" size={14} /></span>
             </a>
 
-            <a href="mailto:suporte@vnmb.com.br" className={styles.supportCard}>
+            <a href="mailto:breno@vnmb.com.br" className={styles.supportCard}>
               <div className={styles.supportCardHeader}>
                 <div className={`${styles.supportIconWrap} ${styles.emailBg}`}>
                   <Icon name="mail-01" className={styles.supportIcon} />
