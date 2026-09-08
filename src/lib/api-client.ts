@@ -202,12 +202,14 @@ export const apiClient = {
 
 export { ApiError };
 
-export function cleanTenantParam(tenantId?: string): string | undefined {
-  if (!tenantId || tenantId === "undefined" || tenantId === "null" || tenantId === "TODAS") {
+export function cleanCompanyParam(companyCode?: string): string | undefined {
+  if (!companyCode || companyCode === "undefined" || companyCode === "null" || companyCode === "TODAS") {
     return undefined;
   }
-  return tenantId;
+  return companyCode;
 }
+
+export const cleanTenantParam = cleanCompanyParam;
 
 export function cleanFilterParam(val?: string): string | undefined {
   if (!val) return undefined;

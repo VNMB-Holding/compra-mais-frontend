@@ -11,6 +11,8 @@ import {
   Loading,
   ExportButton,
   ChartSkeleton,
+  CalendarFilter,
+  DateFilterValue,
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -37,7 +39,10 @@ interface SupplierSpend {
 export default function SpendPage() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({
+    mode: "range",
+    preset: "all",
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
@@ -46,67 +51,96 @@ export default function SpendPage() {
   const [loading, setLoading] = useState(true);
   const [apiData, setApiData] = useState<SpendAnalyticsResponse | null>(null);
 
+  const [filterOptions, setFilterOptions] = useState<{ categories: string[]; suppliers: string[] }>({
+    categories: [],
+    suppliers: [],
+  });
+
   const companyOptions = getCompanyFilterOptions();
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
+
+  useEffect(() => {
+    dashboardApi.getFilterOptions(queryCompanyCode).then(setFilterOptions).catch((err) => {
+      logError("analytics/spend/filterOptions", err);
+    });
+  }, [queryCompanyCode]);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await dashboardApi.getSpendAnalytics(queryCompanyCode, selectedCategory, selectedSupplier, selectedPeriod);
+      const data = await dashboardApi.getSpendAnalytics(
+        queryCompanyCode,
+        selectedCategory,
+        selectedSupplier,
+        dateFilter.preset,
+        dateFilter.startDate,
+        dateFilter.endDate
+      );
       setApiData(data);
     } catch (err) {
       logError("analytics/spend/fetchData", err);
     } finally {
       setLoading(false);
     }
-  }, [queryCompanyCode, selectedCategory, selectedSupplier, selectedPeriod]);
+  }, [queryCompanyCode, selectedCategory, selectedSupplier, dateFilter]);
 
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const handleExport = (type: "PDF" | "XLS") => {
+  const handleExport = async (type: "PDF" | "XLS") => {
     setExportingType(type);
     try {
-      const rows: string[][] = [
-        ["Categoria", "Spend Total (R$)", "% Total", "Pedidos", "Economia Potencial (R$)"],
-        ...categoriesData.map((c) => [
-          c.categoria,
-          c.spendTotal.toFixed(2),
-          `${c.pctTotal}%`,
-          String(c.pedidos),
-          c.economiaPotencial.toFixed(2),
-        ]),
-        [],
-        ["Fornecedor", "Valor Gasto (R$)", "% do Total"],
-        ...suppliersData.map((s) => [
-          s.nome,
-          s.valor.toFixed(2),
-          `${s.pct}%`,
-        ]),
-      ];
-
-      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `relatorio_spend_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
+      const format = type === "XLS" ? "excel" : "pdf";
+      await dashboardApi.downloadReportFile("spend", format, queryCompanyCode, dateFilter.startDate, dateFilter.endDate, dateFilter.preset);
       toast({
         variant: "success",
         title: "Download Concluído",
-        message: `O relatório analítico de Spend foi exportado com sucesso.`
+        message: `O relatório analítico de Spend foi exportado em ${type === "XLS" ? "Excel (.xlsx)" : "PDF (.pdf)"} com sucesso.`
       });
     } catch (err) {
-      toast({
-        variant: "error",
-        title: "Erro na exportação",
-        message: "Não foi possível gerar o arquivo de exportação."
-      });
+      logError("analytics/spend/export", err);
+      try {
+        const rows: string[][] = [
+          ["Categoria", "Spend Total (R$)", "% Total", "Pedidos", "Economia Potencial (R$)"],
+          ...categoriesData.map((c) => [
+            c.categoria,
+            c.spendTotal.toFixed(2),
+            `${c.pctTotal}%`,
+            String(c.pedidos),
+            c.economiaPotencial.toFixed(2),
+          ]),
+          [],
+          ["Fornecedor", "Valor Gasto (R$)", "% do Total"],
+          ...suppliersData.map((s) => [
+            s.nome,
+            s.valor.toFixed(2),
+            `${s.pct}%`,
+          ]),
+        ];
+
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `relatorio_spend_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toast({
+          variant: "success",
+          title: "Download Concluído",
+          message: "O relatório analítico de Spend foi exportado em formato CSV."
+        });
+      } catch {
+        toast({
+          variant: "error",
+          title: "Erro na exportação",
+          message: "Não foi possível gerar o arquivo de exportação."
+        });
+      }
     } finally {
       setExportingType(null);
     }
@@ -118,12 +152,7 @@ export default function SpendPage() {
 
   const categoriesData = useMemo<SpendItem[]>(() => {
     if (!apiData?.categories || apiData.categories.length === 0) return [];
-    
-    let list = apiData.categories;
-    if (selectedCategory !== "all") {
-      list = list.filter((c) => c.categoria === selectedCategory);
-    }
-    return list.map((c, i) => ({
+    return apiData.categories.map((c, i) => ({
       categoria: c.categoria,
       spendTotal: c.spendTotal,
       pctTotal: Number(c.pctTotal.toFixed(1)),
@@ -131,17 +160,11 @@ export default function SpendPage() {
       economiaPotencial: typeof c.economiaPotencial === "number" ? Math.round(c.economiaPotencial) : 0,
       color: c.color || ['#007d79', '#00a39e', '#004144', '#1192e8', '#0f62fe', '#7c3aed'][i % 6],
     }));
-  }, [apiData, selectedCategory]);
+  }, [apiData]);
 
   const suppliersData = useMemo<SupplierSpend[]>(() => {
-    if (!apiData?.suppliers || apiData.suppliers.length === 0) return [];
-    
-    let list = apiData.suppliers;
-    if (selectedSupplier !== "all") {
-      list = list.filter((s) => s.nome === selectedSupplier);
-    }
-    return list;
-  }, [apiData, selectedSupplier]);
+    return apiData?.suppliers || [];
+  }, [apiData]);
 
   const totals = useMemo(() => {
     const spendSum = categoriesData.reduce((s, c) => s + c.spendTotal, 0);
@@ -156,41 +179,38 @@ export default function SpendPage() {
   }, [categoriesData]);
 
   const kpis = useMemo(() => {
-    const totalSpend = totals.spendTotal;
-    const totalEcon = totals.economiaPotencial;
-    const pct = totalSpend > 0 ? ((totalEcon / totalSpend) * 100).toFixed(1) : "0.0";
-
+    const totalEcon = (apiData?.categories || []).reduce((acc, c) => acc + (c.economiaPotencial || 0), 0);
     return {
-      spendTotal: apiData?.kpis?.spendTotal || formatCurrency(totalSpend),
+      spendTotal: apiData?.kpis?.spendTotal || "R$ 0,00",
       economiaPotencial: formatCurrency(totalEcon),
-      pedidosEmitidos: apiData?.kpis?.pedidosEmitidos || String(totals.pedidos),
-      fornecedoresAtivos: apiData?.kpis?.fornecedoresAtivos || String(suppliersData.length),
-      trendSpend: totalSpend > 0 ? "Em conformidade" : "Sem movimentação",
-      trendEconomia: `${pct}% do spend total`,
+      pedidosEmitidos: apiData?.kpis?.pedidosEmitidos || "0",
+      fornecedoresAtivos: apiData?.kpis?.fornecedoresAtivos || "0",
+      trendSpend: "Filtro ativo no servidor",
+      trendEconomia: "Economia estimada",
       trendPedidos: "Emitidos no período",
       trendFornecedores: "Ativos na base"
     };
-  }, [apiData, totals, suppliersData.length]);
+  }, [apiData]);
 
   const categoryOptions = useMemo(() => [
     { value: "all", label: "Todas as Categorias" },
-    ...Array.from(new Set((apiData?.categories || []).map((c) => c.categoria))).map((cat) => ({
+    ...filterOptions.categories.map((cat) => ({
       value: cat,
       label: cat,
     })),
-  ], [apiData]);
+  ], [filterOptions.categories]);
 
   const supplierOptions = useMemo(() => [
     { value: "all", label: "Todos os Fornecedores" },
-    ...Array.from(new Set((apiData?.suppliers || []).map((s) => s.nome))).map((sup) => ({
+    ...filterOptions.suppliers.map((sup) => ({
       value: sup,
       label: sup,
     })),
-  ], [apiData]);
+  ], [filterOptions.suppliers]);
 
 
   const handleClearFilters = () => {
-    setSelectedPeriod("all");
+    setDateFilter({ mode: "all", preset: "all" });
     setSelectedCategory("all");
     setSelectedSupplier("all");
     setSelectedCompanyId("TODAS");
@@ -210,9 +230,6 @@ export default function SpendPage() {
       
       <div className={styles.header}>
         <div className={styles.titleGroup}>
-          <div className={styles.iconBox}>
-            <Icon name="presentation-chart-01" size={24} />
-          </div>
           <div className={styles.titleText}>
             <h1>Análise de Spend</h1>
             <p>Visão completa dos gastos para uma gestão estratégica e orientada a dados.</p>
@@ -220,26 +237,14 @@ export default function SpendPage() {
         </div>
         <div className={styles.headerActions}>
           <ExportButton onExport={handleExport} />
-          <button className={styles.outlineBtn}>
-            <Icon name="filter-lines" size={16} /> Filtros
-          </button>
         </div>
       </div>
 
-      
       <div className={styles.filterRow}>
         <div className={styles.filterInput}>
-          <Select
-            options={[
-              { value: "all", label: "Período: Todo o histórico" },
-              { value: "30d", label: "Últimos 30 dias" },
-              { value: "90d", label: "Últimos 90 dias" },
-              { value: "12m", label: "Últimos 12 meses" },
-              { value: "2026", label: "Ano Vigente (2026)" },
-            ]}
-            value={selectedPeriod}
-            onChange={setSelectedPeriod}
-            icon="calendar"
+          <CalendarFilter
+            value={dateFilter}
+            onChange={setDateFilter}
           />
         </div>
 
@@ -270,12 +275,7 @@ export default function SpendPage() {
 
         <button 
           className={styles.clearButton} 
-          onClick={() => {
-            setSelectedPeriod("all");
-            setSelectedCategory("all");
-            setSelectedSupplier("all");
-            setSelectedCompanyId("TODAS");
-          }}
+          onClick={handleClearFilters}
         >
           <Icon name="refresh-ccw-01" size={16} /> Limpar filtros
         </button>

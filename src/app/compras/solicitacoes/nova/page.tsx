@@ -13,67 +13,8 @@ import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { useCreatePurchaseRequest } from "@/hooks/useQueries";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
+import { ApprovalModal } from "@/components/ApprovalModal";
 
-
-function ApprovalModal({
-  title,
-  code,
-  totalValue,
-  priority,
-  onGoToList,
-  onClose,
-}: {
-  title: string;
-  code: string;
-  totalValue: number;
-  priority: string;
-  onGoToList: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-        
-        <div className={styles.modalSuccessIcon}>
-          <Icon name="check-circle" />
-        </div>
-
-        <div className={styles.modalHeader}>
-          <h2>Solicitação enviada para aprovação!</h2>
-          <p>Sua demanda foi registrada e está aguardando alçada. O que deseja fazer agora?</p>
-        </div>
-
-        
-        <div className={styles.modalSummary}>
-          <div className={styles.modalSummaryRow}>
-            <span>Solicitação</span>
-            <strong>{code}</strong>
-          </div>
-          <div className={styles.modalSummaryRow}>
-            <span>Título</span>
-            <strong>{title || "Solicitação sem título"}</strong>
-          </div>
-          <div className={styles.modalSummaryRow}>
-            <span>Valor estimado</span>
-            <strong className={styles.modalValueHighlight}>{formatCurrency(totalValue)}</strong>
-          </div>
-          <div className={styles.modalSummaryRow}>
-            <span>Prioridade</span>
-            <strong>{(priorityLabels as Record<string, string>)[priority] || priority}</strong>
-          </div>
-        </div>
-
-        
-        <div className={styles.modalActions}>
-          <Button variant="primary" className={styles.modalBtnPrimary} onClick={onGoToList}>
-            <Icon name="check" />
-            Entendido, ir para minhas solicitações
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";
 
@@ -293,6 +234,7 @@ export default function NovaSolicitacaoPage() {
           code={createdCode}
           totalValue={totalEstimated}
           priority={priority}
+          priorityLabel={priorityLabels[priority]}
           onGoToList={() => router.push("/compras/solicitacoes")}
           onClose={() => setShowApprovalModal(false)}
         />

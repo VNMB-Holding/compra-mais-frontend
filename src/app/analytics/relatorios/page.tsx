@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import styles from "./relatorios.module.css";
-import { Card, Button, Badge, Icon, Select, SearchInput } from "@/components/ui";
+import { Card, Button, Badge, Icon, Select, SearchInput, CalendarFilter, DateFilterValue } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { getCompanyFilterOptions } from "@/lib/utils/tenant";
 import { dashboardApi } from "@/lib/api/dashboard";
@@ -65,7 +65,11 @@ interface GeneratedReport {
 export default function RelatoriosPage() {
   const { toast } = useToast();
   const [selectedCompany, setSelectedCompany] = useState<string>("TODAS");
-  const [period, setPeriod] = useState<string>("30d");
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({
+    mode: "range",
+    preset: "30d",
+  });
+  const [reportFormat, setReportFormat] = useState<"XLSX" | "PDF" | "CSV">("XLSX");
   const [search, setSearch] = useState<string>("");
   const [generating, setGenerating] = useState<string | null>(null);
 
@@ -116,24 +120,67 @@ export default function RelatoriosPage() {
 
   const handleGenerateReport = async (template: ReportTemplate) => {
     setGenerating(template.id);
+    const companyCode = selectedCompany !== "TODAS" ? selectedCompany : undefined;
+    const startDate = dateFilter.startDate;
+    const endDate = dateFilter.endDate;
+    const period = dateFilter.preset;
+
     try {
+      if (reportFormat === "XLSX" || reportFormat === "PDF") {
+        const fmt = reportFormat === "XLSX" ? "excel" : "pdf";
+        const downloadedFilename = await dashboardApi.downloadReportFile(
+          template.type,
+          fmt,
+          companyCode,
+          startDate,
+          endDate,
+          period
+        );
+        const newReport: GeneratedReport = {
+          id: `REL-${String(Date.now()).slice(-6)}`,
+          name: `${template.title} (${selectedCompany === "TODAS" ? "Geral" : selectedCompany})`,
+          format: reportFormat,
+          date: new Date().toLocaleDateString("pt-BR"),
+          size: reportFormat === "XLSX" ? "48 KB" : "64 KB",
+          status: "Disponível",
+          data: [],
+        };
+        saveHistory([newReport, ...history]);
+        toast({
+          variant: "success",
+          title: "Download Concluído!",
+          message: `Arquivo ${downloadedFilename} exportado com sucesso.`,
+        });
+        return;
+      }
+
       let rows: string[][] = [];
       let filename = `Relatorio_${template.type}_${Date.now()}`;
       let reportName = `${template.title} (${selectedCompany === "TODAS" ? "Geral" : selectedCompany})`;
 
       try {
-        const res = await dashboardApi.generateReport(template.type, selectedCompany !== "TODAS" ? selectedCompany : undefined);
+        const res = await dashboardApi.generateReport(template.type, companyCode, startDate, endDate, period);
         if (res && res.rows && res.rows.length > 0) {
           rows = res.rows;
           filename = res.filename || filename;
           reportName = res.name || reportName;
         }
       } catch {
+        const matchesDate = (createdAt?: string | Date) => {
+          if (!createdAt) return true;
+          if (dateFilter.mode === "all") return true;
+          const dStr = new Date(createdAt).toISOString().slice(0, 10);
+          if (startDate && dStr < startDate) return false;
+          if (endDate && dStr > endDate) return false;
+          return true;
+        };
+
         if (template.type === "orders") {
           filename = "Relatorio_Pedidos_Compra";
+          const filteredOrders = orders.filter((po) => matchesDate(po.createdAt));
           rows = [
             ["Código", "Fornecedor", "CNPJ", "Valor Total (R$)", "Condição Pagamento", "Frete", "Status", "Data Emissão"],
-            ...orders.map((po) => [
+            ...filteredOrders.map((po) => [
               po.code || po.id,
               po.supplier?.tradeName || po.supplier?.corporateName || "—",
               po.supplier?.cnpj || "—",
@@ -146,9 +193,10 @@ export default function RelatoriosPage() {
           ];
         } else if (template.type === "spend") {
           filename = "Relatorio_Spend_Analitico";
+          const filteredRequests = requests.filter((r) => matchesDate(r.createdAt));
           rows = [
             ["ID Solicitação", "Descrição", "Centro de Custo", "Empresa", "Valor Estimado (R$)", "Status", "Data"],
-            ...requests.map((r) => [
+            ...filteredRequests.map((r) => [
               r.code || r.id,
               r.description || "—",
               r.costCenterName || r.costCenterCode || "Geral",
@@ -160,9 +208,10 @@ export default function RelatoriosPage() {
           ];
         } else if (template.type === "rfqs") {
           filename = "Relatorio_Cotacoes_RFQs";
+          const filteredRfqs = rfqs.filter((rfq) => matchesDate(rfq.createdAt));
           rows = [
             ["Código RFQ", "Título", "Status", "Data Fechamento", "Data Criação"],
-            ...rfqs.map((rfq) => [
+            ...filteredRfqs.map((rfq) => [
               rfq.code || rfq.id,
               rfq.title || "—",
               rfq.status || "—",
@@ -235,16 +284,10 @@ export default function RelatoriosPage() {
           </div>
 
           <div className={styles.filterInput}>
-            <label>Período de Extração</label>
-            <Select
-              options={[
-                { value: "30d", label: "Últimos 30 dias" },
-                { value: "90d", label: "Últimos 90 dias" },
-                { value: "12m", label: "Últimos 12 meses" },
-                { value: "2026", label: "Ano de 2026 completo" },
-              ]}
-              value={period}
-              onChange={setPeriod}
+            <label>Data / Período de Extração</label>
+            <CalendarFilter
+              value={dateFilter}
+              onChange={setDateFilter}
             />
           </div>
 
@@ -252,11 +295,12 @@ export default function RelatoriosPage() {
             <label>Formato Padrão</label>
             <Select
               options={[
-                { value: "CSV", label: "CSV (Excel / Planilhas)" },
-                { value: "JSON", label: "JSON (Integrações)" },
+                { value: "XLSX", label: "Excel (.xlsx) - Formatado" },
+                { value: "PDF", label: "Documento PDF (.pdf)" },
+                { value: "CSV", label: "CSV (Planilhas / Texto)" },
               ]}
-              value="CSV"
-              onChange={() => {}}
+              value={reportFormat}
+              onChange={(val) => setReportFormat(val)}
             />
           </div>
         </div>
@@ -282,7 +326,7 @@ export default function RelatoriosPage() {
                 onClick={() => handleGenerateReport(tmpl)}
               >
                 <Icon name={generating === tmpl.id ? "loading-01" : "download-01"} />
-                {generating === tmpl.id ? "Gerando..." : "Gerar e Baixar CSV"}
+                {generating === tmpl.id ? "Gerando..." : `Gerar e Baixar ${reportFormat}`}
               </Button>
             </Card>
           ))}
