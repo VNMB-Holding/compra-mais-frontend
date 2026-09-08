@@ -1,4 +1,4 @@
-import { apiClient, cleanTenantParam } from "@/lib/api-client";
+import { apiClient, cleanTenantParam, cleanFilterParam } from "@/lib/api-client";
 import { CategoryType } from "@/lib/utils/category-icon";
 
 export interface Supplier {
@@ -70,21 +70,20 @@ export const suppliersApi = {
       const validTenant = cleanTenantParam(paramsOrTenant);
       if (validTenant) params.append("tenantId", validTenant);
     } else if (paramsOrTenant) {
-      if (paramsOrTenant.status && paramsOrTenant.status !== 'Todos' && paramsOrTenant.status !== 'all') {
-        params.append("status", paramsOrTenant.status);
-      }
-      if (paramsOrTenant.state && paramsOrTenant.state !== 'Todos' && paramsOrTenant.state !== 'all') {
-        params.append("state", paramsOrTenant.state);
-      }
-      if (paramsOrTenant.city && paramsOrTenant.city !== 'Todas' && paramsOrTenant.city !== 'all') {
-        params.append("city", paramsOrTenant.city);
-      }
-      if (paramsOrTenant.segment && paramsOrTenant.segment !== 'Todos' && paramsOrTenant.segment !== 'all') {
-        params.append("segment", paramsOrTenant.segment);
-      }
-      if (paramsOrTenant.search && paramsOrTenant.search.trim() !== '') {
-        params.append("search", paramsOrTenant.search.trim());
-      }
+      const status = cleanFilterParam(paramsOrTenant.status);
+      if (status) params.append("status", status);
+
+      const state = cleanFilterParam(paramsOrTenant.state);
+      if (state) params.append("state", state);
+
+      const city = cleanFilterParam(paramsOrTenant.city);
+      if (city) params.append("city", city);
+
+      const segment = cleanFilterParam(paramsOrTenant.segment);
+      if (segment) params.append("segment", segment);
+
+      const search = cleanFilterParam(paramsOrTenant.search);
+      if (search) params.append("search", search);
     }
     const qs = params.toString();
     return apiClient.get<Supplier[]>(`/api/suppliers${qs ? `?${qs}` : ''}`);

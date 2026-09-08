@@ -1,4 +1,4 @@
-import { apiClient, cleanTenantParam } from "@/lib/api-client";
+import { apiClient, cleanTenantParam, cleanFilterParam } from "@/lib/api-client";
 
 export interface PurchaseOrder {
   id: string;
@@ -55,9 +55,15 @@ export const purchaseOrdersApi = {
       const code = paramsOrTenant.companyCode || paramsOrTenant.tenantId;
       const validCode = cleanTenantParam(code);
       if (validCode) params.append("companyCode", validCode);
-      if (paramsOrTenant.status && paramsOrTenant.status !== 'Todos') params.append("status", paramsOrTenant.status);
-      if (paramsOrTenant.supplier && paramsOrTenant.supplier !== 'Todas' && paramsOrTenant.supplier !== 'Todos') params.append("supplier", paramsOrTenant.supplier);
-      if (paramsOrTenant.search && paramsOrTenant.search.trim() !== '') params.append("search", paramsOrTenant.search.trim());
+
+      const status = cleanFilterParam(paramsOrTenant.status);
+      if (status) params.append("status", status);
+
+      const supplier = cleanFilterParam(paramsOrTenant.supplier);
+      if (supplier) params.append("supplier", supplier);
+
+      const search = cleanFilterParam(paramsOrTenant.search);
+      if (search) params.append("search", search);
     }
     const qs = params.toString();
     return apiClient.get<PurchaseOrder[]>(`/api/purchase-orders${qs ? `?${qs}` : ''}`);

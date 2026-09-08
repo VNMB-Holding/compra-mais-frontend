@@ -1,4 +1,4 @@
-import { apiClient, cleanTenantParam } from "@/lib/api-client";
+import { apiClient, cleanTenantParam, cleanFilterParam } from "@/lib/api-client";
 
 export interface Rfq {
   id: string;
@@ -115,9 +115,15 @@ export const rfqsApi = {
       const code = paramsOrTenant.companyCode || paramsOrTenant.tenantId;
       const validCode = cleanTenantParam(code);
       if (validCode) params.append("companyCode", validCode);
-      if (paramsOrTenant.status && paramsOrTenant.status !== 'Todos') params.append("status", paramsOrTenant.status);
-      if (paramsOrTenant.category && paramsOrTenant.category !== 'Todas') params.append("category", paramsOrTenant.category);
-      if (paramsOrTenant.search && paramsOrTenant.search.trim() !== '') params.append("search", paramsOrTenant.search.trim());
+
+      const status = cleanFilterParam(paramsOrTenant.status);
+      if (status) params.append("status", status);
+
+      const category = cleanFilterParam(paramsOrTenant.category);
+      if (category) params.append("category", category);
+
+      const search = cleanFilterParam(paramsOrTenant.search);
+      if (search) params.append("search", search);
     }
     const qs = params.toString();
     return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ''}`);

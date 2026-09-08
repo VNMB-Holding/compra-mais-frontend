@@ -209,3 +209,20 @@ export function cleanTenantParam(tenantId?: string): string | undefined {
   return tenantId;
 }
 
+export function cleanFilterParam(val?: string): string | undefined {
+  if (!val) return undefined;
+  const trimmed = val.trim();
+  const lower = trimmed.toLowerCase();
+  if (
+    !trimmed ||
+    trimmed === "undefined" ||
+    trimmed === "null" ||
+    lower === "todos" ||
+    lower === "todas" ||
+    lower === "all"
+  ) {
+    return undefined;
+  }
+  return trimmed;
+}
+

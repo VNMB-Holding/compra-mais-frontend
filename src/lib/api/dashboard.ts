@@ -1,4 +1,4 @@
-import { apiClient, cleanTenantParam } from "@/lib/api-client";
+import { apiClient, cleanTenantParam, cleanFilterParam } from "@/lib/api-client";
 
 export interface DashboardKpis {
   rfqsInProgress: number;
@@ -109,9 +109,12 @@ export const dashboardApi = {
     const params = new URLSearchParams();
     const valid = cleanTenantParam(companyCode);
     if (valid) params.append("companyCode", valid);
-    if (category && category !== 'all' && category !== 'Todas') params.append("category", category);
-    if (supplier && supplier !== 'all' && supplier !== 'Todos') params.append("supplier", supplier);
-    if (period && period !== 'all') params.append("period", period);
+    const cat = cleanFilterParam(category);
+    if (cat) params.append("category", cat);
+    const sup = cleanFilterParam(supplier);
+    if (sup) params.append("supplier", sup);
+    const per = cleanFilterParam(period);
+    if (per) params.append("period", per);
     const qs = params.toString();
     return apiClient.get<SpendAnalyticsResponse>(`/api/dashboard/analytics/spend${qs ? `?${qs}` : ''}`);
   },
@@ -120,11 +123,28 @@ export const dashboardApi = {
     const params = new URLSearchParams();
     const valid = cleanTenantParam(companyCode);
     if (valid) params.append("companyCode", valid);
-    if (category && category !== 'all' && category !== 'Todas') params.append("category", category);
-    if (supplier && supplier !== 'all' && supplier !== 'Todos') params.append("supplier", supplier);
-    if (period && period !== 'all') params.append("period", period);
+    const cat = cleanFilterParam(category);
+    if (cat) params.append("category", cat);
+    const sup = cleanFilterParam(supplier);
+    if (sup) params.append("supplier", sup);
+    const per = cleanFilterParam(period);
+    if (per) params.append("period", per);
     const qs = params.toString();
     return apiClient.get<EconomyAnalyticsResponse>(`/api/dashboard/analytics/economia${qs ? `?${qs}` : ''}`);
+  },
+
+  generateReport: (type: 'orders' | 'spend' | 'rfqs' | 'savings', companyCode?: string) => {
+    const params = new URLSearchParams();
+    params.append('type', type);
+    const valid = cleanTenantParam(companyCode);
+    if (valid) params.append('companyCode', valid);
+    return apiClient.get<{
+      filename: string;
+      name: string;
+      type: string;
+      format: string;
+      rows: string[][];
+    }>(`/api/dashboard/reports/generate?${params.toString()}`);
   },
 };
 
