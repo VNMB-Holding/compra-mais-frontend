@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Sidebar } from "@/components/ui";
-import Topbar from "@/components/ui/Topbar/Topbar";
-import HelpModal from "@/components/HelpModal/HelpModal";
+import { Sidebar, Topbar } from "@/components/ui";
+import { HelpModal } from "@/components/modals";
 
 import styles from "./LayoutClient.module.css";
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import LayoutClient from "./LayoutClient";
+import { LayoutClient } from "@/components/layout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ToastContainer } from "@/components/ui";
