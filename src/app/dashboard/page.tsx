@@ -80,7 +80,7 @@ export default function DashboardPage() {
           "Almoxarifado Geral";
         const dataAbertura = formatDate(rfq.createdAt);
         const dataEncerramento = formatDate(rfq.closesAt);
-        const tipoSegmento = "Menor Preço";
+        const tipoSegmento = (rfq.purchaseRequest as any)?.category?.name || (rfq.purchaseRequest as any)?.costCenterName || "Geral";
         const status = mapRfqStatus(rfq);
         const empresa = getTenantDisplayName(rfq.tenantId || rfq.purchaseRequest?.tenantId, user);
 

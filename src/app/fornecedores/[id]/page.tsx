@@ -71,9 +71,9 @@ export default function FornecedorDetailPage() {
   }
 
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || "FR";
-  const hasScore = supplier.performanceScore !== undefined && supplier.performanceScore !== null;
-  const score = hasScore ? Number(supplier.performanceScore) : 9.5;
-  const scoreFormatted = score.toFixed(1).replace(".", ",");
+  const hasScore = supplier.performanceScore !== undefined && supplier.performanceScore !== null && Number(supplier.performanceScore) > 0;
+  const score = hasScore ? Number(supplier.performanceScore) : null;
+  const scoreFormatted = score !== null ? score.toFixed(1).replace(".", ",") : "—";
   const isActive = supplier.status === "Active" || supplier.isActive === true;
   const statusLabel = isActive ? "Homologado" : supplier.status === "Inactive" ? "Inativo" : "Em homologação";
   const statusVariant = isActive ? "success" : "gray";
@@ -137,10 +137,10 @@ export default function FornecedorDetailPage() {
             </div>
             <div className={styles.scoreValue}>
               <strong className={styles.textGreen}>{scoreFormatted}</strong>
-              <small>/10</small>
+              {score !== null && <small>/10</small>}
             </div>
             <div className={styles.titleRow}>
-              {renderStars(score)}
+              {score !== null ? renderStars(score) : <span style={{ fontSize: 12, color: "#64748b" }}>Sem avaliações</span>}
             </div>
           </div>
 
@@ -207,44 +207,103 @@ export default function FornecedorDetailPage() {
                 <h3><Icon name="clock-refresh" size={18} /> Histórico de atividades com o fornecedor</h3>
               </div>
               <div className={styles.itemsTableWrapper}>
-                <table className={styles.itemsTable}>
-                  <thead>
-                    <tr>
-                      <th>Data / Tipo</th>
-                      <th>Descrição</th>
-                      <th style={{ width: "160px", textAlign: "right" }}>Valor</th>
-                      <th style={{ width: "160px", textAlign: "center" }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div className={styles.doubleText}>
-                          <strong>{new Date(supplier.updatedAt || supplier.createdAt).toLocaleDateString("pt-BR")}</strong>
-                          <small>Sincronização ERP</small>
-                        </div>
-                      </td>
-                      <td>Cadastro integrado e verificado via Corporate</td>
-                      <td style={{ textAlign: "right" }}>—</td>
-                      <td style={{ textAlign: "center" }}>
-                        <Badge variant="success">Concluído</Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div className={styles.doubleText}>
-                          <strong>{new Date(supplier.createdAt).toLocaleDateString("pt-BR")}</strong>
-                          <small>Homologação</small>
-                        </div>
-                      </td>
-                      <td>Verificação cadastral e fiscal realizada</td>
-                      <td style={{ textAlign: "right" }}>—</td>
-                      <td style={{ textAlign: "center" }}>
-                        <Badge variant="success">Regular</Badge>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                {(() => {
+                  const activities: Array<{
+                    id: string;
+                    date: string;
+                    type: string;
+                    desc: string;
+                    val: string;
+                    status: string;
+                    variant: "success" | "warning" | "gray";
+                  }> = [];
+
+                  // Propostas enviadas pelo fornecedor
+                  if (supplier.proposals && supplier.proposals.length > 0) {
+                    supplier.proposals.forEach((p) => {
+                      activities.push({
+                        id: `prop-${p.id}`,
+                        date: p.createdAt,
+                        type: "Proposta em Cotação",
+                        desc: p.rfq ? `Cotação ${p.rfq.code}: ${p.rfq.title}` : "Proposta enviada em cotação",
+                        val: p.totalValue ? Number(p.totalValue).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—",
+                        status: p.isWinner ? "Vencedora" : p.status === "Declined" ? "Declinada" : "Enviada",
+                        variant: p.isWinner ? "success" : p.status === "Declined" ? "gray" : "warning",
+                      });
+                    });
+                  }
+
+                  // Pedidos de compra
+                  if (supplier.purchaseOrders && supplier.purchaseOrders.length > 0) {
+                    supplier.purchaseOrders.forEach((po) => {
+                      activities.push({
+                        id: `po-${po.id}`,
+                        date: po.createdAt,
+                        type: "Pedido de Compra",
+                        desc: `Pedido ${po.code}`,
+                        val: po.totalAmount ? Number(po.totalAmount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—",
+                        status: po.status,
+                        variant: "success",
+                      });
+                    });
+                  }
+
+                  // Eventos de cadastro
+                  if (supplier.updatedAt) {
+                    activities.push({
+                      id: "sync-erp",
+                      date: supplier.updatedAt,
+                      type: "Sincronização ERP",
+                      desc: "Dados cadastrais sincronizados no sistema",
+                      val: "—",
+                      status: "Concluído",
+                      variant: "success",
+                    });
+                  }
+                  if (supplier.createdAt) {
+                    activities.push({
+                      id: "cad-initial",
+                      date: supplier.createdAt,
+                      type: "Cadastro Inicial",
+                      desc: "Fornecedor registrado na plataforma",
+                      val: "—",
+                      status: isActive ? "Ativo" : "Pendente",
+                      variant: isActive ? "success" : "warning",
+                    });
+                  }
+
+                  activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                  return (
+                    <table className={styles.itemsTable}>
+                      <thead>
+                        <tr>
+                          <th>Data / Tipo</th>
+                          <th>Descrição</th>
+                          <th style={{ width: "160px", textAlign: "right" }}>Valor</th>
+                          <th style={{ width: "160px", textAlign: "center" }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activities.map((act) => (
+                          <tr key={act.id}>
+                            <td>
+                              <div className={styles.doubleText}>
+                                <strong>{new Date(act.date).toLocaleDateString("pt-BR")}</strong>
+                                <small>{act.type}</small>
+                              </div>
+                            </td>
+                            <td>{act.desc}</td>
+                            <td style={{ textAlign: "right" }}>{act.val}</td>
+                            <td style={{ textAlign: "center" }}>
+                              <Badge variant={act.variant}>{act.status}</Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             </div>
           </>

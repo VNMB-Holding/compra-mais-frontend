@@ -144,8 +144,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       .slice(0, 2);
   };
 
-  const userName = user?.name || "Ana Lima";
-  const userEmail = user?.email || "ana.lima@empresa.com";
+  const userName = user?.name || "Usuário";
+  const userEmail = user?.email || "";
   const userRole = user?.role === "admin" ? "Administrador" : user?.role === "gerente" ? "Gerente" : user?.role === "procurist" ? "Comprador" : "Solicitante";
 
   return (

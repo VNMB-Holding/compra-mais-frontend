@@ -250,13 +250,25 @@ export default function FornecedoresListPage() {
           description="Pendente"
           loading={loading}
         />
-        <KpiCard
-          title="Nota média de performance"
-          value={kpis?.avgPerformanceScore || "9.5"}
-          icon="star-01"
-          description="Excelente"
-          loading={loading}
-        />
+        {(() => {
+          const validScores = fornecedores
+            .map((f) => (f.nota !== "-" ? parseFloat(f.nota.replace(",", ".")) : null))
+            .filter((n): n is number => n !== null && !isNaN(n));
+          const listAvg = validScores.length > 0 ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1) : "—";
+          const displayScore = kpis?.avgPerformanceScore ? Number(kpis.avgPerformanceScore).toFixed(1).replace(".", ",") : (listAvg !== "—" ? listAvg.replace(".", ",") : "—");
+          const numScore = parseFloat(displayScore.replace(",", "."));
+          const scoreDesc = isNaN(numScore) ? "Sem avaliações" : numScore >= 9 ? "Excelente" : numScore >= 7 ? "Bom" : numScore >= 5 ? "Regular" : "Abaixo da média";
+
+          return (
+            <KpiCard
+              title="Nota média de performance"
+              value={displayScore}
+              icon="star-01"
+              description={scoreDesc}
+              loading={loading}
+            />
+          );
+        })()}
         <KpiCard
           title="Cobertura no ERP"
           value={String(kpis?.total || fornecedores.length)}

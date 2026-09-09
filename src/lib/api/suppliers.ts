@@ -42,6 +42,26 @@ export interface Supplier {
 
   createdAt: string;
   updatedAt: string;
+
+  proposals?: Array<{
+    id: string;
+    totalValue?: number;
+    status: string;
+    isWinner: boolean;
+    createdAt: string;
+    rfq?: {
+      code: string;
+      title: string;
+      createdAt: string;
+    };
+  }>;
+  purchaseOrders?: Array<{
+    id: string;
+    code: string;
+    totalAmount?: number;
+    status: string;
+    createdAt: string;
+  }>;
 }
 
 export interface SupplierKpis {
