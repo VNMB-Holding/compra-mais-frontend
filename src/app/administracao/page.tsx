@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { ProtectedLayout } from "@/components/ProtectedLayout";
+import {
+  AdminUserModal,
+  AdminAlcadaModal,
+  AdminEmpresaModal,
+  type UserFormData,
+  type EmpresaOption,
+  type AlcadaFormData,
+  type EmpresaFormData,
+} from "@/components/modals";
 import {
   Card,
   Button,
@@ -12,18 +20,9 @@ import {
   Select,
   ConfirmDialog,
   EmptyState,
+  DataTable,
+  ColumnDef,
 } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
-import AdminUserModal, {
-  UserFormData,
-  EmpresaOption,
-} from "@/components/AdminUserModal/AdminUserModal";
-import AdminAlcadaModal, {
-  AlcadaFormData,
-} from "@/components/AdminAlcadaModal/AdminAlcadaModal";
-import AdminEmpresaModal, {
-  EmpresaFormData,
-} from "@/components/AdminEmpresaModal/AdminEmpresaModal";
 import { COMPANY_BRANCHES } from "@/lib/constants/companies";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./administracao.module.css";
@@ -743,7 +742,7 @@ export default function AdministracaoPage() {
   );
 
   return (
-    <ProtectedLayout allowedRoles={["admin"]}>
+    <>
       <div className={styles.pageContainer}>
         
         <div className={styles.pageHeader}>
@@ -1141,6 +1140,6 @@ export default function AdministracaoPage() {
         onConfirm={handleDeleteEmpresa}
         onCancel={() => setDeleteEmpresaDialog(null)}
       />
-    </ProtectedLayout>
+    </>
   );
 }

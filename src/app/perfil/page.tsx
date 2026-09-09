@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { ProtectedLayout } from "@/components/ProtectedLayout";
 import { Card, Button, Icon, Select, Tabs } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
@@ -126,7 +125,7 @@ export default function PerfilPage() {
   ];
 
   return (
-    <ProtectedLayout allowedRoles={["procurist", "solicitante", "gerente", "admin"]}>
+    <>
       <div className={styles.pageContainer}>
         
         
@@ -455,6 +454,6 @@ export default function PerfilPage() {
         )}
 
       </div>
-    </ProtectedLayout>
+    </>
   );
 }
