@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Icon, Select, ErrorState, EmptyState, TableSkeleton } from "@/components/ui";
+import { Card, Button, Icon, Select, ErrorState, EmptyState, TableSkeleton, Badge } from "@/components/ui";
 
 import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import KpiCard from "@/components/ui/KpiCard/KpiCard";
@@ -37,9 +37,9 @@ interface FornecedorRow {
 function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRow {
   const isHomologado = s.status === "Active" || s.isActive === true;
 
-  const rawScore = s.performanceScore !== undefined && s.performanceScore !== null ? Number(s.performanceScore) : 9.5;
-  const nota = rawScore > 0 ? rawScore.toFixed(1).replace(".", ",") : "-";
-  const estrelas = rawScore > 0 ? Math.min(5, Math.max(1, Math.round(rawScore / 2))) : 5;
+  const rawScore = s.performanceScore !== undefined && s.performanceScore !== null ? Number(s.performanceScore) : null;
+  const nota = rawScore !== null && rawScore > 0 ? rawScore.toFixed(1).replace(".", ",") : "—";
+  const estrelas = rawScore !== null && rawScore > 0 ? Math.min(5, Math.max(1, Math.round(rawScore / 2))) : 0;
 
   const cidade = s.city || "—";
   const estado = s.state || "";
@@ -83,7 +83,7 @@ export default function FornecedoresListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Paginação
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -205,18 +205,25 @@ export default function FornecedoresListPage() {
     {
       header: "Status",
       cell: (row) => (
-        <span className={`${styles.statusBadge} ${row.status === "Homologado" ? styles.badgeGreen : styles.badgeYellow}`}>
+        <Badge variant={row.status === "Homologado" ? "success" : "warning"}>
           {row.status}
-        </span>
+        </Badge>
       ),
     },
     {
       header: "",
-      width: "40px",
-      cell: () => (
+      width: "50px",
+      cell: (row) => (
         <div className={styles.actionCell}>
-          <button className={styles.iconBtn}>
-            <Icon name="share-03" />
+          <button 
+            className={styles.iconBtn}
+            title="Ver detalhes do fornecedor"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/fornecedores/${row.id}`);
+            }}
+          >
+            <Icon name="eye" size={16} />
           </button>
         </div>
       ),
@@ -226,7 +233,7 @@ export default function FornecedoresListPage() {
   return (
     <div className={styles.pageContainer}>
 
-      {/* Top Header */}
+      
       <div className={styles.pageHeader}>
         <div>
           <h1>Base de Fornecedores</h1>
@@ -234,7 +241,7 @@ export default function FornecedoresListPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      
       <div className={styles.kpiGrid}>
         <KpiCard
           title="Fornecedores homologados"
@@ -278,11 +285,11 @@ export default function FornecedoresListPage() {
         />
       </div>
 
-      {/* Table Card */}
-      <Card className={styles.mainListCard}>
+      
+      <Card noPadding className={styles.mainListCard}>
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
-            <Icon name="search-lg" />
+            <Icon name="search-md" size={16} />
             <input
               type="text"
               placeholder="Buscar por Fornecedor, CNPJ, Cód. ERP ou Cidade..."
@@ -295,31 +302,27 @@ export default function FornecedoresListPage() {
           </div>
 
           <div className={styles.filtersGroup}>
-            {segmentOptions.length > 2 && (
-              <Select
-                options={segmentOptions}
-                value={selectedSegment}
-                onChange={(val) => {
-                  setSelectedSegment(val);
-                  setCurrentPage(1);
-                }}
-                icon="filter-lines"
-                className={styles.customSelectFilter}
-              />
-            )}
+            <Select
+              options={segmentOptions}
+              value={selectedSegment}
+              onChange={(val) => {
+                setSelectedSegment(val);
+                setCurrentPage(1);
+              }}
+              icon="filter-lines"
+              className={styles.customSelectFilter}
+            />
 
-            {cityOptions.length > 2 && (
-              <Select
-                options={cityOptions}
-                value={selectedCity}
-                onChange={(val) => {
-                  setSelectedCity(val);
-                  setCurrentPage(1);
-                }}
-                icon="marker-pin-01"
-                className={styles.customSelectFilter}
-              />
-            )}
+            <Select
+              options={cityOptions}
+              value={selectedCity}
+              onChange={(val) => {
+                setSelectedCity(val);
+                setCurrentPage(1);
+              }}
+              icon="marker-pin-01"
+              className={styles.customSelectFilter}
+            />
 
             <Select
               options={statusOptions}
@@ -379,17 +382,17 @@ export default function FornecedoresListPage() {
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   className={styles.pageBtn}
                 >
-                  <Icon name="chevron-left" />
+                  <Icon name="chevron-left" size={16} />
                 </button>
-                <button className={`${styles.pageBtn} ${styles.pageActive}`}>
-                  {currentPage}
-                </button>
+                <span style={{ fontSize: 13, color: "#475569", alignSelf: "center", margin: "0 8px" }}>
+                  Página {currentPage} de {totalPages}
+                </span>
                 <button
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   className={styles.pageBtn}
                 >
-                  <Icon name="chevron-right" />
+                  <Icon name="chevron-right" size={16} />
                 </button>
               </div>
             </div>
