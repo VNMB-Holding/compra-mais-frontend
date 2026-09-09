@@ -41,7 +41,7 @@ function parseJwtExp(token: string): number | null {
       }
     }
   } catch {
-    // fallback se não conseguir parsear
+    
   }
   return null;
 }
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokenProvider(() => accessToken);
   }, [accessToken]);
 
-  // Promessa única compartilhada para evitar chamadas de refresh duplicadas/concorrentes
+  
   const activeRefreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
   const doRefreshToken = useCallback(async (): Promise<string | null> => {
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return refreshPromise;
   }, []);
 
-  // Renovação proativa em background antes da expiração do JWT (5 minutos antes de expirar)
+  
   useEffect(() => {
     if (!accessToken) return;
 

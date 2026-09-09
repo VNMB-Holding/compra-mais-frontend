@@ -79,7 +79,7 @@ export default function SolicitacoesPage() {
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
 
-  // Paginação
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDrawerRequest, setSelectedDrawerRequest] = useState<PurchaseRequest | null>(null);
   const itemsPerPage = 10;
@@ -329,7 +329,7 @@ export default function SolicitacoesPage() {
         )}
       </Card>
 
-      {/* Drawer de Detalhes Rápidos */}
+      
       {selectedDrawerRequest && (
         <QuickDetailDrawer
           open={!!selectedDrawerRequest}
@@ -345,7 +345,7 @@ export default function SolicitacoesPage() {
           onPrimaryAction={() => router.push(`/compras/solicitacoes/${selectedDrawerRequest.id}`)}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Informações Gerais */}
+            
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, background: "#f8fafc", padding: 16, borderRadius: 8, border: "1px solid #e2e8f0" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Unidade / Empresa</span>
@@ -379,7 +379,7 @@ export default function SolicitacoesPage() {
               )}
             </div>
 
-            {/* Tabela Rápida de Itens */}
+            
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#334155", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6 }}>
                 <Icon name="package" size={16} /> Itens da Solicitação ({selectedDrawerRequest.items?.length || 0})

@@ -1,7 +1,7 @@
 export interface CompanyBranchMapping {
   code: string;
   name: string;
-  acronym: string; // Sigla (ex: VBA, VBB, etc.)
+  acronym: string; 
   unitName: string;
 }
 
@@ -68,35 +68,27 @@ export const COMPANY_BRANCHES: CompanyBranchMapping[] = [
   },
 ];
 
-/**
- * Mapa rápido indexado por código ERP (ex: "2345" -> CompanyBranchMapping)
- */
+
 export const COMPANY_BY_CODE_MAP: Record<string, CompanyBranchMapping> =
   COMPANY_BRANCHES.reduce((acc, item) => {
     acc[item.code] = item;
     return acc;
   }, {} as Record<string, CompanyBranchMapping>);
 
-/**
- * Mapa rápido indexado por sigla (ex: "VBA" -> CompanyBranchMapping)
- */
+
 export const COMPANY_BY_ACRONYM_MAP: Record<string, CompanyBranchMapping> =
   COMPANY_BRANCHES.reduce((acc, item) => {
     acc[item.acronym.toUpperCase()] = item;
     return acc;
   }, {} as Record<string, CompanyBranchMapping>);
 
-/**
- * Retorna o nome amigável/completo da empresa por código
- */
+
 export function getCompanyNameByCode(code?: string): string | undefined {
   if (!code) return undefined;
   return COMPANY_BY_CODE_MAP[code]?.name;
 }
 
-/**
- * Retorna os dados da unidade/empresa a partir do código ou sigla
- */
+
 export function findCompanyBranch(query?: string): CompanyBranchMapping | undefined {
   if (!query) return undefined;
   const normalized = query.trim().toUpperCase();

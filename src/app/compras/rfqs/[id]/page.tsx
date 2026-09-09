@@ -290,7 +290,7 @@ export default function RfqDetailPage() {
           paymentTerms: dados.paymentTerms || "30 dias DDL",
           deliveryTime: Number(dados.deliveryTime) || 5,
         });
-        // Armazena o propostaId real retornado pela API no estado local
+        
         if (propostaCriada?.id) {
           setPropostas((c) =>
             c.map((p) =>
@@ -391,7 +391,7 @@ export default function RfqDetailPage() {
                 (p) => p.supplierId === pendingVencedorId
               )?.proposalId;
 
-              // Se a proposta ainda não tiver id cadastrado no backend, cria automaticamente
+              
               if (!propostaIdParaEnviar) {
                 const propLocal = propostas.find((p) => p.supplierId === pendingVencedorId);
                 const propCriada = await rfqsApi.createProposal(rfqId, {
@@ -412,7 +412,7 @@ export default function RfqDetailPage() {
 
               await rfqsApi.selectWinner(rfqId, propostaIdParaEnviar);
 
-              // Atualiza os dados completos da RFQ vindos do servidor
+              
               const updated = await rfqsApi.getById(rfqId);
               setRfq(updated);
               setPropostas(mapPropostas(updated));
@@ -648,7 +648,7 @@ export default function RfqDetailPage() {
           </Card>
         )}
 
-        {/* Card de Link Direto para o Fornecedor */}
+        
         <Card style={{ marginBottom: 20, background: "#f0fdfa", border: "1px solid #ccfbf1", padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

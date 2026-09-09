@@ -7,17 +7,17 @@ import Button from "@/components/ui/Button/Button";
 import styles from "./ErrorState.module.css";
 
 interface ErrorStateProps {
-  /** Error message to show. Defaults to a generic message. */
+  
   message?: string;
-  /** Optional heading. Defaults to "Erro ao carregar dados". */
+  
   title?: string;
-  /** Called when the user clicks "Tentar novamente". */
+  
   onRetry?: () => void;
-  /** Label for the retry button. Defaults to "Tentar novamente". */
+  
   retryLabel?: string;
-  /** Nome da ilustração ou 'none' para o ícone padrão de alerta */
+  
   illustration?: "disconnected" | "server-error" | "not-found" | "connection-lost" | "none";
-  /** Optional CSS class added to the root element. */
+  
   className?: string;
 }
 

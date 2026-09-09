@@ -43,7 +43,7 @@ export default function ErrorBoundary({
             Ocorreu uma instabilidade inesperada ao processar esta página. Nossa equipe técnica já foi notificada.
           </p>
 
-          {/* Seção retrátil de diagnóstico técnico */}
+          
           <div className={styles.diagnosticsBox}>
             <button
               type="button"

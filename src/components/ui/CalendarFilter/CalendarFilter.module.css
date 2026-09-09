@@ -101,7 +101,7 @@
   transform: rotate(180deg);
 }
 
-/* Popover overlay */
+
 .popover {
   position: absolute;
   top: calc(100% + 6px);
@@ -131,7 +131,7 @@
   }
 }
 
-/* Top Mode Switcher */
+
 .modeSwitcher {
   display: flex;
   background-color: var(--bg-surface-secondary, #f1f5f9);
@@ -161,7 +161,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Presets */
+
 .presetsContainer {
   display: flex;
   flex-wrap: wrap;
@@ -194,7 +194,7 @@
   color: #ffffff;
 }
 
-/* Calendar Header */
+
 .calendarNav {
   display: flex;
   align-items: center;
@@ -228,7 +228,7 @@
   text-transform: capitalize;
 }
 
-/* Calendar Grid */
+
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -307,7 +307,7 @@
   border-radius: 0;
 }
 
-/* Footer info & actions */
+
 .footer {
   display: flex;
   align-items: center;

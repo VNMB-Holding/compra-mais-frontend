@@ -26,7 +26,7 @@ export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProp
 
   return (
     <Card className={styles.urgentCard}>
-      {/* Header Padronizado do Dashboard */}
+      
       <div className={styles.cardHeader}>
         <div className={styles.headerTitles}>
           <div className={styles.titleWithIndicator}>
@@ -37,7 +37,7 @@ export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProp
         </div>
       </div>
 
-      {/* Caixa de Destaque Central */}
+      
       <div className={styles.quoteBox}>
         <div className={styles.quoteBoxHeader}>
           <span className={styles.codeTag}>{quote.code}</span>
@@ -62,7 +62,7 @@ export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProp
         </div>
       </div>
 
-      {/* Link de Ação no Rodapé Padronizado */}
+      
       <button className={styles.cardLink} onClick={onAction}>
         Acessar cotação na íntegra <Icon name="arrow-right" size={16} />
       </button>

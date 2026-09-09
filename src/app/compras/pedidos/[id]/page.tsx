@@ -164,7 +164,7 @@ export default function PedidoDetailPage() {
         <Icon name="chevron-left" /> Voltar para Pedidos
       </button>
 
-      {/* Header Padronizado */}
+      
       <div className={styles.pageHeader}>
         <div>
           <div className={styles.titleRow}>
@@ -206,13 +206,13 @@ export default function PedidoDetailPage() {
         </div>
       </div>
 
-      {/* Layout 2 Colunas Limpo */}
+      
       <div className={styles.layout2Col}>
         
-        {/* Coluna Principal */}
+        
         <div className={styles.colMain}>
           
-          {/* Stepper Horizontal Limpo */}
+          
           <Card className={styles.flowCard}>
             <h4>Fluxo e Rastreabilidade do Pedido</h4>
             <div className={styles.stepperContainer}>
@@ -278,7 +278,7 @@ export default function PedidoDetailPage() {
             </div>
           </Card>
 
-          {/* Detalhamento Comercial */}
+          
           <Card className={styles.infoCard}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <h4 style={{ margin: 0 }}>Detalhamento Comercial do Pedido</h4>
@@ -315,7 +315,7 @@ export default function PedidoDetailPage() {
             </div>
           </Card>
 
-          {/* Tabela de Itens */}
+          
           <div className={styles.itemsTableCard}>
             <div className={styles.itemsCardHeader}>
               <h4><Icon name="package" size={16} /> Itens do Pedido ({items?.length || 1})</h4>
@@ -372,10 +372,10 @@ export default function PedidoDetailPage() {
 
         </div>
 
-        {/* Coluna Lateral */}
+        
         <div className={styles.colSide}>
           
-          {/* Card de Resumo Financeiro */}
+          
           <Card className={styles.sideCard}>
             <h4>Resumo Financeiro</h4>
             <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", marginBottom: "16px" }}>
@@ -398,7 +398,7 @@ export default function PedidoDetailPage() {
             </div>
           </Card>
 
-          {/* Card de Fornecedor */}
+          
           <Card className={styles.sideCard}>
             <h4>Fornecedor Contratado</h4>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
@@ -417,7 +417,7 @@ export default function PedidoDetailPage() {
             )}
           </Card>
 
-          {/* Card de Documentos e PO */}
+          
           <Card className={styles.sideCard}>
             <h4>Documento Oficial (PO)</h4>
             <div className={styles.fileRow}>

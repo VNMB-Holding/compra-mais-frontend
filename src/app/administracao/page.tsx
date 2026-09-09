@@ -816,7 +816,7 @@ export default function AdministracaoPage() {
                     onChange={setStatusFilter}
                     className={styles.customSelectFilter}
                   />
-                  {/* Criação de usuário desabilitada: gerenciado via Identity */}
+                  
                 </div>
               </div>
 
@@ -1021,7 +1021,7 @@ export default function AdministracaoPage() {
                     onChange={(e) => setEmpresaSearch(e.target.value)}
                   />
                 </div>
-                {/* Cadastro manual de empresa desabilitado: sincronizado via Identity/Corporate */}
+                
               </div>
 
               {filteredEmpresas.length === 0 ? (

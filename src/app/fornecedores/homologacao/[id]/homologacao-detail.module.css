@@ -22,7 +22,7 @@
   text-decoration: underline;
 }
 
-/* Header Section */
+
 .pageHeader {
   display: flex;
   justify-content: space-between;
@@ -98,7 +98,7 @@
   cursor: not-allowed;
 }
 
-/* 4-KPI Metric Strip */
+
 .kpiStrip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -145,7 +145,7 @@
 .textYellow { color: #ca8a04; }
 .textRed { color: #dc2626; }
 
-/* Status Badges */
+
 .badgeSuccess {
   display: inline-flex;
   align-items: center;
@@ -180,7 +180,7 @@
   border-radius: 4px;
 }
 
-/* Tabs */
+
 .tabsBar {
   display: flex;
   gap: 24px;
@@ -215,7 +215,7 @@
   background-color: #007d79;
 }
 
-/* Content Container */
+
 .contentCard {
   background: white;
   border: 1px solid #e2e8f0;
@@ -237,7 +237,7 @@
   gap: 8px;
 }
 
-/* Clean Check List */
+
 .checklistGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -275,7 +275,7 @@
   color: #64748b;
 }
 
-/* Alert Boxes */
+
 .alertSuccess {
   display: flex;
   align-items: center;
@@ -303,7 +303,7 @@
   margin-bottom: 6px;
 }
 
-/* Sources Pills */
+
 .sourcesWrap {
   display: flex;
   align-items: center;
@@ -324,7 +324,7 @@
   border: 1px solid #e2e8f0;
 }
 
-/* Key-Value Details Grid */
+
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -351,7 +351,7 @@
   color: #0f172a;
 }
 
-/* QSA Sócios Cards */
+
 .qsaGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -378,7 +378,7 @@
   color: #64748b;
 }
 
-/* News List */
+
 .newsList {
   display: flex;
   flex-direction: column;

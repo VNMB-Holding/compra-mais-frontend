@@ -127,7 +127,7 @@ export default function EconomiaPage() {
       });
     } catch (err) {
       logError("analytics/economia/export", err);
-      // Fallback para CSV estruturado no cliente
+      
       try {
         const rows: string[][] = [
           ["Iniciativa / Detalhe", "Categoria", "Fornecedor", "Valor Economizado (R$)", "Data"],

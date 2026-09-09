@@ -168,7 +168,7 @@ export default function AprovacaoPage() {
 
   return (
     <div className={styles.portalContainer}>
-      {/* Header Institucional do Portal */}
+      
       <header className={styles.portalHeader}>
         <div className={styles.brandArea}>
           <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logo} />
@@ -183,7 +183,7 @@ export default function AprovacaoPage() {
           <div className={styles.accentBar} />
 
           <div className={styles.cardBody}>
-            {/* Cabeçalho do Card */}
+            
             <div className={styles.cardHeader}>
               <div>
                 <div className={styles.titleRow}>
@@ -220,7 +220,7 @@ export default function AprovacaoPage() {
               </div>
             ) : (
               <>
-                {/* Grid de Detalhamento da Demanda */}
+                
                 <div className={styles.detailsGrid}>
                   <div className={styles.detailItemFull}>
                     <label>Descrição da Demanda</label>
@@ -247,7 +247,7 @@ export default function AprovacaoPage() {
                   )}
                 </div>
 
-                {/* Lista de Itens */}
+                
                 {details.items && details.items.length > 0 && (
                   <div className={styles.itemsBlock}>
                     <div className={styles.itemsBlockHeader}>
@@ -269,7 +269,7 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {/* Input de Justificativa de Recusa */}
+                
                 {showRejectInput && (
                   <div className={styles.rejectInputArea}>
                     <label>Informe o motivo da recusa *</label>
@@ -282,7 +282,7 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {/* Bloco de Ações e Assinatura */}
+                
                 <div className={styles.actionsContainer}>
                   {!showRejectInput ? (
                     <div className={styles.actionButtonsRow}>

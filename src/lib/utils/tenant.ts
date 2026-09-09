@@ -14,16 +14,12 @@ export interface TenantOption {
   acronym?: string;
 }
 
-/**
- * Mantido por compatibilidade: todos os usuários agora têm acesso irrestrito aos seus tenants
- */
+
 export function isVnmbUser(_user: User | null): boolean {
   return true;
 }
 
-/**
- * Retorna opções de filtro unificadas para todas as páginas (Todas + 10 Unidades VB Agro)
- */
+
 export function getCompanyFilterOptions(): { label: string; value: string }[] {
   return [
     { label: "Unidade: Todas as Unidades", value: "TODAS" },
@@ -34,9 +30,7 @@ export function getCompanyFilterOptions(): { label: string; value: string }[] {
   ];
 }
 
-/**
- * Retorna as Empresas / Filiais disponíveis para seleção nos filtros e formulários
- */
+
 export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
   return COMPANY_BRANCHES.map((b) => ({
     id: b.code,
@@ -48,9 +42,7 @@ export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
 }
 
 
-/**
- * Retorna as Filiais da empresa
- */
+
 export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?: string): TenantOption[] {
   if (selectedCompanyId && selectedCompanyId !== "TODAS" && selectedCompanyId !== "2313") {
     return COMPANY_BRANCHES.filter((b) => b.code === selectedCompanyId).map((b) => ({
@@ -71,26 +63,24 @@ export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?:
   }));
 }
 
-/**
- * Retorna o nome amigável da Empresa/Unidade com base no tenantId/código ERP
- */
+
 export function getTenantDisplayName(tenantId?: string, user?: User | null): string {
   if (!tenantId || tenantId === "TODAS") {
     return "VB AGRO LTDA";
   }
 
-  // 1. Tenta mapear diretamente pelos códigos ou siglas corporativas cadastradas
+  
   const branch = findCompanyBranch(tenantId);
   if (branch) {
     return `${branch.name} (${branch.acronym})`;
   }
 
-  // 2. Se for nome de tenant ou ID
+  
   if (tenantId.toUpperCase().includes("VNMB")) {
     return "VB AGRO LTDA";
   }
 
-  // 3. Tenta encontrar na lista de tenants do usuário por ID exato se não for VNMB
+  
   const foundInUser = user?.availableTenants?.find((t) => t.id === tenantId);
   if (foundInUser) {
     const matchInUser = findCompanyBranch(foundInUser.name) || findCompanyBranch(foundInUser.id);
@@ -101,9 +91,7 @@ export function getTenantDisplayName(tenantId?: string, user?: User | null): str
   return "VB AGRO LTDA";
 }
 
-/**
- * Formata o nome completo da filial/empresa a partir dos campos do ERP (Coligada/Filial) ou TenantId
- */
+
 export function formatCorporateBranch(
   coligada?: string | number,
   filial?: string | number,

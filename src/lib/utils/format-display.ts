@@ -81,7 +81,7 @@ export function formatMonthLabel(label: string | undefined | null): string {
     return MONTH_MAP_PT[lower];
   }
 
-  // Se vier no formato "Sep/26" ou "Sep 2026"
+  
   const parts = trimmed.split(/[\s\/-]+/);
   if (parts.length >= 2 && MONTH_MAP_PT[parts[0].toLowerCase()]) {
     return `${MONTH_MAP_PT[parts[0].toLowerCase()]}/${parts[1]}`;

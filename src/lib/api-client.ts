@@ -184,7 +184,7 @@ export const apiClient = {
   },
 
   async getRaw(endpoint: string, options?: RequestOptions): Promise<Response> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    
     const { headers: customHeaders, auth = false, body: _body, ...rest } = options || {};
 
     const headers: Record<string, string> = {

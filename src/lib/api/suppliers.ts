@@ -23,20 +23,20 @@ export interface Supplier {
   isPublicAgency?: boolean;
   suframa?: string;
 
-  // Informação bancária
+  
   bankNumber?: string;
   bankCode?: string;
   pixKey?: string;
   registrationDate?: string;
 
-  // Locais de entrega
+  
   deliveryLocationName?: string;
   deliveryLocationCode?: string;
   deliveryLeadTime?: number;
   performanceScore?: number;
   segment?: string;
 
-  // Integração / ERP
+  
   integrationCode?: string;
   rawPayload?: any;
 

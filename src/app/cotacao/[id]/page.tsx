@@ -16,17 +16,17 @@ export default function CotacaoFornecedorPage() {
   const [error, setError] = useState<string | null>(null);
   const [rfq, setRfq] = useState<PublicRfq | null>(null);
 
-  // Form State
+  
   const [supplierCnpj, setSupplierCnpj] = useState("");
   const [supplierName, setSupplierName] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   
-  // Prices map: { [requestItemId]: number }
+  
   const [itemPrices, setItemPrices] = useState<Record<string, number>>({});
   
-  // Commercial conditions
+  
   const [freightType, setFreightType] = useState<"CIF" | "FOB">("CIF");
   const [freightCost, setFreightCost] = useState<number>(0);
   const [paymentTerms, setPaymentTerms] = useState("30 dias DDL");
@@ -46,7 +46,7 @@ export default function CotacaoFornecedorPage() {
         const data = await rfqsApi.getPublicRfq(id);
         setRfq(data);
 
-        // Iniciar mapa de preços com 0 para cada item
+        
         const initialPrices: Record<string, number> = {};
         (data.items || []).forEach((item) => {
           initialPrices[item.id] = 0;
@@ -70,7 +70,7 @@ export default function CotacaoFornecedorPage() {
     }));
   };
 
-  // Cálculos dinâmicos em tempo real
+  
   const itemsSubtotal = useMemo(() => {
     if (!rfq?.items) return 0;
     return rfq.items.reduce((sum, item) => {
@@ -230,7 +230,7 @@ export default function CotacaoFornecedorPage() {
 
   return (
     <div className={styles.portalContainer}>
-      {/* Header Institucional do Portal */}
+      
       <header className={styles.portalHeader}>
         <div className={styles.brandArea}>
           <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logo} />
@@ -241,7 +241,7 @@ export default function CotacaoFornecedorPage() {
       </header>
 
       <main className={styles.portalMain}>
-        {/* Header no Padrão de Solicitação / Pedido */}
+        
         <div className={styles.pageHeader}>
           <div>
             <div className={styles.titleRow}>
@@ -266,7 +266,7 @@ export default function CotacaoFornecedorPage() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Seção 1: Identificação do Fornecedor */}
+          
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <Icon name="building-07" size={18} className={styles.sectionIcon} />
@@ -328,7 +328,7 @@ export default function CotacaoFornecedorPage() {
             </div>
           </div>
 
-          {/* Seção 2: Tabela de Itens e Preços */}
+          
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <Icon name="shopping-cart-01" size={20} className={styles.sectionIcon} />
@@ -400,7 +400,7 @@ export default function CotacaoFornecedorPage() {
             </div>
           </div>
 
-          {/* Seção 3: Condições Comerciais & Prazos */}
+          
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <Icon name="truck-01" size={20} className={styles.sectionIcon} />

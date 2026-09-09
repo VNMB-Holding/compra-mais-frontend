@@ -61,7 +61,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       loadNotifications();
       loadPendingApprovals();
 
-      // Polling leve a cada 45s para notificações em tempo real
+      
       const interval = setInterval(() => {
         loadNotifications();
       }, 45000);
@@ -259,7 +259,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        {/* Empresa do perfil do usuário logado */}
+        
         <div className={styles.companyBadgeWrapper}>
           <div className={styles.companyStaticBadge} title={`Empresa ativa: ${companyDisplay}`}>
             <Icon name="building-07" size={16} />
@@ -289,11 +289,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                   <small>{userRole}</small>
                 </div>
               </div>
-              {/* Opção 'Meu Perfil' temporariamente oculta */}
-              {/* <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/perfil"); }}>
-                <Icon name="user" /> Meu Perfil
-              </div>
-              <div className={styles.dropdownDivider} /> */}
+              
+              
               <div className={`${styles.dropdownItem} ${styles.logoutItem}`} onClick={handleLogout}>
                 <Icon name="log-out-01" /> Sair
               </div>

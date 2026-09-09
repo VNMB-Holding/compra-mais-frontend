@@ -40,7 +40,7 @@ export default function HomologacaoDetailPage() {
     fetchSupplier();
   }, [fetchSupplier]);
 
-  // Executa raspagem e re-auditoria automática em tempo real
+  
   const handleRunScreening = async () => {
     if (!supplier) return;
     try {
@@ -54,7 +54,7 @@ export default function HomologacaoDetailPage() {
       const result = await homologacaoApi.screen(supplier.corporateName || supplier.tradeName, supplier.cnpj);
       setScreeningResult(result);
 
-      // O status é calculado e atualizado automaticamente pelo sistema
+      
       const autoStatus: Supplier["status"] = result.score >= 70 ? "Active" : result.score >= 40 ? "UnderCertification" : "Suspended";
       const updatedScore = Number((result.score / 10).toFixed(1));
 
@@ -104,7 +104,7 @@ export default function HomologacaoDetailPage() {
   const isHomologado = supplier.status === "Active" || supplier.isActive === true;
   const isSuspended = supplier.status === "Suspended";
 
-  // Score e Risco calculados automaticamente
+  
   const displayScore = screeningResult ? screeningResult.score : supplier.performanceScore ? Math.round(Number(supplier.performanceScore) * 10) : 85;
   const riskCategory = displayScore >= 70 ? "Baixo" : displayScore >= 40 ? "Médio" : "Alto";
   const riskColorClass = displayScore >= 70 ? styles.textGreen : displayScore >= 40 ? styles.textYellow : styles.textRed;
@@ -122,12 +122,12 @@ export default function HomologacaoDetailPage() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Back Button */}
+      
       <button className={styles.backBtn} onClick={() => router.push("/fornecedores/homologacao")}>
         <Icon name="arrow-left" size={16} /> Voltar para Homologação
       </button>
 
-      {/* Header Row */}
+      
       <div className={styles.pageHeader}>
         <div className={styles.headerLeft}>
           <div className={styles.titleRow}>
@@ -155,7 +155,7 @@ export default function HomologacaoDetailPage() {
         </div>
       </div>
 
-      {/* 4-KPI Metric Strip */}
+      
       <div className={styles.kpiStrip}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiLabel}>
@@ -203,7 +203,7 @@ export default function HomologacaoDetailPage() {
         </div>
       </div>
 
-      {/* Clean Tabs */}
+      
       <div className={styles.tabsBar}>
         <button
           className={`${styles.tabBtn} ${activeTab === "diagnostico" ? styles.tabActive : ""}`}
@@ -231,7 +231,7 @@ export default function HomologacaoDetailPage() {
         </button>
       </div>
 
-      {/* Tab 1: Diagnóstico & Conformidade */}
+      
       {activeTab === "diagnostico" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>
@@ -272,7 +272,7 @@ export default function HomologacaoDetailPage() {
             </div>
           </div>
 
-          {/* Apontamentos e Riscos */}
+          
           <div>
             <h2 className={styles.sectionTitle} style={{ marginBottom: 12 }}>
               <Icon name="alert-triangle" size={18} /> Apontamentos & Diagnóstico
@@ -305,7 +305,7 @@ export default function HomologacaoDetailPage() {
             )}
           </div>
 
-          {/* Fontes Consultadas */}
+          
           <div>
             <h2 className={styles.sectionTitle} style={{ marginBottom: 12 }}>
               <Icon name="globe-01" size={18} /> Fontes Oficiais Integradas
@@ -323,7 +323,7 @@ export default function HomologacaoDetailPage() {
         </div>
       )}
 
-      {/* Tab 2: Dados Cadastrais & Sócios */}
+      
       {activeTab === "cadastro" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>
@@ -372,7 +372,7 @@ export default function HomologacaoDetailPage() {
             </div>
           </div>
 
-          {/* Quadro de Sócios */}
+          
           <div style={{ marginTop: 16 }}>
             <h2 className={styles.sectionTitle} style={{ marginBottom: 12 }}>
               <Icon name="users-01" size={18} /> Quadro de Sócios e Administradores (QSA)
@@ -397,7 +397,7 @@ export default function HomologacaoDetailPage() {
         </div>
       )}
 
-      {/* Tab 3: Reputação & Notícias Web */}
+      
       {activeTab === "noticias" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>
@@ -427,7 +427,7 @@ export default function HomologacaoDetailPage() {
         </div>
       )}
 
-      {/* Tab 4: Dados Bancários & Contato */}
+      
       {activeTab === "financeiro" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>

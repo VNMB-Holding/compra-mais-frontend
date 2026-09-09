@@ -722,7 +722,7 @@ textarea.formControl {
 }
 
 
-/* Selected Suppliers Tray */
+
 .selectedTray {
   background: #f0fdf9;
   border: 1px solid #99f6e4;
@@ -790,7 +790,7 @@ textarea.formControl {
   color: #ef4444;
 }
 
-/* Search and Filter Toolbar */
+
 .supplierFilterToolbar {
   display: flex;
   gap: 12px;
@@ -936,7 +936,7 @@ textarea.formControl {
   white-space: nowrap;
 }
 
-/* Pagination Bar */
+
 .supplierPaginationBar {
   display: flex;
   justify-content: space-between;

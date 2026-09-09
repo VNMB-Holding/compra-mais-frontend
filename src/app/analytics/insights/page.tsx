@@ -70,7 +70,7 @@ export default function InsightsPage() {
     fetchData();
   }, [fetchData]);
 
-  // Cálculos derivados reais a partir da API
+  
   const totalSpend = useMemo(() => {
     if (!spendData?.categories) return 0;
     return spendData.categories.reduce((sum, c) => sum + (c.spendTotal || 0), 0);
@@ -81,12 +81,12 @@ export default function InsightsPage() {
     return economyData.suppliers.reduce((sum, s) => sum + (s.valor || 0), 0);
   }, [economyData]);
 
-  // Insights gerados dinamicamente com base nas análises reais de compras
+  
   const dynamicInsights = useMemo<DerivedInsight[]>(() => {
     const list: DerivedInsight[] = [];
     let count = 1;
 
-    // 1. Oportunidade de consolidação na maior categoria de gasto
+    
     if (spendData?.categories && spendData.categories.length > 0) {
       const topCategory = spendData.categories[0];
       const estimatedSaving = Math.round(topCategory.spendTotal * 0.08);
@@ -102,7 +102,7 @@ export default function InsightsPage() {
       });
     }
 
-    // 2. Alerta de concentração de fornecedor
+    
     if (spendData?.suppliers && spendData.suppliers.length > 0) {
       const topSupplier = spendData.suppliers[0];
       if (topSupplier.pct > 30) {
@@ -119,7 +119,7 @@ export default function InsightsPage() {
       }
     }
 
-    // 3. Eficiência em Savings já capturados
+    
     if (economyData?.categories && economyData.categories.length > 0) {
       const bestSavingCat = economyData.categories[0];
       list.push({
@@ -134,7 +134,7 @@ export default function InsightsPage() {
       });
     }
 
-    // 4. Eficiência de alçadas e requisições
+    
     list.push({
       id: `INS-${String(count++).padStart(3, "0")}`,
       category: "Eficiência",
@@ -149,13 +149,13 @@ export default function InsightsPage() {
     return list;
   }, [spendData, economyData]);
 
-  // Filtragem dos insights
+  
   const filteredInsights = useMemo(() => {
     if (categoryFilter === "Todas") return dynamicInsights;
     return dynamicInsights.filter((i) => i.category === categoryFilter);
   }, [dynamicInsights, categoryFilter]);
 
-  // Dados reais para o BarChart
+  
   const barChartData = useMemo(() => {
     if (!spendData?.categories || spendData.categories.length === 0) {
       return [{ name: "Sem dados", value: 0 }];

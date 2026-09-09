@@ -81,7 +81,7 @@ export default function FornecedorDetailPage() {
   return (
     <div className={styles.pageContainer}>
       
-      {/* Top Header & Navigation */}
+      
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório
@@ -110,11 +110,11 @@ export default function FornecedorDetailPage() {
         </div>
       </div>
 
-      {/* Main Supplier Hero Card */}
+      
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
           
-          {/* Base Info */}
+          
           <div className={styles.summaryColBase}>
             <div className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}>
               {getInitials(supplier.corporateName)}
@@ -129,7 +129,7 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-          {/* Performance Score & Stars */}
+          
           <div className={styles.summaryColScore}>
             <div className={styles.scoreHeader}>
               <span>Nota de Performance</span>
@@ -144,7 +144,7 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-          {/* Status & Cadastro */}
+          
           <div className={styles.summaryColStatus}>
             <div className={styles.statusRow}>
               <span>Situação Cadastral</span>
@@ -158,7 +158,7 @@ export default function FornecedorDetailPage() {
         </div>
       </Card>
 
-      {/* Tabs */}
+      
       <div className={styles.tabsContainer}>
         <button className={activeTab === "visao-geral" ? styles.tabActive : ""} onClick={() => setActiveTab("visao-geral")}>
           Visão geral
@@ -168,12 +168,12 @@ export default function FornecedorDetailPage() {
         </button>
       </div>
 
-      {/* Tab Content */}
+      
       <div className={styles.tabContent}>
         
         {activeTab === "visao-geral" && (
           <>
-            {/* KPI Cards */}
+            
             <div className={styles.kpiGrid}>
               <KpiCard
                 title="Score de Performance"
@@ -201,7 +201,7 @@ export default function FornecedorDetailPage() {
               />
             </div>
 
-            {/* Atividades Recentes */}
+            
             <div className={styles.itemsCard}>
               <div className={styles.itemsCardHeader}>
                 <h3><Icon name="clock-refresh" size={18} /> Histórico de atividades com o fornecedor</h3>
@@ -218,7 +218,7 @@ export default function FornecedorDetailPage() {
                     variant: "success" | "warning" | "gray";
                   }> = [];
 
-                  // Propostas enviadas pelo fornecedor
+                  
                   if (supplier.proposals && supplier.proposals.length > 0) {
                     supplier.proposals.forEach((p) => {
                       activities.push({
@@ -233,7 +233,7 @@ export default function FornecedorDetailPage() {
                     });
                   }
 
-                  // Pedidos de compra
+                  
                   if (supplier.purchaseOrders && supplier.purchaseOrders.length > 0) {
                     supplier.purchaseOrders.forEach((po) => {
                       activities.push({
@@ -248,7 +248,7 @@ export default function FornecedorDetailPage() {
                     });
                   }
 
-                  // Eventos de cadastro
+                  
                   if (supplier.updatedAt) {
                     activities.push({
                       id: "sync-erp",
@@ -313,7 +313,7 @@ export default function FornecedorDetailPage() {
           <div className={styles.cadastraisGrid}>
             <div className={styles.cadastraisCol}>
               
-              {/* Card 1: Informações Cadastrais & Fiscais */}
+              
               <Card className={styles.cadastraisCard}>
                 <div className={styles.cadastraisCardHeader}>
                   <div className={`${styles.headerIconCircle} ${styles.iconBlue}`}>
@@ -371,7 +371,7 @@ export default function FornecedorDetailPage() {
                 </div>
               </Card>
 
-              {/* Card 2: Logística & Condições de Fornecimento */}
+              
               <Card className={styles.cadastraisCard}>
                 <div className={styles.cadastraisCardHeader}>
                   <div className={`${styles.headerIconCircle} ${styles.iconAmber}`}>
@@ -417,7 +417,7 @@ export default function FornecedorDetailPage() {
 
             <div className={styles.cadastraisCol}>
 
-              {/* Card 3: Contatos & Localização */}
+              
               <Card className={styles.cadastraisCard}>
                 <div className={styles.cadastraisCardHeader}>
                   <div className={`${styles.headerIconCircle} ${styles.iconPurple}`}>
@@ -480,7 +480,7 @@ export default function FornecedorDetailPage() {
                 </div>
               </Card>
 
-              {/* Card 4: Dados Bancários & PIX */}
+              
               <Card className={styles.cadastraisCard}>
                 <div className={styles.cadastraisCardHeader}>
                   <div className={`${styles.headerIconCircle} ${styles.iconGreen}`}>

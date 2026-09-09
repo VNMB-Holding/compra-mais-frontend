@@ -395,7 +395,7 @@ export default function SolicitacaoDetailPage() {
             </div>
           </Card>
 
-          {/* Card Consolidado: Dados da Demanda e Origem ERP */}
+          
           <Card className={styles.infoCard} style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -488,7 +488,7 @@ export default function SolicitacaoDetailPage() {
             </div>
           </Card>
 
-          {/* Itens Solicitados */}
+          
           {sol?.items && sol.items.length > 0 && (
             <Card noPadding className={styles.itemsTableCard}>
               <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

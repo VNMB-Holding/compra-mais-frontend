@@ -135,7 +135,7 @@ export const rfqsApi = {
     try {
       return await apiClient.get<PublicRfq>(`/api/rfqs/public/${id}`);
     } catch (err: any) {
-      // Fallback para ambientes onde o endpoint /public/:id ainda não foi publicado
+      
       try {
         const fallback = await apiClient.get<any>(`/api/rfqs/${id}`);
         if (fallback) {
@@ -160,7 +160,7 @@ export const rfqsApi = {
           };
         }
       } catch (innerErr) {
-        // Se ambos falharem, relança o erro original
+        
       }
       throw err;
     }
@@ -173,7 +173,7 @@ export const rfqsApi = {
         data
       );
     } catch (err: any) {
-      // Fallback: se o backend retornar 404, tenta enviar via endpoint interno de proposals
+      
       try {
         const rfq = await apiClient.get<any>(`/api/rfqs/${id}`);
         if (rfq?.id) {
@@ -194,7 +194,7 @@ export const rfqsApi = {
           };
         }
       } catch (fallbackErr) {
-        // Ignora e relança o erro original
+        
       }
       throw err;
     }

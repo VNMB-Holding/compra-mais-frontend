@@ -91,7 +91,7 @@ export default function NewRfqPage() {
   const [itens, setItens] = useState<ItemCotacao[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
 
-  // Estados de busca e paginação de fornecedores para grandes bases (18k+)
+  
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierFilterTab, setSupplierFilterTab] = useState<"todos" | "selecionados" | "homologados">("todos");
   const [supplierPage, setSupplierPage] = useState(1);
@@ -279,7 +279,7 @@ export default function NewRfqPage() {
     return filteredFornecedores.slice(start, start + SUPPLIERS_PER_PAGE);
   }, [filteredFornecedores, supplierPage]);
 
-  // Reset de página ao buscar ou mudar tab
+  
   useEffect(() => {
     setSupplierPage(1);
   }, [supplierSearch, supplierFilterTab]);
@@ -361,7 +361,7 @@ export default function NewRfqPage() {
                     />
                   </div>
 
-                  {/* Fila de demandas prontas (se nenhuma selecionada) */}
+                  
                   {!solicitacaoPreview && requestsApi.length > 0 && (
                     <>
                       <div className={styles.gateCardsDivider}>
@@ -397,7 +397,7 @@ export default function NewRfqPage() {
                     </>
                   )}
 
-                  {/* Card limpo e objetivo da solicitação selecionada */}
+                  
                   {solicitacaoPreview && (
                     <div className={styles.gateSelectedCard}>
                       <div className={styles.gateSelectedHeader}>
@@ -445,7 +445,7 @@ export default function NewRfqPage() {
                   )}
                 </div>
 
-                {/* Ações */}
+                
                 <div className={styles.gateActions}>
                   <button
                     className={styles.btnCancel}
@@ -764,7 +764,7 @@ export default function NewRfqPage() {
                   </div>
                 </div>
 
-                {/* Selected Suppliers Tray (Visible whenever at least 1 supplier is selected) */}
+                
                 {fornecedoresSelecionados.length > 0 && (
                   <div className={styles.selectedTray}>
                     <div className={styles.selectedTrayHeader}>
@@ -791,7 +791,7 @@ export default function NewRfqPage() {
                   </div>
                 )}
 
-                {/* Search & Filter Toolbar */}
+                
                 <div className={styles.supplierFilterToolbar}>
                   <div className={styles.supplierSearchInput}>
                     <Icon name="search-sm" size={16} className={styles.searchIconInside} />
@@ -828,7 +828,7 @@ export default function NewRfqPage() {
                   </div>
                 </div>
 
-                {/* Supplier Paginated List */}
+                
                 {paginatedFornecedores.length > 0 ? (
                   <div className={styles.fornecedoresList}>
                     {paginatedFornecedores.map((f) => (
@@ -865,7 +865,7 @@ export default function NewRfqPage() {
                   </div>
                 )}
 
-                {/* Pagination Controls */}
+                
                 {filteredFornecedores.length > SUPPLIERS_PER_PAGE && (
                   <div className={styles.supplierPaginationBar}>
                     <span>

@@ -107,7 +107,7 @@ export default function PedidosPage() {
     { label: "Cancelado", value: "Cancelado" },
   ];
 
-  // Paginação
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
