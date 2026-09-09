@@ -18,9 +18,10 @@ import {
   ErrorState, 
   EmptyState,
   TableSkeleton, 
-  ChartSkeleton 
+  ChartSkeleton,
+  DataTable,
+  ColumnDef
 } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
 import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, DashboardKpis, CategoryBreakdown, MonthlyEconomy } from "@/lib/api/dashboard";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";

@@ -13,7 +13,7 @@ import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { useCreatePurchaseRequest } from "@/hooks/useQueries";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
-import { ApprovalModal } from "@/components/ApprovalModal";
+import { ApprovalModal } from "@/components";
 
 
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";

@@ -2,10 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Icon, Select, Loading, ErrorState, EmptyState, Badge, TableSkeleton } from "@/components/ui";
-
-import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
-import KpiCard from "@/components/ui/KpiCard/KpiCard";
+import { 
+  Button, 
+  Card, 
+  Icon, 
+  Select, 
+  Loading, 
+  ErrorState, 
+  EmptyState, 
+  Badge, 
+  TableSkeleton,
+  DataTable,
+  ColumnDef,
+  KpiCard
+} from "@/components/ui";
 import styles from "./rfqs.module.css";
 import { rfqsApi, Rfq, RfqKpis } from "@/lib/api/rfqs";
 import { getCategoryIcon } from "@/lib/utils/category-icon";

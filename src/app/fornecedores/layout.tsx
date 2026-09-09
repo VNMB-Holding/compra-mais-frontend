@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ProtectedLayout } from "@/components/ProtectedLayout";
+import { ProtectedLayout } from "@/components";
 import { ROUTE_ROLES } from "@/lib/auth/roles";
 
 export default function FornecedoresLayout({

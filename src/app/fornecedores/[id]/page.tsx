@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Badge, Card, Icon, Button, Loading, Skeleton, KpiCardSkeleton, CardSkeleton } from "@/components/ui";
-import KpiCard from "@/components/ui/KpiCard/KpiCard";
+import { Badge, Card, Icon, Button, Loading, Skeleton, KpiCard, KpiCardSkeleton, CardSkeleton } from "@/components/ui";
 import styles from "./fornecedor-detail.module.css";
 import { useSupplier } from "@/hooks/useQueries";
 

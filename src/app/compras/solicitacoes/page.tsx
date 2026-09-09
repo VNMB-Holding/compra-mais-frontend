@@ -11,11 +11,11 @@ import {
   Badge, 
   ErrorState, 
   EmptyState,
-  QuickDetailDrawer 
+  QuickDetailDrawer,
+  DataTable,
+  ColumnDef,
+  KpiCard
 } from "@/components/ui";
-
-import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
-import KpiCard from "@/components/ui/KpiCard/KpiCard";
 import styles from "./solicitacoes.module.css";
 import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib/api/purchase-requests";
 import { useAuth } from "@/hooks/useAuth";

@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, ErrorState, TableSkeleton, Badge } from "@/components/ui";
-import { DataTable, ColumnDef } from "@/components/ui/DataTable/DataTable";
-import KpiCard from "@/components/ui/KpiCard/KpiCard";
+import { Card, Icon, Select, ErrorState, TableSkeleton, Badge, DataTable, ColumnDef, KpiCard } from "@/components/ui";
 import styles from "./homologacao.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
