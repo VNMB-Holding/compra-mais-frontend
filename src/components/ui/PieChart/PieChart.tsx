@@ -16,8 +16,8 @@ interface PieChartProps {
 
 export default function PieChart({ data }: PieChartProps) {
   return (
-    <div className={styles.chartContainer}>
-      <ResponsiveContainer width="100%" height="100%">
+    <div className={styles.chartContainer} style={{ minWidth: 0, minHeight: 0 }}>
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
         <RechartsPie>
           <Pie
             data={data}

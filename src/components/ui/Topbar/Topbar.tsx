@@ -7,7 +7,7 @@ import styles from "./Topbar.module.css";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import CommandPalette from "../CommandPalette/CommandPalette";
-import { rfqsApi, Rfq } from "@/lib/api/rfqs";
+import { notificationsApi, NotificationItem } from "@/lib/api/notifications";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { logError } from "@/lib/utils/error";
 
@@ -21,61 +21,73 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const [isHovered, setIsHovered] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
-  const { toast } = useToast();
   const router = useRouter();
   const companyDisplay = user?.tenantName?.toUpperCase() || "NÃO INFORMADO";
 
-
-
-
-  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [messages, setMessages] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
 
-  useEffect(() => {
-    async function loadNotifications() {
-      try {
-        const [recentRfqs, pendingRequests] = await Promise.all([
-          rfqsApi.list().catch((err) => { 
-            logError("Topbar/rfqsApi.list", err); 
-            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar as notificações de cotações." });
-            return [] as Rfq[]; 
-          }),
-          purchaseRequestsApi.list().catch((err) => { 
-            logError("Topbar/purchaseRequestsApi.list", err); 
-            toast({ variant: "warning", title: "Aviso", message: "Não foi possível carregar as aprovações pendentes." });
-            return [] as PurchaseRequest[]; 
-          }),
-        ]);
-
-        const notifs = recentRfqs.slice(0, 3).map((rfq: Rfq) => ({
-          id: rfq.id,
-          title: `RFQ ${rfq.code} — ${rfq.status === "Open" ? "Em andamento" : "Atualizada"}`,
-          desc: rfq.title || rfq.purchaseRequest?.description || "Processo de cotação ativo.",
-          time: new Date(rfq.createdAt).toLocaleDateString("pt-BR"),
-        }));
-
-        const msgs = pendingRequests
-          .filter((pr: PurchaseRequest) => pr.status === "AwaitingApproval")
-          .slice(0, 3)
-          .map((req: PurchaseRequest) => ({
-            id: req.id,
-            title: `Aprovação Pendente: ${req.code}`,
-            desc: req.description,
-            time: new Date(req.createdAt).toLocaleDateString("pt-BR"),
-          }));
-
-        setNotifications(notifs);
-        setMessages(msgs);
-      } catch (err) {
-        // Unexpected error not caught by individual handlers — log and degrade gracefully
-        logError("Topbar/loadNotifications", err);
-      }
+  const loadNotifications = async () => {
+    try {
+      const res = await notificationsApi.list();
+      setNotifications(res.items);
+      setUnreadNotifCount(res.unreadCount);
+    } catch (err) {
+      logError("Topbar/notificationsApi.list", err);
     }
+  };
 
+  const loadPendingApprovals = async () => {
+    try {
+      const pendingRequests = await purchaseRequestsApi.list().catch(() => [] as PurchaseRequest[]);
+      const msgs = pendingRequests
+        .filter((pr: PurchaseRequest) => pr.status === "AwaitingApproval")
+        .slice(0, 5)
+        .map((req: PurchaseRequest) => ({
+          id: req.id,
+          title: `Aprovação Pendente: ${req.code}`,
+          desc: req.description,
+          time: new Date(req.createdAt).toLocaleDateString("pt-BR"),
+        }));
+      setMessages(msgs);
+    } catch (err) {
+      logError("Topbar/loadPendingApprovals", err);
+    }
+  };
+
+  useEffect(() => {
     if (isAuthenticated) {
       loadNotifications();
+      loadPendingApprovals();
+
+      // Polling leve a cada 45s para notificações em tempo real
+      const interval = setInterval(() => {
+        loadNotifications();
+      }, 45000);
+      return () => clearInterval(interval);
     }
   }, [isAuthenticated]);
+
+  const handleNotificationClick = async (notif: NotificationItem) => {
+    if (!notif.read) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
+      );
+      setUnreadNotifCount((prev) => Math.max(0, prev - 1));
+      notificationsApi.markAsRead(notif.id).catch(() => {});
+    }
+    setActivePopup(null);
+    if (notif.actionUrl) {
+      router.push(notif.actionUrl);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadNotifCount(0);
+    notificationsApi.markAllAsRead().catch(() => {});
+  };
 
   const topbarRef = useRef<HTMLHeadingElement>(null);
 
@@ -172,26 +184,33 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`} onClick={() => togglePopup("notifications")}>
             <Icon name="bell-01" />
-            {hasUnreadNotifs && notifications.length > 0 && <span className={styles.badge}>{notifications.length}</span>}
+            {unreadNotifCount > 0 && <span className={styles.badge}>{unreadNotifCount > 9 ? "9+" : unreadNotifCount}</span>}
           </div>
           
           {activePopup === "notifications" && (
             <div className={styles.dropdownBox}>
-              <div className={styles.dropdownHeader}>Notificações ({notifications.length})</div>
+              <div className={styles.dropdownHeader}>
+                <span>Notificações {unreadNotifCount > 0 ? `(${unreadNotifCount} novas)` : ""}</span>
+                {unreadNotifCount > 0 && (
+                  <button className={styles.markAllReadBtn} onClick={handleMarkAllRead}>
+                    Marcar todas lidas
+                  </button>
+                )}
+              </div>
               <div className={styles.dropdownContent}>
                 {notifications.length > 0 ? (
                   notifications.map((n) => (
                     <div 
                       key={n.id} 
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        setActivePopup(null);
-                        router.push(`/compras/rfqs/${n.id}`);
-                      }}
+                      className={`${styles.dropdownItem} ${!n.read ? styles.unreadItem : ""}`}
+                      onClick={() => handleNotificationClick(n)}
                     >
-                      <strong>{n.title}</strong>
+                      <div className={styles.itemHeaderRow}>
+                        <strong>{n.title}</strong>
+                        {!n.read && <span className={styles.unreadDot} title="Não lida" />}
+                      </div>
                       <p>{n.desc}</p>
-                      <small>{n.time}</small>
+                      <small>{new Date(n.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</small>
                     </div>
                   ))
                 ) : (
@@ -270,10 +289,11 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                   <small>{userRole}</small>
                 </div>
               </div>
-              <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/perfil"); }}>
+              {/* Opção 'Meu Perfil' temporariamente oculta */}
+              {/* <div className={styles.dropdownItem} onClick={() => { setActivePopup(null); router.push("/perfil"); }}>
                 <Icon name="user" /> Meu Perfil
               </div>
-              <div className={styles.dropdownDivider} />
+              <div className={styles.dropdownDivider} /> */}
               <div className={`${styles.dropdownItem} ${styles.logoutItem}`} onClick={handleLogout}>
                 <Icon name="log-out-01" /> Sair
               </div>

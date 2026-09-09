@@ -26,7 +26,7 @@ export default function BarChart({
   return (
     <div className={styles.chartContainer}>
       <ResponsiveContainer width="100%" height={height}>
-        <RechartsBar data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+        <RechartsBar data={data} margin={{ top: 10, right: 16, left: 10, bottom: 5 }}>
           <XAxis 
             dataKey="name" 
             stroke="#94a3b8" 
@@ -36,9 +36,10 @@ export default function BarChart({
           />
           <YAxis 
             stroke="#94a3b8" 
-            fontSize={12} 
+            fontSize={11} 
             tickLine={false} 
             axisLine={false} 
+            width={70}
             tickFormatter={valueFormatter}
           />
           <Tooltip 

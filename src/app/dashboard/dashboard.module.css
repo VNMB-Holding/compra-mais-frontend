@@ -212,14 +212,14 @@
 .donutChartContainer {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   flex-grow: 1;
-  min-height: 160px;
+  min-height: 190px;
 }
 
 .donutGraphicBox {
-  flex: 1;
-  max-width: 130px;
+  flex-shrink: 0;
+  width: 140px;
   height: 140px; 
   position: relative; 
 }
@@ -227,16 +227,18 @@
 .donutLegend {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
+  min-width: 0;
 }
 
 .legItem {
   display: flex;
   align-items: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #475569;
   font-weight: 500;
+  min-width: 0;
 }
 
 .dot {
@@ -248,16 +250,19 @@
 }
 
 .legName {
-  flex-grow: 1;
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .pct {
   font-weight: 600;
   color: #0f172a;
   margin-left: 8px;
+  flex-shrink: 0;
+  font-size: 12px;
 }
 
 

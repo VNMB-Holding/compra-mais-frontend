@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ResponsiveContainer, AreaChart as RechartsArea, Area, XAxis, YAxis, Tooltip } from 'recharts';
+import { formatMonthLabel } from '@/lib/utils/format-display';
 import styles from './AreaChart.module.css';
 
 interface DataItem {
@@ -32,9 +33,9 @@ export default function AreaChart({
   const hasMultipleLines = data.some(d => d.value2 !== undefined);
 
   return (
-    <div className={styles.chartContainer}>
-      <ResponsiveContainer width="100%" height={height}>
-        <RechartsArea data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+    <div className={styles.chartContainer} style={{ minWidth: 0, minHeight: 0 }}>
+      <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={0}>
+        <RechartsArea data={data} margin={{ top: 10, right: 16, left: 10, bottom: 5 }}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={color} stopOpacity={0.2}/>
@@ -53,21 +54,24 @@ export default function AreaChart({
             fontSize={12} 
             tickLine={false} 
             axisLine={false} 
+            tickFormatter={formatMonthLabel}
           />
           <YAxis 
             stroke="#94a3b8" 
-            fontSize={12} 
+            fontSize={11} 
             tickLine={false} 
             axisLine={false} 
+            width={65}
             tickFormatter={valueFormatter}
           />
           <Tooltip 
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
+                const monthName = formatMonthLabel(payload[0].payload.name);
                 return (
                   <div className={styles.tooltip}>
                     <p style={{ margin: 0, fontSize: 12, color: '#64748b', marginBottom: '4px' }}>
-                      {payload[0].payload.name}
+                      {monthName}
                     </p>
                     <p style={{ margin: 0, fontWeight: 600, color: color, fontSize: 13 }}>
                       {label1}: {valueFormatter(payload[0].value as number)}

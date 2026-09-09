@@ -222,12 +222,32 @@
 }
 
 .dropdownHeader {
-  padding: 14px 16px;
+  padding: 12px 16px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   border-bottom: 1px solid var(--border, #e2e8f0);
   background: #f8fafc;
   color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.markAllReadBtn {
+  background: none;
+  border: none;
+  color: var(--primary, #007d79);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.markAllReadBtn:hover {
+  background-color: var(--primary-light, #e6f2f2);
+  text-decoration: underline;
 }
 
 .dropdownContent {
@@ -249,6 +269,30 @@
 
 .dropdownItem:hover {
   background: #f8fafc;
+}
+
+.unreadItem {
+  background: #f0fdf9;
+}
+
+.unreadItem:hover {
+  background: #e6f9f4;
+}
+
+.itemHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.unreadDot {
+  width: 7px;
+  height: 7px;
+  background-color: var(--primary, #007d79);
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .dropdownItem strong {
@@ -305,7 +349,7 @@
 .userAvatarLarge {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary, #007d79);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -314,6 +358,7 @@
   font-weight: bold;
   font-size: 16px;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 125, 121, 0.2);
 }
 
 .dropdownUserHeader strong {

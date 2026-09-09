@@ -199,11 +199,6 @@ export default function SolicitacoesPage() {
           <h1>Solicitações de Compra</h1>
           <p>Demandas e requisições sincronizadas do ERP Corporate para cotação e compras.</p>
         </div>
-        <div className={styles.headerActions}>
-          <Button variant="primary" onClick={() => router.push("/compras/rfqs/nova")}>
-            <Icon name="plus" size={16} /> Criar Cotação (RFQ)
-          </Button>
-        </div>
       </div>
 
       <div className={styles.kpiGrid}>

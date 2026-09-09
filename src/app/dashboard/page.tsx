@@ -291,7 +291,7 @@ export default function DashboardPage() {
                 {topCategoriasData.map((item, index) => (
                   <div key={index} className={styles.legItem}>
                     <span className={styles.dot} style={{ backgroundColor: item.color }}></span>
-                    <span className={styles.legName}>{item.name}</span>
+                    <span className={styles.legName} title={item.name}>{item.name}</span>
                     <span className={styles.pct}>{item.value}%</span>
                   </div>
                 ))}

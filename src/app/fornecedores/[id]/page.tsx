@@ -75,7 +75,7 @@ export default function FornecedorDetailPage() {
   const score = hasScore ? Number(supplier.performanceScore) : 9.5;
   const scoreFormatted = score.toFixed(1).replace(".", ",");
   const isActive = supplier.status === "Active" || supplier.isActive === true;
-  const statusLabel = isActive ? "Homologado" : "Pendente";
+  const statusLabel = isActive ? "Homologado" : supplier.status === "Inactive" ? "Inativo" : "Em homologação";
   const statusVariant = isActive ? "success" : "gray";
 
   return (
@@ -91,15 +91,11 @@ export default function FornecedorDetailPage() {
           <div>
             <div className={styles.titleRow}>
               <h1>{supplier.corporateName}</h1>
-              <Badge variant={statusVariant}>{statusLabel}</Badge>
             </div>
             <p className={styles.subtitleLarge}>
               {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? supplier.tradeName : "Parceiro Comercial Homologado"}
             </p>
             <div className={styles.metadataTags}>
-              <span className={styles.infoTag}>
-                <Icon name="file-01" /> CNPJ: {supplier.cnpj}
-              </span>
               <span className={styles.infoTag}>
                 <Icon name="marker-pin-01" /> {supplier.city ? `${supplier.city} / ${supplier.state || ""}` : "Brasil"}
               </span>
@@ -130,12 +126,6 @@ export default function FornecedorDetailPage() {
               <p className={styles.docInfo}>
                 CNPJ: <strong>{supplier.cnpj}</strong> {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? `• ${supplier.tradeName}` : ""}
               </p>
-              <div className={styles.updateInfo}>
-                <span>Última atualização: {new Date(supplier.updatedAt || supplier.createdAt).toLocaleDateString("pt-BR")}</span>
-                <button className={styles.btnRefresh} onClick={() => window.location.reload()}>
-                  <Icon name="refresh-cw-01" size={14} /> Atualizar
-                </button>
-              </div>
             </div>
           </div>
 
@@ -158,7 +148,6 @@ export default function FornecedorDetailPage() {
           <div className={styles.summaryColStatus}>
             <div className={styles.statusRow}>
               <span>Situação Cadastral</span>
-              <Badge variant={statusVariant} className={styles.badgeHomologado}>{statusLabel}</Badge>
             </div>
             <p className={styles.etapaText}>Cód. ERP: <strong>{supplier.integrationCode || "—"}</strong></p>
             <p className={styles.subStatusText}>

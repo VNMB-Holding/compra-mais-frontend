@@ -1,6 +1,5 @@
 import React from 'react';
 import Card from '../Card/Card';
-import Badge from '../Badge/Badge';
 import Icon from '../Icon/Icon';
 import styles from './UrgentQuoteCard.module.css';
 

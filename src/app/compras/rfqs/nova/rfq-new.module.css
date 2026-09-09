@@ -403,138 +403,84 @@ textarea.formControl {
   color: #0f172a;
 }
 
-.gatePreview {
-  width: 100%;
-  padding: 20px;
-  border: 1px solid #ccfbf1;
-  border-left: 4px solid #007d79;
-  border-radius: 10px;
-  background: #f0fdf9;
+.gateSelectedCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-.gatePreviewHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.gatePreviewIdGroup {
+.gateSelectedHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.gatePreviewId {
-  color: #007d79;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
-.gatePreviewTitle {
-  margin: 4px 0 0;
-  color: #0f172a;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.gatePreviewMeta {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin: 0;
-  padding: 14px;
-  background: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
-@media (max-width: 768px) {
-  .gatePreviewMeta {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.gatePreviewMeta div {
+.gateSelectedDemandInfo {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
-.gatePreviewMeta dt {
-  color: #94a3b8;
+.gateSelectedLabel {
   font-size: 11px;
   font-weight: 700;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.gatePreviewMeta dd {
-  margin: 0;
-  color: #0f172a;
-  font-size: 13px;
+.gateSelectedTitle {
+  font-size: 15px;
   font-weight: 700;
+  color: #0f172a;
 }
 
-.gatePreviewItens {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.gateSelectedGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .gateSelectedGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gateSelectedCol {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.gatePreviewItens li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: #334155;
-  font-weight: 500;
-  background: #ffffff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-}
-
-.gatePreviewItens li svg {
-  color: #007d79;
-  flex-shrink: 0;
-}
-
-.gateGovernanceBar {
-  background: #f8fafc;
-  border-top: 1px solid #edf2f7;
-  padding: 14px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.gateGovernanceItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
+.gateSelectedColLabel {
+  font-size: 11px;
+  font-weight: 700;
   color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.gateGovernanceItem svg {
-  color: #007d79;
-  flex-shrink: 0;
-}
-
-.gateGovernanceItem strong {
-  color: #334155;
+.gateSelectedColValue {
+  font-size: 13px;
   font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gateSelectedValueHighlight {
+  font-size: 15px;
+  font-weight: 800;
+  color: #007d79;
 }
 
 .gateActions {

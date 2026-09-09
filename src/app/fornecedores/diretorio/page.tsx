@@ -225,7 +225,7 @@ export default function FornecedoresListPage() {
 
   return (
     <div className={styles.pageContainer}>
-      
+
       {/* Top Header */}
       <div className={styles.pageHeader}>
         <div>
@@ -337,15 +337,15 @@ export default function FornecedoresListPage() {
             action={
               searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos"
                 ? {
-                    label: "Limpar Filtros",
-                    variant: "secondary",
-                    onClick: () => {
-                      setSearchQuery("");
-                      setSelectedSegment("Todos");
-                      setSelectedCity("Todas");
-                      setStatus("Todos");
-                    },
-                  }
+                  label: "Limpar Filtros",
+                  variant: "secondary",
+                  onClick: () => {
+                    setSearchQuery("");
+                    setSelectedSegment("Todos");
+                    setSelectedCity("Todas");
+                    setStatus("Todos");
+                  },
+                }
                 : undefined
             }
           />

@@ -66,16 +66,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokenProvider(() => accessToken);
   }, [accessToken]);
 
-  // Renovação proativa em background antes da expiração do JWT
-  useEffect(() => {
-    if (!accessToken) return;
+  // Promessa única compartilhada para evitar chamadas de refresh duplicadas/concorrentes
+  const activeRefreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
-    const refreshSilently = async () => {
-      const currentRefresh =
-        refreshTokenRef.current ||
-        (typeof window !== "undefined" ? localStorage.getItem("compra_refresh_token") : null);
-      if (!currentRefresh) return;
+  const doRefreshToken = useCallback(async (): Promise<string | null> => {
+    if (activeRefreshPromiseRef.current) {
+      return activeRefreshPromiseRef.current;
+    }
 
+    const currentRefresh =
+      refreshTokenRef.current ||
+      (typeof window !== "undefined" ? localStorage.getItem("compra_refresh_token") : null);
+
+    if (!currentRefresh) return null;
+
+    const refreshPromise = (async () => {
       try {
         const res = await refreshTokenApi(currentRefresh);
         const newAccess = res.access_token;
@@ -83,15 +88,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setAccessToken(newAccess);
         setRefreshToken(newRefresh);
+        refreshTokenRef.current = newRefresh;
         setTokenProvider(() => newAccess);
 
         if (userRef.current) {
           saveSession(newAccess, newRefresh, userRef.current);
         }
+
+        return newAccess;
       } catch (err) {
-        logError("AuthContext/proactiveRefresh", err);
+        logError("AuthContext/refreshSession", err);
+        return null;
+      } finally {
+        activeRefreshPromiseRef.current = null;
       }
-    };
+    })();
+
+    activeRefreshPromiseRef.current = refreshPromise;
+    return refreshPromise;
+  }, []);
+
+  // Renovação proativa em background antes da expiração do JWT (5 minutos antes de expirar)
+  useEffect(() => {
+    if (!accessToken) return;
 
     const expMs = parseJwtExp(accessToken);
     let delayMs = 45 * 60 * 1000;
@@ -102,14 +121,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const timer = setTimeout(() => {
-      refreshSilently();
+      doRefreshToken();
     }, delayMs);
 
     const handleVisibilityChange = () => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         const currentExpMs = parseJwtExp(accessToken);
         if (currentExpMs && currentExpMs - Date.now() < 5 * 60 * 1000) {
-          refreshSilently();
+          doRefreshToken();
         }
       }
     };
@@ -124,33 +143,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         document.removeEventListener("visibilitychange", handleVisibilityChange);
       }
     };
-  }, [accessToken]);
+  }, [accessToken, doRefreshToken]);
 
   useEffect(() => {
-    setRefreshHandler(async () => {
-      const currentRefresh = refreshTokenRef.current || (typeof window !== "undefined" ? localStorage.getItem("compra_refresh_token") : null);
-      if (!currentRefresh) return null;
-
-      try {
-        const res = await refreshTokenApi(currentRefresh);
-        const newAccess = res.access_token;
-        const newRefresh = res.refresh_token || currentRefresh;
-
-        setAccessToken(newAccess);
-        setRefreshToken(newRefresh);
-        setTokenProvider(() => newAccess);
-
-        if (userRef.current) {
-          saveSession(newAccess, newRefresh, userRef.current);
-        }
-
-        return newAccess;
-      } catch (err) {
-        logError("AuthContext/refreshSession", err);
-        return null;
-      }
-    });
-  }, []);
+    setRefreshHandler(() => doRefreshToken());
+  }, [doRefreshToken]);
 
   const logoutRef = useRef<() => void>(() => {});
 

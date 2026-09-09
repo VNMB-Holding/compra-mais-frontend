@@ -49,3 +49,43 @@ export function formatCurrency(value: number | undefined | null): string {
     currency: "BRL",
   }).format(value);
 }
+
+const MONTH_MAP_PT: Record<string, string> = {
+  jan: "Jan",
+  feb: "Fev",
+  fev: "Fev",
+  mar: "Mar",
+  apr: "Abr",
+  abr: "Abr",
+  may: "Mai",
+  mai: "Mai",
+  jun: "Jun",
+  jul: "Jul",
+  aug: "Ago",
+  ago: "Ago",
+  sep: "Set",
+  set: "Set",
+  oct: "Out",
+  out: "Out",
+  nov: "Nov",
+  dec: "Dez",
+  dez: "Dez",
+};
+
+export function formatMonthLabel(label: string | undefined | null): string {
+  if (!label) return "";
+  const trimmed = label.trim();
+  const lower = trimmed.toLowerCase();
+  
+  if (MONTH_MAP_PT[lower]) {
+    return MONTH_MAP_PT[lower];
+  }
+
+  // Se vier no formato "Sep/26" ou "Sep 2026"
+  const parts = trimmed.split(/[\s\/-]+/);
+  if (parts.length >= 2 && MONTH_MAP_PT[parts[0].toLowerCase()]) {
+    return `${MONTH_MAP_PT[parts[0].toLowerCase()]}/${parts[1]}`;
+  }
+
+  return trimmed;
+}

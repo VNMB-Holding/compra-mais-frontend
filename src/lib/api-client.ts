@@ -125,6 +125,8 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
           if (retryResponse.ok) {
             return retryResponse.status === 204 ? (undefined as T) : (retryResponse.json() as Promise<T>);
           }
+        } else {
+          processQueue(new Error("Falha na renovação da sessão"), null);
         }
       } catch (e) {
         isRefreshing = false;

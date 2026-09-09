@@ -451,7 +451,7 @@ export default function EconomiaPage() {
                 {categoriesData.map((item, index) => (
                   <div key={index} className={styles.legendItem}>
                     <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
-                    <span className={styles.legendName}>{item.categoria}</span>
+                    <span className={styles.legendName} title={item.categoria}>{item.categoria}</span>
                     <span className={styles.legendValue}>{formatCurrency(item.valor)}</span>
                     <span className={styles.legendPct}>{item.pct.toFixed(1)}%</span>
                   </div>

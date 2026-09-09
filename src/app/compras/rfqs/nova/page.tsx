@@ -354,7 +354,7 @@ export default function NewRfqPage() {
                       Solicitação de Compra Aprovada <span className="required-asterisk">*</span>
                     </label>
                     <Select
-                      options={requestsApi.map((s) => ({ label: `${s.id} — ${s.titulo}`, value: s.id }))}
+                      options={requestsApi.map((s) => ({ label: s.titulo, value: s.id }))}
                       value={solicitacaoSelecionada}
                       onChange={setSolicitacaoSelecionada}
                       placeholder="Selecione uma solicitação aprovada..."
@@ -369,7 +369,7 @@ export default function NewRfqPage() {
                       </div>
 
                       <div className={styles.quickRequestsGrid}>
-                        {requestsApi.slice(0, 4).map((s) => (
+                        {requestsApi.slice(0, 4).map((s, idx) => (
                           <div
                             key={s.id}
                             className={`${styles.quickRequestCard} ${solicitacaoSelecionada === s.id ? styles.quickRequestCardActive : ""}`}
@@ -378,7 +378,7 @@ export default function NewRfqPage() {
                             tabIndex={0}
                           >
                             <div className={styles.quickCardHeader}>
-                              <span className={styles.quickCardId}>{s.id}</span>
+                              <span className={styles.quickCardId}>Demanda #{idx + 1}</span>
                               <Badge
                                 variant={PRIORITY_BADGE_CONFIG[s.prioridade]?.variant ?? "gray"}
                                 icon={PRIORITY_BADGE_CONFIG[s.prioridade]?.icon ?? "info-circle"}
@@ -397,77 +397,52 @@ export default function NewRfqPage() {
                     </>
                   )}
 
-                  {/* Preview detalhado quando uma solicitação é selecionada */}
+                  {/* Card limpo e objetivo da solicitação selecionada */}
                   {solicitacaoPreview && (
-                    <div className={styles.gatePreview}>
-                      <div className={styles.gatePreviewHeader}>
-                        <div>
-                          <div className={styles.gatePreviewIdGroup}>
-                            <span className={styles.gatePreviewId}>{solicitacaoPreview.id}</span>
-                            <Badge
-                              variant={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"}
-                              icon={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.icon ?? "info-circle"}
-                            >
-                              {solicitacaoPreview.prioridade}
-                            </Badge>
-                          </div>
-                          <p className={styles.gatePreviewTitle}>{solicitacaoPreview.titulo}</p>
+                    <div className={styles.gateSelectedCard}>
+                      <div className={styles.gateSelectedHeader}>
+                        <div className={styles.gateSelectedDemandInfo}>
+                          <span className={styles.gateSelectedLabel}>Demanda selecionada</span>
+                          <strong className={styles.gateSelectedTitle}>{solicitacaoPreview.titulo}</strong>
                         </div>
-                        <Button
-                          variant="secondary"
-                          onClick={() => setSolicitacaoSelecionada("")}
+                        <Badge
+                          variant={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"}
                         >
-                          Trocar
-                        </Button>
+                          Prioridade {solicitacaoPreview.prioridade}
+                        </Badge>
                       </div>
 
-                      <dl className={styles.gatePreviewMeta}>
-                        <div>
-                          <dt>Área Requisitante</dt>
-                          <dd>{solicitacaoPreview.area || "Geral"}</dd>
+                      <div className={styles.gateSelectedGrid}>
+                        <div className={styles.gateSelectedCol}>
+                          <span className={styles.gateSelectedColLabel}>Área Requisitante</span>
+                          <span className={styles.gateSelectedColValue} title={solicitacaoPreview.area || "Geral"}>
+                            {solicitacaoPreview.area || "Geral"}
+                          </span>
                         </div>
-                        <div>
-                          <dt>Solicitante</dt>
-                          <dd>{solicitacaoPreview.solicitante}</dd>
-                        </div>
-                        <div>
-                          <dt>Total de Itens</dt>
-                          <dd>{solicitacaoPreview.itens.length} {solicitacaoPreview.itens.length === 1 ? "item" : "itens"}</dd>
-                        </div>
-                        <div>
-                          <dt>Valor Estimado</dt>
-                          <dd>{formatCurrency(solicitacaoPreview.valorEstimado)}</dd>
-                        </div>
-                      </dl>
 
-                      <ul className={styles.gatePreviewItens}>
-                        {solicitacaoPreview.itens.map((item: any) => (
-                          <li key={item.id}>
-                            <Icon name="package" size={14} />
-                            <span>
-                              <strong>{item.descricao}</strong> — {item.qtd.toLocaleString("pt-BR")} {item.unidade}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                        <div className={styles.gateSelectedCol}>
+                          <span className={styles.gateSelectedColLabel}>Solicitante</span>
+                          <span className={styles.gateSelectedColValue} title={solicitacaoPreview.solicitante}>
+                            {solicitacaoPreview.solicitante}
+                          </span>
+                        </div>
+
+                        <div className={styles.gateSelectedCol}>
+                          <span className={styles.gateSelectedColLabel}>Total de Itens</span>
+                          <span className={styles.gateSelectedColValue}>
+                            {solicitacaoPreview.itens.length} {solicitacaoPreview.itens.length === 1 ? "item" : "itens"}
+                          </span>
+                        </div>
+
+                        <div className={styles.gateSelectedCol}>
+                          <span className={styles.gateSelectedColLabel}>Valor Estimado</span>
+                          <span className={styles.gateSelectedValueHighlight}>
+                            {formatCurrency(solicitacaoPreview.valorEstimado)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
-                </div>
-
-                {/* Barra de Governança Integrada */}
-                <div className={styles.gateGovernanceBar}>
-                  <div className={styles.gateGovernanceItem}>
-                    <Icon name="shield-tick" size={15} />
-                    <span><strong>Rastreabilidade</strong> vinculada à demanda aprovada</span>
-                  </div>
-                  <div className={styles.gateGovernanceItem}>
-                    <Icon name="zap-fast" size={15} />
-                    <span><strong>Automação</strong> de itens e escopo técnico</span>
-                  </div>
-                  <div className={styles.gateGovernanceItem}>
-                    <Icon name="check-verified-02" size={15} />
-                    <span><strong>Conformidade</strong> com alçadas e auditoria</span>
-                  </div>
                 </div>
 
                 {/* Ações */}
