@@ -9,6 +9,7 @@ export { default as LineChart } from './LineChart/LineChart';
 export { default as PieChart } from './PieChart/PieChart';
 export { default as UrgentQuoteCard } from './UrgentQuoteCard/UrgentQuoteCard';
 export { default as Sidebar } from './Sidebar/Sidebar';
+export { default as Topbar } from './Topbar/Topbar';
 export { default as Icon } from './Icon/Icon';
 export { default as Loading } from './Loading/Loading';
 export { default as Select } from './Select/Select';
@@ -28,6 +29,8 @@ export { default as CalendarFilter } from './CalendarFilter/CalendarFilter';
 export type { DateFilterValue, CalendarFilterProps } from './CalendarFilter/CalendarFilter';
 export { default as EmptyState } from './EmptyState/EmptyState';
 export type { EmptyStateProps, EmptyStateAction, EmptyStateIllustration } from './EmptyState/EmptyState';
+export { DataTable } from './DataTable/DataTable';
+export type { ColumnDef } from './DataTable/DataTable';
 
 
 
