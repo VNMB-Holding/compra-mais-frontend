@@ -103,7 +103,13 @@ export interface PublicProposalPayload {
   deliveryTime?: number;
   validityDays?: number;
   notes?: string;
+  bankCode?: string;
+  bankNumber?: string;
+  pixKey?: string;
+  bankDocumentImage?: string;
+  bankDocumentFileName?: string;
 }
+
 
 export const rfqsApi = {
   list: (paramsOrTenant?: string | RfqListParams) => {
@@ -222,4 +228,20 @@ export const rfqsApi = {
 
   updateStatus: (id: string, status: Rfq["status"]) =>
     apiClient.patch<Rfq>(`/api/rfqs/${id}/status`, { status }),
+
+  inviteUnregisteredSupplier: (
+    rfqId: string,
+    data: {
+      cnpj: string;
+      corporateName: string;
+      contactEmail: string;
+      contactName?: string;
+      contactPhone?: string;
+    },
+  ) =>
+    apiClient.post<{ success: boolean; supplier: any }>(
+      `/api/rfqs/${rfqId}/invite-unregistered`,
+      data,
+    ),
 };
+

@@ -34,6 +34,14 @@ export default function CotacaoFornecedorPage() {
   const [validityDays, setValidityDays] = useState<number>(15);
   const [notes, setNotes] = useState("");
 
+  const [bankCode, setBankCode] = useState("001 - Banco do Brasil");
+  const [bankNumber, setBankNumber] = useState("");
+  const [pixKey, setPixKey] = useState("");
+  const [bankDocumentImage, setBankDocumentImage] = useState<string>("");
+  const [bankDocumentFileName, setBankDocumentFileName] = useState<string>("");
+  const [bankDocumentPreview, setBankDocumentPreview] = useState<string>("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<{ protocol: string; supplierName: string } | null>(null);
 
@@ -46,7 +54,6 @@ export default function CotacaoFornecedorPage() {
         const data = await rfqsApi.getPublicRfq(id);
         setRfq(data);
 
-        
         const initialPrices: Record<string, number> = {};
         (data.items || []).forEach((item) => {
           initialPrices[item.id] = 0;
@@ -70,7 +77,6 @@ export default function CotacaoFornecedorPage() {
     }));
   };
 
-  
   const itemsSubtotal = useMemo(() => {
     if (!rfq?.items) return 0;
     return rfq.items.reduce((sum, item) => {
@@ -86,6 +92,42 @@ export default function CotacaoFornecedorPage() {
 
   const { toast } = useToast();
   const [confirmZeroPriceOpen, setConfirmZeroPriceOpen] = useState(false);
+
+  const handleImageFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "warning",
+        title: "Formato Inválido",
+        message: "Por favor, selecione um arquivo de imagem (PNG, JPG, JPEG ou WebP).",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        variant: "warning",
+        title: "Arquivo muito grande",
+        message: "A imagem não pode ultrapassar 10MB.",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setBankDocumentImage(result);
+      setBankDocumentPreview(result);
+      setBankDocumentFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageFile(e.dataTransfer.files[0]);
+    }
+  };
 
   const executeSubmit = async () => {
     if (!rfq) return;
@@ -107,6 +149,11 @@ export default function CotacaoFornecedorPage() {
         deliveryTime: Number(deliveryTime) || 5,
         validityDays: Number(validityDays) || 15,
         notes,
+        bankCode,
+        bankNumber,
+        pixKey,
+        bankDocumentImage,
+        bankDocumentFileName,
       };
 
       const res = await rfqsApi.submitPublicProposal(rfq.id, payload);
@@ -144,6 +191,24 @@ export default function CotacaoFornecedorPage() {
       return;
     }
 
+    if (!bankNumber.trim()) {
+      toast({
+        variant: "warning",
+        title: "Dados Bancários",
+        message: "Por favor, preencha a Agência e Conta Bancária da empresa.",
+      });
+      return;
+    }
+
+    if (!bankDocumentImage) {
+      toast({
+        variant: "warning",
+        title: "Anexo Obrigatório",
+        message: "É obrigatório anexar uma imagem com os dados bancários (comprovante ou cartão da conta).",
+      });
+      return;
+    }
+
     const unquotedItems = (rfq.items || []).filter((item) => !itemPrices[item.id] || itemPrices[item.id] <= 0);
     if (unquotedItems.length > 0) {
       setConfirmZeroPriceOpen(true);
@@ -154,6 +219,7 @@ export default function CotacaoFornecedorPage() {
   };
 
   if (loading) {
+
     return (
       <div className={styles.portalContainer}>
         <header className={styles.portalHeader}>
@@ -476,6 +542,129 @@ export default function CotacaoFornecedorPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
+            </div>
+          </div>
+
+          {/* SEÇÃO 4: DADOS BANCÁRIOS & COMPROVANTE */}
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <Icon name="bank" size={20} className={styles.sectionIcon} />
+              <h2>4. Dados Bancários & Comprovante de Conta (Obrigatório)</h2>
+            </div>
+
+            <div className={styles.requiredNotice}>
+              <Icon name="info-circle" size={18} />
+              <span>
+                <strong>Atenção:</strong> Caso sua proposta seja vencedora e sua empresa ainda não possua cadastro completo,
+                estas informações e o <strong>comprovante da conta bancária</strong> serão utilizados pelo setor financeiro para formalizar os pagamentos.
+              </span>
+            </div>
+
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label>Banco <span className={styles.required}>*</span></label>
+                <select
+                  className={styles.inputField}
+                  value={bankCode}
+                  onChange={(e) => setBankCode(e.target.value)}
+                  required
+                >
+                  <option value="001 - Banco do Brasil">001 - Banco do Brasil</option>
+                  <option value="033 - Santander">033 - Santander</option>
+                  <option value="104 - Caixa Econômica Federal">104 - Caixa Econômica</option>
+                  <option value="237 - Bradesco">237 - Bradesco</option>
+                  <option value="341 - Itaú Unibanco">341 - Itaú Unibanco</option>
+                  <option value="260 - Nubank">260 - Nubank</option>
+                  <option value="077 - Banco Inter">077 - Banco Inter</option>
+                  <option value="Outro">Outro Banco</option>
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Agência e Conta Corrente com Dígito <span className={styles.required}>*</span></label>
+                <input
+                  type="text"
+                  placeholder="Ex: Ag: 1234-5 / CC: 98765-4"
+                  className={styles.inputField}
+                  value={bankNumber}
+                  onChange={(e) => setBankNumber(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Chave PIX (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="CNPJ, E-mail, Telefone ou Aleatória"
+                  className={styles.inputField}
+                  value={pixKey}
+                  onChange={(e) => setPixKey(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup} style={{ marginTop: "20px" }}>
+              <label>
+                Imagem do Comprovante Bancário / Cartão da Conta <span className={styles.required}>*</span>
+              </label>
+              
+              {!bankDocumentPreview ? (
+                <div
+                  className={styles.uploadDropzone}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                >
+                  <div className={styles.uploadDropzoneIcon}>
+                    <Icon name="upload-cloud-02" size={24} />
+                  </div>
+                  <p className={styles.uploadTitle}>
+                    Clique ou arraste a imagem do comprovante bancário aqui
+                  </p>
+                  <p className={styles.uploadSubtitle}>
+                    Formatos aceitos: PNG, JPG, JPEG ou WebP (máx. 10MB)
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className={styles.fileInputHidden}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleImageFile(e.target.files[0]);
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className={styles.previewContainer}>
+                  <img
+                    src={bankDocumentPreview}
+                    alt="Comprovante Bancário"
+                    className={styles.previewThumb}
+                  />
+                  <div className={styles.previewDetails}>
+                    <span className={styles.previewFileName}>{bankDocumentFileName || "comprovante-bancario.jpg"}</span>
+                    <span className={styles.previewStatus}>
+                      <Icon name="check-circle" size={14} /> Imagem anexada com sucesso
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.removeFileBtn}
+                    onClick={() => {
+                      setBankDocumentImage("");
+                      setBankDocumentPreview("");
+                      setBankDocumentFileName("");
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    <Icon name="trash-01" size={14} />
+                    Remover
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

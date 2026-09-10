@@ -20,7 +20,12 @@ export const rfqsService = {
   selectWinner: (rfqId: string, proposalId: string) => rfqsApi.selectWinner(rfqId, proposalId),
   createPo: (rfqId: string) => rfqsApi.createPo(rfqId),
   updateStatus: (id: string, status: Rfq["status"]) => rfqsApi.updateStatus(id, status),
+  inviteUnregisteredSupplier: (
+    rfqId: string,
+    data: Parameters<typeof rfqsApi.inviteUnregisteredSupplier>[1],
+  ) => rfqsApi.inviteUnregisteredSupplier(rfqId, data),
 };
+
 
 export type { Rfq, RfqListParams, RfqKpis, PublicRfq, PublicProposalPayload };
 

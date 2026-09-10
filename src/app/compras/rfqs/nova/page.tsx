@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, Button, Icon, Select, Badge, Skeleton, EmptyState } from "@/components/ui";
+import { InviteSupplierModal } from "@/components/modals";
 
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
@@ -96,6 +97,20 @@ export default function NewRfqPage() {
   const [supplierFilterTab, setSupplierFilterTab] = useState<"todos" | "selecionados" | "homologados">("todos");
   const [supplierPage, setSupplierPage] = useState(1);
   const SUPPLIERS_PER_PAGE = 8;
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
+  const handleSupplierInvited = (newSup: any) => {
+    const convidado: FornecedorConvidado = {
+      id: newSup.id,
+      nome: newSup.corporateName || newSup.tradeName || "Fornecedor Convidado",
+      cnpj: newSup.cnpj || "—",
+      segmento: "Novo / Convidado",
+      isHomologado: false,
+      selecionado: true,
+    };
+    setFornecedores((prev) => [convidado, ...prev]);
+    setIsInviteModalOpen(false);
+  };
 
   const [requestsApi, setRequestsApi] = useState<Solicitacao[]>(SOLICITACOES_DISPONIVEIS);
   const [loadingData, setLoadingData] = useState(true);
@@ -826,6 +841,15 @@ export default function NewRfqPage() {
                       Homologados
                     </button>
                   </div>
+
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    onClick={() => setIsInviteModalOpen(true)}
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    <Icon name="user-plus" size={16} /> Convidar Não Cadastrado
+                  </Button>
                 </div>
 
                 
@@ -1133,6 +1157,12 @@ export default function NewRfqPage() {
 
         </aside>
       </div>
+
+      <InviteSupplierModal
+        open={isInviteModalOpen}
+        onSuccess={handleSupplierInvited}
+        onClose={() => setIsInviteModalOpen(false)}
+      />
     </div>
   );
 }

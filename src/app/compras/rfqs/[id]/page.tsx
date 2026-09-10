@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton, EmptyState } from "@/components/ui";
+import { InviteSupplierModal } from "@/components/modals";
 
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
@@ -250,9 +251,20 @@ export default function RfqDetailPage() {
   type DialogType = "encerrar" | "selecionar" | "gerar" | null;
   const [dialog, setDialog] = useState<DialogType>(null);
   const [pendingVencedorId, setPendingVencedorId] = useState<string | null>(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const handleSupplierInvited = async () => {
+    try {
+      const updated = await rfqsApi.getById(rfqId);
+      setRfq(updated);
+      setPropostas(mapPropostas(updated));
+    } catch (e) {
+      logError("rfqs/[id]/handleSupplierInvited", e);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -478,6 +490,13 @@ export default function RfqDetailPage() {
         onCancel={() => setDialog(null)}
       />
 
+      <InviteSupplierModal
+        open={inviteModalOpen}
+        rfqId={rfqId}
+        onSuccess={handleSupplierInvited}
+        onClose={() => setInviteModalOpen(false)}
+      />
+
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
         <Icon name="chevron-left" /> Voltar para Cotações
       </button>
@@ -506,6 +525,13 @@ export default function RfqDetailPage() {
         </div>
         <div className={styles.headerActions}>
           <Button
+            variant="primary"
+            onClick={() => setInviteModalOpen(true)}
+          >
+            <Icon name="user-plus" /> Convidar Não Cadastrado
+          </Button>
+
+          <Button
             variant="secondary"
             onClick={() => {
               const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
@@ -517,7 +543,7 @@ export default function RfqDetailPage() {
               });
             }}
           >
-            <Icon name="link-01" /> Copiar Link do Fornecedor
+            <Icon name="link-01" /> Copiar Link
           </Button>
 
           <Button
@@ -530,7 +556,7 @@ export default function RfqDetailPage() {
               window.open(`https://wa.me/?text=${text}`, "_blank");
             }}
           >
-            <Icon name="message-square-02" /> Enviar WhatsApp
+            <Icon name="message-square-02" /> WhatsApp
           </Button>
         </div>
       </div>
@@ -700,11 +726,16 @@ export default function RfqDetailPage() {
               </span>
             )}
           </h2>
-          {recebidas.length > 0 && (
-            <Button variant="primary" onClick={() => setDialog("encerrar")}>
-              Encerrar coleta e ir para análise
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button variant="secondary" onClick={() => setInviteModalOpen(true)}>
+              <Icon name="user-plus" /> Convidar Não Cadastrado
             </Button>
-          )}
+            {recebidas.length > 0 && (
+              <Button variant="primary" onClick={() => setDialog("encerrar")}>
+                Encerrar coleta e ir para análise
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className={styles.propostasList}>
