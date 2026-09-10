@@ -1,10 +1,11 @@
-export * from "./AdminAlcadaModal/AdminAlcadaModal";
-export * from "./AdminEmpresaModal/AdminEmpresaModal";
-export * from "./AdminUserModal/AdminUserModal";
-export * from "./ApprovalModal/ApprovalModal";
-export * from "./HelpModal/HelpModal";
-export { default as AdminAlcadaModal } from "./AdminAlcadaModal/AdminAlcadaModal";
-export { default as AdminEmpresaModal } from "./AdminEmpresaModal/AdminEmpresaModal";
-export { default as AdminUserModal } from "./AdminUserModal/AdminUserModal";
-export { default as ApprovalModal } from "./ApprovalModal/ApprovalModal";
-export { default as HelpModal } from "./HelpModal/HelpModal";
+export * from "./admin-alcada-modal/AdminAlcadaModal";
+export * from "./admin-empresa-modal/AdminEmpresaModal";
+export * from "./admin-user-modal/AdminUserModal";
+export * from "./approval-modal/ApprovalModal";
+export * from "./help-modal/HelpModal";
+export { default as AdminAlcadaModal } from "./admin-alcada-modal/AdminAlcadaModal";
+export { default as AdminEmpresaModal } from "./admin-empresa-modal/AdminEmpresaModal";
+export { default as AdminUserModal } from "./admin-user-modal/AdminUserModal";
+export { default as ApprovalModal } from "./approval-modal/ApprovalModal";
+export { default as HelpModal } from "./help-modal/HelpModal";
+
