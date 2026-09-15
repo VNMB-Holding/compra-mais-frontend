@@ -64,8 +64,8 @@ export default function HomologacaoPage() {
   const { toast } = useToast();
 
   const [selectedUf, setSelectedUf] = useState("Todas");
-  const [risco, setRisco] = useState("Todas");
-  const [etapa, setEtapa] = useState("Todas");
+  const [risco, setRisco] = useState("Todos");
+  const [etapa, setEtapa] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
 
   const [fornecedores, setFornecedores] = useState<HomologacaoRow[]>([]);
@@ -84,8 +84,8 @@ export default function HomologacaoPage() {
       };
       const [suppliers, kpisData] = await Promise.all([
         suppliersApi.list({
-          status: etapa !== "Todas" ? (statusMap[etapa] || etapa) : undefined,
-          state: selectedUf !== "Todas" ? selectedUf : undefined,
+          status: etapa !== "Todas" && etapa !== "Todos" ? (statusMap[etapa] || etapa) : undefined,
+          state: selectedUf !== "Todas" && selectedUf !== "Todos" ? selectedUf : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
         }),
         suppliersApi.getKpis(),
@@ -105,7 +105,7 @@ export default function HomologacaoPage() {
   }, [fetchData]);
 
   const etapaOptions = [
-    { label: "Status: Todos", value: "Todas" },
+    { label: "Status: Todos", value: "Todos" },
     { label: "Conforme", value: "Conforme" },
     { label: "Em Auditoria", value: "Em Auditoria" },
     { label: "Apontamento", value: "Apontamento" },
@@ -229,13 +229,13 @@ export default function HomologacaoPage() {
   const itemsPerPage = 10;
 
   const filtered = fornecedores.filter((f) => {
-    if (selectedUf !== "Todas" && f.estado !== selectedUf) return false;
-    if (risco !== "Todas") {
+    if (selectedUf !== "Todas" && selectedUf !== "Todos" && f.estado !== selectedUf) return false;
+    if (risco !== "Todas" && risco !== "Todos") {
       if (risco === "Baixo" && f.score <= 70) return false;
       if (risco === "Médio" && (f.score <= 30 || f.score > 70)) return false;
       if (risco === "Crítico" && f.score > 30) return false;
     }
-    if (etapa !== "Todas" && f.status !== etapa && f.etapa !== etapa) return false;
+    if (etapa !== "Todas" && etapa !== "Todos" && f.status !== etapa && f.etapa !== etapa) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       const matchNome = f.fornecedor.toLowerCase().includes(q);
@@ -317,7 +317,7 @@ export default function HomologacaoPage() {
 
             <Select
               options={[
-                { label: "Risco: Todos", value: "Todas" },
+                { label: "Risco: Todos", value: "Todos" },
                 { label: "Baixo Risco", value: "Baixo" },
                 { label: "Médio Risco", value: "Médio" },
                 { label: "Crítico", value: "Crítico" },

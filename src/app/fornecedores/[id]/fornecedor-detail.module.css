@@ -107,7 +107,7 @@
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   overflow: hidden;
 }
 
@@ -352,7 +352,7 @@
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   padding: 24px 32px !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
   border-radius: 12px !important;
 }
 
@@ -375,7 +375,7 @@
   gap: 12px;
 }
 
-.infoItem > span {
+.infoItem>span {
   color: #94a3b8;
   font-size: 22px;
   margin-top: 2px;
@@ -450,7 +450,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
 }
 
 .itemsCardHeader {
@@ -613,10 +613,25 @@
   font-size: 18px;
 }
 
-.iconBlue { background: #eff6ff; color: #2563eb; }
-.iconPurple { background: #faf5ff; color: #9333ea; }
-.iconGreen { background: #f0fdf4; color: #16a34a; }
-.iconAmber { background: #fffbeb; color: #d97706; }
+.iconBlue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.iconPurple {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+.iconGreen {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.iconAmber {
+  background: #fffbeb;
+  color: #d97706;
+}
 
 .fieldsList {
   display: flex;
@@ -704,4 +719,3 @@
   background: #dcfce7;
   color: #16a34a;
 }
-

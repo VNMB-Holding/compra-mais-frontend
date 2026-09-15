@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Badge, Card, Icon, Button, Loading, Skeleton, KpiCard, KpiCardSkeleton, CardSkeleton } from "@/components/ui";
+import { Card, Icon, Skeleton, KpiCard, KpiCardSkeleton } from "@/components/ui";
 import styles from "./fornecedor-detail.module.css";
 import { useSupplier } from "@/hooks/useQueries";
 
@@ -10,7 +10,6 @@ export default function FornecedorDetailPage() {
   const params = useParams();
   const router = useRouter();
   const supplierId = params?.id as string;
-  const [activeTab, setActiveTab] = useState("visao-geral");
 
   const { data: supplier, isLoading, isError } = useSupplier(supplierId);
 
@@ -79,8 +78,8 @@ export default function FornecedorDetailPage() {
 
   return (
     <div className={styles.pageContainer}>
-      
-      
+
+
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório
@@ -109,11 +108,11 @@ export default function FornecedorDetailPage() {
         </div>
       </div>
 
-      
+
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
-          
-          
+
+
           <div className={styles.summaryColBase}>
             <div className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}>
               {getInitials(supplier.corporateName)}
@@ -128,7 +127,7 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-          
+
           <div className={styles.summaryColScore}>
             <div className={styles.scoreHeader}>
               <span>Nota de Performance</span>
@@ -143,7 +142,7 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-          
+
           <div className={styles.summaryColStatus}>
             <div className={styles.statusRow}>
               <span>Situação Cadastral</span>
@@ -157,380 +156,248 @@ export default function FornecedorDetailPage() {
         </div>
       </Card>
 
-      
-      <div className={styles.tabsContainer}>
-        <button className={activeTab === "visao-geral" ? styles.tabActive : ""} onClick={() => setActiveTab("visao-geral")}>
-          Visão geral
-        </button>
-        <button className={activeTab === "dados-cadastrais" ? styles.tabActive : ""} onClick={() => setActiveTab("dados-cadastrais")}>
-          Dados cadastrais
-        </button>
-      </div>
 
-      
       <div className={styles.tabContent}>
-        
-        {activeTab === "visao-geral" && (
-          <>
-            
-            <div className={styles.kpiGrid}>
-              <KpiCard
-                title="Score de Performance"
-                value={`${scoreFormatted}/10`}
-                icon="star-01"
-                description="Avaliação em cotações e entregas"
-              />
-              <KpiCard
-                title="Prazo de Entrega"
-                value={supplier.deliveryLeadTime ? `${supplier.deliveryLeadTime} dias` : "Padrão"}
-                icon="truck-01"
-                description={supplier.deliveryLocationName || "Almoxarifado Central"}
-              />
-              <KpiCard
-                title="Dados de Pagamento"
-                value={supplier.pixKey ? "PIX Cadastrado" : supplier.bankCode ? `Banco ${supplier.bankCode}` : "Padrão"}
-                icon="bank"
-                description={supplier.bankNumber ? `Conta: ${supplier.bankNumber}` : "Transferência / Boleto"}
-              />
-              <KpiCard
-                title="Situação Cadastral"
-                value={statusLabel}
-                icon="shield-tick"
-                description="Status no ERP Corporate"
-              />
-            </div>
+        {/* KPI Cards em Grid */}
+        <div className={styles.kpiGrid}>
+          <KpiCard
+            title="Score de Performance"
+            value={`${scoreFormatted}/10`}
+            icon="star-01"
+            description="Avaliação em cotações e entregas"
+          />
+          <KpiCard
+            title="Prazo de Entrega"
+            value={supplier.deliveryLeadTime ? `${supplier.deliveryLeadTime} dias` : "Padrão"}
+            icon="truck-01"
+            description={supplier.deliveryLocationName || "Almoxarifado Central"}
+          />
+          <KpiCard
+            title="Dados de Pagamento"
+            value={supplier.pixKey ? "PIX Cadastrado" : supplier.bankCode ? `Banco ${supplier.bankCode}` : "Padrão"}
+            icon="bank"
+            description={supplier.bankNumber ? `Conta: ${supplier.bankNumber}` : "Transferência / Boleto"}
+          />
+          <KpiCard
+            title="Situação Cadastral"
+            value={statusLabel}
+            icon="shield-tick"
+            description="Status no ERP Corporate"
+          />
+        </div>
 
-            
-            <div className={styles.itemsCard}>
-              <div className={styles.itemsCardHeader}>
-                <h3><Icon name="clock-refresh" size={18} /> Histórico de atividades com o fornecedor</h3>
+        {/* Grid com Dados Cadastrais e Operacionais */}
+        <div className={styles.cadastraisGrid}>
+          <div className={styles.cadastraisCol}>
+            <Card className={styles.cadastraisCard}>
+              <div className={styles.cadastraisCardHeader}>
+                <div className={`${styles.headerIconCircle} ${styles.iconBlue}`}>
+                  <Icon name="building-02" size={20} />
+                </div>
+                <h3>Identificação Cadastral & Fiscal</h3>
               </div>
-              <div className={styles.itemsTableWrapper}>
-                {(() => {
-                  const activities: Array<{
-                    id: string;
-                    date: string;
-                    type: string;
-                    desc: string;
-                    val: string;
-                    status: string;
-                    variant: "success" | "warning" | "gray";
-                  }> = [];
 
-                  
-                  if (supplier.proposals && supplier.proposals.length > 0) {
-                    supplier.proposals.forEach((p) => {
-                      activities.push({
-                        id: `prop-${p.id}`,
-                        date: p.createdAt,
-                        type: "Proposta em Cotação",
-                        desc: p.rfq ? `Cotação ${p.rfq.code}: ${p.rfq.title}` : "Proposta enviada em cotação",
-                        val: p.totalValue ? Number(p.totalValue).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—",
-                        status: p.isWinner ? "Vencedora" : p.status === "Declined" ? "Declinada" : "Enviada",
-                        variant: p.isWinner ? "success" : p.status === "Declined" ? "gray" : "warning",
-                      });
-                    });
-                  }
+              <div className={styles.fieldsList}>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="building-01" size={14} /> Razão Social
+                  </span>
+                  <span className={styles.fieldValue}>{supplier.corporateName}</span>
+                </div>
 
-                  
-                  if (supplier.purchaseOrders && supplier.purchaseOrders.length > 0) {
-                    supplier.purchaseOrders.forEach((po) => {
-                      activities.push({
-                        id: `po-${po.id}`,
-                        date: po.createdAt,
-                        type: "Pedido de Compra",
-                        desc: `Pedido ${po.code}`,
-                        val: po.totalAmount ? Number(po.totalAmount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—",
-                        status: po.status,
-                        variant: "success",
-                      });
-                    });
-                  }
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="tag-01" size={14} /> Nome Fantasia
+                  </span>
+                  <span className={styles.fieldValue}>{supplier.tradeName || "—"}</span>
+                </div>
 
-                  
-                  if (supplier.updatedAt) {
-                    activities.push({
-                      id: "sync-erp",
-                      date: supplier.updatedAt,
-                      type: "Sincronização ERP",
-                      desc: "Dados cadastrais sincronizados no sistema",
-                      val: "—",
-                      status: "Concluído",
-                      variant: "success",
-                    });
-                  }
-                  if (supplier.createdAt) {
-                    activities.push({
-                      id: "cad-initial",
-                      date: supplier.createdAt,
-                      type: "Cadastro Inicial",
-                      desc: "Fornecedor registrado na plataforma",
-                      val: "—",
-                      status: isActive ? "Ativo" : "Pendente",
-                      variant: isActive ? "success" : "warning",
-                    });
-                  }
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="file-check-01" size={14} /> CNPJ
+                  </span>
+                  <div className={styles.fieldValueSub}>
+                    <span className={styles.fieldValue}>{supplier.cnpj}</span>
+                  </div>
+                </div>
 
-                  activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="file-02" size={14} /> Inscrição Estadual
+                  </span>
+                  <span className={styles.fieldValue}>{supplier.stateRegistration || "Isento / Não informado"}</span>
+                </div>
 
-                  return (
-                    <table className={styles.itemsTable}>
-                      <thead>
-                        <tr>
-                          <th>Data / Tipo</th>
-                          <th>Descrição</th>
-                          <th style={{ width: "160px", textAlign: "right" }}>Valor</th>
-                          <th style={{ width: "160px", textAlign: "center" }}>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {activities.map((act) => (
-                          <tr key={act.id}>
-                            <td>
-                              <div className={styles.doubleText}>
-                                <strong>{new Date(act.date).toLocaleDateString("pt-BR")}</strong>
-                                <small>{act.type}</small>
-                              </div>
-                            </td>
-                            <td>{act.desc}</td>
-                            <td style={{ textAlign: "right" }}>{act.val}</td>
-                            <td style={{ textAlign: "center" }}>
-                              <Badge variant={act.variant}>{act.status}</Badge>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  );
-                })()}
+
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="calendar" size={14} /> Cadastrado em
+                  </span>
+                  <span className={styles.fieldValue}>
+                    {new Date(supplier.createdAt).toLocaleDateString("pt-BR")}
+                  </span>
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </Card>
 
-        {activeTab === "dados-cadastrais" && (
-          <div className={styles.cadastraisGrid}>
-            <div className={styles.cadastraisCol}>
-              
-              
-              <Card className={styles.cadastraisCard}>
-                <div className={styles.cadastraisCardHeader}>
-                  <div className={`${styles.headerIconCircle} ${styles.iconBlue}`}>
-                    <Icon name="building-02" size={20} />
-                  </div>
-                  <h3>Identificação Cadastral & Fiscal</h3>
+
+            <Card className={styles.cadastraisCard}>
+              <div className={styles.cadastraisCardHeader}>
+                <div className={`${styles.headerIconCircle} ${styles.iconAmber}`}>
+                  <Icon name="truck-01" size={20} />
+                </div>
+                <h3>Logística & Condições de Entrega</h3>
+              </div>
+
+              <div className={styles.fieldsList}>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="marker-pin-01" size={14} /> Local de Entrega Padrão
+                  </span>
+                  <span className={styles.fieldValue}>
+                    {supplier.deliveryLocationName || "Almoxarifado Central / Pátio de Obras"}
+                  </span>
                 </div>
 
-                <div className={styles.fieldsList}>
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="building-01" size={14} /> Razão Social
-                    </span>
-                    <span className={styles.fieldValue}>{supplier.corporateName}</span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="tag-01" size={14} /> Nome Fantasia
-                    </span>
-                    <span className={styles.fieldValue}>{supplier.tradeName || "—"}</span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="file-check-01" size={14} /> CNPJ
-                    </span>
-                    <div className={styles.fieldValueSub}>
-                      <span className={styles.fieldValue}>{supplier.cnpj}</span>
-                    </div>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="file-02" size={14} /> Inscrição Estadual
-                    </span>
-                    <span className={styles.fieldValue}>{supplier.stateRegistration || "Isento / Não informado"}</span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="database-01" size={14} /> Código no ERP
-                    </span>
-                    <span className={styles.fieldValue}>{supplier.integrationCode || "—"}</span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="calendar" size={14} /> Cadastrado em
-                    </span>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="clock" size={14} /> Lead Time de Entrega
+                  </span>
+                  <div className={styles.fieldValueSub}>
                     <span className={styles.fieldValue}>
-                      {new Date(supplier.createdAt).toLocaleDateString("pt-BR")}
+                      {supplier.deliveryLeadTime ? `⚡ ${supplier.deliveryLeadTime} dias úteis` : "Prazo sob consulta"}
                     </span>
+                    <small>Tempo médio de expedição e transporte</small>
                   </div>
                 </div>
-              </Card>
 
-              
-              <Card className={styles.cadastraisCard}>
-                <div className={styles.cadastraisCardHeader}>
-                  <div className={`${styles.headerIconCircle} ${styles.iconAmber}`}>
-                    <Icon name="truck-01" size={20} />
-                  </div>
-                  <h3>Logística & Condições de Entrega</h3>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="globe-01" size={14} /> Praça Principal
+                  </span>
+                  <span className={styles.fieldValue}>
+                    {supplier.city ? `${supplier.city} / ${supplier.state}` : "Atendimento Nacional"}
+                  </span>
                 </div>
+              </div>
+            </Card>
 
-                <div className={styles.fieldsList}>
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="marker-pin-01" size={14} /> Local de Entrega Padrão
-                    </span>
-                    <span className={styles.fieldValue}>
-                      {supplier.deliveryLocationName || "Almoxarifado Central / Pátio de Obras"}
-                    </span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="clock" size={14} /> Lead Time de Entrega
-                    </span>
-                    <div className={styles.fieldValueSub}>
-                      <span className={styles.fieldValue}>
-                        {supplier.deliveryLeadTime ? `⚡ ${supplier.deliveryLeadTime} dias úteis` : "Prazo sob consulta"}
-                      </span>
-                      <small>Tempo médio de expedição e transporte</small>
-                    </div>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="globe-01" size={14} /> Praça Principal
-                    </span>
-                    <span className={styles.fieldValue}>
-                      {supplier.city ? `${supplier.city} / ${supplier.state}` : "Atendimento Nacional"}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-
-            </div>
-
-            <div className={styles.cadastraisCol}>
-
-              
-              <Card className={styles.cadastraisCard}>
-                <div className={styles.cadastraisCardHeader}>
-                  <div className={`${styles.headerIconCircle} ${styles.iconPurple}`}>
-                    <Icon name="user-01" size={20} />
-                  </div>
-                  <h3>Contatos & Localização da Sede</h3>
-                </div>
-
-                <div className={styles.fieldsList}>
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="users-01" size={14} /> Contato Comercial
-                    </span>
-                    <span className={styles.fieldValue}>{supplier.contactName || "Equipe de Atendimento"}</span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="phone" size={14} /> Telefone
-                    </span>
-                    <span className={styles.fieldValue}>
-                      {supplier.contactPhone ? (
-                        <a href={`tel:${supplier.contactPhone.replace(/\D/g, "")}`} style={{ color: "#007d79", textDecoration: "none" }}>
-                          {supplier.contactPhone}
-                        </a>
-                      ) : (
-                        "—"
-                      )}
-                    </span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="mail-01" size={14} /> E-mail
-                    </span>
-                    <span className={styles.fieldValue}>
-                      {supplier.contactEmail ? (
-                        <a href={`mailto:${supplier.contactEmail}`} style={{ color: "#007d79", textDecoration: "none" }}>
-                          {supplier.contactEmail}
-                        </a>
-                      ) : (
-                        "—"
-                      )}
-                    </span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="marker-pin-02" size={14} /> Endereço Completo
-                    </span>
-                    <div className={styles.fieldValueSub}>
-                      <span className={styles.fieldValue}>
-                        {supplier.address || "Endereço comercial cadastrado"}
-                      </span>
-                      {supplier.neighborhood && (
-                        <small>{supplier.neighborhood} • {supplier.city}/{supplier.state} • CEP {supplier.zipCode || "—"}</small>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              
-              <Card className={styles.cadastraisCard}>
-                <div className={styles.cadastraisCardHeader}>
-                  <div className={`${styles.headerIconCircle} ${styles.iconGreen}`}>
-                    <Icon name="bank" size={20} />
-                  </div>
-                  <h3>Dados Bancários & PIX</h3>
-                </div>
-
-                <div className={styles.fieldsList}>
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="credit-card-01" size={14} /> Banco / Código
-                    </span>
-                    <span className={styles.fieldValue}>
-                      {supplier.bankCode ? `Banco Febraban [${supplier.bankCode}]` : "Banco Centralizado"}
-                    </span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="file-attachment-01" size={14} /> Agência / Conta
-                    </span>
-                    <span className={styles.fieldValue}>
-                      {supplier.bankNumber || "Conta Corrente Integrada"}
-                    </span>
-                  </div>
-
-                  <div className={styles.fieldRow}>
-                    <span className={styles.fieldLabel}>
-                      <Icon name="zap" size={14} /> Chave PIX
-                    </span>
-                    <div className={styles.fieldValueSub} style={{ width: "100%" }}>
-                      {supplier.pixKey ? (
-                        <div className={styles.pixHighlight}>
-                          <span>{supplier.pixKey}</span>
-                          <span className={styles.badgeCadastral}>PIX Ativo</span>
-                        </div>
-                      ) : (
-                        <span className={styles.fieldValue} style={{ color: "#94a3b8" }}>Não cadastrada</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-            </div>
           </div>
-        )}
 
+          <div className={styles.cadastraisCol}>
+
+
+            <Card className={styles.cadastraisCard}>
+              <div className={styles.cadastraisCardHeader}>
+                <div className={`${styles.headerIconCircle} ${styles.iconPurple}`}>
+                  <Icon name="user-01" size={20} />
+                </div>
+                <h3>Contatos & Localização da Sede</h3>
+              </div>
+
+              <div className={styles.fieldsList}>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="users-01" size={14} /> Contato Comercial
+                  </span>
+                  <span className={styles.fieldValue}>{supplier.contactName || "Equipe de Atendimento"}</span>
+                </div>
+
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="phone" size={14} /> Telefone
+                  </span>
+                  <span className={styles.fieldValue}>
+                    {supplier.contactPhone ? (
+                      <a href={`tel:${supplier.contactPhone.replace(/\D/g, "")}`} style={{ color: "#007d79", textDecoration: "none" }}>
+                        {supplier.contactPhone}
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+                </div>
+
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="mail-01" size={14} /> E-mail
+                  </span>
+                  <span className={styles.fieldValue}>
+                    {supplier.contactEmail ? (
+                      <a href={`mailto:${supplier.contactEmail}`} style={{ color: "#007d79", textDecoration: "none" }}>
+                        {supplier.contactEmail}
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+                </div>
+
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="marker-pin-02" size={14} /> Endereço Completo
+                  </span>
+                  <div className={styles.fieldValueSub}>
+                    <span className={styles.fieldValue}>
+                      {supplier.address || "Endereço comercial cadastrado"}
+                    </span>
+                    {supplier.neighborhood && (
+                      <small>{supplier.neighborhood} • {supplier.city}/{supplier.state} • CEP {supplier.zipCode || "—"}</small>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+
+            <Card className={styles.cadastraisCard}>
+              <div className={styles.cadastraisCardHeader}>
+                <div className={`${styles.headerIconCircle} ${styles.iconGreen}`}>
+                  <Icon name="bank" size={20} />
+                </div>
+                <h3>Dados Bancários & PIX</h3>
+              </div>
+
+              <div className={styles.fieldsList}>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="credit-card-01" size={14} /> Banco / Código
+                  </span>
+                  <span className={styles.fieldValue}>
+                    {supplier.bankCode ? `Banco Febraban [${supplier.bankCode}]` : "Banco Centralizado"}
+                  </span>
+                </div>
+
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="file-attachment-01" size={14} /> Agência / Conta
+                  </span>
+                  <span className={styles.fieldValue}>
+                    {supplier.bankNumber || "Conta Corrente Integrada"}
+                  </span>
+                </div>
+
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>
+                    <Icon name="zap" size={14} /> Chave PIX
+                  </span>
+                  <div className={styles.fieldValueSub} style={{ width: "100%" }}>
+                    {supplier.pixKey ? (
+                      <div className={styles.pixHighlight}>
+                        <span>{supplier.pixKey}</span>
+                        <span className={styles.badgeCadastral}>PIX Ativo</span>
+                      </div>
+                    ) : (
+                      <span className={styles.fieldValue} style={{ color: "#94a3b8" }}>Não cadastrada</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+          </div>
+        </div>
       </div>
-
     </div>
   );
 }
