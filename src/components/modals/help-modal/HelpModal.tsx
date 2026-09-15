@@ -104,17 +104,6 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
               <p>Envie sua dúvida e responderemos em até 2 horas.</p>
               <span className={styles.cardAction}>Enviar e-mail <Icon name="arrow-right" size={14} /></span>
             </a>
-
-            <a href="/configuracoes" className={styles.supportCard} onClick={(e) => { onClose(); }}>
-              <div className={styles.supportCardHeader}>
-                <div className={`${styles.supportIconWrap} ${styles.docsBg}`}>
-                  <Icon name="book-open-01" className={styles.supportIcon} />
-                </div>
-                <strong>Configurações & Guias</strong>
-              </div>
-              <p>Parâmetros, categorias e manuais do sistema.</p>
-              <span className={styles.cardAction}>Acessar painel <Icon name="arrow-right" size={14} /></span>
-            </a>
           </div>
 
           <hr className={styles.sectionDivider} />

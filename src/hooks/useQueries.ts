@@ -3,7 +3,6 @@ import { purchaseRequestsApi, PurchaseRequest, RequestItem, PurchaseRequestListP
 import { rfqsApi, RfqListParams } from "@/lib/api/rfqs";
 import { suppliersApi, SupplierListParams } from "@/lib/api/suppliers";
 import { purchaseOrdersApi, PurchaseOrderListParams } from "@/lib/api/purchase-orders";
-import { categoriesApi } from "@/lib/api/categories";
 import { dashboardApi } from "@/lib/api/dashboard";
 
 export const QUERY_KEYS = {
@@ -15,7 +14,6 @@ export const QUERY_KEYS = {
   supplier: (id: string) => ["suppliers", "detail", id] as const,
   purchaseOrders: (params?: string | PurchaseOrderListParams) => ["purchase-orders", "list", params] as const,
   purchaseOrder: (id: string) => ["purchase-orders", "detail", id] as const,
-  categories: ["categories"] as const,
   dashboardKpis: ["dashboard-kpis"] as const,
 };
 
@@ -103,13 +101,6 @@ export function usePurchaseOrder(id: string) {
   });
 }
 
-export function useCategories() {
-  return useQuery({
-    queryKey: QUERY_KEYS.categories,
-    queryFn: () => categoriesApi.list(),
-    staleTime: 1000 * 60 * 5,
-  });
-}
 
 export function useApprovePurchaseRequest() {
   const queryClient = useQueryClient();

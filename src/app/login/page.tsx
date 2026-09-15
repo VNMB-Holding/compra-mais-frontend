@@ -124,10 +124,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
-        <p className={styles.register}>
-          Ainda não tem uma conta? <a href="/solicitar-acesso">Solicitar Acesso</a>
-        </p>
       </div>
     </div>
   );

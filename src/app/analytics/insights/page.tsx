@@ -134,18 +134,6 @@ export default function InsightsPage() {
       });
     }
 
-    
-    list.push({
-      id: `INS-${String(count++).padStart(3, "0")}`,
-      category: "Eficiência",
-      priority: "Baixa",
-      title: "Governança e Fluxo de Aprovações",
-      description: "Mantenha a matriz de alçadas atualizada por departamento para garantir que pedidos de compra sejam liberados sem gargalos operacionais.",
-      estimatedImpact: "Agilidade no tempo de atendimento",
-      actionLabel: "Ver Alçadas",
-      actionUrl: "/administracao",
-    });
-
     return list;
   }, [spendData, economyData]);
 
@@ -244,8 +232,8 @@ export default function InsightsPage() {
               title="Categorias Monitoradas"
               value={String(spendData?.categories?.length || 0)}
               icon="layers-three-01"
-              linkLabel="Ver Categorias"
-              onClick={() => router.push("/configuracoes/categorias")}
+              linkLabel="Ver Spend"
+              onClick={() => router.push("/analytics/spend")}
             />
             <KpiCard
               title="Fornecedores no Período"
