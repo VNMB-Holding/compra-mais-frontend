@@ -91,28 +91,28 @@ export function KpiCardSkeleton({ hasLink = false }: { hasLink?: boolean }) {
   return (
     <div
       style={{
-        padding: "20px",
+        padding: "14px 16px",
         background: "#ffffff",
-        borderRadius: "12px",
+        borderRadius: "10px",
         border: "1px solid #e2e8f0",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        minHeight: "180px",
+        minHeight: "104px",
         position: "relative",
       }}
     >
-      <Skeleton variant="rectangular" width={40} height={40} style={{ borderRadius: 8, marginBottom: 16 }} />
+      <Skeleton variant="rectangular" width={32} height={32} style={{ borderRadius: 7, marginBottom: 8 }} />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, flexGrow: 1 }}>
-        <Skeleton variant="text" width="55%" height={14} />
-        <Skeleton variant="title" width="40%" height={28} />
-        <Skeleton variant="text" width="70%" height={12} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 5, flexGrow: 1 }}>
+        <Skeleton variant="text" width="55%" height={13} />
+        <Skeleton variant="title" width="40%" height={22} />
+        <Skeleton variant="text" width="70%" height={11} />
       </div>
 
       {hasLink && (
-        <div style={{ marginTop: 16 }}>
-          <Skeleton variant="text" width="35%" height={14} />
+        <div style={{ marginTop: 8 }}>
+          <Skeleton variant="text" width="35%" height={13} />
         </div>
       )}
     </div>
