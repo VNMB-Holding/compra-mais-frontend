@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import styles from "./cotacao.module.css";
 import { Icon, Loading, ErrorState, Skeleton, CardSkeleton, Badge, ConfirmDialog } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
@@ -10,18 +10,47 @@ import { formatCurrency } from "@/lib/utils/format-display";
 
 export default function CotacaoFornecedorPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params?.id as string;
+
+  const paramFornecedor = searchParams?.get("fornecedor") || "";
+  const paramCnpj = searchParams?.get("cnpj") || "";
+  const paramSupId = searchParams?.get("supId") || "";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rfq, setRfq] = useState<PublicRfq | null>(null);
 
-  
-  const [supplierCnpj, setSupplierCnpj] = useState("");
-  const [supplierName, setSupplierName] = useState("");
+  const [supplierCnpj, setSupplierCnpj] = useState(paramCnpj);
+  const [supplierName, setSupplierName] = useState(paramFornecedor);
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+
+  const isRegisteredSupplier = useMemo(() => {
+    if (paramSupId) return true;
+    if (paramFornecedor && paramCnpj) return true;
+    const cleanCurrentCnpj = supplierCnpj.replace(/\D/g, "");
+    if (!cleanCurrentCnpj) return false;
+    return Boolean(
+      rfq?.invitedSuppliers?.some(
+        (s) => s.id === paramSupId || (s.cnpj && s.cnpj.replace(/\D/g, "") === cleanCurrentCnpj)
+      )
+    );
+  }, [paramSupId, paramFornecedor, paramCnpj, supplierCnpj, rfq?.invitedSuppliers]);
+
+  useEffect(() => {
+    if (paramFornecedor && !supplierName) setSupplierName(paramFornecedor);
+    if (paramCnpj && !supplierCnpj) setSupplierCnpj(paramCnpj);
+
+    if (paramSupId && rfq?.invitedSuppliers) {
+      const match = rfq.invitedSuppliers.find((s) => s.id === paramSupId);
+      if (match) {
+        if (!supplierName) setSupplierName(match.name || match.corporateName || "");
+        if (!supplierCnpj && match.cnpj) setSupplierCnpj(match.cnpj);
+      }
+    }
+  }, [paramFornecedor, paramCnpj, paramSupId, rfq?.invitedSuppliers, supplierName, supplierCnpj]);
   
   
   const [itemPrices, setItemPrices] = useState<Record<string, number>>({});
@@ -134,11 +163,12 @@ export default function CotacaoFornecedorPage() {
     try {
       setSubmitting(true);
       const payload: PublicProposalPayload = {
+        supplierId: paramSupId || undefined,
         supplierCnpj,
         supplierName,
-        contactName,
-        contactEmail,
-        contactPhone,
+        contactName: contactName || undefined,
+        contactEmail: contactEmail || undefined,
+        contactPhone: contactPhone || undefined,
         items: Object.entries(itemPrices).map(([requestItemId, unitPrice]) => ({
           requestItemId,
           unitPrice,
@@ -149,11 +179,11 @@ export default function CotacaoFornecedorPage() {
         deliveryTime: Number(deliveryTime) || 5,
         validityDays: Number(validityDays) || 15,
         notes,
-        bankCode,
-        bankNumber,
-        pixKey,
-        bankDocumentImage,
-        bankDocumentFileName,
+        bankCode: isRegisteredSupplier ? undefined : bankCode,
+        bankNumber: isRegisteredSupplier ? undefined : bankNumber,
+        pixKey: pixKey || undefined,
+        bankDocumentImage: isRegisteredSupplier ? undefined : bankDocumentImage,
+        bankDocumentFileName: isRegisteredSupplier ? undefined : bankDocumentFileName,
       };
 
       const res = await rfqsApi.submitPublicProposal(rfq.id, payload);
@@ -191,22 +221,24 @@ export default function CotacaoFornecedorPage() {
       return;
     }
 
-    if (!bankNumber.trim()) {
-      toast({
-        variant: "warning",
-        title: "Dados Bancários",
-        message: "Por favor, preencha a Agência e Conta Bancária da empresa.",
-      });
-      return;
-    }
+    if (!isRegisteredSupplier) {
+      if (!bankNumber.trim()) {
+        toast({
+          variant: "warning",
+          title: "Dados Bancários",
+          message: "Por favor, preencha a Agência e Conta Bancária da empresa.",
+        });
+        return;
+      }
 
-    if (!bankDocumentImage) {
-      toast({
-        variant: "warning",
-        title: "Anexo Obrigatório",
-        message: "É obrigatório anexar uma imagem com os dados bancários (comprovante ou cartão da conta).",
-      });
-      return;
+      if (!bankDocumentImage) {
+        toast({
+          variant: "warning",
+          title: "Anexo Obrigatório",
+          message: "É obrigatório anexar uma imagem com os dados bancários (comprovante ou cartão da conta).",
+        });
+        return;
+      }
     }
 
     const unquotedItems = (rfq.items || []).filter((item) => !itemPrices[item.id] || itemPrices[item.id] <= 0);
@@ -312,15 +344,9 @@ export default function CotacaoFornecedorPage() {
           <div>
             <div className={styles.titleRow}>
               <h1>{rfq.code}</h1>
-              <Badge variant="warning">
-                <Icon name="clock" size={13} /> Encerra em: {closesDate}
-              </Badge>
             </div>
             <p className={styles.subtitleLarge}>{rfq.title}</p>
             <div className={styles.metadataTags}>
-              <span className={styles.infoTag}>
-                <Icon name="building-01" /> Empresa: {rfq.companyCode}
-              </span>
               <span className={styles.infoTag}>
                 <Icon name="layers-three-01" /> Almoxarifado: {rfq.costCenterName}
               </span>
@@ -333,65 +359,134 @@ export default function CotacaoFornecedorPage() {
 
         <form onSubmit={handleSubmit}>
           
+          {/* SEÇÃO 1: IDENTIFICAÇÃO DA EMPRESA */}
           <div className={styles.sectionCard}>
-            <div className={styles.sectionHeader}>
-              <Icon name="building-07" size={18} className={styles.sectionIcon} />
-              <h2>1. Identificação da Empresa Fornecedora</h2>
+            <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon name="building-07" size={18} className={styles.sectionIcon} />
+                <h2>1. Identificação da Empresa Fornecedora</h2>
+              </div>
+              {isRegisteredSupplier ? (
+                <Badge variant="success" icon="check-circle">
+                  Fornecedor Cadastrado
+                </Badge>
+              ) : (
+                <Badge variant="gray" icon="info-circle">
+                  Novo Fornecedor
+                </Badge>
+              )}
             </div>
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label>CNPJ *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="00.000.000/0000-00"
-                  className={styles.inputField}
-                  value={supplierCnpj}
-                  onChange={(e) => setSupplierCnpj(e.target.value)}
-                />
+
+            {isRegisteredSupplier ? (
+              <div className={styles.registeredSupplierCard}>
+                <div className={styles.registeredSupplierDetails}>
+                  <div>
+                    <div className={styles.registeredDataLabel}>Razão Social / Nome Fantasia</div>
+                    <div className={styles.registeredDataValue}>{supplierName || paramFornecedor || "Empresa Cadastrada"}</div>
+                  </div>
+                  <div>
+                    <div className={styles.registeredDataLabel}>CNPJ</div>
+                    <div className={styles.registeredDataValue}>{supplierCnpj || paramCnpj || "Homologado"}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                  <Icon name="check-circle" size={14} /> Sua empresa já está cadastrada no ecossistema Compra+. Não é necessário preencher dados de cadastro.
+                </div>
+
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e2e8f0" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 8 }}>
+                    Contato Responsável por Esta Proposta (Opcional):
+                  </div>
+                  <div className={styles.formGrid}>
+                    <div className={styles.formGroup}>
+                      <label>Nome do Contato</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Carlos Silva"
+                        className={styles.inputField}
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>E-mail Comercial</label>
+                      <input
+                        type="email"
+                        placeholder="contato@empresa.com.br"
+                        className={styles.inputField}
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>Telefone / WhatsApp</label>
+                      <input
+                        type="text"
+                        placeholder="(00) 00000-0000"
+                        className={styles.inputField}
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className={styles.formGroup}>
-                <label>Razão Social / Nome Fantasia *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Fornecedor Industrial Ltda"
-                  className={styles.inputField}
-                  value={supplierName}
-                  onChange={(e) => setSupplierName(e.target.value)}
-                />
+            ) : (
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label>CNPJ *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="00.000.000/0000-00"
+                    className={styles.inputField}
+                    value={supplierCnpj}
+                    onChange={(e) => setSupplierCnpj(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Razão Social / Nome Fantasia *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Fornecedor Industrial Ltda"
+                    className={styles.inputField}
+                    value={supplierName}
+                    onChange={(e) => setSupplierName(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Nome do Contato Comercial</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Carlos Silva"
+                    className={styles.inputField}
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>E-mail Comercial</label>
+                  <input
+                    type="email"
+                    placeholder="contato@empresa.com.br"
+                    className={styles.inputField}
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Telefone / WhatsApp</label>
+                  <input
+                    type="text"
+                    placeholder="(00) 00000-0000"
+                    className={styles.inputField}
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className={styles.formGroup}>
-                <label>Nome do Contato Comercial</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Carlos Silva"
-                  className={styles.inputField}
-                  value={contactName}
-                  onChange={(e) => setContactName(e.target.value)}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>E-mail Comercial</label>
-                <input
-                  type="email"
-                  placeholder="contato@empresa.com.br"
-                  className={styles.inputField}
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Telefone / WhatsApp</label>
-                <input
-                  type="text"
-                  placeholder="(00) 00000-0000"
-                  className={styles.inputField}
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           
@@ -545,127 +640,147 @@ export default function CotacaoFornecedorPage() {
             </div>
           </div>
 
-          {/* SEÇÃO 4: DADOS BANCÁRIOS & COMPROVANTE */}
+          {/* SEÇÃO 4: DADOS BANCÁRIOS & HOMOLOGAÇÃO */}
           <div className={styles.sectionCard}>
-            <div className={styles.sectionHeader}>
-              <Icon name="bank" size={20} className={styles.sectionIcon} />
-              <h2>4. Dados Bancários & Comprovante de Conta (Obrigatório)</h2>
-            </div>
-
-            <div className={styles.requiredNotice}>
-              <Icon name="info-circle" size={18} />
-              <span>
-                <strong>Atenção:</strong> Caso sua proposta seja vencedora e sua empresa ainda não possua cadastro completo,
-                estas informações e o <strong>comprovante da conta bancária</strong> serão utilizados pelo setor financeiro para formalizar os pagamentos.
-              </span>
-            </div>
-
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label>Banco <span className={styles.required}>*</span></label>
-                <select
-                  className={styles.inputField}
-                  value={bankCode}
-                  onChange={(e) => setBankCode(e.target.value)}
-                  required
-                >
-                  <option value="001 - Banco do Brasil">001 - Banco do Brasil</option>
-                  <option value="033 - Santander">033 - Santander</option>
-                  <option value="104 - Caixa Econômica Federal">104 - Caixa Econômica</option>
-                  <option value="237 - Bradesco">237 - Bradesco</option>
-                  <option value="341 - Itaú Unibanco">341 - Itaú Unibanco</option>
-                  <option value="260 - Nubank">260 - Nubank</option>
-                  <option value="077 - Banco Inter">077 - Banco Inter</option>
-                  <option value="Outro">Outro Banco</option>
-                </select>
+            <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon name="bank" size={20} className={styles.sectionIcon} />
+                <h2>4. Dados Bancários & Homologação</h2>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>Agência e Conta Corrente com Dígito <span className={styles.required}>*</span></label>
-                <input
-                  type="text"
-                  placeholder="Ex: Ag: 1234-5 / CC: 98765-4"
-                  className={styles.inputField}
-                  value={bankNumber}
-                  onChange={(e) => setBankNumber(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Chave PIX (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="CNPJ, E-mail, Telefone ou Aleatória"
-                  className={styles.inputField}
-                  value={pixKey}
-                  onChange={(e) => setPixKey(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className={styles.formGroup} style={{ marginTop: "20px" }}>
-              <label>
-                Imagem do Comprovante Bancário / Cartão da Conta <span className={styles.required}>*</span>
-              </label>
-              
-              {!bankDocumentPreview ? (
-                <div
-                  className={styles.uploadDropzone}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                >
-                  <div className={styles.uploadDropzoneIcon}>
-                    <Icon name="upload-cloud-02" size={24} />
-                  </div>
-                  <p className={styles.uploadTitle}>
-                    Clique ou arraste a imagem do comprovante bancário aqui
-                  </p>
-                  <p className={styles.uploadSubtitle}>
-                    Formatos aceitos: PNG, JPG, JPEG ou WebP (máx. 10MB)
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className={styles.fileInputHidden}
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleImageFile(e.target.files[0]);
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className={styles.previewContainer}>
-                  <img
-                    src={bankDocumentPreview}
-                    alt="Comprovante Bancário"
-                    className={styles.previewThumb}
-                  />
-                  <div className={styles.previewDetails}>
-                    <span className={styles.previewFileName}>{bankDocumentFileName || "comprovante-bancario.jpg"}</span>
-                    <span className={styles.previewStatus}>
-                      <Icon name="check-circle" size={14} /> Imagem anexada com sucesso
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className={styles.removeFileBtn}
-                    onClick={() => {
-                      setBankDocumentImage("");
-                      setBankDocumentPreview("");
-                      setBankDocumentFileName("");
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                  >
-                    <Icon name="trash-01" size={14} />
-                    Remover
-                  </button>
-                </div>
+              {isRegisteredSupplier && (
+                <Badge variant="success" icon="shield-tick">
+                  Cadastro Homologado
+                </Badge>
               )}
             </div>
+
+            {isRegisteredSupplier ? (
+              <div className={styles.registeredNoticeBox}>
+                <Icon name="check-circle" size={22} style={{ color: "#16a34a", flexShrink: 0 }} />
+                <div>
+                  <strong>Informações Cadastrais e Bancárias Validadas</strong>
+                  <p>
+                    Sua empresa já possui cadastro ativo e homologado no Compra+. Os dados bancários e tributários para faturamento e pagamento serão utilizados diretamente a partir do seu cadastro ativo. <strong>Nenhum documento ou comprovante bancário adicional é necessário.</strong>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={styles.requiredNotice}>
+                  <Icon name="info-circle" size={18} />
+                  <span>
+                    <strong>Atenção:</strong> Como sua empresa é nova no sistema, estas informações e o <strong>comprovante da conta bancária</strong> serão utilizados pelo setor de suprimentos e financeiro para homologar os pagamentos caso sua proposta seja vencedora.
+                  </span>
+                </div>
+
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Banco <span className={styles.required}>*</span></label>
+                    <select
+                      className={styles.inputField}
+                      value={bankCode}
+                      onChange={(e) => setBankCode(e.target.value)}
+                      required
+                    >
+                      <option value="001 - Banco do Brasil">001 - Banco do Brasil</option>
+                      <option value="033 - Santander">033 - Santander</option>
+                      <option value="104 - Caixa Econômica Federal">104 - Caixa Econômica</option>
+                      <option value="237 - Bradesco">237 - Bradesco</option>
+                      <option value="341 - Itaú Unibanco">341 - Itaú Unibanco</option>
+                      <option value="260 - Nubank">260 - Nubank</option>
+                      <option value="077 - Banco Inter">077 - Banco Inter</option>
+                      <option value="Outro">Outro Banco</option>
+                    </select>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Agência e Conta Corrente com Dígito <span className={styles.required}>*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Ag: 1234-5 / CC: 98765-4"
+                      className={styles.inputField}
+                      value={bankNumber}
+                      onChange={(e) => setBankNumber(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Chave PIX (Opcional)</label>
+                    <input
+                      type="text"
+                      placeholder="CNPJ, E-mail, Telefone ou Aleatória"
+                      className={styles.inputField}
+                      value={pixKey}
+                      onChange={(e) => setPixKey(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formGroup} style={{ marginTop: "20px" }}>
+                  <label>
+                    Imagem do Comprovante Bancário / Cartão da Conta <span className={styles.required}>*</span>
+                  </label>
+                  
+                  {!bankDocumentPreview ? (
+                    <div
+                      className={styles.uploadDropzone}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={handleDrop}
+                    >
+                      <div className={styles.uploadDropzoneIcon}>
+                        <Icon name="upload-cloud-02" size={24} />
+                      </div>
+                      <p className={styles.uploadTitle}>
+                        Clique ou arraste a imagem do comprovante bancário aqui
+                      </p>
+                      <p className={styles.uploadSubtitle}>
+                        Formatos aceitos: PNG, JPG, JPEG ou WebP (máx. 10MB)
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className={styles.fileInputHidden}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleImageFile(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className={styles.previewContainer}>
+                      <img
+                        src={bankDocumentPreview}
+                        alt="Comprovante Bancário"
+                        className={styles.previewThumb}
+                      />
+                      <div className={styles.previewDetails}>
+                        <span className={styles.previewFileName}>{bankDocumentFileName || "comprovante-bancario.jpg"}</span>
+                        <span className={styles.previewStatus}>
+                          <Icon name="check-circle" size={14} /> Imagem anexada com sucesso
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.removeFileBtn}
+                        onClick={() => {
+                          setBankDocumentImage("");
+                          setBankDocumentPreview("");
+                          setBankDocumentFileName("");
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                      >
+                        <Icon name="trash-01" size={14} />
+                        Remover
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <div className={styles.actionFooter}>
