@@ -6,7 +6,7 @@
     #f1f5f9 63%
   );
   background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
+  animation: shimmer 1.2s linear infinite;
   border-radius: 6px;
   display: block;
 }
@@ -56,8 +56,9 @@
     #f1f5f9 63%
   );
   background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
+  animation: shimmer 1.2s linear infinite;
 }
+
 
 
 .chartCard {
@@ -118,7 +119,7 @@
     #f1f5f9 63%
   );
   background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
+  animation: shimmer 1.2s linear infinite;
 }
 
 .chartXLabel {
@@ -146,7 +147,7 @@
   border-top-color: #e2e8f0;
   border-right-color: #cbd5e1;
   box-sizing: border-box;
-  animation: shimmer 1.4s ease infinite;
+  animation: shimmer 1.2s linear infinite;
 }
 
 .donutLegend {

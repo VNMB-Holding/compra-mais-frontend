@@ -729,12 +729,6 @@ export default function NewRfqPage() {
                   <div>
                     <h2>3. Fornecedores convidados <span className="required-asterisk">*</span></h2>
                     <p>Selecione os fornecedores homologados que receberão o convite para cotação.</p>
-                    {solicitacaoConfirmada && (
-                      <div className={styles.policyNotice}>
-                        <Icon name="info-circle" size={14} style={{ marginRight: 6, verticalAlign: "text-bottom" }} />
-                        Com base no valor estimado ({formatCurrency(solicitacaoConfirmada.valorEstimado || 0)}), a política exige no mínimo <strong>{solicitacaoConfirmada.valorEstimado > 5000 ? 3 : solicitacaoConfirmada.valorEstimado > 1000 ? 2 : 1} orçamentos</strong>.
-                      </div>
-                    )}
                   </div>
                 </div>
 

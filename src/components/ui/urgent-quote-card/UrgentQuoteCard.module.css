@@ -60,11 +60,11 @@
 .quoteBox {
   background: linear-gradient(180deg, #fbfdfc 0%, #f4fbf9 100%);
   border: 1px solid #d1fae5;
-  border-radius: 12px;
-  padding: 16px 18px;
+  border-radius: 10px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex-grow: 1;
   transition: all 0.2s ease;
   position: relative;

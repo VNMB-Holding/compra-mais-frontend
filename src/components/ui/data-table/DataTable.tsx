@@ -32,10 +32,11 @@ export function DataTable<T>({ columns, data, onRowClick, density = "normal" }: 
         </thead>
         <tbody>
           {data.map((row, rowIndex) => (
-            <tr 
-              key={rowIndex} 
+            <tr
+              key={rowIndex}
               onClick={() => onRowClick && onRowClick(row)}
-              className={onRowClick ? styles.clickableRow : ""}
+              className={`${styles.animatedRow} ${onRowClick ? styles.clickableRow : ""}`}
+              style={{ "--row-index": Math.min(rowIndex, 8) } as React.CSSProperties}
             >
               {columns.map((col, colIndex) => (
                 <td key={colIndex}>

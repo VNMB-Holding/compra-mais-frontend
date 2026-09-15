@@ -11,13 +11,13 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  width: 120px;
-  gap: 8px;
+  width: 100px;
+  gap: 6px;
 }
 
 .stepIcon {
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: white;
   border: 2px solid #e2e8f0;
@@ -26,7 +26,12 @@
   justify-content: center;
   color: #94a3b8;
   position: relative;
-  transition: all 0.2s ease;
+  font-size: 15px;
+  transition:
+    background-color  var(--duration-normal) var(--ease-in-out),
+    border-color      var(--duration-normal) var(--ease-in-out),
+    color             var(--duration-normal) var(--ease-in-out),
+    transform         var(--duration-normal) var(--ease-out);
 }
 
 .stepInfo {
@@ -38,6 +43,7 @@
 .stepInfo strong {
   font-size: 13px;
   color: #0f172a;
+  transition: color var(--duration-normal) var(--ease-in-out);
 }
 
 .stepInfo span {
@@ -55,25 +61,39 @@
   color: #007d79;
 }
 
+/* Ícone de check que aparece no step completo — entra com scale */
 .checkBadge {
   position: absolute;
   bottom: -2px;
   right: -2px;
   background: #16a34a;
   color: white;
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid white;
+  animation: checkBadgeIn var(--duration-enter) var(--ease-spring) both;
+}
+
+@keyframes checkBadgeIn {
+  from {
+    transform: scale(0) rotate(-30deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 
 .active .stepIcon {
   border-color: #007d79;
   background: #007d79;
   color: white;
+  transform: scale(1.06);
 }
 
 .active .stepInfo strong {
@@ -96,7 +116,8 @@
   height: 2px;
   background: #e2e8f0;
   margin: 0 -10px;
-  transform: translateY(-30px);
+  transform: translateY(-22px);
+  transition: background-color var(--duration-normal) var(--ease-in-out);
 }
 
 .lineActive {
@@ -108,3 +129,4 @@
   color: #cbd5e1;
   border-color: #f1f5f9;
 }
+

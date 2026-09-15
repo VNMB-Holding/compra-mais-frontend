@@ -13,9 +13,9 @@
 
 .modalCard {
   background-color: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px;
   width: 100%;
-  max-width: 520px;
+  max-width: 440px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
   overflow: hidden;
@@ -23,24 +23,24 @@
 }
 
 .modalHeader {
-  padding: 20px 24px;
+  padding: 14px 18px;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .headerIconArea {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .headerIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
   background-color: #f0fdfa;
   color: #0d9488;
   display: flex;
@@ -51,14 +51,14 @@
 
 .headerTexts h2 {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
 }
 
 .headerTexts p {
-  margin: 4px 0 0 0;
-  font-size: 0.875rem;
+  margin: 2px 0 0 0;
+  font-size: 0.8125rem;
   color: #64748b;
 }
 
@@ -78,30 +78,31 @@
 }
 
 .formContent {
-  padding: 24px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .formGroup label {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #334155;
 }
 
 .inputField {
   width: 100%;
-  padding: 10px 14px;
+  min-height: 36px;
+  padding: 7px 11px;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
   color: #0f172a;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -113,13 +114,13 @@
 }
 
 .modalFooter {
-  padding: 16px 24px;
+  padding: 12px 18px;
   background-color: #f8fafc;
   border-top: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
 }
 
 @keyframes fadeIn {

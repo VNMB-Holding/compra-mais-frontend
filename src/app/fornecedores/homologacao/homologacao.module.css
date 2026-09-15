@@ -1,7 +1,7 @@
 .pageContainer {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -13,7 +13,7 @@
 }
 
 .pageHeader h1 {
-  font-size: 26px;
+  font-size: 21px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 4px 0;
@@ -23,12 +23,12 @@
 .pageHeader p {
   margin: 0;
   color: #64748b;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .headerActions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
 
 .btnExport {
@@ -38,9 +38,9 @@
   background: white;
   border: 1px solid #cbd5e1;
   color: #475569;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
@@ -62,20 +62,20 @@
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
 
 .mainListCard {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .tableToolbar {
-  padding: 16px 24px;
+  padding: 12px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -88,9 +88,9 @@
   gap: 8px;
   background: white;
   border: 1px solid #cbd5e1;
-  padding: 8px 12px;
-  border-radius: 8px;
-  width: 280px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  width: 260px;
 }
 
 .searchBox svg {
@@ -100,7 +100,7 @@
 .searchBox input {
   border: none;
   outline: none;
-  font-size: 13px;
+  font-size: 12.5px;
   color: #0f172a;
   width: 100%;
   background: transparent;
@@ -108,11 +108,11 @@
 
 .filtersGroup {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .customSelectFilter {
-  width: 180px;
+  width: 170px;
 }
 
 .selectWrapper {
@@ -120,8 +120,8 @@
   align-items: center;
   gap: 6px;
   border: 1px solid #cbd5e1;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   background: white;
 }
 
@@ -132,7 +132,7 @@
 .selectWrapper select {
   border: none;
   outline: none;
-  font-size: 13px;
+  font-size: 12.5px;
   color: #334155;
   font-weight: 500;
   cursor: pointer;

@@ -7,6 +7,30 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* === Animation tokens === */
+  /* Easing */
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);    /* Entradas suaves */
+  --ease-in-out:  cubic-bezier(0.4, 0, 0.2, 1);     /* Transições de estado */
+  --ease-spring:  cubic-bezier(0.34, 1.2, 0.64, 1); /* Spring leve — só confirmações */
+
+  /* Durations */
+  --duration-fast:   120ms;  /* Micro: hover de cor, focus ring */
+  --duration-normal: 200ms;  /* Padrão: hovers, mudanças de estado */
+  --duration-enter:  260ms;  /* Entradas de componentes */
+}
+
+/* === Acessibilidade: prefers-reduced-motion ===
+   Desabilita animações para usuários que solicitaram menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 html {
@@ -85,15 +109,15 @@ a {
 
 .geoapify-autocomplete-input {
   width: 100%;
-  min-height: 44px;
-  padding: 11px 13px;
+  min-height: 36px;
+  padding: 7px 11px;
   border: 1px solid #dbe4ef;
-  border-radius: 8px;
+  border-radius: 6px;
   outline: none;
   background: #fff;
   color: #0f172a;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.35;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   box-shadow: none !important;

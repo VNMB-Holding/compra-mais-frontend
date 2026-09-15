@@ -23,10 +23,10 @@
 .modalCard {
   position: relative;
   width: 100%;
-  max-width: 520px;
-  padding: 40px 36px 32px;
+  max-width: 440px;
+  padding: 24px 22px 20px;
   border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 20px;
+  border-radius: 14px;
   background: var(--bg-card, #ffffff);
   box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
   animation: slideUp 0.25s ease;
@@ -48,28 +48,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 20px;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 14px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e6f5f4 0%, #d0f0ee 100%);
   color: var(--color-primary, #007d79);
-  font-size: 32px;
+  font-size: 24px;
 }
 
 .modalSuccessIcon svg {
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
 }
 
 .modalHeader {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .modalHeader h2 {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   color: var(--text-primary, #0f172a);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 900;
   letter-spacing: -0.3px;
   line-height: 1.25;
@@ -78,15 +78,15 @@
 .modalHeader p {
   margin: 0;
   color: var(--text-secondary, #64748b);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .modalSummary {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 12px;
   overflow: hidden;
