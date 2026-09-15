@@ -290,9 +290,11 @@ export default function AprovacaoPage() {
                         variant="primary"
                         onClick={handleApprove}
                         disabled={submitting}
+                        loading={submitting}
+                        loadingText="Assinando eletronicamente..."
                         className={styles.approveBtn}
                       >
-                        <Icon name="check" /> {submitting ? 'Assinando eletronicamente...' : 'Confirmar e Assinar'}
+                        <Icon name="check" /> Confirmar e Assinar
                       </Button>
                       <Button
                         variant="secondary"
@@ -309,9 +311,11 @@ export default function AprovacaoPage() {
                         variant="primary"
                         onClick={handleReject}
                         disabled={submitting}
+                        loading={submitting}
+                        loadingText="Gravando recusa..."
                         style={{ background: '#dc2626', borderColor: '#dc2626', flex: 1 }}
                       >
-                        <Icon name="x-close" /> {submitting ? 'Gravando recusa...' : 'Confirmar Recusa'}
+                        <Icon name="x-close" /> Confirmar Recusa
                       </Button>
                       <Button
                         variant="secondary"
@@ -322,6 +326,7 @@ export default function AprovacaoPage() {
                       </Button>
                     </div>
                   )}
+
 
                   <div className={styles.securityFooter}>
                     <Icon name="shield-tick" size={14} /> Assinatura digital com registro de IP, geolocalização e data/hora de auditoria.

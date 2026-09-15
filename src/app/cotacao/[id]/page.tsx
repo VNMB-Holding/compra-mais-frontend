@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import styles from "./cotacao.module.css";
-import { Icon, Loading, ErrorState, Skeleton, CardSkeleton, Badge, ConfirmDialog } from "@/components/ui";
+import { Icon, Button, Loading, ErrorState, Skeleton, CardSkeleton, Badge, ConfirmDialog } from "@/components/ui";
+
 import { useToast } from "@/contexts/ToastContext";
 import { rfqsApi, PublicRfq, PublicProposalPayload } from "@/lib/api/rfqs";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -784,15 +785,18 @@ export default function CotacaoFornecedorPage() {
           </div>
 
           <div className={styles.actionFooter}>
-            <button
+            <Button
               type="submit"
+              variant="primary"
               disabled={submitting}
+              loading={submitting}
+              loadingText="Enviando Proposta..."
               className={styles.submitBtn}
             >
-              <Icon name="send-01" size={18} />
-              {submitting ? "Enviando Proposta..." : "Enviar Proposta Comercial"}
-            </button>
+              <Icon name="send-01" size={18} /> Enviar Proposta Comercial
+            </Button>
           </div>
+
         </form>
       </main>
 

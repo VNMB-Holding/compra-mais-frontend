@@ -78,8 +78,10 @@ export default function NewRfqPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
 
   const [tituloRfq, setTituloRfq] = useState("");
+
   const [estrategia, setEstrategia] = useState("Menor Preco Equalizado");
   const [dataEncerramento, setDataEncerramento] = useState("");
   const [incoterm, setIncoterm] = useState("CIF");
@@ -980,13 +982,21 @@ export default function NewRfqPage() {
 
               {currentStep === 4 && (
                 <>
-                  <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(3)}>
-                    <Icon name="chevron-left" /> Voltar
-                  </button>
                   <button
                     type="button"
+                    className={styles.btnCancel}
+                    onClick={() => setCurrentStep(3)}
+                    disabled={isSubmitting || savingDraft}
+                  >
+                    <Icon name="chevron-left" /> Voltar
+                  </button>
+                  <Button
+                    variant="secondary"
+                    type="button"
                     className={styles.secondaryAction}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || savingDraft}
+                    loading={savingDraft}
+                    loadingText="Salvando..."
                     onClick={async () => {
                       const targetRequestId = solicitacaoConfirmada?.id || paramSol;
                       if (!targetRequestId) {
@@ -994,7 +1004,7 @@ export default function NewRfqPage() {
                         return;
                       }
 
-                      setIsSubmitting(true);
+                      setSavingDraft(true);
                       try {
                         const selectedSupplierIds = fornecedoresSelecionados.map((f) => f.id);
                         const endClosesAt = dataEncerramento
@@ -1023,16 +1033,18 @@ export default function NewRfqPage() {
                           message: getErrorMessage(err),
                         });
                       } finally {
-                        setIsSubmitting(false);
+                        setSavingDraft(false);
                       }
                     }}
                   >
                     <Icon name="save-01" /> Salvar rascunho
-                  </button>
+                  </Button>
                   <Button
                     variant="primary"
                     className={styles.btnSubmit}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || savingDraft}
+                    loading={isSubmitting}
+                    loadingText="Publicando..."
                     onClick={async () => {
                       if (!incoterm || !condicaoPagamento.trim() || !moeda) {
                         toast({ variant: "warning", title: "Atenção", message: "Preencha os dados de compliance obrigatórios (Incoterm, Condição e Moeda)" });
@@ -1071,6 +1083,7 @@ export default function NewRfqPage() {
                   </Button>
                 </>
               )}
+
             </div>
           </Card>
         </div>

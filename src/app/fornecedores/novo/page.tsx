@@ -587,10 +587,12 @@ export default function NovoFornecedorPage() {
                   variant="primary"
                   className={styles.btnSubmit}
                   disabled={loading}
+                  loading={loading}
+                  loadingText="Salvando..."
                 >
-                  <Icon name="save-01" />
-                  {loading ? "Salvando..." : "Salvar e Iniciar Homologação"}
+                  <Icon name="save-01" /> Salvar e Iniciar Homologação
                 </Button>
+
               </div>
 
             </form>

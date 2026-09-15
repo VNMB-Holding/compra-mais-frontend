@@ -56,8 +56,10 @@ export default function NovaSolicitacaoPage() {
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [createdCode, setCreatedCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(1);
+
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
 
   const { user } = useAuth();
@@ -201,8 +203,13 @@ export default function NovaSolicitacaoPage() {
   const createMutation = useCreatePurchaseRequest();
 
   const handleSubmit = async (asDraft = false) => {
-    setIsSubmitting(true);
+    if (asDraft) {
+      setSavingDraft(true);
+    } else {
+      setIsSubmitting(true);
+    }
     try {
+
       const validDates = items
         .map(i => (i.requiredDate ? new Date(i.requiredDate).getTime() : 0))
         .filter(t => t > 0 && !isNaN(t));
@@ -267,8 +274,10 @@ export default function NovaSolicitacaoPage() {
       });
     } finally {
       setIsSubmitting(false);
+      setSavingDraft(false);
     }
   };
+
 
   return (
     <div className={styles.formContainer}>
@@ -720,28 +729,44 @@ export default function NovaSolicitacaoPage() {
 
               {currentStep === 3 && (
                 <>
-                  <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(2)}>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => setCurrentStep(2)}
+                    disabled={isSubmitting || savingDraft}
+                  >
                     <Icon name="chevron-left" /> Voltar
                   </button>
-                  <button
+                  <Button
+                    variant="secondary"
                     type="button"
                     className={styles.secondaryAction}
                     onClick={() => handleSubmit(true)}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || savingDraft}
+                    loading={savingDraft}
+                    loadingText="Salvando..."
                   >
                     <Icon name="save-01" /> Salvar rascunho
-                  </button>
-                  <Button variant="primary" className={styles.btnSubmit} onClick={() => {
-                    if (!deliveryLocation) {
-                      toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione o local de entrega." });
-                      return;
-                    }
-                    handleSubmit(false);
-                  }} disabled={isSubmitting}>
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className={styles.btnSubmit}
+                    onClick={() => {
+                      if (!deliveryLocation) {
+                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione o local de entrega." });
+                        return;
+                      }
+                      handleSubmit(false);
+                    }}
+                    disabled={isSubmitting || savingDraft}
+                    loading={isSubmitting}
+                    loadingText="Enviando para aprovação..."
+                  >
                     <Icon name="send-01" /> Enviar para aprovação
                   </Button>
                 </>
               )}
+
             </div>
           </Card>
         </div>

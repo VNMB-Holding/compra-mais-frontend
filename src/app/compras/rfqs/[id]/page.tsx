@@ -301,6 +301,8 @@ export default function RfqDetailPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [publishing, setPublishing] = useState(false);
+  const [creatingPo, setCreatingPo] = useState(false);
+
 
   const handlePublishRfq = async () => {
     try {
@@ -548,6 +550,8 @@ export default function RfqDetailPage() {
         variant="info"
         icon="file-check-02"
         title="Emitir Pedido de Compra?"
+        loading={creatingPo}
+        loadingConfirmLabel="Emitindo Pedido..."
         message={
           vencedor ? (
             <>
@@ -563,6 +567,7 @@ export default function RfqDetailPage() {
         }
         confirmLabel="Emitir Pedido de Compra"
         onConfirm={async () => {
+          setCreatingPo(true);
           try {
             const po = await rfqsApi.createPo(rfqId);
             const poObj = po as any;
@@ -578,15 +583,17 @@ export default function RfqDetailPage() {
               message: `PO ${createdCode} gerado para ${vencedor?.supplierName ?? "fornecedor"}.`,
               duration: 6000,
             });
+            setDialog(null);
           } catch (e) {
             logError("rfqs/[id]/createPo", e);
             toast({ variant: "error", title: "Erro ao emitir Pedido", message: getErrorMessage(e) });
           } finally {
-            setDialog(null);
+            setCreatingPo(false);
           }
         }}
         onCancel={() => setDialog(null)}
       />
+
 
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
         <Icon name="chevron-left" /> Voltar para Cotações
@@ -620,10 +627,12 @@ export default function RfqDetailPage() {
               variant="primary"
               onClick={handlePublishRfq}
               disabled={publishing}
+              loading={publishing}
+              loadingText="Publicando..."
             >
-              <Icon name="send-01" />
-              {publishing ? "Publicando..." : "Publicar Cotação no Mercado"}
+              <Icon name="send-01" /> Publicar Cotação no Mercado
             </Button>
+
           </div>
         )}
       </div>

@@ -208,10 +208,16 @@ export default function InviteSupplierModal({
             <Button variant="secondary" type="button" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
-              <Icon name="mail-01" size={16} />
-              {loading ? "Convidando..." : "Convidar e Adicionar"}
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={loading}
+              loading={loading}
+              loadingText="Convidando..."
+            >
+              <Icon name="mail-01" size={16} /> Convidar e Adicionar
             </Button>
+
           </div>
         </form>
       </div>

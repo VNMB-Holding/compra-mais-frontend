@@ -149,6 +149,8 @@ export default function PedidoDetailPage() {
         variant="success"
         icon="package-check"
         title="Confirmar recebimento do pedido?"
+        loading={updateStatusMutation.isPending}
+        loadingConfirmLabel="Confirmando..."
         message={
           <>Os itens de <strong>{displayId}</strong> foram conferidos e estão em conformidade com o pedido. Esta ação finaliza o ciclo de entrega.</>
         }
@@ -200,9 +202,16 @@ export default function PedidoDetailPage() {
               <Icon name="package-check" /> Confirmar Recebimento
             </Button>
           )}
-          <Button variant="primary" onClick={handlePrintPO} disabled={loadingPdf}>
-            <Icon name={loadingPdf ? "loading-01" : "printer"} /> {loadingPdf ? "Gerando PDF..." : "Imprimir / Baixar PO"}
+          <Button
+            variant="primary"
+            onClick={handlePrintPO}
+            disabled={loadingPdf}
+            loading={loadingPdf}
+            loadingText="Gerando PDF..."
+          >
+            <Icon name="printer" /> Imprimir / Baixar PO
           </Button>
+
         </div>
       </div>
 

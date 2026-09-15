@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Icon } from "@/components/ui";
+import { Icon, Button } from "@/components/ui";
 import styles from "./login.module.css";
 
 export default function LoginPage() {
@@ -105,9 +105,16 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <button type="submit" className={styles.submit} disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
-            </button>
+            <Button
+              type="submit"
+              variant="primary"
+              className={styles.submit}
+              loading={isLoading}
+              loadingText="Entrando..."
+            >
+              Entrar
+            </Button>
+
 
             <div className={styles.divider}>
               <span>ou continue com</span>
