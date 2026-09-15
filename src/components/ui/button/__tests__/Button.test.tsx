@@ -33,4 +33,22 @@ describe('Button Component', () => {
     const button = screen.getByRole('button', { name: /custom/i });
     expect(button.className).toContain('custom-class');
   });
+
+  it('deve exibir spinner e ficar desabilitado quando loading for true', () => {
+    const handleClick = vi.fn();
+    render(<Button loading onClick={handleClick}>Salvar</Button>);
+
+    const button = screen.getByRole('button');
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+
+    fireEvent.click(button);
+    expect(handleClick).not.toHaveBeenCalled();
+  });
+
+  it('deve exibir loadingText quando fornecido em estado de loading', () => {
+    render(<Button loading loadingText="Salvando...">Salvar</Button>);
+    expect(screen.getByText('Salvando...')).toBeInTheDocument();
+  });
 });
+

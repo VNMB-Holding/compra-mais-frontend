@@ -20,10 +20,15 @@ export interface ConfirmDialogProps {
   
   icon?: string;
   
+  loading?: boolean;
+  
+  loadingConfirmLabel?: string;
+  
   onConfirm: () => void;
   
   onCancel: () => void;
 }
+
 
 const VARIANT_CONFIG = {
   danger: {
@@ -60,6 +65,8 @@ export default function ConfirmDialog({
   confirmLabel,
   cancelLabel = "Cancelar",
   icon,
+  loading = false,
+  loadingConfirmLabel,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -67,10 +74,10 @@ export default function ConfirmDialog({
 
   const cfg = VARIANT_CONFIG[variant];
   const iconName = icon ?? cfg.defaultIcon;
-  const btnLabel = confirmLabel ?? cfg.defaultLabel;
+  const btnLabel = loading && loadingConfirmLabel ? loadingConfirmLabel : (confirmLabel ?? cfg.defaultLabel);
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onCancel();
+    if (!loading && e.target === e.currentTarget) onCancel();
   };
 
   return (
@@ -90,14 +97,42 @@ export default function ConfirmDialog({
 
         
         <div className={styles.actions}>
-          <button className={styles.cancelBtn} onClick={onCancel}>
+          <button className={styles.cancelBtn} onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </button>
-          <button className={`${styles.confirmBtn} ${cfg.confirmBtn}`} onClick={onConfirm}>
-            {btnLabel}
+          <button
+            className={`${styles.confirmBtn} ${cfg.confirmBtn} ${loading ? styles.loadingBtn : ''}`}
+            onClick={onConfirm}
+            disabled={loading}
+            aria-busy={loading ? 'true' : undefined}
+          >
+            {loading && (
+              <svg
+                className={styles.spinner}
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeOpacity="0.25"
+                />
+                <path
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+            )}
+            <span>{btnLabel}</span>
           </button>
         </div>
       </div>
     </div>
   );
 }
+

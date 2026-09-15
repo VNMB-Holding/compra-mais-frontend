@@ -18,9 +18,9 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 440px;
-  padding: 36px 32px 28px;
-  border-radius: 20px;
+  max-width: 380px;
+  padding: 24px 22px 20px;
+  border-radius: 14px;
   background: #fff;
   box-shadow:
     0 4px 6px -1px rgba(15, 23, 42, 0.07),
@@ -35,16 +35,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   flex-shrink: 0;
 }
 
 .iconWrap svg {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
 }
 
 
@@ -57,23 +57,23 @@
 
 .body {
   width: 100%;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .title {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   color: #0f172a;
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: -0.25px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
   line-height: 1.25;
 }
 
 .message {
   margin: 0;
   color: #64748b;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 
@@ -90,12 +90,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 16px;
-  border-radius: 10px;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 6px;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.1s ease;
@@ -129,6 +129,30 @@
 .confirmWarning { background: #d97706; }
 .confirmSuccess { background: #007d79; }
 .confirmInfo    { background: #0284c7; }
+
+.loadingBtn {
+  cursor: not-allowed !important;
+  opacity: 0.85 !important;
+  transform: none !important;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 
 
 
