@@ -417,21 +417,6 @@ export default function PedidoDetailPage() {
             )}
           </Card>
 
-          
-          <Card className={styles.sideCard}>
-            <h4>Documento Oficial (PO)</h4>
-            <div className={styles.fileRow}>
-              <Icon name="file-02" size={24} style={{ color: "#007d79" }} />
-              <div className={styles.fileInfo}>
-                <strong>{displayId}.pdf</strong>
-                <small>Ordem de Compra Oficial</small>
-              </div>
-              <button className={styles.downloadIconBtn} onClick={handlePrintPO} title="Baixar Ordem de Compra">
-                <Icon name="download-01" size={16} />
-              </button>
-            </div>
-          </Card>
-
         </div>
       </div>
     </div>

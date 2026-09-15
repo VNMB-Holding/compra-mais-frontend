@@ -121,6 +121,7 @@ export default function RfqsPage() {
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
+    { label: "Rascunho", value: "Rascunho" },
     { label: "Aberta", value: "Aberta" },
     { label: "Em análise", value: "Em análise" },
     { label: "Encerrando hoje", value: "Encerrando hoje" },
@@ -155,6 +156,8 @@ export default function RfqsPage() {
               ? "warning"
               : row.status === "Em análise"
               ? "primary"
+              : row.status === "Rascunho"
+              ? "gray"
               : row.status === "Cancelada"
               ? "danger"
               : "gray"

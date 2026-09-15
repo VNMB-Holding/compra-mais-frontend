@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton, EmptyState } from "@/components/ui";
-import { InviteSupplierModal } from "@/components/modals";
 
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
+import { purchaseOrdersApi } from "@/lib/api/purchase-orders";
 import { useAuth } from "@/hooks/useAuth";
 import { getTenantDisplayName } from "@/lib/utils/tenant";
 import { logError, getErrorMessage } from "@/lib/utils/error";
@@ -88,13 +88,18 @@ function PropostaCard({
   proposta,
   isWinner,
   totalQtd,
+  rfqCode,
+  rfqTitle,
   onSalvar,
 }: {
   proposta: LocalProposal;
   isWinner: boolean;
   totalQtd: number;
+  rfqCode: string;
+  rfqTitle: string;
   onSalvar: (id: string, dados: Partial<LocalProposal>) => void;
 }) {
+  const { toast } = useToast();
   const [aberto, setAberto] = useState(false);
   const [draft, setDraft] = useState({
     unitPrice: proposta.unitPrice ?? 0,
@@ -115,6 +120,28 @@ function PropostaCard({
   const handleSalvar = () => {
     onSalvar(proposta.supplierId, { ...draft, status: "received" });
     setAberto(false);
+  };
+
+  const handleCopyLink = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/cotacao/${rfqCode}?supId=${encodeURIComponent(proposta.supplierId)}&fornecedor=${encodeURIComponent(proposta.supplierName)}&cnpj=${encodeURIComponent(proposta.cnpj || "")}`;
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      toast({
+        variant: "success",
+        title: "Link Copiado!",
+        message: `Link exclusivo para ${proposta.supplierName} copiado com sucesso.`,
+      });
+    }
+  };
+
+  const handleWhatsApp = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/cotacao/${rfqCode}?supId=${encodeURIComponent(proposta.supplierId)}&fornecedor=${encodeURIComponent(proposta.supplierName)}&cnpj=${encodeURIComponent(proposta.cnpj || "")}`;
+    const text = encodeURIComponent(
+      `Olá, *${proposta.supplierName}*! Segue o link exclusivo para envio da sua proposta comercial referente à cotação *${rfqCode} - ${rfqTitle}*:\n\n${url}\n\nPor favor, preencha os preços e condições no link acima.`
+    );
+    window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
   const totalEqualizado = (draft.unitPrice + draft.freightCost) * (totalQtd || 1);
@@ -159,14 +186,32 @@ function PropostaCard({
           )}
 
           <div className={styles.propostaActions}>
+            <button
+              type="button"
+              className={styles.btnActionIcon}
+              onClick={handleCopyLink}
+              title={`Copiar link exclusivo de ${proposta.supplierName}`}
+            >
+              <Icon name="copy-01" size={14} />
+              <span>Copiar link</span>
+            </button>
+            <button
+              type="button"
+              className={styles.btnActionIcon}
+              onClick={handleWhatsApp}
+              title={`Enviar pelo WhatsApp para ${proposta.supplierName}`}
+            >
+              <Icon name="message-square-02" size={14} />
+              <span>WhatsApp</span>
+            </button>
             {proposta.status === "awaiting" && (
               <button className={styles.btnRegistrar} onClick={() => setAberto(!aberto)}>
-                <Icon name="plus" size={15} /> Registrar proposta
+                <Icon name="plus" size={14} /> Registrar proposta
               </button>
             )}
             {proposta.status === "received" && (
               <button className={styles.btnEditar} onClick={() => setAberto(!aberto)}>
-                <Icon name="edit-01" size={15} /> {aberto ? "Fechar" : "Editar"}
+                <Icon name="edit-01" size={14} /> {aberto ? "Fechar" : "Editar"}
               </button>
             )}
           </div>
@@ -251,20 +296,37 @@ export default function RfqDetailPage() {
   type DialogType = "encerrar" | "selecionar" | "gerar" | null;
   const [dialog, setDialog] = useState<DialogType>(null);
   const [pendingVencedorId, setPendingVencedorId] = useState<string | null>(null);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [generatedPo, setGeneratedPo] = useState<{ id: string; code: string } | null>(null);
 
   const { toast } = useToast();
   const { user } = useAuth();
+  const [publishing, setPublishing] = useState(false);
 
-  const handleSupplierInvited = async () => {
+  const handlePublishRfq = async () => {
     try {
+      setPublishing(true);
+      await rfqsApi.updateStatus(rfqId, "Open");
       const updated = await rfqsApi.getById(rfqId);
       setRfq(updated);
       setPropostas(mapPropostas(updated));
+      setStage(getStage(updated));
+      toast({
+        variant: "success",
+        title: "Cotação publicada com sucesso!",
+        message: "A cotação agora está aberta no mercado e os fornecedores podem enviar propostas.",
+      });
     } catch (e) {
-      logError("rfqs/[id]/handleSupplierInvited", e);
+      logError("rfqs/[id]/publish", e);
+      toast({
+        variant: "error",
+        title: "Erro ao publicar cotação",
+        message: getErrorMessage(e),
+      });
+    } finally {
+      setPublishing(false);
     }
   };
+
 
   useEffect(() => {
     async function load() {
@@ -276,6 +338,22 @@ export default function RfqDetailPage() {
         setStage(getStage(data));
         const winner = (data.proposals ?? []).find((p) => p.isWinner);
         if (winner) setVencedorId(winner.supplierId);
+
+        // Verifica se já existe um Pedido de Compra (PO) gerado
+        try {
+          const orders = await purchaseOrdersApi.list();
+          const match = orders.find(
+            (o: any) =>
+              (winner && o.winningProposalId === winner.id) ||
+              (o.notes && (o.notes.includes(data.code) || o.notes.includes(data.id))) ||
+              ((data.status === "Finished" || data.status === "Closed") && winner && o.supplierId === winner.supplierId)
+          );
+          if (match) {
+            setGeneratedPo({ id: match.id, code: match.code });
+          }
+        } catch {
+          // fallback silencioso
+        }
       } catch (err) {
         logError("rfqs/[id]/load", err);
         toast({
@@ -341,10 +419,24 @@ export default function RfqDetailPage() {
     : "—";
   const companyName = getTenantDisplayName(rfq?.tenantId || rfq?.purchaseRequest?.tenantId, user);
 
-  const badgeVariant =
-    stage === "approval" ? "warning" : stage === "analysis" ? "primary" : "success";
+  const isFinished = rfq?.status === "Finished" || rfq?.status === "Closed" || !!generatedPo;
+  const isDraft = rfq?.status === "Draft";
+  const badgeVariant: "primary" | "danger" | "gray" | "dark" | "success" | "warning" =
+    isDraft
+      ? "gray"
+      : isFinished
+      ? "success"
+      : stage === "approval"
+      ? "warning"
+      : stage === "analysis"
+      ? "primary"
+      : "success";
   const badgeLabel =
-    stage === "proposal"
+    isDraft
+      ? "Rascunho"
+      : isFinished
+      ? "Pedido Emitido"
+      : stage === "proposal"
       ? "Aguardando propostas"
       : stage === "analysis"
       ? "Em análise"
@@ -473,13 +565,19 @@ export default function RfqDetailPage() {
         onConfirm={async () => {
           try {
             const po = await rfqsApi.createPo(rfqId);
+            const poObj = po as any;
+            const createdCode = poObj?.code || "PO Gerado";
+            const createdId = poObj?.id || poObj?.code || "";
+            if (createdId) {
+              setGeneratedPo({ id: createdId, code: createdCode });
+            }
+            setRfq((prev) => prev ? { ...prev, status: "Finished" } : null);
             toast({
               variant: "success",
               title: "Pedido de Compra emitido com sucesso!",
-              message: `PO ${(po as any)?.code || ""} gerado para ${vencedor?.supplierName ?? "fornecedor"}.`,
+              message: `PO ${createdCode} gerado para ${vencedor?.supplierName ?? "fornecedor"}.`,
               duration: 6000,
             });
-            router.push(`/compras/pedidos`);
           } catch (e) {
             logError("rfqs/[id]/createPo", e);
             toast({ variant: "error", title: "Erro ao emitir Pedido", message: getErrorMessage(e) });
@@ -488,13 +586,6 @@ export default function RfqDetailPage() {
           }
         }}
         onCancel={() => setDialog(null)}
-      />
-
-      <InviteSupplierModal
-        open={inviteModalOpen}
-        rfqId={rfqId}
-        onSuccess={handleSupplierInvited}
-        onClose={() => setInviteModalOpen(false)}
       />
 
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
@@ -523,42 +614,18 @@ export default function RfqDetailPage() {
             </span>
           </div>
         </div>
-        <div className={styles.headerActions}>
-          <Button
-            variant="primary"
-            onClick={() => setInviteModalOpen(true)}
-          >
-            <Icon name="user-plus" /> Convidar Não Cadastrado
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={() => {
-              const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
-              navigator.clipboard.writeText(url);
-              toast({
-                variant: "success",
-                title: "Link Copiado!",
-                message: "O link público para preenchimento de proposta foi copiado para sua área de transferência.",
-              });
-            }}
-          >
-            <Icon name="link-01" /> Copiar Link
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={() => {
-              const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
-              const text = encodeURIComponent(
-                `Olá! Segue o link para envio da sua proposta comercial referente à cotação *${rfqCode} - ${rfqTitle}*:\n\n${url}\n\nPor favor, preencha os preços e condições no link acima.`
-              );
-              window.open(`https://wa.me/?text=${text}`, "_blank");
-            }}
-          >
-            <Icon name="message-square-02" /> WhatsApp
-          </Button>
-        </div>
+        {isDraft && (
+          <div className={styles.headerActions}>
+            <Button
+              variant="primary"
+              onClick={handlePublishRfq}
+              disabled={publishing}
+            >
+              <Icon name="send-01" />
+              {publishing ? "Publicando..." : "Publicar Cotação no Mercado"}
+            </Button>
+          </div>
+        )}
       </div>
 
       
@@ -646,80 +713,9 @@ export default function RfqDetailPage() {
       <div className={styles.detailContainer}>
         <Header />
 
-        
-        {rfq?.purchaseRequest?.items && rfq.purchaseRequest.items.length > 0 && (
-          <Card className={styles.flowCard} style={{ marginBottom: 20 }}>
-            <h4>Itens solicitados ({rfq.purchaseRequest.items.length})</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
-              {rfq.purchaseRequest.items.map((item: any) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "10px 14px",
-                    background: "#f8fafc",
-                    borderRadius: 8,
-                    border: "1px solid #e2e8f0",
-                    fontSize: 13,
-                  }}
-                >
-                  <strong style={{ color: "#0f172a" }}>{item.description}</strong>
-                  <span style={{ color: "#64748b" }}>
-                    {item.quantity} {item.unit}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        
-        <Card style={{ marginBottom: 20, background: "#f0fdfa", border: "1px solid #ccfbf1", padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 8, background: "#007d79", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name="link-01" size={20} />
-              </div>
-              <div>
-                <strong style={{ display: "block", color: "#004144", fontSize: 14 }}>Link de Cotação Externa para Fornecedores</strong>
-                <span style={{ fontSize: 12, color: "#0f766e" }}>Envie este link para qualquer fornecedor preencher valores, prazos e condições comerciais sem login.</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
-                  navigator.clipboard.writeText(url);
-                  toast({
-                    variant: "success",
-                    title: "Link Copiado!",
-                    message: "Link da cotação copiado com sucesso.",
-                  });
-                }}
-              >
-                <Icon name="copy-01" /> Copiar Link
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  const url = `${window.location.origin}/cotacao/${rfqCode || rfqId}`;
-                  const text = encodeURIComponent(
-                    `Olá! Segue o link para envio da sua proposta comercial referente à cotação *${rfqCode} - ${rfqTitle}*:\n\n${url}\n\nPor favor, preencha os preços e condições no link acima.`
-                  );
-                  window.open(`https://wa.me/?text=${text}`, "_blank");
-                }}
-              >
-                <Icon name="message-square-02" /> WhatsApp
-              </Button>
-            </div>
-          </div>
-        </Card>
-
         <div className={styles.coletaHeader}>
           <h2 className={styles.coletaTitulo}>
-            Fornecedores & Propostas
+            Fornecedores Convocados & Propostas
             {propostas.length === 0 && (
               <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8", marginLeft: 8 }}>
                 Aguardando envio de propostas
@@ -727,9 +723,6 @@ export default function RfqDetailPage() {
             )}
           </h2>
           <div style={{ display: "flex", gap: 8 }}>
-            <Button variant="secondary" onClick={() => setInviteModalOpen(true)}>
-              <Icon name="user-plus" /> Convidar Não Cadastrado
-            </Button>
             {recebidas.length > 0 && (
               <Button variant="primary" onClick={() => setDialog("encerrar")}>
                 Encerrar coleta e ir para análise
@@ -753,6 +746,8 @@ export default function RfqDetailPage() {
                 proposta={p}
                 isWinner={false}
                 totalQtd={totalQtd}
+                rfqCode={rfqCode}
+                rfqTitle={rfqTitle}
                 onSalvar={handleSalvarProposta}
               />
             ))
@@ -943,13 +938,64 @@ export default function RfqDetailPage() {
       <Header />
 
       <div className={styles.aprovacaoContainer}>
+        {generatedPo && (
+          <div style={{
+            background: "#f0fdf9",
+            border: "1px solid #99f6e4",
+            borderRadius: 12,
+            padding: "20px 24px",
+            marginBottom: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: 10,
+                background: "#007d79",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <Icon name="file-check-02" size={24} />
+              </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#004144" }}>
+                    Pedido de Compra Oficial Emitido
+                  </h3>
+                  <Badge variant="success">Gerado</Badge>
+                </div>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: "#0f766e" }}>
+                  Ordem de Compra oficial: <strong>{generatedPo.code}</strong> vinculada a esta cotação. O ciclo de contratação foi formalizado.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="primary"
+              onClick={() => router.push(`/compras/pedidos/${generatedPo.id || generatedPo.code}`)}
+            >
+              Ir para o Pedido de Compra <Icon name="arrow-right" />
+            </Button>
+          </div>
+        )}
+
         <div className={styles.aprovacaoBanner}>
           <div className={styles.aprovacaoBannerIcon}>
             <Icon name="trophy-01" />
           </div>
           <div className={styles.aprovacaoBannerText}>
-            <h2>Proposta Selecionada</h2>
-            <p>Revise os detalhes comerciais antes de emitir o Pedido de Compra Oficial.</p>
+            <h2>{generatedPo ? "Cotação Finalizada & Homologada" : "Proposta Selecionada"}</h2>
+            <p>
+              {generatedPo
+                ? `O processo foi encerrado com sucesso e o Pedido Oficial ${generatedPo.code} foi gerado.`
+                : "Revise os detalhes comerciais antes de emitir o Pedido de Compra Oficial."}
+            </p>
           </div>
         </div>
 
@@ -1013,13 +1059,23 @@ export default function RfqDetailPage() {
           <button className={styles.btnVoltarAnalise} onClick={() => setStage("analysis")}>
             <Icon name="arrow-left" size={15} /> Voltar para Matriz
           </button>
-          <Button
-            variant="primary"
-            className={styles.btnGerarPO}
-            onClick={() => setDialog("gerar")}
-          >
-            Gerar Pedido de Compra <Icon name="arrow-right" />
-          </Button>
+          {generatedPo ? (
+            <Button
+              variant="primary"
+              className={styles.btnGerarPO}
+              onClick={() => router.push(`/compras/pedidos/${generatedPo.id || generatedPo.code}`)}
+            >
+              Ir para o Pedido {generatedPo.code} <Icon name="arrow-right" />
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              className={styles.btnGerarPO}
+              onClick={() => setDialog("gerar")}
+            >
+              Gerar Pedido de Compra <Icon name="arrow-right" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

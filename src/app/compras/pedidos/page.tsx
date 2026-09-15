@@ -64,7 +64,7 @@ export default function PedidosPage() {
   const { user } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [supplier, setSupplier] = useState("Todas");
+  const [supplier, setSupplier] = useState("Todos");
   const [status, setStatus] = useState("Todos");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
@@ -82,7 +82,7 @@ export default function PedidosPage() {
       const data = await purchaseOrdersApi.list({
         companyCode: queryCompanyCode,
         status: status !== "Todos" ? status : undefined,
-        supplier: supplier !== "Todas" ? supplier : undefined,
+        supplier: supplier !== "Todos" && supplier !== "Todas" ? supplier : undefined,
         search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
       });
       const rows = data.map((po) => mapToRow(po, user));
@@ -102,7 +102,7 @@ export default function PedidosPage() {
   }, [fetchData]);
 
   const supplierOptions = [
-    { label: "Todos os fornecedores", value: "Todas" },
+    { label: "Todos os fornecedores", value: "Todos" },
     ...Array.from(new Set(pedidos.map((p) => p.fornecedor)))
       .filter((f) => f !== "—")
       .map((f) => ({ label: f, value: f })),
@@ -223,22 +223,22 @@ export default function PedidosPage() {
           <ErrorState message={error} onRetry={fetchData} />
         ) : filtered.length === 0 ? (
           <EmptyState
-            illustration={searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS" ? "no-search" : "box-empty"}
-            title={searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS" ? "Nenhum pedido encontrado" : "Nenhum pedido gerado"}
+            illustration={searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS" ? "no-search" : "box-empty"}
+            title={searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS" ? "Nenhum pedido encontrado" : "Nenhum pedido gerado"}
             description={
-              searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS"
+              searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS"
                 ? "Não encontramos pedidos com os filtros aplicados. Tente alterar os critérios de busca."
                 : "Quando uma cotação for finalizada e o mapa comparativo for aprovado, os pedidos de compra aparecerão aqui."
             }
             action={
-              searchQuery || status !== "Todos" || supplier !== "Todas" || selectedCompanyId !== "TODAS"
+              searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS"
                 ? {
                     label: "Limpar Filtros",
                     variant: "secondary",
                     onClick: () => {
                       setSearchQuery("");
                       setStatus("Todos");
-                      setSupplier("Todas");
+                      setSupplier("Todos");
                       setSelectedCompanyId("TODAS");
                     },
                   }

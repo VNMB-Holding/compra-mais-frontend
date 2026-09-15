@@ -55,6 +55,7 @@ export interface RfqKpis {
   open: number;
   closingToday: number;
   closed: number;
+  draft?: number;
   proposalCount: number;
 }
 
@@ -84,9 +85,16 @@ export interface PublicRfq {
     unit: string;
     notes?: string;
   }[];
+  invitedSuppliers?: {
+    id: string;
+    name: string;
+    corporateName?: string;
+    cnpj?: string;
+  }[];
 }
 
 export interface PublicProposalPayload {
+  supplierId?: string;
   supplierCnpj: string;
   supplierName: string;
   contactName?: string;
@@ -214,7 +222,7 @@ export const rfqsApi = {
     return apiClient.get<RfqKpis>(`/api/rfqs/kpis${qs ? `?${qs}` : ''}`);
   },
   
-  create: (data: { requestId: string; title: string; closesAt: string; supplierIds?: string[] }) =>
+  create: (data: { requestId: string; title: string; closesAt: string; supplierIds?: string[]; status?: 'Draft' | 'Open' }) =>
     apiClient.post<Rfq>("/api/rfqs", data),
   
   createProposal: (rfqId: string, data: { supplierId: string; unitPrice: number; freightCost?: number; paymentTerms?: string; deliveryTime?: number; notes?: string }) =>

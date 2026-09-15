@@ -121,6 +121,7 @@ export default function SolicitacoesPage() {
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
+    { label: "Rascunho", value: "Rascunho" },
     { label: "Aprovada / Pronta p/ Cotação", value: "Aprovada" },
     { label: "Em Cotação", value: "Em Cotação" },
     { label: "Finalizada", value: "Finalizada" },
@@ -206,6 +207,12 @@ export default function SolicitacoesPage() {
           title="Total de Solicitações"
           value={String(kpis?.total ?? rawRequests.length)}
           icon="file-02"
+          loading={loadingKpis}
+        />
+        <KpiCard
+          title="Rascunhos"
+          value={String(kpis?.draft ?? rawRequests.filter((r) => r.status === "Draft").length)}
+          icon="edit-01"
           loading={loadingKpis}
         />
         <KpiCard

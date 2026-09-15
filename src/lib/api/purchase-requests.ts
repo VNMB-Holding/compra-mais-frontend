@@ -61,6 +61,7 @@ export interface PurchaseRequestKpis {
   approved: number;
   inQuote: number;
   finished: number;
+  draft?: number;
 }
 
 export interface PurchaseRequestListParams {
@@ -103,6 +104,12 @@ export const purchaseRequestsApi = {
 
   create: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
     apiClient.post<PurchaseRequest>("/api/purchase-requests", data),
+
+  update: (id: string, data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
+    apiClient.put<PurchaseRequest>(`/api/purchase-requests/${id}`, data),
+
+  createPublic: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
+    apiClient.post<PurchaseRequest>("/api/purchase-requests/public", data),
 
   updateStatus: (id: string, status: PurchaseRequest["status"], comments?: string) =>
     apiClient.patch<PurchaseRequest>(`/api/purchase-requests/${id}/status`, { status, comments }),

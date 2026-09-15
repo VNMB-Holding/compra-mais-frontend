@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { categoriesApi, Category } from "@/lib/api/categories";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import { GeoapifyGeocoderAutocomplete, GeoapifyContext } from '@geoapify/react-geocoder-autocomplete';
@@ -12,7 +11,9 @@ import styles from "./solicitacoes-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { useCreatePurchaseRequest } from "@/hooks/useQueries";
+import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
+import { CATEGORY_LABEL_MAP } from "@/lib/utils/category-icon";
 import { ApprovalModal } from "@/components";
 
 
@@ -43,6 +44,11 @@ const PRIORITY_BADGE_CONFIG: Record<Priority, { variant: "gray" | "warning" | "d
   Baixa: { variant: "gray", icon: "info-circle" },
 };
 
+const ITEM_CATEGORY_OPTIONS = Object.values(CATEGORY_LABEL_MAP).map((name) => ({
+  label: name,
+  value: name,
+}));
+
 export default function NovaSolicitacaoPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -60,18 +66,64 @@ export default function NovaSolicitacaoPage() {
   const [requester, setRequester] = useState(user?.name || "");
   const [department, setDepartment] = useState(user?.department || "");
   const [priority, setPriority] = useState<Priority>("Media");
-  const [categories, setCategories] = useState<Category[]>([]);
+
+  const searchParams = useSearchParams();
+  const editId = searchParams?.get("editId");
+
+  const [loadingEdit, setLoadingEdit] = useState(false);
 
   useEffect(() => {
-    categoriesApi.list()
-      .then(setCategories)
-      .catch((err) => logError("solicitacoes/nova/categories", err));
-  }, []);
+    if (!editId) return;
+    const currentId = editId;
+    let active = true;
+    async function loadDraft() {
+      try {
+        setLoadingEdit(true);
+        const data = await purchaseRequestsApi.getById(currentId);
+        if (!active) return;
+        if (data.description) setTitle(data.description);
+        if (data.requesterName) setRequester(data.requesterName);
+        if (data.costCenterName) setDepartment(data.costCenterName);
+        if (data.notes) setJustification(data.notes);
+        if (data.companyCode) setTargetTenantId(data.companyCode);
+        if (data.corporateStockLocation) setDeliveryLocation(data.corporateStockLocation);
+        if (data.items && data.items.length > 0) {
+          setItems(
+            data.items.map((item, idx) => ({
+              id: idx + 1,
+              description: item.description || "",
+              category: item.costCenterName || "MRO / Pecas",
+              quantity: Number(item.quantity) || 1,
+              unit: item.unit || "UN",
+              unitPrice: Number(item.estimatedUnitPrice) || 0,
+              costCenter: item.costCenterCode || "Administrativo",
+              requiredDate: item.requiredDate ? new Date(item.requiredDate).toISOString().split("T")[0] : "",
+            }))
+          );
+        }
+      } catch (err) {
+        logError("solicitacoes/nova/loadDraft", err);
+        toast({
+          variant: "error",
+          title: "Erro ao carregar rascunho",
+          message: getErrorMessage(err),
+        });
+      } finally {
+        if (active) setLoadingEdit(false);
+      }
+    }
+    loadDraft();
+    return () => {
+      active = false;
+    };
+  }, [editId]);
 
   useEffect(() => {
-    if (user?.name) setRequester(user.name);
-    if (user?.department) setDepartment(user.department);
-  }, [user]);
+    if (!editId) {
+      if (user?.name) setRequester(user.name);
+      if (user?.department) setDepartment(user.department);
+    }
+  }, [user, editId]);
 
   const [targetTenantId, setTargetTenantId] = useState<string>("2313");
 
@@ -144,17 +196,7 @@ export default function NovaSolicitacaoPage() {
     setItems((current) => current.filter((item) => item.id !== id));
   };
 
-  const uniqueCategoryOptions = useMemo(() => {
-    const seen = new Set<string>();
-    const opts: { label: string; value: string }[] = [];
-    for (const c of categories) {
-      if (c.name && !seen.has(c.name)) {
-        seen.add(c.name);
-        opts.push({ label: c.name, value: c.name });
-      }
-    }
-    return opts;
-  }, [categories]);
+  const uniqueCategoryOptions = ITEM_CATEGORY_OPTIONS;
 
   const createMutation = useCreatePurchaseRequest();
 
@@ -169,11 +211,7 @@ export default function NovaSolicitacaoPage() {
         ? new Date(Math.min(...validDates)).toISOString()
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const firstItemCategory = items[0]?.category;
-      const matchedCategory = categories.find((c) => c.name === firstItemCategory) || categories[0];
-      const derivedCategoryId = matchedCategory?.id || undefined;
-
-      const data = await createMutation.mutateAsync({
+      const payload = {
         tenantId: targetTenantId || user?.tenantId,
         description: title,
         requesterId: user?.id,
@@ -182,8 +220,7 @@ export default function NovaSolicitacaoPage() {
         purchaseType: purchaseType,
         paymentTerms: paymentTerms || undefined,
         preferredSupplier: preferredSupplier || undefined,
-        notes: (notes || "") + (deliveryWindow ? `\nJanela de recebimento: ${deliveryWindow}` : ""),
-        categoryId: derivedCategoryId,
+        notes: (justification || notes || "") + (deliveryWindow ? `\nJanela de recebimento: ${deliveryWindow}` : ""),
         justification: justification,
         estimatedBudget: totalEstimated,
         deliveryLocation: deliveryLocation,
@@ -201,21 +238,28 @@ export default function NovaSolicitacaoPage() {
             costCenter: i.costCenter || undefined,
             requiredDate: i.requiredDate || undefined,
           })),
-      } as any);
+      };
+
+      let data: any;
+      if (editId) {
+        data = await purchaseRequestsApi.update(editId, payload as any);
+      } else {
+        data = await createMutation.mutateAsync(payload as any);
+      }
 
       if (asDraft) {
         toast({
           variant: "success",
           title: "Salvo",
-          message: `Rascunho ${data.code} salvo com sucesso!`,
+          message: `Rascunho ${data.code || ""} salvo com sucesso!`,
         });
         router.push("/compras/solicitacoes");
       } else {
-        setCreatedCode(data.code);
+        setCreatedCode(data.code || "");
         setShowApprovalModal(true);
       }
     } catch (err) {
-      logError("solicitacoes/nova/create", err);
+      logError("solicitacoes/nova/createOrUpdate", err);
       toast({
         variant: "error",
         title: "Erro",
@@ -246,9 +290,9 @@ export default function NovaSolicitacaoPage() {
 
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>Compras internas</span>
-          <h1>Nova Solicitação de Compra</h1>
-          <p>Monte uma demanda completa, com escopo, orçamento, recebimento e requisitos para cotação.</p>
+          <span className={styles.eyebrow}>{editId ? "Edição de rascunho" : "Compras internas"}</span>
+          <h1>{editId ? "Editar Rascunho da Solicitação" : "Nova Solicitação de Compra"}</h1>
+          <p>{editId ? "Revise os itens, valores e prazos antes de enviar para aprovação." : "Monte uma demanda completa, com escopo, orçamento, recebimento e requisitos para cotação."}</p>
         </div>
       </div>
 

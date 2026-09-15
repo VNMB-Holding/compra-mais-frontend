@@ -139,9 +139,36 @@ export default function SolicitacaoDetailPage() {
     });
   };
 
+  const isDraft = sol?.status === "Draft";
   const isFullyApproved = approved === true || sol?.status === "Approved" || sol?.status === "InQuote" || sol?.status === "Finished";
-  const currentStatus = STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente";
+  const currentStatus = isDraft ? "Rascunho" : (STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente");
   const isRejected = approved === false || sol?.status === "Rejected";
+
+  const [sendingApproval, setSendingApproval] = useState(false);
+
+  const handleSendToApproval = async () => {
+    if (!sol) return;
+    setSendingApproval(true);
+    try {
+      await purchaseRequestsApi.update(sol.id, { status: "AwaitingApproval" });
+      const fresh = await purchaseRequestsApi.getById(sol.id);
+      setSolOverride(fresh);
+      toast({
+        variant: "success",
+        title: "Solicitação Enviada",
+        message: `Solicitação ${fresh.code || solId} enviada para aprovação com sucesso!`,
+      });
+    } catch (err) {
+      logError("solicitacoes/[id]/sendToApproval", err);
+      toast({
+        variant: "error",
+        title: "Erro ao enviar",
+        message: getErrorMessage(err),
+      });
+    } finally {
+      setSendingApproval(false);
+    }
+  };
 
   const budget = Number(sol?.estimatedBudget || 0);
   const companyName = formatCorporateBranch(sol?.corporateColigada, sol?.corporateFilial, sol?.tenantId, user);
@@ -229,8 +256,8 @@ export default function SolicitacaoDetailPage() {
         <div>
           <div className={styles.titleRow}>
             <h1>{sol?.code || solId}</h1>
-            <Badge variant={isFullyApproved ? "success" : isRejected ? "gray" : "warning"}>
-              {isFullyApproved ? "Aprovada" : isRejected ? "Rejeitada" : currentStatus}
+            <Badge variant={isFullyApproved ? "success" : isRejected ? "danger" : isDraft ? "gray" : "warning"}>
+              {currentStatus}
             </Badge>
           </div>
           <p className={styles.subtitleLarge}>{sol?.description || "Solicitação de Compra"}</p>
@@ -240,7 +267,17 @@ export default function SolicitacaoDetailPage() {
             <span className={styles.infoTag}><Icon name="archive" /> Estoque: {sol?.corporateStockLocation || "Almoxarifado Principal"}</span>
           </div>
         </div>
-        {isFullyApproved ? (
+
+        {isDraft ? (
+          <div className={styles.headerActions}>
+            <Button variant="secondary" onClick={() => router.push(`/compras/solicitacoes/nova?editId=${sol?.id || solId}`)}>
+              <Icon name="edit-01" /> Editar Rascunho
+            </Button>
+            <Button variant="primary" disabled={sendingApproval} onClick={handleSendToApproval}>
+              <Icon name="send-01" /> {sendingApproval ? "Enviando..." : "Enviar para Aprovação"}
+            </Button>
+          </div>
+        ) : isFullyApproved ? (
           <div className={styles.headerActions}>
             <Button variant="primary" onClick={() => router.push(`/compras/rfqs/nova?solicitationId=${sol?.id || solId}`)}>
               <Icon name="plus" /> Criar Cotação (RFQ)
@@ -267,6 +304,15 @@ export default function SolicitacaoDetailPage() {
           </div>
         )}
       </div>
+
+      {isDraft && (
+        <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, color: "#475569", fontSize: 13 }}>
+          <Icon name="info-circle" size={18} style={{ color: "#0284c7", flexShrink: 0 }} />
+          <span>
+            Esta solicitação está salva como <strong>rascunho</strong> e ainda não entrou na esteira de governança. Você pode continuar editando os itens e prazos ou clicar em <strong>Enviar para Aprovação</strong> para iniciar a análise dos gestores.
+          </span>
+        </div>
+      )}
 
       
       <div className={styles.layout2Col}>
@@ -296,7 +342,7 @@ export default function SolicitacaoDetailPage() {
               {chain.map((lvl, index) => {
                 const historyMatch = sol?.approvalHistories && sol.approvalHistories[index];
                 const isLevelDone = isFullyApproved || !!historyMatch;
-                const isLevelActive = !isLevelDone && !isRejected && (index === 0 || !!(sol?.approvalHistories && sol.approvalHistories[index - 1]));
+                const isLevelActive = !isDraft && !isLevelDone && !isRejected && (index === 0 || !!(sol?.approvalHistories && sol.approvalHistories[index - 1]));
 
                 return (
                   <React.Fragment key={lvl.level}>

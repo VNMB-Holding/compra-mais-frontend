@@ -44,9 +44,6 @@ interface FornecedorConvidado {
   selecionado: boolean;
 }
 
-const SOLICITACOES_DISPONIVEIS: Solicitacao[] = [];
-const FORNECEDORES_BASE: FornecedorConvidado[] = [];
-
 const PRIORITY_CLASS: Record<string, string> = {
   Alta: styles.priorityAlta,
   Critica: styles.priorityCritica,
@@ -90,29 +87,29 @@ export default function NewRfqPage() {
   const [moeda, setMoeda] = useState("BRL");
   const [observacoes, setObservacoes] = useState("");
   const [itens, setItens] = useState<ItemCotacao[]>([]);
-  const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>(FORNECEDORES_BASE);
+  const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>([]);
 
   
   const [supplierSearch, setSupplierSearch] = useState("");
-  const [supplierFilterTab, setSupplierFilterTab] = useState<"todos" | "selecionados" | "homologados">("todos");
+  const [supplierFilterTab, setSupplierFilterTab] = useState<"todos" | "selecionados">("todos");
   const [supplierPage, setSupplierPage] = useState(1);
   const SUPPLIERS_PER_PAGE = 8;
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const handleSupplierInvited = (newSup: any) => {
     const convidado: FornecedorConvidado = {
-      id: newSup.id,
+      id: newSup.id || `sup-conv-${Date.now()}`,
       nome: newSup.corporateName || newSup.tradeName || "Fornecedor Convidado",
       cnpj: newSup.cnpj || "—",
-      segmento: "Novo / Convidado",
-      isHomologado: false,
+      segmento: newSup.segment || "Convidado Externo",
+      isHomologado: true,
       selecionado: true,
     };
     setFornecedores((prev) => [convidado, ...prev]);
     setIsInviteModalOpen(false);
   };
 
-  const [requestsApi, setRequestsApi] = useState<Solicitacao[]>(SOLICITACOES_DISPONIVEIS);
+  const [requestsApi, setRequestsApi] = useState<Solicitacao[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -154,7 +151,7 @@ export default function NewRfqPage() {
         if (sups && sups.length > 0) {
           const mappedSups: FornecedorConvidado[] = sups.map((s) => ({
             id: s.id,
-            nome: s.corporateName || s.tradeName,
+            nome: s.corporateName || s.tradeName || "Fornecedor",
             cnpj: s.cnpj,
             segmento: s.segment || "Geral",
             isHomologado: s.status === "Active" || s.isActive === true,
@@ -227,7 +224,7 @@ export default function NewRfqPage() {
     setTituloRfq("");
     setItens([]);
     setObservacoes("");
-    setFornecedores(FORNECEDORES_BASE);
+    setFornecedores((cur) => cur.map((f) => ({ ...f, selecionado: false })));
     setCurrentStep(1);
   };
 
@@ -273,8 +270,6 @@ export default function NewRfqPage() {
     let list = fornecedores;
     if (supplierFilterTab === "selecionados") {
       list = list.filter((f) => f.selecionado);
-    } else if (supplierFilterTab === "homologados") {
-      list = list.filter((f) => f.isHomologado);
     }
 
     if (supplierSearch.trim()) {
@@ -550,42 +545,6 @@ export default function NewRfqPage() {
             
             {currentStep === 1 && (
               <>
-                
-                <section className={styles.formSection}>
-                  <div className={styles.sectionHeader}>
-                    <div className={styles.sectionIcon}><Icon name="link-01" /></div>
-                    <div>
-                      <h2>Origem da cotação</h2>
-                      <p>Solicitação de compra aprovada que origina este processo de mercado.</p>
-                    </div>
-                  </div>
-
-                  <div className={styles.origemBox}>
-                    <div className={styles.origemLeft}>
-                      <div className={styles.origemId}>{solicitacaoConfirmada.id}</div>
-                      <div className={styles.origemTitulo}>{solicitacaoConfirmada.titulo}</div>
-                      <div className={styles.origemMeta}>
-                        <span>{solicitacaoConfirmada.area}</span>
-                        <span>·</span>
-                        <span>{solicitacaoConfirmada.solicitante}</span>
-                        <span>·</span>
-                        <span>{formatCurrency(solicitacaoConfirmada.valorEstimado || 0)} estimado</span>
-                      </div>
-                    </div>
-                    <div className={styles.origemRight}>
-                      <Badge
-                        variant={PRIORITY_BADGE_CONFIG[solicitacaoConfirmada.prioridade]?.variant ?? "gray"}
-                        icon={PRIORITY_BADGE_CONFIG[solicitacaoConfirmada.prioridade]?.icon ?? "info-circle"}
-                      >
-                        {solicitacaoConfirmada.prioridade}
-                      </Badge>
-                      <button className={styles.desvincularBtn} onClick={handleDesvincular}>
-                        <Icon name="switch-horizontal-01" size={14} /> Trocar
-                      </button>
-                    </div>
-                  </div>
-                </section>
-
                 <section className={styles.formSection}>
                   <div className={styles.sectionHeader}>
                     <div className={styles.sectionIcon}><Icon name="settings-01" /></div>
@@ -771,7 +730,7 @@ export default function NewRfqPage() {
                     <h2>3. Fornecedores convidados <span className="required-asterisk">*</span></h2>
                     <p>Selecione os fornecedores homologados que receberão o convite para cotação.</p>
                     {solicitacaoConfirmada && (
-                      <div style={{ marginTop: 8, padding: "8px 12px", background: "#f1f5f9", borderRadius: 6, fontSize: 13, color: "#334155", borderLeft: "3px solid #007d79" }}>
+                      <div className={styles.policyNotice}>
                         <Icon name="info-circle" size={14} style={{ marginRight: 6, verticalAlign: "text-bottom" }} />
                         Com base no valor estimado ({formatCurrency(solicitacaoConfirmada.valorEstimado || 0)}), a política exige no mínimo <strong>{solicitacaoConfirmada.valorEstimado > 5000 ? 3 : solicitacaoConfirmada.valorEstimado > 1000 ? 2 : 1} orçamentos</strong>.
                       </div>
@@ -779,34 +738,6 @@ export default function NewRfqPage() {
                   </div>
                 </div>
 
-                
-                {fornecedoresSelecionados.length > 0 && (
-                  <div className={styles.selectedTray}>
-                    <div className={styles.selectedTrayHeader}>
-                      <span>Fornecedores Selecionados ({fornecedoresSelecionados.length})</span>
-                      <button type="button" className={styles.clearSelectionBtn} onClick={clearAllSuppliers}>
-                        Limpar seleção
-                      </button>
-                    </div>
-                    <div className={styles.chipsContainer}>
-                      {fornecedoresSelecionados.map((f) => (
-                        <div key={f.id} className={styles.supplierChip}>
-                          <span>{f.nome}</span>
-                          <button
-                            type="button"
-                            className={styles.chipRemoveBtn}
-                            onClick={() => removeSupplier(f.id)}
-                            title="Remover convite"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                
                 <div className={styles.supplierFilterToolbar}>
                   <div className={styles.supplierSearchInput}>
                     <Icon name="search-sm" size={16} className={styles.searchIconInside} />
@@ -833,13 +764,6 @@ export default function NewRfqPage() {
                     >
                       Selecionados ({fornecedoresSelecionados.length})
                     </button>
-                    <button
-                      type="button"
-                      className={`${styles.filterTabBtn} ${supplierFilterTab === "homologados" ? styles.filterTabBtnActive : ""}`}
-                      onClick={() => setSupplierFilterTab("homologados")}
-                    >
-                      Homologados
-                    </button>
                   </div>
 
                   <Button
@@ -848,11 +772,10 @@ export default function NewRfqPage() {
                     onClick={() => setIsInviteModalOpen(true)}
                     style={{ whiteSpace: "nowrap" }}
                   >
-                    <Icon name="user-plus" size={16} /> Convidar Não Cadastrado
+                    <Icon name="user-plus-01" size={16} /> Convidar Não Cadastrado
                   </Button>
                 </div>
 
-                
                 {paginatedFornecedores.length > 0 ? (
                   <div className={styles.fornecedoresList}>
                     {paginatedFornecedores.map((f) => (
@@ -1066,7 +989,50 @@ export default function NewRfqPage() {
                   <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(3)}>
                     <Icon name="chevron-left" /> Voltar
                   </button>
-                  <button type="button" className={styles.secondaryAction} onClick={() => router.push("/compras/rfqs")}>
+                  <button
+                    type="button"
+                    className={styles.secondaryAction}
+                    disabled={isSubmitting}
+                    onClick={async () => {
+                      const targetRequestId = solicitacaoConfirmada?.id || paramSol;
+                      if (!targetRequestId) {
+                        toast({ variant: "warning", title: "Atenção", message: "Selecione uma solicitação para salvar o rascunho da cotação." });
+                        return;
+                      }
+
+                      setIsSubmitting(true);
+                      try {
+                        const selectedSupplierIds = fornecedoresSelecionados.map((f) => f.id);
+                        const endClosesAt = dataEncerramento
+                          ? new Date(dataEncerramento).toISOString()
+                          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+                        const createdDraft = await rfqsApi.create({
+                          requestId: targetRequestId,
+                          title: tituloRfq || "Rascunho de Cotação",
+                          closesAt: endClosesAt,
+                          supplierIds: selectedSupplierIds,
+                          status: "Draft",
+                        });
+
+                        toast({
+                          variant: "success",
+                          title: "Rascunho Salvo",
+                          message: `Rascunho da cotação ${createdDraft.code || ""} salvo com sucesso!`,
+                        });
+                        router.push("/compras/rfqs");
+                      } catch (err) {
+                        logError("rfqs/nova/saveDraft", err);
+                        toast({
+                          variant: "error",
+                          title: "Erro ao salvar rascunho",
+                          message: getErrorMessage(err),
+                        });
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                  >
                     <Icon name="save-01" /> Salvar rascunho
                   </button>
                   <Button
@@ -1091,6 +1057,7 @@ export default function NewRfqPage() {
                           title: tituloRfq || "Cotação de Compra",
                           closesAt: endClosesAt,
                           supplierIds: selectedSupplierIds,
+                          status: "Open",
                         });
 
                         router.push(`/compras/rfqs/${createdRfq.id}`);
@@ -1135,7 +1102,22 @@ export default function NewRfqPage() {
             </div>
 
             <dl className={styles.summaryList}>
-              <div><dt>Origem</dt><dd>{solicitacaoConfirmada.id}</dd></div>
+              <div>
+                <dt>Origem</dt>
+                <dd style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                  <span title={solicitacaoConfirmada.id} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
+                    {solicitacaoConfirmada.id}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleDesvincular}
+                    title="Trocar solicitação vinculada"
+                    style={{ background: "none", border: "none", color: "#007d79", cursor: "pointer", fontSize: 11, fontWeight: 700, padding: 0, textDecoration: "underline", flexShrink: 0 }}
+                  >
+                    Trocar
+                  </button>
+                </dd>
+              </div>
               <div><dt>Estratégia</dt><dd>{estrategia || "—"}</dd></div>
               <div><dt>Incoterm</dt><dd>{incoterm || "—"}</dd></div>
               <div><dt>Pagamento</dt><dd>{condicaoPagamento || "—"}</dd></div>

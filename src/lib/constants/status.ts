@@ -26,6 +26,7 @@ export const PURCHASE_ORDER_STATUS_MAP: Record<string, "Emitido" | "Faturado" | 
 };
 
 export function mapRfqStatus(rfq: { status: string; closesAt?: string | null }): string {
+  if (rfq.status === "Draft") return "Rascunho";
   if (rfq.status === "Closed" || rfq.status === "Finished") return "Encerrada";
   if (rfq.status === "Cancelled") return "Cancelada";
   if (rfq.status === "UnderAnalysis") return "Em análise";
