@@ -37,18 +37,18 @@ export default function KpiCard({
     return (
       <Card className={styles.kpiCard}>
         <div className={styles.iconWrapper} style={{ background: "transparent", padding: 0 }}>
-          <Skeleton variant="rectangular" width={40} height={40} style={{ borderRadius: 8 }} />
+          <Skeleton variant="rectangular" width={32} height={32} style={{ borderRadius: 7 }} />
         </div>
 
         <div className={styles.content}>
-          <Skeleton variant="text" width="55%" height={14} style={{ marginBottom: 6 }} />
-          <Skeleton variant="title" width="40%" height={28} style={{ marginBottom: 6 }} />
-          {description && <Skeleton variant="text" width="70%" height={12} />}
+          <Skeleton variant="text" width="55%" height={13} style={{ marginBottom: 4 }} />
+          <Skeleton variant="title" width="40%" height={22} style={{ marginBottom: 4 }} />
+          {description && <Skeleton variant="text" width="70%" height={11} />}
         </div>
 
         {linkLabel && (
-          <div style={{ marginTop: 16 }}>
-            <Skeleton variant="text" width="35%" height={14} />
+          <div style={{ marginTop: 8 }}>
+            <Skeleton variant="text" width="35%" height={13} />
           </div>
         )}
       </Card>
