@@ -66,6 +66,12 @@ export const COMPANY_BRANCHES: CompanyBranchMapping[] = [
     acronym: "VBG",
     unitName: "Jaraguari",
   },
+  {
+    code: "PURAFE",
+    name: "IGREJA PURA FÉ",
+    acronym: "IPF",
+    unitName: "Igreja Pura Fé - Sede",
+  },
 ];
 
 

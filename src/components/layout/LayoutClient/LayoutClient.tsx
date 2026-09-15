@@ -15,7 +15,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const isStandalone = 
     pathname.startsWith("/login") ||
     pathname.startsWith("/unauthorized") ||
-    pathname.startsWith("/solicitar-acesso") ||
+    pathname.startsWith("/solicitar") ||
     pathname.startsWith("/aprovacao") ||
     pathname.startsWith("/cotacao");
 
