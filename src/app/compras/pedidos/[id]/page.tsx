@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Skeleton, CardSkeleton } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -17,8 +17,19 @@ export default function PedidoDetailPage() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
+  const [confirmFaturamento, setConfirmFaturamento] = useState(false);
+  const [confirmTransporte, setConfirmTransporte] = useState(false);
   const [confirmRecebimento, setConfirmRecebimento] = useState(false);
-  const [recebimentoConfirmado, setRecebimentoConfirmado] = useState(false);
+  const [statusOverride, setStatusOverride] = useState<string | null>(null);
+  const [savedNfe, setSavedNfe] = useState<string>("");
+  const [savedRastreio, setSavedRastreio] = useState<string>("");
+
+  const [inputNfe, setInputNfe] = useState("");
+  const [inputChaveNfe, setInputChaveNfe] = useState("");
+  const [inputTransportadora, setInputTransportadora] = useState("");
+  const [inputRastreio, setInputRastreio] = useState("");
+  const [inputRecebimentoNotas, setInputRecebimentoNotas] = useState("");
+
   const [loadingPdf, setLoadingPdf] = useState(false);
   const { toast } = useToast();
   
@@ -35,24 +46,91 @@ export default function PedidoDetailPage() {
 
   const displayId = po?.code || (isNewFlow ? `PED-${String(Date.now()).slice(-6)}` : rawId);
 
-  const isDelivered = po?.status === "Delivered" || recebimentoConfirmado;
+  const currentStatus = statusOverride || po?.status || (isNewFlow ? "Sent" : "Sent");
+  const isDelivered = currentStatus === "Delivered";
+  const isInTransit = currentStatus === "InTransit" || isDelivered;
+  const isBilled = currentStatus === "Signed" || isInTransit || isDelivered;
+
+  const handleConfirmFaturamento = async () => {
+    try {
+      const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
+      const nfeVal = inputNfe.trim() || `NF-${String(Date.now()).slice(-6)}`;
+      const note = `NF-e confirmada: ${nfeVal}${inputChaveNfe ? ` (Chave: ${inputChaveNfe})` : ""}`;
+      
+      if (orderIdToUpdate) {
+        await updateStatusMutation.mutateAsync({
+          id: orderIdToUpdate,
+          status: "Signed",
+          notes: note,
+        });
+      }
+      setSavedNfe(nfeVal);
+      setStatusOverride("Signed");
+      setConfirmFaturamento(false);
+      toast({
+        variant: "success",
+        title: "Faturamento confirmado!",
+        message: `Nota Fiscal ${nfeVal} vinculada com sucesso ao pedido ${displayId}.`,
+        duration: 5000,
+      });
+    } catch (e) {
+      toast({
+        variant: "error",
+        title: "Erro ao confirmar faturamento",
+        message: e instanceof Error ? e.message : "Não foi possível atualizar o status.",
+      });
+    }
+  };
+
+  const handleConfirmTransporte = async () => {
+    try {
+      const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
+      const transpVal = inputTransportadora.trim() || "Transportadora Contratada";
+      const rastrVal = inputRastreio.trim() ? ` (Rastreio: ${inputRastreio.trim()})` : "";
+      const note = `Em transporte via ${transpVal}${rastrVal}`;
+      
+      if (orderIdToUpdate) {
+        await updateStatusMutation.mutateAsync({
+          id: orderIdToUpdate,
+          status: "InTransit",
+          notes: note,
+        });
+      }
+      setSavedRastreio(transpVal + (rastrVal ? ` - ${inputRastreio.trim()}` : ""));
+      setStatusOverride("InTransit");
+      setConfirmTransporte(false);
+      toast({
+        variant: "success",
+        title: "Transporte confirmado!",
+        message: `O pedido ${displayId} foi despachado e está em trânsito.`,
+        duration: 5000,
+      });
+    } catch (e) {
+      toast({
+        variant: "error",
+        title: "Erro ao confirmar transporte",
+        message: e instanceof Error ? e.message : "Não foi possível atualizar o status.",
+      });
+    }
+  };
 
   const handleConfirmRecebimento = async () => {
     try {
       const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
+      const note = inputRecebimentoNotas.trim() || "Recebimento confirmado pelo almoxarifado";
       if (orderIdToUpdate) {
         await updateStatusMutation.mutateAsync({
           id: orderIdToUpdate,
           status: "Delivered",
-          notes: "Recebimento confirmado pelo comprador/almoxarifado",
+          notes: note,
         });
       }
-      setRecebimentoConfirmado(true);
+      setStatusOverride("Delivered");
       setConfirmRecebimento(false);
       toast({
         variant: "success",
         title: "Recebimento confirmado!",
-        message: `Os itens de ${displayId} foram recebidos e conferidos. Ciclo de entrega finalizado no sistema.`,
+        message: `Os itens de ${displayId} foram recebidos e conferidos. Ciclo de entrega finalizado.`,
         duration: 5000,
       });
     } catch (e) {
@@ -145,18 +223,160 @@ export default function PedidoDetailPage() {
   return (
     <div className={styles.detailContainer}>
       <ConfirmDialog
+        open={confirmFaturamento}
+        variant="info"
+        icon="file-02"
+        title="Confirmar Faturamento do Pedido"
+        loading={updateStatusMutation.isPending}
+        loadingConfirmLabel="Confirmando..."
+        confirmLabel="Confirmar Faturamento"
+        onConfirm={handleConfirmFaturamento}
+        onCancel={() => setConfirmFaturamento(false)}
+        message={
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
+            <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
+              Confirme a emissão da Nota Fiscal Eletrônica de <strong>{displayId}</strong>. O pedido avançará para a etapa de Faturado.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                Número da NF-e
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: NF-004821"
+                value={inputNfe}
+                onChange={(e) => setInputNfe(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 13,
+                  outline: "none",
+                  width: "100%",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                Chave de Acesso / Observação (opcional)
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: 3524 0912 3456 7800 0199..."
+                value={inputChaveNfe}
+                onChange={(e) => setInputChaveNfe(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 13,
+                  outline: "none",
+                  width: "100%",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+          </div>
+        }
+      />
+
+      <ConfirmDialog
+        open={confirmTransporte}
+        variant="info"
+        icon="truck-01"
+        title="Confirmar Envio / Despacho"
+        loading={updateStatusMutation.isPending}
+        loadingConfirmLabel="Confirmando..."
+        confirmLabel="Confirmar Despacho"
+        onConfirm={handleConfirmTransporte}
+        onCancel={() => setConfirmTransporte(false)}
+        message={
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
+            <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
+              Informe os dados de despacho de <strong>{displayId}</strong> para iniciar a etapa de rastreamento logístico.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                Transportadora / Modal de Frete
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Jamef Encomendas, Correios, ou Frota Própria"
+                value={inputTransportadora}
+                onChange={(e) => setInputTransportadora(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 13,
+                  outline: "none",
+                  width: "100%",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                Código de Rastreamento / CTE (opcional)
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: BR123456789XP ou CTE-8921"
+                value={inputRastreio}
+                onChange={(e) => setInputRastreio(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 13,
+                  outline: "none",
+                  width: "100%",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+          </div>
+        }
+      />
+
+      <ConfirmDialog
         open={confirmRecebimento}
         variant="success"
         icon="package-check"
-        title="Confirmar recebimento do pedido?"
+        title="Confirmar Recebimento do Pedido"
         loading={updateStatusMutation.isPending}
         loadingConfirmLabel="Confirmando..."
-        message={
-          <>Os itens de <strong>{displayId}</strong> foram conferidos e estão em conformidade com o pedido. Esta ação finaliza o ciclo de entrega.</>
-        }
         confirmLabel="Confirmar recebimento"
         onConfirm={handleConfirmRecebimento}
         onCancel={() => setConfirmRecebimento(false)}
+        message={
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
+            <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
+              Os itens de <strong>{displayId}</strong> foram conferidos e estão em conformidade com o pedido. Esta ação finaliza o ciclo de entrega.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                Observações do Recebimento (opcional)
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Mercadoria recebida sem avarias pelo almoxarifado"
+                value={inputRecebimentoNotas}
+                onChange={(e) => setInputRecebimentoNotas(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 13,
+                  outline: "none",
+                  width: "100%",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+          </div>
+        }
       />
 
       <button
@@ -166,13 +386,12 @@ export default function PedidoDetailPage() {
         <Icon name="chevron-left" /> Voltar para Pedidos
       </button>
 
-      
       <div className={styles.pageHeader}>
         <div>
           <div className={styles.titleRow}>
             <h1>{displayId}</h1>
-            <Badge variant={isDelivered ? "success" : "primary"}>
-              {isDelivered ? "Entregue" : po?.status === "InTransit" ? "Em Transporte" : "Emitido"}
+            <Badge variant={isDelivered ? "success" : isInTransit ? "primary" : isBilled ? "warning" : "gray"}>
+              {isDelivered ? "Entregue" : isInTransit ? "Em Transporte" : isBilled ? "Faturado" : "Emitido"}
             </Badge>
           </div>
           <p className={styles.subtitleLarge}>{fornecedorNome}</p>
@@ -197,10 +416,25 @@ export default function PedidoDetailPage() {
         </div>
 
         <div className={styles.headerActions}>
-          {!isDelivered && (
+          {!isBilled && (
+            <Button variant="primary" onClick={() => setConfirmFaturamento(true)}>
+              <Icon name="file-02" /> Confirmar Faturamento
+            </Button>
+          )}
+          {isBilled && !isInTransit && (
+            <Button variant="primary" onClick={() => setConfirmTransporte(true)}>
+              <Icon name="truck-01" /> Confirmar Despacho
+            </Button>
+          )}
+          {isInTransit && !isDelivered && (
             <Button variant="secondary" onClick={() => setConfirmRecebimento(true)}>
               <Icon name="package-check" /> Confirmar Recebimento
             </Button>
+          )}
+          {isDelivered && (
+            <Badge variant="success" icon="check">
+              Pedido Concluído
+            </Badge>
           )}
           <Button
             variant="primary"
@@ -211,20 +445,34 @@ export default function PedidoDetailPage() {
           >
             <Icon name="printer" /> Imprimir / Baixar PO
           </Button>
-
         </div>
       </div>
 
-      
       <div className={styles.layout2Col}>
-        
-        
         <div className={styles.colMain}>
-          
-          
           <Card className={styles.flowCard}>
-            <h4>Fluxo e Rastreabilidade do Pedido</h4>
+            <div className={styles.flowCardHeader}>
+              <div>
+                <h4>Fluxo e Rastreabilidade do Pedido</h4>
+                <p className={styles.flowCardSubtitle}>
+                  Acompanhe e confirme manualmente cada etapa do ciclo de atendimento e entrega.
+                </p>
+              </div>
+              <div className={styles.flowCurrentBadge}>
+                Etapa Atual: <strong>
+                  {isDelivered
+                    ? "Entregue (Concluído)"
+                    : isInTransit
+                    ? "Em Transporte"
+                    : isBilled
+                    ? "Faturado (Aguardando Envio)"
+                    : "Emitido (Aguardando Faturamento)"}
+                </strong>
+              </div>
+            </div>
+
             <div className={styles.stepperContainer}>
+              {/* Passo 1: Pedido Emitido */}
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="receipt-check" />
@@ -234,44 +482,78 @@ export default function PedidoDetailPage() {
                   <strong>Pedido Emitido</strong>
                   <span>{po?.createdAt ? new Date(po.createdAt).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</span>
                   <small>Ordem gerada</small>
+                  <span className={styles.stepStatusBadgeCompleted}>
+                    <Icon name="check" size={11} /> Concluído
+                  </span>
                 </div>
               </div>
 
-              <div className={`${styles.stepLine} ${po?.status === "InTransit" || isDelivered ? styles.lineActive : ""}`} />
+              <div className={`${styles.stepLine} ${isBilled ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.step} ${po?.status === "InTransit" || isDelivered ? styles.completed : styles.active}`}>
+              {/* Passo 2: Faturado (NF-e) */}
+              <div className={`${styles.step} ${isBilled ? styles.completed : styles.active}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-02" />
-                  {(po?.status === "InTransit" || isDelivered) && (
+                  {isBilled && (
                     <div className={styles.checkBadge}><Icon name="check" /></div>
                   )}
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Faturado (NF-e)</strong>
-                  <span>{po?.id ? `NF-${po.id.slice(0, 6)}` : "Aguardando"}</span>
-                  <small>Nota fiscal emitida</small>
+                  <span>{isBilled ? (savedNfe || (po?.id ? `NF-${po.id.slice(0, 6).toUpperCase()}` : "Emitida")) : "Aguardando NF"}</span>
+                  <small>{isBilled ? "Nota fiscal emitida" : "Faturamento pendente"}</small>
+                  {isBilled ? (
+                    <span className={styles.stepStatusBadgeCompleted}>
+                      <Icon name="check" size={11} /> Faturado
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.btnStepActionHighlight}
+                      onClick={() => setConfirmFaturamento(true)}
+                    >
+                      <Icon name="file-02" size={12} /> Confirmar NF-e
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className={`${styles.stepLine} ${isDelivered ? styles.lineActive : ""}`} />
+              <div className={`${styles.stepLine} ${isInTransit ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.step} ${isDelivered ? styles.completed : po?.status === "InTransit" ? styles.active : ""}`}>
+              {/* Passo 3: Em Transporte */}
+              <div className={`${styles.step} ${isInTransit ? styles.completed : isBilled ? styles.active : styles.disabledStep}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="truck-01" />
-                  {isDelivered && (
+                  {isInTransit && (
                     <div className={styles.checkBadge}><Icon name="check" /></div>
                   )}
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Em Transporte</strong>
-                  <span>{po?.shippingType || "CIF"}</span>
-                  <small>Despachado</small>
+                  <span>{isInTransit ? (savedRastreio || po?.shippingType || "Despachado") : (isBilled ? "Pronto p/ envio" : "Aguardando")}</span>
+                  <small>{isInTransit ? "Despachado" : "Transportadora"}</small>
+                  {isInTransit ? (
+                    <span className={styles.stepStatusBadgeCompleted}>
+                      <Icon name="check" size={11} /> Despachado
+                    </span>
+                  ) : isBilled ? (
+                    <button
+                      type="button"
+                      className={styles.btnStepActionHighlight}
+                      onClick={() => setConfirmTransporte(true)}
+                    >
+                      <Icon name="truck-01" size={12} /> Confirmar Envio
+                    </button>
+                  ) : (
+                    <span className={styles.stepStatusBadgePending}>Aguardando NF</span>
+                  )}
                 </div>
               </div>
 
               <div className={`${styles.stepLine} ${isDelivered ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.step} ${isDelivered ? styles.completed : ""}`}>
+              {/* Passo 4: Entregue */}
+              <div className={`${styles.step} ${isDelivered ? styles.completed : isInTransit ? styles.active : styles.disabledStep}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="package-check" />
                   {isDelivered && (
@@ -282,12 +564,26 @@ export default function PedidoDetailPage() {
                   <strong>Entregue</strong>
                   <span>{isDelivered ? "Conferido" : "Aguardando"}</span>
                   <small>Almoxarifado</small>
+                  {isDelivered ? (
+                    <span className={styles.stepStatusBadgeCompleted}>
+                      <Icon name="check" size={11} /> Recebido
+                    </span>
+                  ) : isInTransit ? (
+                    <button
+                      type="button"
+                      className={styles.btnStepActionHighlight}
+                      onClick={() => setConfirmRecebimento(true)}
+                    >
+                      <Icon name="package-check" size={12} /> Confirmar Recebimento
+                    </button>
+                  ) : (
+                    <span className={styles.stepStatusBadgePending}>Aguardando Envio</span>
+                  )}
                 </div>
               </div>
             </div>
           </Card>
 
-          
           <Card className={styles.infoCard}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <h4 style={{ margin: 0 }}>Detalhamento Comercial do Pedido</h4>
@@ -324,7 +620,6 @@ export default function PedidoDetailPage() {
             </div>
           </Card>
 
-          
           <div className={styles.itemsTableCard}>
             <div className={styles.itemsCardHeader}>
               <h4><Icon name="package" size={16} /> Itens do Pedido ({items?.length || 1})</h4>
@@ -378,13 +673,9 @@ export default function PedidoDetailPage() {
               </table>
             </div>
           </div>
-
         </div>
 
-        
         <div className={styles.colSide}>
-          
-          
           <Card className={styles.sideCard}>
             <h4>Resumo Financeiro</h4>
             <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", marginBottom: "16px" }}>
@@ -407,7 +698,6 @@ export default function PedidoDetailPage() {
             </div>
           </Card>
 
-          
           <Card className={styles.sideCard}>
             <h4>Fornecedor Contratado</h4>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
@@ -425,7 +715,6 @@ export default function PedidoDetailPage() {
               </Button>
             )}
           </Card>
-
         </div>
       </div>
     </div>

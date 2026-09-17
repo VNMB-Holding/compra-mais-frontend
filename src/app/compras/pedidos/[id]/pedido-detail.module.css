@@ -11,23 +11,225 @@
 .layout2Col { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
 .colMain, .colSide { display: flex; flex-direction: column; gap: 16px; }
 
-.flowCard h4, .infoCard h4, .sideCard h4 { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 14px 0; }
-.stepperContainer { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
-.step { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100px; gap: 6px; }
-.stepIcon { width: 34px; height: 34px; border-radius: 50%; background: white; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; position: relative; font-size: 15px; }
-.stepInfo { display: flex; flex-direction: column; gap: 2px; }
-.stepInfo strong { font-size: 12px; color: #0f172a; }
-.stepInfo span { font-size: 11px; color: #64748b; }
-.stepInfo small { font-size: 10.5px; color: #94a3b8; }
+.flowCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
 
-.completed .stepIcon { border-color: #007d79; color: #007d79; }
-.checkBadge { position: absolute; bottom: -2px; right: -2px; background: #16a34a; color: white; width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+.flowCardHeader h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
 
-.active .stepIcon { border-color: #007d79; background: #007d79; color: white; }
-.active .stepInfo strong { color: #007d79; }
+.flowCardSubtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
 
-.stepLine { flex: 1; height: 2px; background: #e2e8f0; margin: 0 -10px; transform: translateY(-22px); }
-.lineActive { background: #007d79; }
+.flowCurrentBadge {
+  font-size: 12px;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+.flowCurrentBadge strong {
+  color: #007d79;
+}
+
+.infoCard h4, .sideCard h4 { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 14px 0; }
+
+.stepperContainer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 0 6px 0;
+  position: relative;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 120px;
+  max-width: 145px;
+  gap: 8px;
+  z-index: 2;
+}
+
+.stepIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  position: relative;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.stepInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+}
+
+.stepInfo strong {
+  font-size: 12.5px;
+  color: #0f172a;
+}
+
+.stepInfo span {
+  font-size: 11.5px;
+  color: #64748b;
+  max-width: 135px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepInfo small {
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+.completed .stepIcon {
+  border-color: #007d79;
+  color: #007d79;
+  background: #f0fdf9;
+}
+
+.active .stepIcon {
+  border-color: #007d79;
+  background: #007d79;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.15);
+}
+
+.disabledStep .stepIcon {
+  border-color: #f1f5f9;
+  color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.disabledStep .stepInfo strong {
+  color: #94a3b8;
+}
+
+.checkBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: #16a34a;
+  color: white;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.stepLine {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 18px -15px 0 -15px;
+  z-index: 1;
+}
+
+.lineActive {
+  background: #007d79;
+}
+
+.btnStepAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #f0fdf9;
+  color: #007d79;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btnStepAction:hover {
+  background: #ccfbf1;
+  border-color: #007d79;
+}
+
+.btnStepActionHighlight {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #007d79;
+  color: #ffffff;
+  border: 1px solid #007d79;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 125, 121, 0.2);
+}
+
+.btnStepActionHighlight:hover {
+  background: #005a57;
+}
+
+.stepStatusBadgeCompleted {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  margin-top: 4px;
+}
+
+.stepStatusBadgePending {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin-top: 4px;
+}
 
 .infoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
 .infoItem { display: flex; flex-direction: column; gap: 4px; }
@@ -490,3 +692,33 @@
     border-right: none !important;
   }
 }
+
+@media (max-width: 720px) {
+  .stepperContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .step {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    max-width: none;
+    width: 100%;
+    gap: 14px;
+  }
+
+  .stepInfo {
+    align-items: flex-start;
+  }
+
+  .stepInfo span {
+    max-width: none;
+  }
+
+  .stepLine {
+    display: none;
+  }
+}
+

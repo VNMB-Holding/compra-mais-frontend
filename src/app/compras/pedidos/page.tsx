@@ -18,6 +18,7 @@ import {
 } from "@/components/ui";
 import styles from "./pedidos.module.css";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
+import { dashboardApi } from "@/lib/api/dashboard";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tenant";
@@ -68,12 +69,27 @@ export default function PedidosPage() {
   const [status, setStatus] = useState("Todos");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
+  const [allSuppliers, setAllSuppliers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const companyOptions = getCompanyFilterOptions();
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
+
+  useEffect(() => {
+    let isMounted = true;
+    dashboardApi
+      .getFilterOptions(queryCompanyCode)
+      .then((res) => {
+        if (!isMounted || !res?.suppliers) return;
+        setAllSuppliers((prev) => Array.from(new Set([...prev, ...res.suppliers])).sort());
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [queryCompanyCode]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -88,6 +104,11 @@ export default function PedidosPage() {
       const rows = data.map((po) => mapToRow(po, user));
       setPedidos(rows);
       setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
+
+      const currentSups = rows.map((p) => p.fornecedor).filter((f) => f && f !== "—");
+      if (currentSups.length > 0) {
+        setAllSuppliers((prev) => Array.from(new Set([...prev, ...currentSups])).sort());
+      }
     } catch (err) {
       logError("pedidos/fetchData", err);
       setError(getErrorMessage(err));
@@ -101,12 +122,13 @@ export default function PedidosPage() {
     fetchData();
   }, [fetchData]);
 
-  const supplierOptions = [
+  const supplierOptions = React.useMemo(() => [
     { label: "Todos os fornecedores", value: "Todos" },
-    ...Array.from(new Set(pedidos.map((p) => p.fornecedor)))
+    ...Array.from(new Set([...allSuppliers, ...pedidos.map((p) => p.fornecedor)]))
       .filter((f) => f !== "—")
+      .sort()
       .map((f) => ({ label: f, value: f })),
-  ];
+  ], [allSuppliers, pedidos]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
