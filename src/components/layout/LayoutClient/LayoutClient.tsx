@@ -16,6 +16,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     pathname.startsWith("/login") ||
     pathname.startsWith("/unauthorized") ||
     pathname.startsWith("/solicitar") ||
+    pathname.startsWith("/solicitacao-externa") ||
     pathname.startsWith("/aprovacao") ||
     pathname.startsWith("/cotacao");
 

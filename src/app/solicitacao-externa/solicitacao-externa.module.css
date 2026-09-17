@@ -6,6 +6,7 @@
   color: #0f172a;
   font-family: inherit;
   width: 100%;
+  max-width: 100vw;
   overflow-x: hidden;
   box-sizing: border-box;
 }
@@ -24,32 +25,34 @@
 .brandArea {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .logo {
-  height: 32px;
+  height: 30px;
   width: auto;
   max-width: 100%;
+  object-fit: contain;
 }
 
 .brandDivider {
   width: 1px;
-  height: 24px;
+  height: 22px;
   background: #cbd5e1;
 }
 
-.churchBadge {
+.portalBadge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #007d79;
   background: #f0fdf9;
   border: 1px solid #ccfbf1;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
+  white-space: nowrap;
 }
 
 .headerRight {
@@ -64,6 +67,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
 }
 
 .main {
@@ -81,7 +85,7 @@
 .pageTitleArea {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pageTitleArea h1 {
@@ -108,17 +112,18 @@
   flex-direction: column;
   gap: 24px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .sectionCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   width: 100%;
   box-sizing: border-box;
 }
@@ -126,7 +131,7 @@
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   border-bottom: 1px solid #f1f5f9;
   padding-bottom: 14px;
 }
@@ -134,12 +139,12 @@
 .sectionHeaderNoBorder {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .sectionIcon {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   background: #f0fdf9;
   color: #007d79;
@@ -162,6 +167,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .fullWidth {
@@ -188,6 +194,7 @@
   margin-left: 2px;
 }
 
+/* === Campos de Entrada e Selects com Dimensões Idênticas === */
 .inputField {
   width: 100%;
   box-sizing: border-box;
@@ -200,6 +207,7 @@
   outline: none;
   background: #ffffff;
   min-height: 44px;
+  height: 44px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -219,7 +227,7 @@
   color: #0f172a;
   outline: none;
   background: #ffffff;
-  min-height: 84px;
+  min-height: 88px;
   resize: vertical;
   line-height: 1.4;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -230,7 +238,75 @@
   box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.12);
 }
 
-/* Items list */
+/* Customização do Select para equiparar altura e tipografia ao inputField */
+.selectTrigger {
+  width: 100% !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 10px 14px !important;
+  border: 1px solid #dbe4ef !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+.selectTrigger:hover:not(:disabled) {
+  border-color: #94a3b8 !important;
+}
+
+.selectTrigger:focus,
+.selectTrigger[class*="triggerOpen"] {
+  border-color: #007d79 !important;
+  box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.12) !important;
+}
+
+.formGroup button[class*="trigger"] {
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  border-radius: 8px !important;
+  border: 1px solid #dbe4ef !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.formGroup [class*="triggerLeft"] {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+}
+
+.formGroup [class*="valueText"] {
+  font-size: 14px !important;
+  color: #0f172a !important;
+}
+
+.formGroup [class*="dropdown"] {
+  border-radius: 8px !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  z-index: 100 !important;
+}
+
+.formGroup [class*="optionButton"] {
+  font-size: 14px !important;
+  padding: 10px 12px !important;
+  min-height: 40px !important;
+  border-radius: 6px !important;
+}
+
+/* Lista de Itens */
 .itemsHeader {
   display: flex;
   justify-content: space-between;
@@ -249,11 +325,11 @@
 .itemBox {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   box-sizing: border-box;
   width: 100%;
 }
@@ -277,7 +353,7 @@
   background: none;
   border: none;
   color: #dc2626;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -307,7 +383,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
-  min-height: 40px;
+  min-height: 42px;
   box-sizing: border-box;
   white-space: nowrap;
 }
@@ -357,7 +433,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 28px;
+  padding: 14px 30px;
   background: #007d79;
   color: #ffffff;
   border: none;
@@ -537,20 +613,41 @@
 }
 
 /* =========================================================
-   RESPONSIVIDADE MOBILE (CELULAR <= 640px)
+   RESPONSIVIDADE MOBILE ROBUSTA (<= 768px)
    ========================================================= */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .header {
     padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .brandArea {
+    gap: 8px;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .logo {
-    height: 26px;
+    height: 24px;
+  }
+
+  .brandDivider {
+    display: none;
+  }
+
+  .portalBadge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .securityTag {
+    display: none;
   }
 
   .main {
-    padding: 18px 12px 48px 12px;
+    padding: 16px 12px 48px 12px;
     gap: 16px;
+    max-width: 100%;
   }
 
   .extraText {
@@ -562,13 +659,13 @@
   }
 
   .pageTitleArea h1 {
-    font-size: 18px;
-    line-height: 1.25;
+    font-size: 20px;
+    line-height: 1.3;
   }
 
   .pageTitleArea p {
-    font-size: 12px;
-    line-height: 1.4;
+    font-size: 13px;
+    line-height: 1.45;
   }
 
   .form {
@@ -577,7 +674,7 @@
 
   .sectionCard {
     padding: 16px 14px;
-    border-radius: 10px;
+    border-radius: 12px;
     gap: 16px;
   }
 
@@ -597,17 +694,44 @@
     font-size: 15px;
   }
 
+  /* Grid 100% de 1 coluna no mobile */
   .formGrid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 14px;
   }
 
-  /* Font-size 16px evita zoom automático no iOS Safari ao focar no campo */
-  .inputField,
+  /* Font-size 16px evita zoom automático no iOS Safari */
+  .inputField {
+    font-size: 16px !important;
+    padding: 11px 12px !important;
+    min-height: 48px !important;
+    height: 48px !important;
+    border-radius: 8px !important;
+  }
+
   .textareaField {
-    font-size: 16px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    font-size: 16px !important;
+    padding: 11px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .selectTrigger,
+  .formGroup button[class*="trigger"] {
+    font-size: 16px !important;
+    padding: 11px 12px !important;
+    min-height: 48px !important;
+    height: 48px !important;
+    border-radius: 8px !important;
+  }
+
+  .formGroup [class*="valueText"] {
+    font-size: 16px !important;
+  }
+
+  .formGroup [class*="optionButton"] {
+    font-size: 15px !important;
+    padding: 12px 14px !important;
+    min-height: 46px !important;
   }
 
   .itemsHeader {
@@ -618,13 +742,13 @@
 
   .btnAddItem {
     width: 100%;
-    min-height: 44px;
+    min-height: 46px;
     font-size: 14px;
   }
 
   .itemBox {
     padding: 14px 12px;
-    border-radius: 8px;
+    border-radius: 10px;
     gap: 12px;
   }
 
@@ -658,20 +782,20 @@
 
   .btnSubmit {
     width: 100%;
-    min-height: 48px;
-    font-size: 15px;
+    min-height: 50px;
+    font-size: 16px;
   }
 
   /* Tela de Sucesso no Mobile */
   .successCard {
-    padding: 24px 16px;
-    border-radius: 12px;
+    padding: 24px 14px;
+    border-radius: 14px;
     gap: 16px;
   }
 
   .successIconBadge {
-    width: 54px;
-    height: 54px;
+    width: 56px;
+    height: 56px;
   }
 
   .successTitle {
@@ -690,13 +814,13 @@
   }
 
   .protocolNumber {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .successSummary {
     padding: 14px;
     font-size: 13px;
-    border-radius: 8px;
+    border-radius: 10px;
   }
 
   .emailNotice {
@@ -712,7 +836,28 @@
 
   .btnSecondaryAction {
     width: 100%;
-    min-height: 44px;
+    min-height: 46px;
     font-size: 14px;
+  }
+}
+
+/* =========================================================
+   AJUSTES PARA TELAS MUITO PEQUENAS (<= 380px)
+   ========================================================= */
+@media (max-width: 380px) {
+  .header {
+    padding: 10px 12px;
+  }
+
+  .portalBadge {
+    display: none;
+  }
+
+  .main {
+    padding: 12px 8px 40px 8px;
+  }
+
+  .sectionCard {
+    padding: 14px 10px;
   }
 }
