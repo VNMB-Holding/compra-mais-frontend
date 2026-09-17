@@ -37,23 +37,30 @@ function computePlacement(
   const spaceLeft = elRect.left - SPOTLIGHT_PADDING;
   const spaceRight = vw - (elRect.left + elRect.width + SPOTLIGHT_PADDING);
 
-  const needed = tooltipHeight + TOOLTIP_GAP;
+  const neededH = tooltipHeight + TOOLTIP_GAP + 16;
+  const neededW = tooltipWidth + TOOLTIP_GAP + 16;
 
   let placement: Placement;
 
-  if (preferred && preferred !== "auto") {
-    placement = preferred;
+  // Verify if preferred fits. If not, pick the side with the most space
+  if (preferred === "bottom" && spaceBottom >= neededH) {
+    placement = "bottom";
+  } else if (preferred === "top" && spaceTop >= neededH) {
+    placement = "top";
+  } else if (preferred === "right" && spaceRight >= neededW) {
+    placement = "right";
+  } else if (preferred === "left" && spaceLeft >= neededW) {
+    placement = "left";
   } else {
-    // Auto: prefer bottom, then top, then right, then left
-    if (spaceBottom >= needed) {
-      placement = "bottom";
-    } else if (spaceTop >= needed) {
-      placement = "top";
-    } else if (spaceRight >= tooltipWidth + TOOLTIP_GAP) {
-      placement = "right";
-    } else {
-      placement = "left";
-    }
+    // Pick the best available position based on available viewport space
+    const spaces = [
+      { side: "bottom" as Placement, space: spaceBottom },
+      { side: "top" as Placement, space: spaceTop },
+      { side: "right" as Placement, space: spaceRight },
+      { side: "left" as Placement, space: spaceLeft },
+    ];
+    spaces.sort((a, b) => b.space - a.space);
+    placement = spaces[0].side;
   }
 
   let top = 0;
@@ -86,6 +93,10 @@ function computePlacement(
       caretTop = Math.max(20, Math.min(elCenterY - top, tooltipHeight - 20));
       break;
   }
+
+  // Final viewport safety clamp — guarantees card never exits screen
+  top = Math.max(16, Math.min(top, vh - tooltipHeight - 16));
+  left = Math.max(16, Math.min(left, vw - tooltipWidth - 16));
 
   return { placement, top, left, caretLeft, caretTop };
 }
@@ -147,14 +158,13 @@ export default function GuidedTour() {
 
     if (!inView) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Re-measure after scroll
-      requestAnimationFrame(() => {
+      const timer = setTimeout(() => {
         const r2 = el.getBoundingClientRect();
         const newRect = { top: r2.top, left: r2.left, width: r2.width, height: r2.height };
         setTargetRect(newRect);
         computeTooltip(newRect, step.placement);
-      });
-      return;
+      }, 300);
+      return () => clearTimeout(timer);
     }
 
     computeTooltip(
