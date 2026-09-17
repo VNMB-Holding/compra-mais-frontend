@@ -9,7 +9,7 @@ import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
-import { getApprovalChainForRequest } from "@/lib/utils/approval-limits";
+import { getApprovalChainForRequest, isUserEligibleToApprove } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { getTenantDisplayName, formatCorporateBranch } from "@/lib/utils/tenant";
@@ -140,9 +140,16 @@ export default function SolicitacaoDetailPage() {
   };
 
   const isDraft = sol?.status === "Draft";
-  const isFullyApproved = approved === true || sol?.status === "Approved" || sol?.status === "InQuote" || sol?.status === "Finished";
-  const currentStatus = isDraft ? "Rascunho" : (STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente");
+  const isApproved = approved === true || sol?.status === "Approved";
+  const isInQuote = sol?.status === "InQuote" || (!!sol?.rfqs && sol.rfqs.length > 0);
+  const isFinished = sol?.status === "Finished";
   const isRejected = approved === false || sol?.status === "Rejected";
+
+  const isEligibleForRfq = isApproved && !isInQuote && !isFinished && (!sol?.rfqs || sol.rfqs.length === 0);
+  const hasApprovedGovernance = isApproved || isInQuote || isFinished;
+  const isFullyApproved = hasApprovedGovernance;
+  const isAwaitingApproval = !isDraft && !isFullyApproved && !isRejected;
+  const currentStatus = isDraft ? "Rascunho" : (STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente");
 
   const [sendingApproval, setSendingApproval] = useState(false);
 
@@ -179,13 +186,20 @@ export default function SolicitacaoDetailPage() {
   const currentPendingLevel = chain[pendingHistoryCount];
   const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
 
-  const loggedUserName = user?.name || "";
-  const isUserAdmin = user?.role === "admin" || user?.roles?.includes("Admin") || user?.scopes?.includes("approver") || user?.scopes?.includes("admin");
-  const canUserApproveCurrentLevel =
-    isUserAdmin ||
-    (currentPendingLevel &&
-      (user?.roles?.some((r) => r.trim().toLowerCase() === currentApproverName.trim().toLowerCase()) ||
-        (loggedUserName && loggedUserName.trim().toLowerCase() === currentApproverName.trim().toLowerCase())));
+  const handleCopyApprovalLink = (tokenOverride?: string) => {
+    const histories = (sol as any)?.approvalHistories || [];
+    const activeToken = tokenOverride || (pendingHistoryCount >= 0 && histories[pendingHistoryCount]?.id) || sol?.id;
+    if (!activeToken) return;
+    const link = `${window.location.origin}/aprovacao/${activeToken}`;
+    navigator.clipboard.writeText(link);
+    toast({
+      variant: "success",
+      title: "Link Copiado!",
+      message: "Link de aprovação copiado para a área de transferência.",
+    });
+  };
+
+  const canUserApproveCurrentLevel = isUserEligibleToApprove(user, currentApproverName);
 
   return (
     <div className={styles.detailContainer}>
@@ -237,15 +251,12 @@ export default function SolicitacaoDetailPage() {
               <Skeleton width={140} height={28} />
             </div>
           </div>
-          <div className={styles.layout2Col}>
+          <div className={styles.layoutSingleCol}>
             <div className={styles.colMain}>
               <CardSkeleton height={200} />
               <div style={{ marginTop: 20 }}>
                 <CardSkeleton height={320} />
               </div>
-            </div>
-            <div className={styles.colSide}>
-              <CardSkeleton height={300} />
             </div>
           </div>
         </div>
@@ -277,16 +288,37 @@ export default function SolicitacaoDetailPage() {
               <Icon name="send-01" /> {sendingApproval ? "Enviando..." : "Enviar para Aprovação"}
             </Button>
           </div>
-        ) : isFullyApproved ? (
+        ) : isEligibleForRfq ? (
           <div className={styles.headerActions}>
             <Button variant="primary" onClick={() => router.push(`/compras/rfqs/nova?solicitationId=${sol?.id || solId}`)}>
               <Icon name="plus" /> Criar Cotação (RFQ)
             </Button>
           </div>
+        ) : isInQuote ? (
+          <div className={styles.headerActions}>
+            {sol?.rfqs && sol.rfqs.length > 0 ? (
+              <Button variant="primary" onClick={() => router.push(`/compras/rfqs/${sol?.rfqs?.[0]?.id || sol?.rfqs?.[0]?.code}`)}>
+                <Icon name="arrow-right" /> Ver Cotação ({sol?.rfqs?.[0]?.code || "RFQ"})
+              </Button>
+            ) : (
+              <Button variant="secondary" onClick={() => router.push(`/compras/rfqs`)}>
+                <Icon name="arrow-right" /> Ver Cotações em Aberto
+              </Button>
+            )}
+          </div>
+        ) : isFinished ? (
+          <div className={styles.headerActions}>
+            <span style={{ fontSize: 13, color: "#16a34a", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6, background: "#f0fdf4", padding: "6px 12px", borderRadius: 6, border: "1px solid #bbf7d0" }}>
+              <Icon name="check-circle" size={16} /> Demanda Atendida
+            </span>
+          </div>
         ) : !isRejected && (
           <div className={styles.headerActions}>
             {canUserApproveCurrentLevel ? (
               <>
+                <Button variant="secondary" onClick={() => handleCopyApprovalLink()} title="Copiar link desta aprovação">
+                  <Icon name="copy-01" /> Copiar Link
+                </Button>
                 <Button variant="secondary" onClick={() => setDialog("reject")}>
                   <Icon name="x-close" /> Rejeitar Demanda
                 </Button>
@@ -295,10 +327,17 @@ export default function SolicitacaoDetailPage() {
                 </Button>
               </>
             ) : (
-              <div style={{ textAlign: "right", fontSize: 13, color: "#64748b" }}>
-                <span className={styles.warningBadgeHint} style={{ background: "#fef3c7", color: "#92400e", padding: "6px 12px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <div className={styles.waitingApproverInfo}>
+                <span className={styles.waitingBadge}>
                   <Icon name="clock" size={14} /> Aguardando aprovação de <strong>{currentApproverName}</strong>
                 </span>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleCopyApprovalLink()}
+                  title="Copiar link de aprovação para enviar ao gestor"
+                >
+                  <Icon name="copy-01" /> Copiar Link
+                </Button>
               </div>
             )}
           </div>
@@ -315,14 +354,27 @@ export default function SolicitacaoDetailPage() {
       )}
 
       
-      <div className={styles.layout2Col}>
+      <div className={styles.layoutSingleCol}>
 
         
         <div className={styles.colMain}>
 
           
           <Card className={styles.flowCard}>
-            <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length > 1 ? "s" : ""})</h4>
+            <div className={styles.flowCardHeader}>
+              <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length > 1 ? "s" : ""})</h4>
+              {isAwaitingApproval && (
+                <button
+                  type="button"
+                  className={styles.copyLinkActionBtn}
+                  onClick={() => handleCopyApprovalLink()}
+                  title="Copiar link do portal de aprovação direta para o gestor"
+                >
+                  <Icon name="copy-01" size={14} />
+                  <span>Copiar Link de Aprovação</span>
+                </button>
+              )}
+            </div>
             <div className={styles.stepperContainer}>
 
               
@@ -375,32 +427,20 @@ export default function SolicitacaoDetailPage() {
                             : `Pendente (${lvl.roleOrName})`}
                         </span>
                         {isLevelActive && !isLevelDone && !isRejected ? (
-                          <div style={{ marginTop: 4 }}>
-                            <span className={styles.warningBadgeHint}>Falta aprovar</span>
+                          <div className={styles.stepActiveRow}>
+                            <span className={styles.stepWarningBadge}>Falta aprovar</span>
                             <button
+                              type="button"
+                              className={styles.stepCopyBtn}
                               onClick={() => {
                                 const histories = (sol as any)?.approvalHistories || [];
                                 const token = (historyMatch as any)?.id || histories[index]?.id || sol?.id;
-                                const link = `${window.location.origin}/aprovacao/${token}`;
-                                navigator.clipboard.writeText(link);
-                                toast({ variant: "success", title: "Link Copiado!", message: "Link de aprovação copiado para a área de transferência." });
+                                handleCopyApprovalLink(token);
                               }}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 4,
-                                marginLeft: 8,
-                                padding: "2px 8px",
-                                fontSize: 11,
-                                fontWeight: 600,
-                                borderRadius: 4,
-                                border: "1px solid #0284c7",
-                                background: "#f0f9ff",
-                                color: "#0369a1",
-                                cursor: "pointer",
-                              }}
+                              title="Copiar link de aprovação desta alçada"
                             >
-                              <Icon name="link-01" size={12} /> Copiar Link
+                              <Icon name="copy-01" size={11} />
+                              <span>Copiar</span>
                             </button>
                           </div>
                         ) : isLevelDone ? (
@@ -421,9 +461,19 @@ export default function SolicitacaoDetailPage() {
               <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`} />
 
               
-              <div className={`${styles.step} ${isFullyApproved ? styles.completed : styles.pending}`}>
+              <div className={`${styles.step} ${hasApprovedGovernance ? styles.completed : styles.pending}`}>
                 <div className={styles.stepIcon}>
-                  {isFullyApproved ? (
+                  {isInQuote ? (
+                    <>
+                      <Icon name="trend-up-01" />
+                      <div className={styles.checkBadge}><Icon name="check" /></div>
+                    </>
+                  ) : isFinished ? (
+                    <>
+                      <Icon name="check-circle" />
+                      <div className={styles.checkBadge}><Icon name="check" /></div>
+                    </>
+                  ) : isEligibleForRfq ? (
                     <>
                       <Icon name="check-circle" />
                       <div className={styles.checkBadge}><Icon name="check" /></div>
@@ -434,7 +484,15 @@ export default function SolicitacaoDetailPage() {
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Liberação para RFQ</strong>
-                  <span>{isFullyApproved ? "Pronto para cotação" : "Aguardando aprovação"}</span>
+                  <span>
+                    {isInQuote
+                      ? "Cotação em andamento"
+                      : isFinished
+                      ? "Demanda finalizada"
+                      : isEligibleForRfq
+                      ? "Pronta para cotação"
+                      : "Aguardando aprovação"}
+                  </span>
                 </div>
               </div>
 
@@ -597,91 +655,6 @@ export default function SolicitacaoDetailPage() {
               </div>
             </Card>
           )}
-        </div>
-
-        
-        <div className={styles.colSide}>
-
-          
-          <Card className={styles.sideCard}>
-            <h4>Rastreabilidade</h4>
-            <div className={styles.verticalTimeline}>
-              
-              
-              <div className={`${styles.vtItem} ${styles.vtDone}`}>
-                <div className={styles.vtDot}></div>
-                <div className={styles.vtContent}>
-                  <strong>Solicitação enviada</strong>
-                  <span>Por {sol?.requesterName || formatUserDisplayName(sol?.requesterId, user)}</span>
-                  <small>
-                    {sol?.createdAt
-                      ? `${new Date(sol.createdAt).toLocaleDateString("pt-BR")} às ${new Date(sol.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
-                      : "—"}
-                  </small>
-                </div>
-              </div>
-
-              
-              {sol?.approvalHistories && sol.approvalHistories.length > 0 ? (
-                sol.approvalHistories.map((hist: any, index: number) => (
-                  <div key={hist.id || index} className={`${styles.vtItem} ${styles.vtDone}`}>
-                    <div className={styles.vtDot}></div>
-                    <div className={styles.vtContent}>
-                      <strong>{hist.action === "Approved" ? "Aprovado na alçada" : hist.action === "Rejected" ? "Rejeitado na alçada" : hist.action}</strong>
-                      <span>{hist.comments || "Gestão da área"}</span>
-                      <small>
-                        {hist.actionDate
-                          ? `${new Date(hist.actionDate).toLocaleDateString("pt-BR")} às ${new Date(hist.actionDate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
-                          : "—"}
-                      </small>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                
-                <div className={`${styles.vtItem} ${isFullyApproved || isRejected ? styles.vtDone : styles.vtCurrent}`}>
-                  <div className={styles.vtDot}></div>
-                  <div className={styles.vtContent}>
-                    <strong>
-                      {isFullyApproved
-                        ? "Aprovada na Alçada"
-                        : isRejected
-                        ? "Rejeitada na Alçada"
-                        : "Aguardando aprovação"}
-                    </strong>
-                    <span>{isFullyApproved ? "Liberada para cotação" : isRejected ? "Solicitação encerrada" : "Análise pendente"}</span>
-                    {(isFullyApproved || isRejected) && (
-                      <small>
-                        {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                      </small>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              
-              {(isFullyApproved || sol?.status === "InQuote") && (
-                <div className={`${styles.vtItem} ${sol?.status === "InQuote" ? styles.vtDone : styles.vtCurrent}`}>
-                  <div className={styles.vtDot}></div>
-                  <div className={styles.vtContent}>
-                    <strong>{sol?.status === "InQuote" ? "Processo de Cotação Aberto" : "Pronta para Cotação"}</strong>
-                    <span>Módulo de Mercado (RFQ)</span>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </Card>
-
-          
-          <Card className={styles.sideCard}>
-            <h4>Arquivos e Termos Técnicos</h4>
-            <div style={{ fontSize: 13, color: "#64748b", padding: "12px 0", textAlign: "center" }}>
-              <Icon name="file-01" size={24} style={{ marginBottom: 6, color: "#94a3b8" }} />
-              <p>Nenhum anexo ou documento anexado a esta solicitação.</p>
-            </div>
-          </Card>
-
         </div>
       </div>
         </>
