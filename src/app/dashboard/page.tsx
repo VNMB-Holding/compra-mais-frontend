@@ -31,6 +31,8 @@ import { getCompanyFilterOptions, getTenantDisplayName } from "@/lib/utils/tenan
 import { RFQRow } from "@/types/domain";
 import { mapRfqStatus, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { useTour } from "@/hooks/useTour";
+import { dashboardTour } from "@/lib/tours/dashboard-tour";
 
 const PIE_COLORS = ["#007d79", "#7c3aed", "#db2777", "#64748b", "#f59e0b", "#10b981"];
 
@@ -118,6 +120,16 @@ export default function DashboardPage() {
   }, [fetchData]);
 
   const firstName = user?.name?.split(" ")[0] || "Usuário";
+  const { startTour, isTourCompleted } = useTour();
+
+  useEffect(() => {
+    if (!loading && !isTourCompleted("dashboard-intro")) {
+      const timer = setTimeout(() => {
+        startTour(dashboardTour);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isTourCompleted, startTour]);
 
   const aggregatedCategoriesMap = new Map<string, number>();
   for (const c of categories) {
@@ -181,7 +193,7 @@ export default function DashboardPage() {
           <h1>Bom dia, {firstName}. <span className={styles.wave}>👋</span></h1>
           <p>Aqui está o panorama das suas operações de suprimentos hoje.</p>
         </div>
-        <div style={{ minWidth: 260 }}>
+        <div style={{ minWidth: 260 }} data-tour="company-filter">
           <Select
             options={companyOptions}
             value={selectedCompanyId}
@@ -191,14 +203,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className={styles.heroBanner}>
+      <div className={styles.heroBanner} data-tour="hero-banner">
         <div className={styles.heroContent}>
           <h2>Conectamos negócios.<br />Potencializamos <strong>resultados.</strong></h2>
           <p>Uma plataforma inteligente para compras estratégicas<br />e conexões que geram valor para o seu negócio.</p>
         </div>
       </div>
 
-      <div className={styles.kpiGrid}>
+      <div className={styles.kpiGrid} data-tour="kpi-grid">
         <KpiCard 
           title="RFQs em andamento" 
           value={String(kpis?.rfqsInProgress || 0)} 
@@ -236,43 +248,47 @@ export default function DashboardPage() {
       <div className={styles.middleGrid}>
         
         {rfqMaisUrgente && (
-          <UrgentQuoteCard 
-            quote={{
-              title: rfqMaisUrgente.descricao,
-              code: rfqMaisUrgente.codigo,
-              comprador: firstName,
-              quantity: "",
-              costCenter: rfqMaisUrgente.categoria,
-              type: rfqMaisUrgente.tipoSegmento,
-              timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
-            }} 
-            onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.id}`)} 
-          />
+          <div data-tour="urgent-quote">
+            <UrgentQuoteCard 
+              quote={{
+                title: rfqMaisUrgente.descricao,
+                code: rfqMaisUrgente.codigo,
+                comprador: firstName,
+                quantity: "",
+                costCenter: rfqMaisUrgente.categoria,
+                type: rfqMaisUrgente.tipoSegmento,
+                timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
+              }} 
+              onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.id}`)} 
+            />
+          </div>
         )}
 
         {loading ? (
           <ChartSkeleton type="line" height={320} />
         ) : (
-          <Card className={styles.chartCard}>
-            <div className={styles.cardHeader}>
-              <h4>Evolução de Economia (Savings)</h4>
-              <span className={styles.subtitle}>Histórico mensal de economia gerada</span>
-            </div>
-            <div className={styles.chartValue}>
-              <h3>{formatCurrency(totalEconomyValue)}</h3>
-              {lastEconomy && (
-                <span className={styles.chartPeriodMeta}>
-                  Mês recente ({lastEconomy.name}): <strong>{formatCurrency(lastEconomy.value)}</strong>
-                </span>
-              )}
-            </div>
-            <div className={styles.chartWrapperElement}>
-              <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
-            </div>
-            <button className={styles.cardLink} onClick={() => router.push("/analytics/economia")}>
-              Ver análise detalhada de savings <Icon name="arrow-right" size={16} />
-            </button>
-          </Card>
+          <div data-tour="economy-chart">
+            <Card className={styles.chartCard}>
+              <div className={styles.cardHeader}>
+                <h4>Evolução de Economia (Savings)</h4>
+                <span className={styles.subtitle}>Histórico mensal de economia gerada</span>
+              </div>
+              <div className={styles.chartValue}>
+                <h3>{formatCurrency(totalEconomyValue)}</h3>
+                {lastEconomy && (
+                  <span className={styles.chartPeriodMeta}>
+                    Mês recente ({lastEconomy.name}): <strong>{formatCurrency(lastEconomy.value)}</strong>
+                  </span>
+                )}
+              </div>
+              <div className={styles.chartWrapperElement}>
+                <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
+              </div>
+              <button className={styles.cardLink} onClick={() => router.push("/analytics/economia")}>
+                Ver análise detalhada de savings <Icon name="arrow-right" size={16} />
+              </button>
+            </Card>
+          </div>
         )}
 
         {loading ? (
@@ -304,7 +320,8 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <Card noPadding className={styles.tableCard}>
+      <div data-tour="rfq-table">
+        <Card noPadding className={styles.tableCard}>
         <div className={styles.tableHeaderActions}>
           <Tabs tabs={tabsConfig} activeTab={activeTab} onChange={setActiveTab} />
         </div>
@@ -341,7 +358,8 @@ export default function DashboardPage() {
         ) : (
           <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
         )}
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

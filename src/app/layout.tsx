@@ -4,7 +4,8 @@ import "./globals.css";
 import { LayoutClient } from "@/components/layout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
-import { ToastContainer } from "@/components/ui";
+import { TourProvider } from "@/contexts/TourContext";
+import { ToastContainer, GuidedTour } from "@/components/ui";
 import { QueryProvider } from "@/providers/query-provider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -32,8 +33,11 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <ToastProvider>
-              <LayoutClient>{children}</LayoutClient>
-              <ToastContainer />
+              <TourProvider>
+                <LayoutClient>{children}</LayoutClient>
+                <ToastContainer />
+                <GuidedTour />
+              </TourProvider>
             </ToastProvider>
           </AuthProvider>
         </QueryProvider>

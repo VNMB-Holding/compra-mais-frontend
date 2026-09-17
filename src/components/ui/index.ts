@@ -31,3 +31,4 @@ export { default as EmptyState } from './empty-state/EmptyState';
 export type { EmptyStateProps, EmptyStateAction, EmptyStateIllustration } from './empty-state/EmptyState';
 export { DataTable } from './data-table/DataTable';
 export type { ColumnDef } from './data-table/DataTable';
+export { default as GuidedTour } from './guided-tour/GuidedTour';
