@@ -88,9 +88,28 @@ export default function FornecedoresListPage() {
   const [status, setStatus] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [fornecedores, setFornecedores] = useState<FornecedorRow[]>([]);
+  const [allSegments, setAllSegments] = useState<string[]>([]);
+  const [allCities, setAllCities] = useState<string[]>([]);
   const [kpis, setKpis] = useState<SupplierKpis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    suppliersApi
+      .list()
+      .then((data) => {
+        if (!isMounted || !data) return;
+        const segs = data.map((s) => s.segment || "").filter(Boolean);
+        const cities = data.map((s) => s.city || "").filter((c) => c && c !== "—");
+        if (segs.length > 0) setAllSegments((prev) => Array.from(new Set([...prev, ...segs])).sort());
+        if (cities.length > 0) setAllCities((prev) => Array.from(new Set([...prev, ...cities])).sort());
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -114,8 +133,14 @@ export default function FornecedoresListPage() {
         }),
         suppliersApi.getKpis(),
       ]);
-      setFornecedores((suppliers || []).map((s) => mapSupplierToRow(s, user)));
+      const rows = (suppliers || []).map((s) => mapSupplierToRow(s, user));
+      setFornecedores(rows);
       setKpis(kpisData);
+
+      const currentSegs = rows.map((f) => f.categoria).filter(Boolean);
+      const currentCities = rows.map((f) => f.cidade).filter((c) => c && c !== "—");
+      if (currentSegs.length > 0) setAllSegments((prev) => Array.from(new Set([...prev, ...currentSegs])).sort());
+      if (currentCities.length > 0) setAllCities((prev) => Array.from(new Set([...prev, ...currentCities])).sort());
     } catch (err) {
       logError("fornecedores/fetchData", err);
       setError(getErrorMessage(err));
@@ -128,21 +153,21 @@ export default function FornecedoresListPage() {
     fetchData();
   }, [fetchData]);
 
-  const segmentOptions = [
+  const segmentOptions = React.useMemo(() => [
     { label: "Segmento: Todos", value: "Todos" },
-    ...Array.from(new Set(fornecedores.map((f) => f.categoria)))
+    ...Array.from(new Set([...allSegments, ...fornecedores.map((f) => f.categoria)]))
       .filter(Boolean)
       .sort()
       .map((seg) => ({ label: seg, value: seg })),
-  ];
+  ], [allSegments, fornecedores]);
 
-  const cityOptions = [
+  const cityOptions = React.useMemo(() => [
     { label: "Cidade: Todas", value: "Todas" },
-    ...Array.from(new Set(fornecedores.map((f) => f.cidade)))
+    ...Array.from(new Set([...allCities, ...fornecedores.map((f) => f.cidade)]))
       .filter((c) => c && c !== "—")
       .sort()
       .map((c) => ({ label: `Cidade: ${c}`, value: c })),
-  ];
+  ], [allCities, fornecedores]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },

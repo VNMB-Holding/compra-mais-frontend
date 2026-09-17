@@ -104,23 +104,97 @@
 
 
 .workspaceGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 24px;
-  align-items: start;
+  display: block;
+  width: 100%;
 }
 
-.mainColumn,
-.sideColumn {
+.mainColumn {
+  width: 100%;
   min-width: 0;
 }
 
-.sideColumn {
-  position: sticky;
-  top: 0;
+.linkedSolBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  flex-shrink: 0;
+  max-width: 600px;
+}
+
+.linkedSolIcon {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  color: #007d79;
+  flex-shrink: 0;
+}
+
+.linkedSolInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.linkedSolLabel {
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.linkedSolCode {
+  color: #007d79;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: #e6f5f4;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.linkedSolDivider {
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.linkedSolTitle {
+  color: #1e293b;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+
+.btnTrocarSol {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
+  color: #007d79;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btnTrocarSol:hover {
+  background: #e6f4f4;
+  border-color: #99d5d3;
 }
 
 

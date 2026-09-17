@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Icon from "../icon/Icon";
 import styles from "./ConfirmDialog.module.css";
 
@@ -70,7 +71,13 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!open || !mounted) return null;
 
   const cfg = VARIANT_CONFIG[variant];
   const iconName = icon ?? cfg.defaultIcon;
@@ -80,7 +87,7 @@ export default function ConfirmDialog({
     if (!loading && e.target === e.currentTarget) onCancel();
   };
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={handleOverlayClick} role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <div className={styles.dialog}>
 
@@ -132,7 +139,8 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

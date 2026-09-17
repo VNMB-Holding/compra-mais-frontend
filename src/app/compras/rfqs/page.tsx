@@ -18,6 +18,7 @@ import {
 } from "@/components/ui";
 import styles from "./rfqs.module.css";
 import { rfqsApi, Rfq, RfqKpis } from "@/lib/api/rfqs";
+import { dashboardApi } from "@/lib/api/dashboard";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
@@ -100,6 +101,31 @@ export default function RfqsPage() {
   const loading = loadingRfqs;
   const error = queryError ? getErrorMessage(queryError) : null;
 
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    dashboardApi
+      .getFilterOptions(queryCompanyCode)
+      .then((res) => {
+        if (!isMounted || !res?.categories) return;
+        setAllCategories((prev) => Array.from(new Set([...prev, ...res.categories])).sort());
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [queryCompanyCode]);
+
+  useEffect(() => {
+    if (rfqs.length > 0) {
+      const currentCats = rfqs.map((r) => r.categoria).filter(Boolean);
+      if (currentCats.length > 0) {
+        setAllCategories((prev) => Array.from(new Set([...prev, ...currentCats])).sort());
+      }
+    }
+  }, [rfqs]);
+
   useEffect(() => {
     async function fetchKpis() {
       try {
@@ -112,12 +138,13 @@ export default function RfqsPage() {
     fetchKpis();
   }, [queryCompanyCode]);
 
-  const categoryOptions = [
+  const categoryOptions = React.useMemo(() => [
     { label: "Todas as categorias", value: "Todas" },
-    ...Array.from(new Set(rfqs.map((r) => r.categoria)))
+    ...Array.from(new Set([...allCategories, ...rfqs.map((r) => r.categoria)]))
       .filter(Boolean)
+      .sort()
       .map((c) => ({ label: c, value: c })),
-  ];
+  ], [allCategories, rfqs]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },

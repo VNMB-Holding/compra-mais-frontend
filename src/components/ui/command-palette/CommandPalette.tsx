@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Icon from "../icon/Icon";
 import Badge from "../badge/Badge";
@@ -42,10 +43,15 @@ interface CommandPaletteProps {
 export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [dynamicResults, setDynamicResults] = useState<SearchItem[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -273,9 +279,9 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     }
   }, [safeSelectedIndex]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-label="Busca Global">
       <div
         className={styles.modal}
@@ -334,7 +340,8 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

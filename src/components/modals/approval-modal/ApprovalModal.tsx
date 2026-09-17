@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button, Icon } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils/format-display";
 import styles from "./ApprovalModal.module.css";
@@ -24,9 +25,17 @@ export default function ApprovalModal({
   onGoToList,
   onClose,
 }: ApprovalModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const displayPriority = priorityLabel || priority;
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true">
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalSuccessIcon}>
@@ -64,6 +73,7 @@ export default function ApprovalModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

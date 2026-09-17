@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Icon from "@/components/ui/icon/Icon";
 import Button from "@/components/ui/button/Button";
 import styles from "./QuickDetailDrawer.module.css";
@@ -28,6 +29,12 @@ export default function QuickDetailDrawer({
   onPrimaryAction,
   secondaryActionLabel = "Fechar",
 }: QuickDetailDrawerProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && open) {
@@ -46,7 +53,9 @@ export default function QuickDetailDrawer({
     };
   }, [open, onClose]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       <div
         className={`${styles.overlay} ${open ? styles.overlayOpen : ""}`}
@@ -89,6 +98,7 @@ export default function QuickDetailDrawer({
           )}
         </div>
       </aside>
-    </>
+    </>,
+    document.body
   );
 }

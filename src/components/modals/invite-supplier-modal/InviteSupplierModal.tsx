@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button, Icon } from "@/components/ui";
 import { rfqsApi } from "@/lib/api/rfqs";
 import { suppliersApi } from "@/lib/api/suppliers";
@@ -22,6 +23,7 @@ export default function InviteSupplierModal({
 }: InviteSupplierModalProps) {
   const { toast } = useToast();
 
+  const [mounted, setMounted] = useState(false);
   const [cnpj, setCnpj] = useState("");
   const [corporateName, setCorporateName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -29,7 +31,11 @@ export default function InviteSupplierModal({
   const [contactPhone, setContactPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (!open) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!open || !mounted) return null;
 
   const handleCnpjChange = (val: string) => {
     const raw = val.replace(/\D/g, "").slice(0, 14);
@@ -123,7 +129,7 @@ export default function InviteSupplierModal({
     }
   };
 
-  return (
+  return createPortal(
     <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true">
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -221,6 +227,7 @@ export default function InviteSupplierModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

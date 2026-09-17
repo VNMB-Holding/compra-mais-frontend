@@ -17,6 +17,7 @@ import { logError, getErrorMessage } from "@/lib/utils/error";
 
 interface Solicitacao {
   id: string;
+  codigo?: string;
   titulo: string;
   area: string;
   solicitante: string;
@@ -124,11 +125,14 @@ export default function NewRfqPage() {
 
         if (reqs && reqs.length > 0) {
           const eligibleReqs = reqs.filter(
-            (r) => r.status === "Approved" && (!r.rfqs || r.rfqs.length === 0)
+            (r) =>
+              r.status === "Approved" &&
+              (!r.rfqs || r.rfqs.length === 0)
           );
 
           const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => ({
             id: r.id,
+            codigo: r.code || r.id,
             titulo: r.description,
             area: r.costCenterName || r.costCenterCode || "Operações",
             solicitante: r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
@@ -179,9 +183,9 @@ export default function NewRfqPage() {
 
 
   useEffect(() => {
-    if (!paramSol) return;
+    if (!paramSol || loadingData) return;
 
-    const solExistente = requestsApi.find((s) => s.id === paramSol || (s as any).code === paramSol);
+    const solExistente = requestsApi.find((s) => s.id === paramSol || s.codigo === paramSol || (s as any).code === paramSol);
 
     if (solExistente) {
       setSolicitacaoConfirmada(solExistente);
@@ -195,14 +199,44 @@ export default function NewRfqPage() {
         setExpandedItemId(solExistente.itens[0].id);
       }
     } else if (paramSol) {
-      toast({
-        variant: "warning",
-        title: "Solicitação não elegível",
-        message: "A solicitação informada ainda não foi aprovada ou já possui uma cotação aberta.",
+      purchaseRequestsApi.getById(paramSol).then((r) => {
+        if (r) {
+          const mapped: Solicitacao = {
+            id: r.id,
+            codigo: r.code || r.id,
+            titulo: r.description,
+            area: r.costCenterName || r.costCenterCode || "Operações",
+            solicitante: r.corporateRequester || r.requesterName || "Solicitante",
+            prioridade: "Media",
+            valorEstimado: Number(r.estimatedBudget) || 0,
+            itens: (r.items || []).map((it, idx) => ({
+              id: idx + 1,
+              descricao: it.description,
+              qtd: Number(it.quantity) || 1,
+              unidade: it.unit || "UN",
+            })),
+            incoterm: "CIF",
+            condicaoPagamento: "30 dias DDL",
+            observacoes: r.notes || "",
+          };
+          setSolicitacaoConfirmada(mapped);
+          setSolicitacaoSelecionada(mapped.id);
+          setTituloRfq(`RFQ — ${mapped.titulo}`);
+          setItens(mapped.itens.map((i) => ({ ...i })));
+          if (mapped.itens.length > 0) {
+            setExpandedItemId(mapped.itens[0].id);
+          }
+        }
+      }).catch(() => {
+        toast({
+          variant: "warning",
+          title: "Solicitação não elegível",
+          message: "A solicitação informada ainda não foi aprovada ou já possui uma cotação aberta.",
+        });
       });
     }
     setCurrentStep(1);
-  }, [paramSol, requestsApi]);
+  }, [paramSol, requestsApi, loadingData]);
 
 
   const handleConfirmarSolicitacao = () => {
@@ -366,7 +400,10 @@ export default function NewRfqPage() {
                       Solicitação de Compra Aprovada <span className="required-asterisk">*</span>
                     </label>
                     <Select
-                      options={requestsApi.map((s) => ({ label: s.titulo, value: s.id }))}
+                      options={requestsApi.map((s) => ({
+                        label: s.codigo ? `${s.codigo} — ${s.titulo}` : s.titulo,
+                        value: s.id,
+                      }))}
                       value={solicitacaoSelecionada}
                       onChange={setSolicitacaoSelecionada}
                       placeholder="Selecione uma solicitação aprovada..."
@@ -390,7 +427,7 @@ export default function NewRfqPage() {
                             tabIndex={0}
                           >
                             <div className={styles.quickCardHeader}>
-                              <span className={styles.quickCardId}>Demanda #{idx + 1}</span>
+                              <span className={styles.quickCardId}>{s.codigo || `Demanda #${idx + 1}`}</span>
                               <Badge
                                 variant={PRIORITY_BADGE_CONFIG[s.prioridade]?.variant ?? "gray"}
                                 icon={PRIORITY_BADGE_CONFIG[s.prioridade]?.icon ?? "info-circle"}
@@ -497,6 +534,33 @@ export default function NewRfqPage() {
             compliance para equalizar propostas.
           </p>
         </div>
+        <div className={styles.linkedSolBadge}>
+          <div className={styles.linkedSolIcon}>
+            <Icon name="file-check-02" size={16} />
+          </div>
+          <div className={styles.linkedSolInfo}>
+            <span className={styles.linkedSolLabel}>Demanda vinculada:</span>
+            <strong className={styles.linkedSolCode}>
+              {solicitacaoConfirmada.codigo || solicitacaoConfirmada.id}
+            </strong>
+            {solicitacaoConfirmada.titulo && (
+              <>
+                <span className={styles.linkedSolDivider}>•</span>
+                <span className={styles.linkedSolTitle} title={solicitacaoConfirmada.titulo}>
+                  {solicitacaoConfirmada.titulo}
+                </span>
+              </>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleDesvincular}
+            className={styles.btnTrocarSol}
+            title="Trocar solicitação vinculada"
+          >
+            <Icon name="refresh-cw-01" size={13} /> Trocar Demanda
+          </button>
+        </div>
       </div>
 
       
@@ -601,7 +665,7 @@ export default function NewRfqPage() {
                   <div>
                     <h2>2. Itens e quantidades solicitadas</h2>
                     <p>
-                      Importados da solicitação <strong>{solicitacaoConfirmada.id}</strong>. Você pode
+                      Importados da solicitação <strong>{solicitacaoConfirmada.codigo || solicitacaoConfirmada.id}</strong>. Você pode
                       adicionar itens complementares ao escopo.
                     </p>
                   </div>
@@ -1087,64 +1151,6 @@ export default function NewRfqPage() {
             </div>
           </Card>
         </div>
-
-        
-        <aside className={styles.sideColumn}>
-          <Card className={styles.summaryCard}>
-            <div className={styles.summaryHeader}>
-              <span>Resumo da cotação</span>
-              <strong className={styles.statusPill}>
-                {fornecedoresSelecionados.length} fornecedor
-                {fornecedoresSelecionados.length !== 1 ? "es" : ""}
-              </strong>
-            </div>
-            <h3>{tituloRfq || "Cotação sem título"}</h3>
-
-            <div className={styles.summaryValue}>
-              <span>Total de itens no escopo</span>
-              <strong>
-                {itens.filter((i) => i.descricao).length} item
-                {itens.filter((i) => i.descricao).length !== 1 ? "s" : ""}
-              </strong>
-            </div>
-
-            <dl className={styles.summaryList}>
-              <div>
-                <dt>Origem</dt>
-                <dd style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-                  <span title={solicitacaoConfirmada.id} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
-                    {solicitacaoConfirmada.id}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleDesvincular}
-                    title="Trocar solicitação vinculada"
-                    style={{ background: "none", border: "none", color: "#007d79", cursor: "pointer", fontSize: 11, fontWeight: 700, padding: 0, textDecoration: "underline", flexShrink: 0 }}
-                  >
-                    Trocar
-                  </button>
-                </dd>
-              </div>
-              <div><dt>Estratégia</dt><dd>{estrategia || "—"}</dd></div>
-              <div><dt>Incoterm</dt><dd>{incoterm || "—"}</dd></div>
-              <div><dt>Pagamento</dt><dd>{condicaoPagamento || "—"}</dd></div>
-              <div><dt>Moeda</dt><dd>{moeda || "—"}</dd></div>
-              <div>
-                <dt>Encerra em</dt>
-                <dd>
-                  {dataEncerramento
-                    ? new Date(dataEncerramento).toLocaleString("pt-BR", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })
-                    : "—"}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-
-
-        </aside>
       </div>
 
       <InviteSupplierModal

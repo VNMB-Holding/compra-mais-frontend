@@ -210,12 +210,6 @@ export default function SolicitacoesPage() {
           loading={loadingKpis}
         />
         <KpiCard
-          title="Rascunhos"
-          value={String(kpis?.draft ?? rawRequests.filter((r) => r.status === "Draft").length)}
-          icon="edit-01"
-          loading={loadingKpis}
-        />
-        <KpiCard
           title="Prontas para Cotação"
           value={String(kpis?.approved ?? rawRequests.filter((r) => r.status === "Approved").length)}
           icon="check-circle"

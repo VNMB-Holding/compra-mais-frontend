@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton, EmptyState } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton, EmptyState, Stepper } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
@@ -638,61 +638,27 @@ export default function RfqDetailPage() {
       </div>
 
       
-      <div className={styles.estagioPista}>
-        <div
-          className={`${styles.estsgioItem} ${
-            stage === "proposal" ? styles.estsgioAtivo : styles.estagioConcluido
-          }`}
-        >
-          <div className={styles.estsgioIcone}>
-            {stage === "proposal" ? "1" : <Icon name="check" size={16} />}
-          </div>
-          <div>
-            <strong>Coleta de propostas</strong>
-            <span>
-              {recebidas.length} de {propostas.length} recebidas
-            </span>
-          </div>
-        </div>
-        <div
-          className={`${styles.estagioConetor} ${
-            stage !== "proposal" ? styles.estsgioConectorAtivo : ""
-          }`}
+      <Card className={styles.stepperCard}>
+        <Stepper
+          steps={[
+            {
+              label: "Coleta de propostas",
+              description: `${recebidas.length} de ${propostas.length} recebidas`,
+              status: stage === "proposal" ? "active" : "completed",
+            },
+            {
+              label: "Análise e comparativo",
+              description: "Equalização comercial",
+              status: stage === "analysis" ? "active" : stage === "approval" ? "completed" : "pending",
+            },
+            {
+              label: "Aprovação e PO",
+              description: "Geração do pedido",
+              status: stage === "approval" ? "active" : "pending",
+            },
+          ]}
         />
-        <div
-          className={`${styles.estsgioItem} ${
-            stage === "analysis"
-              ? styles.estsgioAtivo
-              : stage === "approval"
-              ? styles.estagioConcluido
-              : styles.estsgioInativo
-          }`}
-        >
-          <div className={styles.estsgioIcone}>
-            {stage === "approval" ? <Icon name="check" size={16} /> : "2"}
-          </div>
-          <div>
-            <strong>Análise e comparativo</strong>
-            <span>Equalização comercial</span>
-          </div>
-        </div>
-        <div
-          className={`${styles.estagioConetor} ${
-            stage === "approval" ? styles.estsgioConectorAtivo : ""
-          }`}
-        />
-        <div
-          className={`${styles.estsgioItem} ${
-            stage === "approval" ? styles.estsgioAtivo : styles.estsgioInativo
-          }`}
-        >
-          <div className={styles.estsgioIcone}>3</div>
-          <div>
-            <strong>Aprovação e PO</strong>
-            <span>Geração do pedido</span>
-          </div>
-        </div>
-      </div>
+      </Card>
     </>
   );
 

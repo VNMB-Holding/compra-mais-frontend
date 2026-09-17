@@ -69,9 +69,25 @@ export default function HomologacaoPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [fornecedores, setFornecedores] = useState<HomologacaoRow[]>([]);
+  const [allUfs, setAllUfs] = useState<string[]>([]);
   const [kpis, setKpis] = useState<SupplierKpis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    suppliersApi
+      .list()
+      .then((data) => {
+        if (!isMounted || !data) return;
+        const ufs = data.map((s) => s.state?.toUpperCase().trim() || "").filter(Boolean);
+        if (ufs.length > 0) setAllUfs((prev) => Array.from(new Set([...prev, ...ufs])).sort());
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -90,8 +106,14 @@ export default function HomologacaoPage() {
         }),
         suppliersApi.getKpis(),
       ]);
-      setFornecedores((suppliers || []).map(mapSupplierToHomologacao));
+      const rows = (suppliers || []).map(mapSupplierToHomologacao);
+      setFornecedores(rows);
       setKpis(kpisData);
+
+      const currentUfs = rows.map((f) => f.estado?.toUpperCase().trim()).filter(Boolean);
+      if (currentUfs.length > 0) {
+        setAllUfs((prev) => Array.from(new Set([...prev, ...currentUfs])).sort());
+      }
     } catch (err) {
       logError("homologacao/fetchData", err);
       setError(getErrorMessage(err));
@@ -111,13 +133,13 @@ export default function HomologacaoPage() {
     { label: "Apontamento", value: "Apontamento" },
   ];
 
-  const ufOptions = [
+  const ufOptions = React.useMemo(() => [
     { label: "Estado: Todos (UF)", value: "Todas" },
-    ...Array.from(new Set(fornecedores.map((f) => f.estado)))
+    ...Array.from(new Set([...allUfs, ...fornecedores.map((f) => f.estado?.toUpperCase().trim())]))
       .filter(Boolean)
       .sort()
       .map((uf) => ({ label: `UF: ${uf}`, value: uf })),
-  ];
+  ], [allUfs, fornecedores]);
 
 
   const columns: ColumnDef<HomologacaoRow>[] = [
