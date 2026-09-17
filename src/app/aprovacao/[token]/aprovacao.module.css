@@ -1,42 +1,55 @@
 .portalContainer {
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--bg-color, #f8fafc);
   display: flex;
   flex-direction: column;
 }
 
 .portalHeader {
   background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 16px 24px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  padding: 14px 24px;
   display: flex;
   justify-content: center;
 }
 
-.brandArea {
+.headerContent {
   width: 100%;
-  max-width: 680px;
+  max-width: 860px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+}
+
+.brandArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .logo {
-  height: 32px;
+  height: 28px;
   width: auto;
 }
 
-.badgePortal {
+.brandDivider {
+  width: 1px;
+  height: 18px;
+  background: #cbd5e1;
+}
+
+.portalTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.badgeSecurity {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
+  gap: 5px;
   font-size: 12px;
-  font-weight: 600;
-  background: #f0fdf9;
-  color: #007d79;
-  border: 1px solid #ccfbf1;
 }
 
 .mainContent {
@@ -47,30 +60,25 @@
   padding: 32px 16px;
 }
 
-.card {
+.contentWrapper {
   width: 100%;
-  max-width: 680px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-  overflow: hidden;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.accentBar {
-  height: 4px;
+.approvalCard {
   width: 100%;
-  background: linear-gradient(90deg, #007d79 0%, #0d9488 100%);
-}
-
-.cardBody {
-  padding: 32px;
 }
 
 .cardHeader {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 18px;
   border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 18px;
 }
 
 .titleRow {
@@ -78,144 +86,160 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 6px;
 }
 
-.titleRow h1 {
-  font-size: 24px;
+.codeGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.codeGroup h1 {
+  font-size: 20px;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
 }
 
-.approverText {
-  font-size: 13px;
-  color: #64748b;
+.demandDescription {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
   margin: 0;
+  line-height: 1.5;
 }
 
-.approverText strong {
+.metadataTags {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.infoTag {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infoTag strong {
   color: #0f172a;
 }
 
-.roleText {
-  color: #007d79;
+.justificationBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.justificationBox p {
+  font-size: 13px;
+  color: #334155;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.itemsSection {
+  margin-bottom: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sectionHeader h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.itemsTable th {
+  background: #f8fafc;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.itemsTable td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.itemsTable tbody tr:last-child td {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.itemsTable tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.itemsTable tfoot td {
+  padding: 12px 14px;
+  background: #f8fafc;
+}
+
+.itemDesc {
+  font-size: 13px;
+  color: #0f172a;
   font-weight: 600;
 }
 
-.detailsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.detailItem {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.detailItemFull {
-  grid-column: span 2;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.detailsGrid label {
+.unitBadge {
   font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.demandTitle {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.detailsGrid span {
-  font-size: 14px;
-  color: #334155;
-  font-weight: 500;
-}
-
-.budgetValue {
-  font-size: 20px;
-  font-weight: 800;
-  color: #007d79;
-}
-
-.justificationText {
-  font-size: 13px;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
   color: #475569;
-  margin: 0;
-  line-height: 1.5;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  padding: 10px 12px;
-  border-radius: 8px;
-}
-
-.itemsBlock {
-  margin-bottom: 24px;
-}
-
-.itemsBlockHeader h4 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 12px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.itemsList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.itemCard {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-
-.itemInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.itemInfo strong {
-  font-size: 13px;
-  color: #0f172a;
-}
-
-.itemInfo small {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.itemTotal {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 600;
 }
 
 .rejectInputArea {
@@ -223,75 +247,66 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 14px 16px;
+  border-radius: 8px;
 }
 
 .rejectInputArea label {
   font-size: 12px;
-  font-weight: 600;
-  color: #dc2626;
+  font-weight: 700;
+  color: #b91c1c;
 }
 
 .rejectInputArea textarea {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1.5px solid #fca5a5;
-  background: #fff;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #fca5a5;
+  background: #ffffff;
   font-size: 13px;
   font-family: inherit;
   resize: vertical;
   outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .rejectInputArea textarea:focus {
   border-color: #dc2626;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
 }
 
-.actionsContainer {
+.actionsFooter {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-top: 20px;
+  gap: 14px;
+  padding-top: 18px;
   border-top: 1px solid #f1f5f9;
 }
 
 .actionButtonsRow {
   display: flex;
-  gap: 12px;
-  width: 100%;
+  gap: 10px;
+  align-items: center;
 }
 
-.approveBtn {
-  flex: 1;
-  padding: 12px 20px !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-}
-
-.rejectBtn {
-  color: #dc2626 !important;
-  border-color: #fecaca !important;
-  background: #fff !important;
-}
-
-.rejectBtn:hover {
-  background: #fef2f2 !important;
-  border-color: #f87171 !important;
-}
-
-.securityFooter {
+.securityNote {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 11px;
-  color: #94a3b8;
+  font-size: 11.5px;
+  color: #64748b;
   text-align: center;
 }
 
+.securityNote span {
+  line-height: 1.4;
+}
+
 .resultStateBox {
-  padding: 40px 20px;
+  padding: 36px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -299,8 +314,8 @@
 }
 
 .successIconWrapper {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: #f0fdf4;
   border: 1.5px solid #bbf7d0;
@@ -308,12 +323,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .rejectIconWrapper {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: #fef2f2;
   border: 1.5px solid #fee2e2;
@@ -321,38 +336,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .resultStateBox h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 8px 0;
 }
 
 .resultStateBox p {
-  font-size: 14px;
+  font-size: 13.5px;
   color: #64748b;
   margin: 0;
-  max-width: 440px;
+  max-width: 460px;
   line-height: 1.5;
 }
 
 @media (max-width: 640px) {
-  .cardBody {
-    padding: 20px;
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .detailsGrid {
-    grid-template-columns: 1fr;
+  .portalTitle {
+    display: none;
   }
 
-  .detailItemFull {
-    grid-column: span 1;
+  .brandDivider {
+    display: none;
   }
 
   .actionButtonsRow {
     flex-direction: column;
+    width: 100%;
+  }
+
+  .actionButtonsRow button {
+    width: 100%;
   }
 }

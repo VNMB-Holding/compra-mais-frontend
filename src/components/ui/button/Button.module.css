@@ -10,6 +10,7 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
+  white-space: nowrap;
   transition:
     background-color var(--duration-normal) var(--ease-in-out),
     box-shadow       var(--duration-normal) var(--ease-in-out),
