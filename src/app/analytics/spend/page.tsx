@@ -186,7 +186,7 @@ export default function SpendPage() {
       pedidosEmitidos: apiData?.kpis?.pedidosEmitidos || "0",
       fornecedoresAtivos: apiData?.kpis?.fornecedoresAtivos || "0",
       trendSpend: "Filtro ativo no servidor",
-      trendEconomia: "Economia estimada",
+      trendEconomia: "Oportunidade de saving sobre o spend atual",
       trendPedidos: "Emitidos no período",
       trendFornecedores: "Ativos na base"
     };
@@ -301,7 +301,7 @@ export default function SpendPage() {
 
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
-            <span className={styles.kpiTitle}>Economia potencial</span>
+            <span className={styles.kpiTitle}>Economia potencial estimada</span>
             <div className={styles.kpiIconBox} style={{ backgroundColor: "#e0f2fe", color: "#0284c7" }}>
               <Icon name="line-chart-up-01" size={16} />
             </div>

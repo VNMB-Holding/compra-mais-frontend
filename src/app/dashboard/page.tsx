@@ -170,6 +170,8 @@ export default function DashboardPage() {
   const filteredRfqs = rfqs.filter((r) => activeTab === "Todas" || r.status === activeTab);
 
   const lastEconomy = economyData.length > 0 ? economyData[economyData.length - 1] : null;
+  const totalEconomyFromChart = economyData.reduce((acc, curr) => acc + (curr.value || 0), 0);
+  const totalEconomyValue = (typeof kpis?.economy === "number" && kpis.economy > 0) ? kpis.economy : totalEconomyFromChart;
 
   return (
     <div className={styles.viewDashboard}>
@@ -206,16 +208,8 @@ export default function DashboardPage() {
           onClick={() => router.push("/compras/rfqs")}
         />
         <KpiCard 
-          title="Aprovações pendentes" 
-          value={String(kpis?.approvalsPending || 0)} 
-          icon="shield-01" 
-          linkLabel="Ver todas" 
-          loading={loading}
-          onClick={() => router.push("/compras/solicitacoes")}
-        />
-        <KpiCard 
           title="Economia acumulada" 
-          value={formatCurrency(kpis?.economy || 0)} 
+          value={formatCurrency(totalEconomyValue)} 
           icon="trend-up-01" 
           linkLabel="Ver detalhes" 
           loading={loading}
@@ -261,17 +255,22 @@ export default function DashboardPage() {
         ) : (
           <Card className={styles.chartCard}>
             <div className={styles.cardHeader}>
-              <h4>Economia potencial</h4>
-              <span className={styles.subtitle}>Evolução mensal</span>
+              <h4>Evolução de Economia (Savings)</h4>
+              <span className={styles.subtitle}>Histórico mensal de economia gerada</span>
             </div>
             <div className={styles.chartValue}>
-              <h3>{lastEconomy ? formatCurrency(lastEconomy.value) : "—"}</h3>
+              <h3>{formatCurrency(totalEconomyValue)}</h3>
+              {lastEconomy && (
+                <span className={styles.chartPeriodMeta}>
+                  Mês recente ({lastEconomy.name}): <strong>{formatCurrency(lastEconomy.value)}</strong>
+                </span>
+              )}
             </div>
             <div className={styles.chartWrapperElement}>
               <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
             </div>
             <button className={styles.cardLink} onClick={() => router.push("/analytics/economia")}>
-              Ver evolução completa <Icon name="arrow-right" size={16} />
+              Ver análise detalhada de savings <Icon name="arrow-right" size={16} />
             </button>
           </Card>
         )}
@@ -308,7 +307,6 @@ export default function DashboardPage() {
       <Card noPadding className={styles.tableCard}>
         <div className={styles.tableHeaderActions}>
           <Tabs tabs={tabsConfig} activeTab={activeTab} onChange={setActiveTab} />
-          <Button variant="secondary" onClick={() => router.push("/compras/rfqs")}>Filtrar Avançado</Button>
         </div>
 
         {loading ? (

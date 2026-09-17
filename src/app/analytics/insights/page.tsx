@@ -77,8 +77,9 @@ export default function InsightsPage() {
   }, [spendData]);
 
   const totalSavings = useMemo(() => {
-    if (!economyData?.suppliers) return 0;
-    return economyData.suppliers.reduce((sum, s) => sum + (s.valor || 0), 0);
+    const fromCategories = (economyData?.categories || []).reduce((sum, c) => sum + (c.valor || 0), 0);
+    const fromSuppliers = (economyData?.suppliers || []).reduce((sum, s) => sum + (s.valor || 0), 0);
+    return fromCategories || fromSuppliers || 0;
   }, [economyData]);
 
   

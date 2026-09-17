@@ -114,6 +114,18 @@
   margin: 0 0 4px 0;
 }
 
+.chartPeriodMeta {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.chartPeriodMeta strong {
+  color: #007d79;
+  font-weight: 600;
+}
+
 .trend {
   display: inline-flex;
   align-items: center;
