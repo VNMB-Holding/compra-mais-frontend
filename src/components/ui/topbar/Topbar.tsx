@@ -7,7 +7,7 @@ import styles from "./Topbar.module.css";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import CommandPalette from "../command-palette/CommandPalette";
-import { notificationsApi, NotificationItem } from "@/lib/api/notifications";
+import { notificationsApi, NotificationItem, resolveNotificationUrl } from "@/lib/api/notifications";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { logError } from "@/lib/utils/error";
 
@@ -78,8 +78,9 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       notificationsApi.markAsRead(notif.id).catch(() => {});
     }
     setActivePopup(null);
-    if (notif.actionUrl) {
-      router.push(notif.actionUrl);
+    const targetUrl = resolveNotificationUrl(notif);
+    if (targetUrl) {
+      router.push(targetUrl);
     }
   };
 
@@ -146,7 +147,11 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
   const userName = user?.name || "Usuário";
   const userEmail = user?.email || "";
-  const userRole = user?.role === "admin" ? "Administrador" : user?.role === "gerente" ? "Gerente" : user?.role === "procurist" ? "Comprador" : "Solicitante";
+  const rawSpecialistRole = user?.roles?.find((r) => {
+    const lower = r.toLowerCase();
+    return lower.includes("comprador") || lower.includes("especialista") || lower.includes("procurist");
+  });
+  const userRole = rawSpecialistRole || (user?.role === "admin" ? "Administrador" : user?.role === "gerente" ? "Gerente" : user?.role === "procurist" ? "Comprador(a)" : "Solicitante");
 
   return (
     <header className={styles.topbar} ref={topbarRef}>

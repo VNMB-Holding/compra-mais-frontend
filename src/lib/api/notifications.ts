@@ -42,3 +42,5 @@ export const notificationsApi = {
     }
   },
 };
+
+export { resolveNotificationUrl } from '../utils/notifications';
