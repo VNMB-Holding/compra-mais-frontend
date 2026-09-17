@@ -4,25 +4,11 @@ import React, { createContext, useState, useCallback, useEffect, useRef } from "
 import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
 import { loginApi, getTenantsApi, getUserByIdApi, logoutApi, refreshTokenApi } from "@/lib/auth/api";
+import { mapApiRole } from "@/lib/auth/roles";
 import { setTokenProvider, setUnauthorizedHandler, setRefreshHandler } from "@/lib/api-client";
 import { logError } from "@/lib/utils/error";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
-
-function mapApiRole(roles: string[]): UserRole {
-  if (!roles || roles.length === 0) return "solicitante";
-  const normalized = roles.map((r) => r.toLowerCase().trim());
-  if (normalized.some((r) => r === "admin" || r === "administrator" || r === "administrador")) {
-    return "admin";
-  }
-  if (normalized.some((r) => r === "gerente" || r === "manager" || r === "diretor")) {
-    return "gerente";
-  }
-  if (normalized.some((r) => r === "procurist" || r === "procurista" || r === "comprador")) {
-    return "procurist";
-  }
-  return "solicitante";
-}
 
 function parseJwtExp(token: string): number | null {
   try {
