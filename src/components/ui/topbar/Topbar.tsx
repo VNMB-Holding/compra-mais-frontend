@@ -7,7 +7,7 @@ import styles from "./Topbar.module.css";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import CommandPalette from "../command-palette/CommandPalette";
-import { notificationsApi, NotificationItem, resolveNotificationUrl } from "@/lib/api/notifications";
+import { notificationsApi, NotificationItem } from "@/lib/api/notifications";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { logError } from "@/lib/utils/error";
 
@@ -76,11 +76,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       );
       setUnreadNotifCount((prev) => Math.max(0, prev - 1));
       notificationsApi.markAsRead(notif.id).catch(() => {});
-    }
-    setActivePopup(null);
-    const targetUrl = resolveNotificationUrl(notif);
-    if (targetUrl) {
-      router.push(targetUrl);
     }
   };
 
