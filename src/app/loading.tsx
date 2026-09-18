@@ -15,7 +15,6 @@ export default function RootLoading() {
         <Skeleton variant="rectangular" width={160} height={38} style={{ borderRadius: "8px" }} />
       </div>
 
-      
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
         <KpiCardSkeleton />
         <KpiCardSkeleton />
@@ -23,7 +22,6 @@ export default function RootLoading() {
         <KpiCardSkeleton />
       </div>
 
-      
       <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
           <Skeleton variant="title" width="25%" height={20} style={{ margin: 0 }} />

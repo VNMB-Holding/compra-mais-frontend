@@ -4,14 +4,11 @@
   gap: 16px;
   width: 100%;
 }
-
-
 .pageHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .pageHeader h1 {
   font-size: 21px;
   font-weight: 700;
@@ -19,18 +16,15 @@
   margin: 0 0 4px 0;
   letter-spacing: -0.02em;
 }
-
 .pageHeader p {
   margin: 0;
   color: #64748b;
   font-size: 13px;
 }
-
 .headerActions {
   display: flex;
   gap: 8px;
 }
-
 .btnExport {
   display: flex;
   align-items: center;
@@ -45,27 +39,21 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .btnExport:hover {
   background: #f8fafc;
   color: #0f172a;
 }
-
 .btnNew {
   background-color: #007d79 !important;
   display: flex;
   align-items: center;
   gap: 4px;
 }
-
-
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
 }
-
-
 .mainListCard {
   background: white;
   border: 1px solid #e2e8f0;
@@ -73,7 +61,6 @@
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
-
 .tableToolbar {
   padding: 12px 18px;
   display: flex;
@@ -81,7 +68,6 @@
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .searchBox {
   display: flex;
   align-items: center;
@@ -92,11 +78,9 @@
   border-radius: 6px;
   width: 260px;
 }
-
 .searchBox svg {
   color: #94a3b8;
 }
-
 .searchBox input {
   border: none;
   outline: none;
@@ -105,16 +89,13 @@
   width: 100%;
   background: transparent;
 }
-
 .filtersGroup {
   display: flex;
   gap: 10px;
 }
-
 .customSelectFilter {
   width: 170px;
 }
-
 .selectWrapper {
   display: flex;
   align-items: center;
@@ -124,11 +105,9 @@
   border-radius: 6px;
   background: white;
 }
-
 .selectWrapper svg {
   color: #64748b;
 }
-
 .selectWrapper select {
   border: none;
   outline: none;
@@ -138,7 +117,6 @@
   cursor: pointer;
   background: transparent;
 }
-
 .btnMoreFilters {
   background: white;
   border: 1px solid #cbd5e1;
@@ -152,14 +130,11 @@
   gap: 6px;
   cursor: pointer;
 }
-
-
 .fornecedorCell {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .avatar {
   width: 36px;
   height: 36px;
@@ -172,30 +147,25 @@
   align-items: center;
   justify-content: center;
 }
-
 .doubleText {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .doubleText strong {
   font-size: 14px;
   color: #0f172a;
   font-weight: 600;
 }
-
 .doubleText span {
   font-size: 12px;
   color: #64748b;
 }
-
 .linkText {
   color: #007d79 !important;
   font-weight: 600;
   cursor: pointer;
 }
-
 .iconTextCell {
   display: flex;
   align-items: center;
@@ -204,65 +174,52 @@
   color: #334155;
   font-weight: 500;
 }
-
 .iconTextCell svg {
   color: #94a3b8;
 }
-
 .scoreCell {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 140px;
 }
-
 .scoreInfo {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
 }
-
 .scoreInfo strong {
   font-size: 13px;
   color: #0f172a;
 }
-
 .scoreInfo span {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
-
 .progressTrack {
   height: 6px;
   background: #f1f5f9;
   border-radius: 10px;
   overflow: hidden;
 }
-
 .progressFill {
   height: 100%;
   border-radius: 10px;
 }
-
 .moreIcon {
   color: #94a3b8;
   cursor: pointer;
 }
-
 .textHigh {
   color: #16a34a;
 }
-
 .textMid {
   color: #ca8a04;
 }
-
 .textLow {
   color: #dc2626;
 }
-
-
 .tableFooter {
   display: flex;
   justify-content: space-between;
@@ -271,17 +228,14 @@
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
 }
-
 .tableFooter span {
   font-size: 13px;
   color: #64748b;
 }
-
 .paginationControls {
   display: flex;
   gap: 8px;
 }
-
 .pageBtn {
   background: white;
   border: 1px solid #e2e8f0;
@@ -296,7 +250,6 @@
   color: #475569;
   cursor: pointer;
 }
-
 .pageActive {
   background: #f1f5f9;
   color: #007d79;

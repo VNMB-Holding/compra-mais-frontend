@@ -8,11 +8,9 @@
   transition: all 0.2s;
   box-sizing: border-box;
 }
-
 .exportGroup:hover {
   border-color: #94a3b8;
 }
-
 .exportMainBtn {
   display: inline-flex;
   align-items: center;
@@ -29,17 +27,14 @@
   outline: none;
   transition: background-color 0.2s;
 }
-
 .exportMainBtn:hover {
   background-color: #f8fafc;
 }
-
 .exportDivider {
   width: 1px;
   background-color: #e2e8f0;
   margin: 6px 0;
 }
-
 .exportArrowBtn {
   display: inline-flex;
   align-items: center;
@@ -54,20 +49,16 @@
   color: #64748b;
   transition: all 0.2s;
 }
-
 .exportArrowBtn:hover {
   background-color: #f8fafc;
   color: #334155;
 }
-
 .chevron {
   transition: transform 0.2s ease;
 }
-
 .rotate {
   transform: rotate(180deg);
 }
-
 .exportDropdown {
   position: absolute;
   top: 100%;
@@ -84,7 +75,6 @@
   padding: 6px;
   animation: dropdownFadeIn 0.15s ease-out;
 }
-
 .exportDropdownItem {
   display: flex;
   align-items: center;
@@ -102,12 +92,10 @@
   width: 100%;
   outline: none;
 }
-
 .exportDropdownItem:hover {
   background-color: #f1f5f9;
   color: #0f172a;
 }
-
 @keyframes dropdownFadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }

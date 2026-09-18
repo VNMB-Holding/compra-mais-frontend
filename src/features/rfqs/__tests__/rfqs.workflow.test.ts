@@ -62,12 +62,10 @@ describe('TC-USR-05 / TC-ADM-02: Cotações e RFQs (Request for Quotation) Workf
     const patchSpy = vi.spyOn(apiClient, 'patch').mockResolvedValue({ success: true } as any);
     const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({ orderId: 'po-777', code: 'PED-2026-0777' } as any);
 
-    // 1. Seleciona proposta vencedora
     const winnerResult = await rfqsService.selectWinner('rfq-500', 'prop-10');
     expect(patchSpy).toHaveBeenCalledWith('/api/rfqs/rfq-500/winner', { proposalId: 'prop-10' });
     expect(winnerResult).toEqual({ success: true });
 
-    // 2. Converte RFQ finalizada em Pedido de Compra
     const poResult = await rfqsService.createPo('rfq-500');
     expect(postSpy).toHaveBeenCalledWith('/api/rfqs/rfq-500/create-po', {});
     expect(poResult).toEqual({ orderId: 'po-777', code: 'PED-2026-0777' });

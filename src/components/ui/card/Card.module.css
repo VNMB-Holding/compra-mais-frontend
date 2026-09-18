@@ -10,14 +10,10 @@
     box-shadow  var(--duration-normal) var(--ease-in-out),
     border-color var(--duration-normal) var(--ease-in-out);
 }
-
 .noPadding { padding: 0; }
-
-/* Cards interativos/clicáveis */
 .interactive {
   cursor: pointer;
 }
-
 .interactive:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
   border-color: #d1d5db;

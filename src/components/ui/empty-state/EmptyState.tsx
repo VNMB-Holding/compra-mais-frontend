@@ -78,14 +78,12 @@ const ILLUSTRATION_MAP: Record<string, string> = {
   "cart-empty": "/illustrations/cart-empty.svg",
   "discount-empty": "/illustrations/discount-empty.svg",
 
-  
   disconnected: "/illustrations/disconnected.svg",
   "server-error": "/illustrations/server-error.svg",
   "device-offline": "/illustrations/device-offline.svg",
   "not-found": "/illustrations/not-found.svg",
   "connection-lost": "/illustrations/connection-lost.svg",
 
-  
   "envelope-empty": "/illustrations/envelope-empty.svg",
   "chat-empty": "/illustrations/chat-empty.svg",
   "no-notifications": "/illustrations/no-notifications.svg",

@@ -5,7 +5,6 @@
   width: 100%;
   color: #0f172a;
 }
-
 .backBtn {
   display: inline-flex;
   align-items: center;
@@ -19,14 +18,12 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 .pageHeader {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
 }
-
 .eyebrow {
   display: block;
   margin-bottom: 6px;
@@ -36,7 +33,6 @@
   letter-spacing: 0;
   text-transform: uppercase;
 }
-
 .pageHeader h1 {
   margin: 0 0 4px;
   color: #0f172a;
@@ -44,7 +40,6 @@
   font-weight: 800;
   letter-spacing: 0;
 }
-
 .pageHeader p {
   max-width: 760px;
   margin: 0;
@@ -52,7 +47,6 @@
   font-size: 14px;
   line-height: 1.55;
 }
-
 .headerActions,
 .formActions {
   display: flex;
@@ -61,7 +55,6 @@
   gap: 12px;
   flex-wrap: wrap;
 }
-
 .secondaryAction,
 .btnCancel,
 .addItemButton,
@@ -81,12 +74,10 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
-
 .secondaryAction,
 .btnCancel {
   padding: 10px 16px;
 }
-
 .secondaryAction:hover,
 .btnCancel:hover,
 .addItemButton:hover,
@@ -95,24 +86,20 @@
   background: #f8fafc;
   color: #0f172a;
 }
-
 .btnSubmit {
   min-height: 42px;
   background-color: #007d79 !important;
 }
-
 .workspaceGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 24px;
   align-items: start;
 }
-
 .mainColumn,
 .sideColumn {
   min-width: 0;
 }
-
 .sideColumn {
   position: sticky;
   top: 0;
@@ -120,30 +107,25 @@
   flex-direction: column;
   gap: 16px;
 }
-
 .formCard {
   padding: 0 !important;
   border: 1px solid #e2e8f0;
   background: #fff;
   overflow: hidden;
 }
-
 .formSection {
   padding: 28px 32px;
   border-bottom: 1px solid #edf2f7;
 }
-
 .formSection:last-of-type {
   border-bottom: 0;
 }
-
 .sectionHeader {
   display: flex;
   gap: 14px;
   align-items: flex-start;
   margin-bottom: 22px;
 }
-
 .sectionIcon {
   display: inline-flex;
   align-items: center;
@@ -155,7 +137,6 @@
   color: #007d79;
   flex: 0 0 auto;
 }
-
 .sectionHeader h2 {
   margin: 0 0 4px;
   color: #0f172a;
@@ -163,14 +144,12 @@
   font-weight: 800;
   letter-spacing: 0;
 }
-
 .sectionHeader p {
   margin: 0;
   color: #64748b;
   font-size: 13px;
   line-height: 1.45;
 }
-
 .formRow,
 .itemGrid {
   display: grid;
@@ -178,24 +157,20 @@
   gap: 16px;
   margin-bottom: 16px;
 }
-
 .formGroup {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 8px;
 }
-
 .fullWidth {
   margin-bottom: 16px;
 }
-
 .formGroup label {
   color: #1e293b;
   font-size: 13px;
   font-weight: 800;
 }
-
 .formControl {
   width: 100%;
   min-height: 36px;
@@ -210,21 +185,17 @@
   line-height: 1.35;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-
 textarea.formControl {
   resize: vertical;
 }
-
 .formControl:focus {
   border-color: #007d79;
   box-shadow: 0 0 0 3px #dff4f2;
 }
-
 .formControl[readonly] {
   background: #f8fafc;
   color: #475569;
 }
-
 .segmentedControl {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -234,7 +205,6 @@ textarea.formControl {
   border-radius: 6px;
   background: #f8fafc;
 }
-
 .segmentedControl button {
   min-width: 0;
   border: 0;
@@ -246,26 +216,22 @@ textarea.formControl {
   font-weight: 800;
   cursor: pointer;
 }
-
 .segmentedControl .segmentActive {
   background: #fff;
   color: #007d79;
   box-shadow: 0 1px 4px #0f172a1a;
 }
-
 .itemsList {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
 .itemPanel {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #fbfdff;
   overflow: hidden;
 }
-
 .itemHeader {
   display: flex;
   align-items: center;
@@ -275,12 +241,10 @@ textarea.formControl {
   border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
 }
-
 .itemHeader strong {
   font-size: 14px;
   font-weight: 800;
 }
-
 .itemHeader button {
   display: inline-flex;
   align-items: center;
@@ -293,21 +257,17 @@ textarea.formControl {
   color: #64748b;
   cursor: pointer;
 }
-
 .itemHeader button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-
 .itemGrid {
   grid-template-columns: minmax(220px, 2fr) minmax(160px, 1fr) repeat(2, minmax(96px, 0.7fr));
   padding: 16px;
 }
-
 .itemDescription {
   grid-column: span 2;
 }
-
 .itemTotal {
   display: flex;
   flex-direction: column;
@@ -319,19 +279,16 @@ textarea.formControl {
   border-radius: 8px;
   background: #fff;
 }
-
 .itemTotal span {
   color: #64748b;
   font-size: 12px;
   font-weight: 700;
 }
-
 .itemTotal strong {
   color: #007d79;
   font-size: 16px;
   font-weight: 900;
 }
-
 .addItemButton {
   width: 100%;
   margin-top: 14px;
@@ -339,20 +296,17 @@ textarea.formControl {
   border-style: dashed;
   color: #007d79;
 }
-
 .formActions {
   padding: 22px 32px;
   border-top: 1px solid #edf2f7;
   background: #fbfdff;
 }
-
 .summaryCard,
 .checklistCard {
   padding: 20px !important;
   border: 1px solid #e2e8f0;
   background: #fff;
 }
-
 .summaryHeader {
   display: flex;
   align-items: center;
@@ -360,14 +314,12 @@ textarea.formControl {
   gap: 12px;
   margin-bottom: 14px;
 }
-
 .summaryHeader span {
   color: #64748b;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
-
 .priorityPill {
   display: inline-flex;
   align-items: center;
@@ -377,27 +329,22 @@ textarea.formControl {
   font-size: 12px;
   font-weight: 900;
 }
-
 .priorityBaixa {
   background: #f1f5f9;
   color: #475569;
 }
-
 .priorityMedia {
   background: #fef9c3;
   color: #92400e;
 }
-
 .priorityAlta {
   background: #fee2e2;
   color: #b91c1c;
 }
-
 .priorityCritica {
   background: #0f172a;
   color: #fff;
 }
-
 .summaryCard h3 {
   margin: 0 0 18px;
   color: #0f172a;
@@ -405,45 +352,38 @@ textarea.formControl {
   font-weight: 900;
   line-height: 1.3;
 }
-
 .summaryValue {
   padding: 14px;
   border-radius: 8px;
   background: #e6f5f4;
   color: #075e5b;
 }
-
 .summaryValue span {
   display: block;
   margin-bottom: 4px;
   font-size: 12px;
   font-weight: 800;
 }
-
 .summaryValue strong {
   font-size: 24px;
   font-weight: 900;
 }
-
 .summaryList {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin: 18px 0 0;
 }
-
 .summaryList div {
   display: grid;
   grid-template-columns: 96px 1fr;
   gap: 12px;
 }
-
 .summaryList dt {
   color: #94a3b8;
   font-size: 12px;
   font-weight: 800;
 }
-
 .summaryList dd {
   margin: 0;
   color: #334155;
@@ -451,25 +391,21 @@ textarea.formControl {
   font-weight: 700;
   line-height: 1.35;
 }
-
 .sideTitle {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
 }
-
 .sideTitle svg {
   color: #007d79;
 }
-
 .sideTitle h3 {
   margin: 0;
   color: #0f172a;
   font-size: 15px;
   font-weight: 900;
 }
-
 .checklistCard ul {
   display: flex;
   flex-direction: column;
@@ -478,7 +414,6 @@ textarea.formControl {
   margin: 0;
   padding: 0;
 }
-
 .checklistCard li {
   position: relative;
   padding-left: 26px;
@@ -487,7 +422,6 @@ textarea.formControl {
   font-weight: 700;
   line-height: 1.35;
 }
-
 .checklistCard li::before {
   content: "";
   position: absolute;
@@ -499,113 +433,87 @@ textarea.formControl {
   border-radius: 50%;
   background: #fff;
 }
-
 .checklistCard .done {
   color: #0f766e;
 }
-
 .checklistCard .done::before {
   border-color: #007d79;
   background: #007d79;
   box-shadow: inset 0 0 0 4px #fff;
 }
-
 @media (max-width: 1180px) {
   .workspaceGrid {
     grid-template-columns: 1fr;
   }
-
   .sideColumn {
     position: static;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 @media (max-width: 960px) {
   .pageHeader {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .sideColumn {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .itemGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .itemDescription {
     grid-column: span 2;
   }
 }
-
 @media (max-width: 720px) {
   .formContainer {
     gap: 18px;
   }
-
   .pageHeader h1 {
     font-size: 24px;
   }
-
   .sideColumn,
   .formRow,
   .itemGrid {
     grid-template-columns: 1fr;
   }
-
   .itemDescription {
     grid-column: auto;
   }
-
   .formSection,
   .formActions {
     padding: 22px;
   }
-
   .headerActions,
   .formActions {
     align-items: stretch;
     flex-direction: column;
     width: 100%;
   }
-
   .headerActions > *,
   .formActions > * {
     width: 100%;
   }
-
   .segmentedControl {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px;
   }
 }
-
-
-
-
-
 @media (max-width: 560px) {
   .modalCard {
     padding: 32px 24px 28px;
   }
-
   .modalActions {
     flex-direction: column;
     align-items: stretch;
   }
-
   .modalBtnSecondary,
   .modalBtnPrimary {
     width: 100%;
     justify-content: center;
   }
 }
-
-
-
 .stepperNav {
   display: flex;
   align-items: center;
@@ -618,7 +526,6 @@ textarea.formControl {
   margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
-
 .stepIndicator {
   display: flex;
   align-items: center;
@@ -629,11 +536,9 @@ textarea.formControl {
   transition: all 0.2s ease;
   user-select: none;
 }
-
 .stepIndicator:hover {
   background: #f8fafc;
 }
-
 .stepNumber {
   display: flex;
   align-items: center;
@@ -648,61 +553,47 @@ textarea.formControl {
   font-weight: 700;
   transition: all 0.2s ease;
 }
-
 .stepLabel {
   font-size: 13px;
   font-weight: 700;
   color: #64748b;
   transition: all 0.2s ease;
 }
-
 .stepConnectorLine {
   flex: 1;
   height: 2px;
   background: #e2e8f0;
   border-radius: 1px;
 }
-
-
 .stepActive .stepNumber {
   border-color: #007d79;
   background: #e6f5f4;
   color: #007d79;
 }
-
 .stepActive .stepLabel {
   color: #007d79;
 }
-
 .stepCompleted .stepNumber {
   border-color: #007d79;
   background: #007d79;
   color: #ffffff;
 }
-
 .stepCompleted .stepLabel {
   color: #0f172a;
 }
-
 .stepDisabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 .stepDisabled:hover {
   background: transparent;
 }
-
-
-
-
 .gridCol12 {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 16px;
   width: 100%;
 }
-
 .col12 { grid-column: span 12; }
 .col11 { grid-column: span 11; }
 .col10 { grid-column: span 10; }
@@ -715,10 +606,6 @@ textarea.formControl {
 .col3 { grid-column: span 3; }
 .col2 { grid-column: span 2; }
 .col1 { grid-column: span 1; }
-
-
-
-
 .itemSummaryRow {
   display: flex;
   align-items: center;
@@ -727,17 +614,14 @@ textarea.formControl {
   cursor: pointer;
   transition: background 0.2s ease;
 }
-
 .itemSummaryRow:hover {
   background: #f8fafc;
 }
-
 .itemSummaryLeft {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
 .itemSummaryBadge {
   display: flex;
   align-items: center;
@@ -750,30 +634,25 @@ textarea.formControl {
   padding: 0 10px;
   border-radius: 12px;
 }
-
 .itemSummaryText {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .itemSummaryTitle {
   font-size: 14px;
   font-weight: 700;
   color: #0f172a;
 }
-
 .itemSummaryMeta {
   font-size: 12px;
   color: #64748b;
 }
-
 .itemSummaryRight {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .actionIconBtn {
   display: inline-flex;
   align-items: center;
@@ -787,24 +666,20 @@ textarea.formControl {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .actionIconBtn:hover {
   background: #f1f5f9;
   color: #0f172a;
   border-color: #cbd5e1;
 }
-
 .actionDeleteBtn {
   color: #ef4444;
   border-color: #fca5a5;
 }
-
 .actionDeleteBtn:hover {
   background: #fef2f2;
   color: #dc2626;
   border-color: #f87171;
 }
-
 .actionDeleteBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -812,19 +687,14 @@ textarea.formControl {
   border-color: #e2e8f0;
   color: #cbd5e1;
 }
-
-
 .accordionExpandable {
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
   padding: 20px;
 }
-
 .chevronRotate {
   transition: transform 0.2s ease;
 }
-
 .chevronRotateActive {
   transform: rotate(180deg);
 }
-

@@ -7,10 +7,8 @@
 .metadataTags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .infoTag { background: white; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #475569; display: inline-flex; align-items: center; gap: 5px; }
 .headerActions { display: flex; gap: 8px; align-items: center; }
-
 .layout2Col { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
 .colMain, .colSide { display: flex; flex-direction: column; gap: 16px; }
-
 .flowCardHeader {
   display: flex;
   justify-content: space-between;
@@ -19,20 +17,17 @@
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
-
 .flowCardHeader h4 {
   font-size: 15px;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
 }
-
 .flowCardSubtitle {
   font-size: 13px;
   color: #64748b;
   margin: 4px 0 0 0;
 }
-
 .flowCurrentBadge {
   font-size: 12px;
   color: #475569;
@@ -42,13 +37,10 @@
   padding: 4px 12px;
   white-space: nowrap;
 }
-
 .flowCurrentBadge strong {
   color: #007d79;
 }
-
 .infoCard h4, .sideCard h4 { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 14px 0; }
-
 .stepperContainer {
   display: flex;
   align-items: flex-start;
@@ -56,7 +48,6 @@
   padding: 12px 0 6px 0;
   position: relative;
 }
-
 .step {
   display: flex;
   flex-direction: column;
@@ -67,7 +58,6 @@
   gap: 8px;
   z-index: 2;
 }
-
 .stepIcon {
   width: 38px;
   height: 38px;
@@ -82,7 +72,6 @@
   font-size: 16px;
   transition: all 0.2s ease;
 }
-
 .stepInfo {
   display: flex;
   flex-direction: column;
@@ -90,12 +79,10 @@
   gap: 3px;
   width: 100%;
 }
-
 .stepInfo strong {
   font-size: 12.5px;
   color: #0f172a;
 }
-
 .stepInfo span {
   font-size: 11.5px;
   color: #64748b;
@@ -104,35 +91,29 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .stepInfo small {
   font-size: 10.5px;
   color: #94a3b8;
 }
-
 .completed .stepIcon {
   border-color: #007d79;
   color: #007d79;
   background: #f0fdf9;
 }
-
 .active .stepIcon {
   border-color: #007d79;
   background: #007d79;
   color: white;
   box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.15);
 }
-
 .disabledStep .stepIcon {
   border-color: #f1f5f9;
   color: #cbd5e1;
   background: #f8fafc;
 }
-
 .disabledStep .stepInfo strong {
   color: #94a3b8;
 }
-
 .checkBadge {
   position: absolute;
   bottom: -2px;
@@ -147,7 +128,6 @@
   justify-content: center;
   border: 2px solid white;
 }
-
 .stepLine {
   flex: 1;
   height: 2px;
@@ -155,11 +135,9 @@
   margin: 18px -15px 0 -15px;
   z-index: 1;
 }
-
 .lineActive {
   background: #007d79;
 }
-
 .btnStepAction {
   display: inline-flex;
   align-items: center;
@@ -177,12 +155,10 @@
   transition: all 0.15s ease;
   white-space: nowrap;
 }
-
 .btnStepAction:hover {
   background: #ccfbf1;
   border-color: #007d79;
 }
-
 .btnStepActionHighlight {
   display: inline-flex;
   align-items: center;
@@ -201,11 +177,9 @@
   white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0, 125, 121, 0.2);
 }
-
 .btnStepActionHighlight:hover {
   background: #005a57;
 }
-
 .stepStatusBadgeCompleted {
   display: inline-flex;
   align-items: center;
@@ -218,7 +192,6 @@
   border-radius: 12px;
   margin-top: 4px;
 }
-
 .stepStatusBadgePending {
   display: inline-flex;
   align-items: center;
@@ -230,14 +203,12 @@
   border-radius: 12px;
   margin-top: 4px;
 }
-
 .infoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
 .infoItem { display: flex; flex-direction: column; gap: 4px; }
 .infoItem label { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; }
 .infoItem span { font-size: 14px; color: #334155; }
 .infoItem strong { font-size: 15px; color: #0f172a; }
 .textPrimary { color: #007d79; }
-
 .originTag {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -249,27 +220,23 @@
   align-items: center;
   gap: 6px;
 }
-
 .fileRow { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
 .fileInfo { flex-grow: 1; display: flex; flex-direction: column; font-size: 13px; }
 .fileInfo strong { color: #0f172a; }
 .fileInfo small { color: #64748b; }
 .downloadIconBtn { background: none; border: none; color: #64748b; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
 .downloadIconBtn:hover { background: #e2e8f0; color: #0f172a; }
-
 .itemsTableCard {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
 }
-
 .itemsCardHeader {
   padding: 16px 20px;
   border-bottom: 1px solid #e2e8f0;
   background: white;
 }
-
 .itemsCardHeader h4 {
   margin: 0;
   font-size: 15px;
@@ -279,18 +246,15 @@
   align-items: center;
   gap: 8px;
 }
-
 .itemsTableWrapper {
   width: 100%;
   overflow-x: auto;
 }
-
 .itemsTable {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
-
 .itemsTable th {
   background: #f8fafc;
   padding: 12px 16px;
@@ -302,7 +266,6 @@
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
 }
-
 .itemsTable td {
   padding: 14px 16px;
   font-size: 13px;
@@ -310,21 +273,17 @@
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
 }
-
 .itemsTable tr:last-child td {
   border-bottom: none;
 }
-
 .itemsTable tr:hover td {
   background: #f8fafc;
 }
-
 .itemDesc {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .itemIconWrapper {
   width: 34px;
   height: 34px;
@@ -337,34 +296,28 @@
   color: #007d79;
   flex-shrink: 0;
 }
-
 .itemDescText {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .itemDescText strong {
   font-size: 14px;
   color: #0f172a;
 }
-
 .itemDescText small {
   font-size: 11px;
   color: #64748b;
 }
-
 .itemsTableWrapper {
   overflow-x: auto;
 }
-
 .itemsTable {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
   background: white;
 }
-
 .itemsTable thead th {
   background: #f8fafc;
   padding: 14px 24px;
@@ -376,32 +329,26 @@
   letter-spacing: 0.05em;
   text-align: left;
 }
-
 .itemsTable tbody tr {
   transition: background 0.2s;
 }
-
 .itemsTable tbody tr:hover {
   background: #f8fafc;
 }
-
 .itemsTable td {
   padding: 20px 24px;
   border-bottom: 1px solid #e2e8f0;
   color: #1e293b;
   vertical-align: middle;
 }
-
 .itemsTable tr:last-child td {
   border-bottom: none;
 }
-
 .itemDesc {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
 .itemIconWrapper {
   width: 40px;
   height: 40px;
@@ -414,24 +361,20 @@
   color: #0d9488;
   flex-shrink: 0;
 }
-
 .itemDescText {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .itemDescText strong {
   font-size: 15px;
   color: #0f172a;
   font-weight: 700;
 }
-
 .itemDescText small {
   font-size: 13px;
   color: #64748b;
 }
-
 .badgeUm {
   display: inline-flex;
   align-items: center;
@@ -444,14 +387,11 @@
   font-weight: 700;
   color: #64748b;
 }
-
 .tdSubtotal {
   font-size: 16px;
   font-weight: 800;
   color: #0f172a;
 }
-
-
 .estagioPista {
   display: flex;
   align-items: center;
@@ -462,7 +402,6 @@
   border-radius: 12px;
   gap: 16px;
 }
-
 .estsgioItem {
   display: flex;
   align-items: center;
@@ -470,26 +409,22 @@
   position: relative;
   flex: 1;
 }
-
 .estsgioItem > div:last-child {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .estsgioItem strong {
   font-size: 15px;
   font-weight: 700;
   color: #64748b;
   display: block;
 }
-
 .estsgioItem span {
   font-size: 13px;
   color: #94a3b8;
   font-weight: 500;
 }
-
 .estsgioIcone {
   display: flex;
   align-items: center;
@@ -505,7 +440,6 @@
   border: 2px solid #e2e8f0;
   transition: all 0.2s ease;
 }
-
 .estsgioAtivo .estsgioIcone {
   background: #f0fdf9;
   color: #007d79;
@@ -513,7 +447,6 @@
 }
 .estsgioAtivo strong { color: #0f172a; }
 .estsgioAtivo span { color: #475569; }
-
 .estagioConcluido .estsgioIcone {
   background: #007d79;
   color: #ffffff;
@@ -521,13 +454,11 @@
 }
 .estagioConcluido strong { color: #0f172a; }
 .estagioConcluido span { color: #475569; }
-
 .estsgioInativo .estsgioIcone {
   background: #f8fafc;
   color: #cbd5e1;
   border-color: #f1f5f9;
 }
-
 .estagioConetor {
   flex: 1;
   height: 2px;
@@ -535,17 +466,14 @@
   margin: 0 16px;
   border-radius: 2px;
 }
-
 .estsgioConectorAtivo {
   background: #007d79;
 }
-
 .premiumMetricsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
-
 .premiumMetricCard {
   padding: 24px;
   display: flex;
@@ -555,7 +483,6 @@
   border: 1px solid #e2e8f0;
   border-radius: 12px;
 }
-
 .premiumMetricCard span {
   font-size: 12px;
   color: #64748b;
@@ -563,35 +490,28 @@
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-
 .premiumMetricCard h3 {
   font-size: 24px;
   font-weight: 800;
   color: #0f172a;
   margin: 0;
 }
-
 .premiumMetricCard .sub {
   font-size: 13px;
   color: #475569;
   margin-top: 6px;
 }
-
 .darkCard { background-color: #004d4a !important; border: none; }
 .darkCardContent { color: white; display: flex; flex-direction: column; }
 .darkCardContent span { color: #cce5e5; }
 .darkCardContent h3 { color: white !important; }
 .textPrimary { color: #007d79 !important; }
-
-
-
 .originTags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
 }
-
 .originTag {
   display: inline-flex;
   align-items: center;
@@ -604,15 +524,11 @@
   font-size: 12px;
   font-weight: 700;
 }
-
-
-
 .supplierCard {
   padding: 24px !important;
   border: 1px solid #d0f0ee !important;
   background: linear-gradient(135deg, #f0fdfb 0%, #e6f5f4 100%) !important;
 }
-
 .supplierCard h3 {
   display: flex;
   align-items: center;
@@ -622,11 +538,9 @@
   font-size: 16px;
   font-weight: 900;
 }
-
 .supplierCard h3 svg {
   color: #007d79;
 }
-
 .supplierGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -636,7 +550,6 @@
   overflow: hidden;
   background: #fff;
 }
-
 .supplierRow {
   display: flex;
   flex-direction: column;
@@ -645,15 +558,12 @@
   border-right: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .supplierRow:nth-child(3n) {
   border-right: none;
 }
-
 .supplierRow:nth-last-child(-n+3) {
   border-bottom: none;
 }
-
 .supplierRow span {
   color: #94a3b8;
   font-size: 11px;
@@ -661,45 +571,37 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
-
 .supplierRow strong {
   color: #0f172a;
   font-size: 14px;
   font-weight: 700;
   line-height: 1.3;
 }
-
 @media (max-width: 800px) {
   .supplierGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-
   .supplierRow:nth-child(3n) {
     border-right: 1px solid #e2e8f0;
   }
-
   .supplierRow:nth-child(2n) {
     border-right: none;
   }
 }
-
 @media (max-width: 560px) {
   .supplierGrid {
     grid-template-columns: 1fr;
   }
-
   .supplierRow {
     border-right: none !important;
   }
 }
-
 @media (max-width: 720px) {
   .stepperContainer {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
   }
-
   .step {
     flex-direction: row;
     align-items: center;
@@ -708,17 +610,13 @@
     width: 100%;
     gap: 14px;
   }
-
   .stepInfo {
     align-items: flex-start;
   }
-
   .stepInfo span {
     max-width: none;
   }
-
   .stepLine {
     display: none;
   }
 }
-

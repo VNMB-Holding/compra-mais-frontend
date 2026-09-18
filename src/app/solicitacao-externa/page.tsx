@@ -51,20 +51,17 @@ const UNIDADE_MEDIDA_OPTIONS = [
 export default function SolicitacaoExternaPage() {
   const { toast } = useToast();
 
-  // Solicitante
   const [solicitanteNome, setSolicitanteNome] = useState("");
   const [solicitanteWhats, setSolicitanteWhats] = useState("");
   const [solicitanteEmail, setSolicitanteEmail] = useState("");
   const [setor, setSetor] = useState("Administracao");
   const [empresaCode, setEmpresaCode] = useState(COMPANY_BRANCHES[0]?.code || "AGRO");
 
-  // Demanda
   const [titulo, setTitulo] = useState("");
   const [justificativa, setJustificativa] = useState("");
   const [prioridade, setPrioridade] = useState("Media");
   const [dataDesejada, setDataDesejada] = useState("");
 
-  // Itens
   const [itens, setItens] = useState<ItemDemanda[]>([
     { id: 1, descricao: "", quantidade: 1, unidade: "UN", valorEstimado: 0, linkReferencia: "" },
   ]);
@@ -212,7 +209,6 @@ export default function SolicitacaoExternaPage() {
     setItens([{ id: 1, descricao: "", quantidade: 1, unidade: "UN", valorEstimado: 0, linkReferencia: "" }]);
   };
 
-  // Se já enviou, mostra o comprovante com o protocolo
   if (protocoloGerado) {
     return (
       <div className={styles.container}>
@@ -321,7 +317,7 @@ export default function SolicitacaoExternaPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
 
-          {/* Seção 1: Identificação */}
+          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
@@ -397,7 +393,7 @@ export default function SolicitacaoExternaPage() {
             </div>
           </div>
 
-          {/* Seção 2: Dados da Compra */}
+          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
@@ -456,7 +452,7 @@ export default function SolicitacaoExternaPage() {
             </div>
           </div>
 
-          {/* Seção 3: Itens */}
+          {}
           <div className={styles.sectionCard}>
             <div className={styles.itemsHeader}>
               <div className={styles.sectionHeaderNoBorder}>
@@ -565,7 +561,7 @@ export default function SolicitacaoExternaPage() {
             )}
           </div>
 
-          {/* Barra de Envio */}
+          {}
           <div className={styles.submitActions}>
             <button type="submit" className={styles.btnSubmit} disabled={submitting}>
               <Icon name={submitting ? "loading-01" : "send-01"} size={18} />

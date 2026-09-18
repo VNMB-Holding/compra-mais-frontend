@@ -5,7 +5,6 @@
   width: 100%;
   max-width: 100%;
 }
-
 .mainContainer {
   flex-grow: 1;
   display: flex;
@@ -13,11 +12,9 @@
   height: 100dvh;
   overflow: hidden;
 }
-
 .topbarWrapper {
   flex-shrink: 0;
 }
-
 .contentArea {
   flex-grow: 1;
   background-color: var(--bg-surface-secondary, #f8fafc);
@@ -25,7 +22,6 @@
   overflow-y: auto;
   animation: pageEnter var(--duration-enter) var(--ease-out);
 }
-
 @keyframes pageEnter {
   from {
     opacity: 0;
@@ -34,7 +30,6 @@
     opacity: 1;
   }
 }
-
 @media (max-width: 768px) {
   .layoutRoot {
     flex-direction: column;
@@ -42,12 +37,10 @@
     min-height: 100vh;
     overflow: visible;
   }
-
   .mainContainer {
     height: auto;
     overflow: visible;
   }
-
   .contentArea {
     padding: 16px;
   }

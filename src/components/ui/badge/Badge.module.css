@@ -11,7 +11,6 @@
     background-color var(--duration-normal) var(--ease-in-out),
     color            var(--duration-normal) var(--ease-in-out);
 }
-
 .primary { background: var(--primary-light, #e6f2f2); color: var(--primary, #007d79); }
 .gray    { background: var(--bg-color, #f1f5f9);       color: var(--text-muted, #64748b); }
 .success { background: #dcfce7; color: #15803d; }

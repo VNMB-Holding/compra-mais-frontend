@@ -28,6 +28,8 @@ import { getCompanyFilterOptions, formatCorporateBranch, getTenantDisplayName } 
 import { RfqRow } from "@/types/domain";
 import { useRfqs } from "@/hooks/useQueries";
 import { mapRfqStatus } from "@/lib/constants/status";
+import { useTour } from "@/hooks/useTour";
+import { rfqsTour } from "@/lib/tours";
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -132,11 +134,23 @@ export default function RfqsPage() {
         const kpisData = await rfqsApi.getKpis(queryCompanyCode);
         setKpis(kpisData);
       } catch (err) {
-        logError("rfqs/kpis", err);
+       } finally {
+        
       }
     }
     fetchKpis();
   }, [queryCompanyCode]);
+
+  const { startTour, isTourCompleted } = useTour();
+
+  useEffect(() => {
+    if (!loading && !isTourCompleted("rfqs-intro")) {
+      const timer = setTimeout(() => {
+        startTour(rfqsTour);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isTourCompleted, startTour]);
 
   const categoryOptions = React.useMemo(() => [
     { label: "Todas as categorias", value: "Todas" },
@@ -228,21 +242,23 @@ export default function RfqsPage() {
           <h1>Processos de Cotação (RFQs)</h1>
           <p>Gerencie cotações com fornecedores, equalização de propostas e rodadas de negociação.</p>
         </div>
-        <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/rfqs/nova")}>
-          <Icon name="plus" /> Nova RFQ
-        </Button>
+        <div data-tour="rfqs-new-btn">
+          <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/rfqs/nova")}>
+            <Icon name="plus" /> Nova RFQ
+          </Button>
+        </div>
       </div>
 
-      <div className={styles.kpiGrid}>
+      <div className={styles.kpiGrid} data-tour="rfqs-kpis">
         <KpiCard title="RFQs Abertas" value={String(kpis?.open || 0)} icon="hourglass-01" description="Em andamento" loading={loading} />
         <KpiCard title="Propostas Recebidas" value={String(kpis?.proposalCount || 0)} icon="file-01" description="Aguardando análise" loading={loading} />
         <KpiCard title="Finalizadas" value={String(kpis?.total || 0)} icon="check-circle" description="Concluídas" loading={loading} />
         <KpiCard title="Em Negociação" value={String(kpis?.total || 0)} icon="users-01" loading={loading} />
       </div>
 
-      <Card noPadding className={styles.mainListCard}>
+      <Card noPadding className={styles.mainListCard} data-tour="rfqs-table">
 
-        <div className={styles.tableToolbar}>
+        <div className={styles.tableToolbar} data-tour="rfqs-toolbar">
           <div className={styles.searchBox}>
             <Icon name="search-md" />
             <input 

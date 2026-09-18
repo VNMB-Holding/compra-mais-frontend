@@ -10,7 +10,6 @@
   padding: 16px;
   animation: fadeIn 0.2s ease-out;
 }
-
 .modalCard {
   background-color: #ffffff;
   border-radius: 10px;
@@ -21,7 +20,6 @@
   overflow: hidden;
   animation: slideUp 0.25s ease-out;
 }
-
 .modalHeader {
   padding: 14px 18px;
   border-bottom: 1px solid #f1f5f9;
@@ -30,13 +28,11 @@
   justify-content: space-between;
   gap: 12px;
 }
-
 .headerIconArea {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .headerIcon {
   width: 34px;
   height: 34px;
@@ -48,20 +44,17 @@
   justify-content: center;
   flex-shrink: 0;
 }
-
 .headerTexts h2 {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
 }
-
 .headerTexts p {
   margin: 2px 0 0 0;
   font-size: 0.8125rem;
   color: #64748b;
 }
-
 .closeButton {
   background: none;
   border: none;
@@ -71,31 +64,26 @@
   border-radius: 6px;
   transition: all 0.15s;
 }
-
 .closeButton:hover {
   color: #0f172a;
   background-color: #f1f5f9;
 }
-
 .formContent {
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
 .formGroup {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
-
 .formGroup label {
   font-size: 0.75rem;
   font-weight: 600;
   color: #334155;
 }
-
 .inputField {
   width: 100%;
   min-height: 36px;
@@ -107,12 +95,10 @@
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-
 .inputField:focus {
   border-color: #0d9488;
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 }
-
 .modalFooter {
   padding: 12px 18px;
   background-color: #f8fafc;
@@ -122,12 +108,10 @@
   justify-content: flex-end;
   gap: 10px;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }

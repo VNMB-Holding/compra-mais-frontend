@@ -61,7 +61,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       loadNotifications();
       loadPendingApprovals();
 
-      
       const interval = setInterval(() => {
         loadNotifications();
       }, 45000);
@@ -169,7 +168,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         </button>
       </div>
 
-      
       <div className={styles.searchBar} onClick={() => setIsPaletteOpen(true)}>
         <Icon name="search-md" />
         <span className={styles.searchPlaceholder}>
@@ -177,9 +175,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         </span>
       </div>
 
-      
       <div className={styles.topbarRight}>
-        
         
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`} onClick={() => togglePopup("notifications")}>
@@ -223,7 +219,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        
         <div className={styles.popupWrapper}>
           <div className={`${styles.iconBtn} ${activePopup === "messages" ? styles.activeIcon : ""}`} onClick={() => togglePopup("messages")}>
             <Icon name="mail-01" />
@@ -259,7 +254,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           )}
         </div>
 
-        
         <div className={styles.companyBadgeWrapper}>
           <div className={styles.companyStaticBadge} title={`Empresa ativa: ${companyDisplay}`}>
             <Icon name="building-07" size={16} />
@@ -267,7 +261,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           </div>
         </div>
 
-        
         <div className={styles.popupWrapper}>
           <div 
             className={`${styles.userAvatarSmall} ${styles.avatarBtn}`}
@@ -289,7 +282,6 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                   <small>{userRole}</small>
                 </div>
               </div>
-              
               
               <div className={`${styles.dropdownItem} ${styles.logoutItem}`} onClick={handleLogout}>
                 <Icon name="log-out-01" /> Sair

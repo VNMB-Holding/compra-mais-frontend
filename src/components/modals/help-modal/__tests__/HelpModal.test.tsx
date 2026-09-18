@@ -3,6 +3,18 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { HelpModal } from '@/components/modals';
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/dashboard',
+}));
+
+vi.mock('@/hooks/useTour', () => ({
+  useTour: () => ({
+    startTour: vi.fn(),
+    resetTour: vi.fn(),
+  }),
+}));
+
 describe('HelpModal Component', () => {
   it('não deve renderizar quando open = false', () => {
     const { container } = render(<HelpModal open={false} onClose={() => {}} />);

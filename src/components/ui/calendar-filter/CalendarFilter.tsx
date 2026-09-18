@@ -51,7 +51,6 @@ export default function CalendarFilter({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  
   const [activeMode, setActiveMode] = useState<"range" | "single">(
     value.mode === "single" ? "single" : "range"
   );
@@ -59,7 +58,6 @@ export default function CalendarFilter({
   const [tempEnd, setTempEnd] = useState<string | undefined>(value.endDate);
   const [activePreset, setActivePreset] = useState<string | undefined>(value.preset);
 
-  
   const [viewDate, setViewDate] = useState<Date>(() => {
     if (value.startDate) {
       const [y, m] = value.startDate.split("-").map(Number);
@@ -68,7 +66,6 @@ export default function CalendarFilter({
     return new Date();
   });
 
-  
   useEffect(() => {
     setActiveMode(value.mode === "single" ? "single" : "range");
     setTempStart(value.startDate);
@@ -76,7 +73,6 @@ export default function CalendarFilter({
     setActivePreset(value.preset);
   }, [value]);
 
-  
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -103,7 +99,6 @@ export default function CalendarFilter({
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
   };
 
-  
   const calendarDays = useMemo(() => {
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -113,12 +108,10 @@ export default function CalendarFilter({
 
     const days: Array<{ dayNumber: number | null; iso: string | null }> = [];
 
-    
     for (let i = 0; i < firstDayIndex; i++) {
       days.push({ dayNumber: null, iso: null });
     }
 
-    
     for (let d = 1; d <= totalDaysInMonth; d++) {
       const date = new Date(year, month, d);
       days.push({
@@ -130,7 +123,6 @@ export default function CalendarFilter({
     return days;
   }, [viewDate]);
 
-  
   const handleDayClick = (iso: string) => {
     setActivePreset(undefined);
 
@@ -140,7 +132,6 @@ export default function CalendarFilter({
       return;
     }
 
-    
     if (!tempStart || (tempStart && tempEnd)) {
       setTempStart(iso);
       setTempEnd(undefined);
@@ -155,7 +146,6 @@ export default function CalendarFilter({
     }
   };
 
-  
   const handleSelectPreset = (presetId: string) => {
     setActivePreset(presetId);
     const today = new Date();
@@ -254,7 +244,6 @@ export default function CalendarFilter({
     onChange({ mode: "all", startDate: undefined, endDate: undefined, preset: "all" });
   };
 
-  
   const triggerDisplayLabel = useMemo(() => {
     if (value.mode === "all" || (!value.startDate && !value.endDate)) {
       return "Todo o Período";
@@ -332,7 +321,6 @@ export default function CalendarFilter({
             </button>
           </div>
 
-          
           <div className={styles.presetsContainer}>
             {PRESETS.map((p) => (
               <button
@@ -346,7 +334,6 @@ export default function CalendarFilter({
             ))}
           </div>
 
-          
           <div className={styles.calendarNav}>
             <button
               type="button"
@@ -367,7 +354,6 @@ export default function CalendarFilter({
             </button>
           </div>
 
-          
           <div className={styles.calendarGrid}>
             {WEEKDAYS.map((w) => (
               <div key={w} className={styles.weekHeader}>
@@ -420,7 +406,6 @@ export default function CalendarFilter({
             })}
           </div>
 
-          
           <div className={styles.footer}>
             <div className={styles.selectedSummary}>
               {tempStart && tempEnd && tempStart !== tempEnd

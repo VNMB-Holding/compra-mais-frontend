@@ -56,8 +56,6 @@ function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
   };
 }
 
-
-
 export default function HomologacaoPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -140,7 +138,6 @@ export default function HomologacaoPage() {
       .sort()
       .map((uf) => ({ label: `UF: ${uf}`, value: uf })),
   ], [allUfs, fornecedores]);
-
 
   const columns: ColumnDef<HomologacaoRow>[] = [
     {

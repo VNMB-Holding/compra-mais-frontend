@@ -103,7 +103,7 @@
   gap: 24px;
 }
 
-/* Anima o conteúdo do body após o drawer abrir */
+
 .drawerOpen .body {
   animation: drawerContentIn var(--duration-enter) var(--ease-out) both;
   animation-delay: 0.1s;

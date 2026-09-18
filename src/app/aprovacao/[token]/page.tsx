@@ -197,7 +197,7 @@ export default function AprovacaoPage() {
         <div className={styles.contentWrapper}>
           <Card className={styles.approvalCard}>
             
-            {/* Header da Demanda */}
+            {}
             <div className={styles.cardHeader}>
               <div className={styles.titleRow}>
                 <div className={styles.codeGroup}>
@@ -222,7 +222,7 @@ export default function AprovacaoPage() {
               </div>
             </div>
 
-            {/* Estado de Conclusão / Recusa */}
+            {}
             {completed ? (
               <div className={styles.resultStateBox}>
                 <div className={styles.successIconWrapper}>
@@ -245,7 +245,7 @@ export default function AprovacaoPage() {
               </div>
             ) : (
               <>
-                {/* Justificativa */}
+                {}
                 {details.justification && (
                   <div className={styles.justificationBox}>
                     <div className={styles.sectionLabel}>
@@ -255,7 +255,7 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {/* Tabela de Itens */}
+                {}
                 {details.items && details.items.length > 0 && (
                   <div className={styles.itemsSection}>
                     <div className={styles.sectionHeader}>
@@ -314,7 +314,7 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {/* Input de Recusa */}
+                {}
                 {showRejectInput && (
                   <div className={styles.rejectInputArea}>
                     <label>Informe a justificativa da recusa *</label>
@@ -327,7 +327,7 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {/* Barra de Ações */}
+                {}
                 <div className={styles.actionsFooter}>
                   {!showRejectInput ? (
                     <div className={styles.actionButtonsRow}>

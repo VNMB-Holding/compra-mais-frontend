@@ -194,7 +194,7 @@
   margin-left: 2px;
 }
 
-/* === Campos de Entrada e Selects com Dimensões Idênticas === */
+
 .inputField {
   width: 100%;
   box-sizing: border-box;
@@ -238,7 +238,7 @@
   box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.12);
 }
 
-/* Customização do Select para equiparar altura e tipografia ao inputField */
+
 .selectTrigger {
   width: 100% !important;
   min-height: 44px !important;
@@ -306,7 +306,7 @@
   border-radius: 6px !important;
 }
 
-/* Lista de Itens */
+
 .itemsHeader {
   display: flex;
   justify-content: space-between;
@@ -393,7 +393,7 @@
   border-style: solid;
 }
 
-/* Total Bar */
+
 .totalBar {
   background: #f0fdf9;
   border: 1px solid #99f6e4;
@@ -419,7 +419,7 @@
   color: #004144;
 }
 
-/* Actions */
+
 .submitActions {
   display: flex;
   justify-content: flex-end;
@@ -456,7 +456,7 @@
   cursor: not-allowed;
 }
 
-/* Success View */
+
 .successCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -612,9 +612,7 @@
   color: #0f172a;
 }
 
-/* =========================================================
-   RESPONSIVIDADE MOBILE ROBUSTA (<= 768px)
-   ========================================================= */
+
 @media (max-width: 768px) {
   .header {
     padding: 12px 16px;
@@ -694,13 +692,11 @@
     font-size: 15px;
   }
 
-  /* Grid 100% de 1 coluna no mobile */
   .formGrid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
 
-  /* Font-size 16px evita zoom automático no iOS Safari */
   .inputField {
     font-size: 16px !important;
     padding: 11px 12px !important;
@@ -786,7 +782,6 @@
     font-size: 16px;
   }
 
-  /* Tela de Sucesso no Mobile */
   .successCard {
     padding: 24px 14px;
     border-radius: 14px;
@@ -841,9 +836,7 @@
   }
 }
 
-/* =========================================================
-   AJUSTES PARA TELAS MUITO PEQUENAS (<= 380px)
-   ========================================================= */
+
 @media (max-width: 380px) {
   .header {
     padding: 10px 12px;

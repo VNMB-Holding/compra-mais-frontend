@@ -10,13 +10,11 @@
   top: 0;
   z-index: 90;
 }
-
 .topbarLeft {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-
 .toggleSidebarBtn {
   background: none;
   border: none;
@@ -29,13 +27,11 @@
   padding: 6px;
   border-radius: 6px;
 }
-
 .toggleSidebarBtn:hover {
   color: var(--primary, #007d79);
   background-color: var(--primary-light, #e6f2f2);
   transform: scale(1.08);
 }
-
 .searchBar {
   display: flex; 
   align-items: center; 
@@ -47,17 +43,14 @@
   transition: all 0.2s ease;
   cursor: pointer;
 }
-
 .searchBar:hover { 
   border-color: var(--primary, #007d79); 
   background: white; 
 }
-
 .searchBar span { 
   color: var(--text-muted, #64748b); 
   font-size: 18px; 
 }
-
 .searchPlaceholder {
   font-size: 12px !important;
   font-weight: 500;
@@ -68,7 +61,6 @@
   align-items: center;
   justify-content: space-between;
 }
-
 .searchShortcut {
   font-size: 10px !important;
   font-weight: 800;
@@ -78,7 +70,6 @@
   padding: 1px 5px;
   border-radius: 4px;
 }
-
 .searchBar input {
   border: none; 
   background: transparent; 
@@ -88,7 +79,6 @@
   font-size: 13px; 
   color: var(--text-main, #0f172a);
 }
-
 .shortcut {
   background: white; 
   border: 1px solid var(--border, #e2e8f0); 
@@ -97,18 +87,14 @@
   font-size: 10px; 
   color: var(--text-muted, #64748b);
 }
-
 .topbarRight { 
   display: flex; 
   align-items: center; 
   gap: 14px; 
 }
-
-
 .popupWrapper {
   position: relative;
 }
-
 .iconBtn { 
   position: relative; 
   cursor: pointer; 
@@ -119,18 +105,15 @@
   align-items: center;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .iconBtn:hover { 
   color: var(--primary, #007d79); 
   background-color: var(--primary-light, #e6f2f2);
   transform: scale(1.08);
 }
-
 .activeIcon {
   color: var(--primary, #007d79); 
   background-color: var(--primary-light, #e6f2f2);
 }
-
 .iconBtn .badge {
   position: absolute; 
   top: 2px; 
@@ -147,14 +130,12 @@
   justify-content: center;
   border: 2px solid white;
 }
-
 .companyBadgeWrapper {
   display: flex;
   align-items: center;
   padding-left: 16px;
   border-left: 1px solid var(--border, #e2e8f0);
 }
-
 .companyStaticBadge {
   display: inline-flex;
   align-items: center;
@@ -169,18 +150,15 @@
   letter-spacing: 0.02em;
   user-select: none;
 }
-
 .companyStaticBadge svg {
   color: var(--primary, #007d79);
 }
-
 .companyNameText {
   max-width: 180px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .userAvatarSmall {
   width: 28px; 
   height: 28px; 
@@ -194,13 +172,10 @@
   font-size: 12px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .userAvatarSmall:hover {
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(0, 125, 121, 0.25);
 }
-
-
 .dropdownBox {
   position: absolute;
   top: 38px;
@@ -214,14 +189,12 @@
   animation: dropdownEnter 0.2s var(--ease-out) both;
   transform-origin: top right;
 }
-
 .companyDropdown {
   width: 260px;
   top: 36px;
   max-height: 280px;
   overflow-y: auto;
 }
-
 @keyframes dropdownEnter {
   from {
     opacity: 0;
@@ -232,9 +205,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-
-
 .dropdownHeader {
   padding: 10px 14px;
   font-weight: 700;
@@ -246,7 +216,6 @@
   align-items: center;
   justify-content: space-between;
 }
-
 .markAllReadBtn {
   background: none;
   border: none;
@@ -258,17 +227,14 @@
   border-radius: 4px;
   transition: background-color 0.15s;
 }
-
 .markAllReadBtn:hover {
   background-color: var(--primary-light, #e6f2f2);
   text-decoration: underline;
 }
-
 .dropdownContent {
   max-height: 260px;
   overflow-y: auto;
 }
-
 .dropdownItem {
   padding: 9px 13px;
   border-bottom: 1px solid #f1f5f9;
@@ -276,30 +242,24 @@
   transition: background 0.2s;
   font-size: 12px;
 }
-
 .dropdownItem:last-child {
   border-bottom: none;
 }
-
 .dropdownItem:hover {
   background: #f8fafc;
 }
-
 .unreadItem {
   background: #f0fdf9;
 }
-
 .unreadItem:hover {
   background: #e6f9f4;
 }
-
 .itemHeaderRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
-
 .unreadDot {
   width: 6px;
   height: 6px;
@@ -308,25 +268,21 @@
   display: inline-block;
   flex-shrink: 0;
 }
-
 .dropdownItem strong {
   display: block;
   color: var(--text-main);
   margin-bottom: 2px;
 }
-
 .dropdownItem p {
   margin: 0;
   color: #475569;
   line-height: 1.35;
 }
-
 .dropdownItem small {
   color: var(--text-muted);
   display: block;
   margin-top: 3px;
 }
-
 .dropdownItemActive {
   padding: 9px 13px;
   background: var(--primary-light);
@@ -337,18 +293,12 @@
   align-items: center;
   gap: 7px;
 }
-
 .dropdownItemActive span {
   font-size: 16px;
 }
-
-
-
-
 .userDropdown {
   width: 250px;
 }
-
 .dropdownUserHeader {
   padding: 12px 14px;
   display: flex;
@@ -356,7 +306,6 @@
   gap: 10px;
   border-bottom: 1px solid var(--border, #e2e8f0);
 }
-
 .userAvatarLarge {
   width: 40px;
   height: 40px;
@@ -371,20 +320,17 @@
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 125, 121, 0.2);
 }
-
 .dropdownUserHeader strong {
   display: block;
   font-size: 14px;
   color: var(--text-main, #0f172a);
   margin-bottom: 4px;
 }
-
 .dropdownUserHeader p {
   margin: 0;
   font-size: 12px;
   color: #64748b;
 }
-
 .dropdownUserHeader small {
   display: block;
   font-size: 11px;
@@ -393,13 +339,11 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
 .dropdownDivider {
   height: 1px;
   background: #f1f5f9;
   margin: 0;
 }
-
 .dropdownItem {
   display: flex;
   align-items: center;
@@ -409,15 +353,12 @@
   font-size: 13px;
   transition: background 0.2s;
 }
-
 .dropdownItem:hover {
   background: #f8fafc;
 }
-
 .dropdownItem span {
   font-size: 16px;
 }
-
 .companyDropdownSectionHeader {
   padding: 8px 16px;
   font-size: 11px;
@@ -429,24 +370,19 @@
   border-bottom: 1px solid var(--border, #e2e8f0);
   border-top: 1px solid var(--border, #e2e8f0);
 }
-
 .companyDropdownSectionHeader:first-child {
   border-top: none;
 }
-
 .emptyStateText {
   margin: 0;
   color: var(--text-muted, #64748b);
 }
-
 .companyStatic {
   cursor: default;
 }
-
 .avatarBtn {
   cursor: pointer;
 }
-
 .logoutItem {
   color: var(--color-danger, #ef4444);
 }

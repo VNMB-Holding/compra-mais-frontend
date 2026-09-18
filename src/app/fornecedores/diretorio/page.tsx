@@ -22,6 +22,8 @@ import { getErrorMessage, logError } from "@/lib/utils/error";
 import { useAuth } from "@/hooks/useAuth";
 import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
 import { User } from "@/types/auth";
+import { useTour } from "@/hooks/useTour";
+import { fornecedoresTour } from "@/lib/tours";
 
 interface FornecedorRow {
   id: string;
@@ -111,7 +113,6 @@ export default function FornecedoresListPage() {
     };
   }, []);
 
-  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -153,6 +154,17 @@ export default function FornecedoresListPage() {
     fetchData();
   }, [fetchData]);
 
+  const { startTour, isTourCompleted } = useTour();
+
+  useEffect(() => {
+    if (!loading && !error && !isTourCompleted("fornecedores-intro")) {
+      const timer = setTimeout(() => {
+        startTour(fornecedoresTour);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, error, isTourCompleted, startTour]);
+
   const segmentOptions = React.useMemo(() => [
     { label: "Segmento: Todos", value: "Todos" },
     ...Array.from(new Set([...allSegments, ...fornecedores.map((f) => f.categoria)]))
@@ -177,7 +189,6 @@ export default function FornecedoresListPage() {
   ];
 
   const filtered = [...fornecedores].sort((a, b) => a.nome.localeCompare(b.nome));
-
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -267,7 +278,6 @@ export default function FornecedoresListPage() {
   return (
     <div className={styles.pageContainer}>
 
-      
       <div className={styles.pageHeader}>
         <div>
           <h1>Base de Fornecedores</h1>
@@ -275,8 +285,7 @@ export default function FornecedoresListPage() {
         </div>
       </div>
 
-      
-      <div className={styles.kpiGrid}>
+      <div className={styles.kpiGrid} data-tour="fornecedores-kpis">
         <KpiCard
           title="Fornecedores homologados"
           value={String(kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length)}
@@ -319,9 +328,8 @@ export default function FornecedoresListPage() {
         />
       </div>
 
-      
-      <Card noPadding className={styles.mainListCard}>
-        <div className={styles.tableToolbar}>
+      <Card noPadding className={styles.mainListCard} data-tour="fornecedores-table">
+        <div className={styles.tableToolbar} data-tour="fornecedores-toolbar">
           <div className={styles.searchBox}>
             <Icon name="search-md" size={16} />
             <input

@@ -30,7 +30,6 @@ export interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-
 const VARIANT_CONFIG = {
   danger: {
     iconBg: styles.iconBgDanger,
@@ -91,18 +90,15 @@ export default function ConfirmDialog({
     <div className={styles.overlay} onClick={handleOverlayClick} role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <div className={styles.dialog}>
 
-        
         <div className={`${styles.iconWrap} ${cfg.iconBg}`}>
           <Icon name={iconName} />
         </div>
 
-        
         <div className={styles.body}>
           <h2 id="confirm-title" className={styles.title}>{title}</h2>
           {message && <p className={styles.message}>{message}</p>}
         </div>
 
-        
         <div className={styles.actions}>
           <button className={styles.cancelBtn} onClick={onCancel} disabled={loading}>
             {cancelLabel}
@@ -143,4 +139,4 @@ export default function ConfirmDialog({
     document.body
   );
 }
-
+

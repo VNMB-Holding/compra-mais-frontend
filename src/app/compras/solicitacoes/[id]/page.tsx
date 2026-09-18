@@ -181,7 +181,6 @@ export default function SolicitacaoDetailPage() {
   const companyName = formatCorporateBranch(sol?.corporateColigada, sol?.corporateFilial, sol?.tenantId, user);
   const chain = getApprovalChainForRequest(companyName, budget);
 
-
   const pendingHistoryCount = sol?.approvalHistories?.length || 0;
   const currentPendingLevel = chain[pendingHistoryCount];
   const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
@@ -204,7 +203,6 @@ export default function SolicitacaoDetailPage() {
   return (
     <div className={styles.detailContainer}>
 
-      
       <ConfirmDialog
         open={dialog === "approve"}
         variant="success"
@@ -220,7 +218,6 @@ export default function SolicitacaoDetailPage() {
         onCancel={() => setDialog(null)}
       />
 
-      
       <ConfirmDialog
         open={dialog === "reject"}
         variant="danger"
@@ -353,13 +350,10 @@ export default function SolicitacaoDetailPage() {
         </div>
       )}
 
-      
       <div className={styles.layoutSingleCol}>
 
-        
         <div className={styles.colMain}>
 
-          
           <Card className={styles.flowCard}>
             <div className={styles.flowCardHeader}>
               <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length > 1 ? "s" : ""})</h4>
@@ -377,7 +371,6 @@ export default function SolicitacaoDetailPage() {
             </div>
             <div className={styles.stepperContainer}>
 
-              
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-01" />
@@ -390,7 +383,6 @@ export default function SolicitacaoDetailPage() {
                 </div>
               </div>
 
-              
               {chain.map((lvl, index) => {
                 const historyMatch = sol?.approvalHistories && sol.approvalHistories[index];
                 const isLevelDone = isFullyApproved || !!historyMatch;
@@ -460,7 +452,6 @@ export default function SolicitacaoDetailPage() {
 
               <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`} />
 
-              
               <div className={`${styles.step} ${hasApprovedGovernance ? styles.completed : styles.pending}`}>
                 <div className={styles.stepIcon}>
                   {isInQuote ? (
@@ -499,7 +490,6 @@ export default function SolicitacaoDetailPage() {
             </div>
           </Card>
 
-          
           <Card className={styles.infoCard} style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -555,7 +545,6 @@ export default function SolicitacaoDetailPage() {
                     );
                   })()}
 
-
                   {(sol?.costCenterCode || sol?.costCenterName) && (
                     <div className={styles.infoItem}>
                       <label>Centro de Custo</label>
@@ -592,7 +581,6 @@ export default function SolicitacaoDetailPage() {
             </div>
           </Card>
 
-          
           {sol?.items && sol.items.length > 0 && (
             <Card noPadding className={styles.itemsTableCard}>
               <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

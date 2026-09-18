@@ -74,13 +74,11 @@ export const COMPANY_BRANCHES: CompanyBranchMapping[] = [
   },
 ];
 
-
 export const COMPANY_BY_CODE_MAP: Record<string, CompanyBranchMapping> =
   COMPANY_BRANCHES.reduce((acc, item) => {
     acc[item.code] = item;
     return acc;
   }, {} as Record<string, CompanyBranchMapping>);
-
 
 export const COMPANY_BY_ACRONYM_MAP: Record<string, CompanyBranchMapping> =
   COMPANY_BRANCHES.reduce((acc, item) => {
@@ -88,12 +86,10 @@ export const COMPANY_BY_ACRONYM_MAP: Record<string, CompanyBranchMapping> =
     return acc;
   }, {} as Record<string, CompanyBranchMapping>);
 
-
 export function getCompanyNameByCode(code?: string): string | undefined {
   if (!code) return undefined;
   return COMPANY_BY_CODE_MAP[code]?.name;
 }
-
 
 export function findCompanyBranch(query?: string): CompanyBranchMapping | undefined {
   if (!query) return undefined;

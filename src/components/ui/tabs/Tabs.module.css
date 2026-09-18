@@ -4,7 +4,6 @@
   border-bottom: 1px solid var(--border, #e2e8f0);
   padding-bottom: 6px;
 }
-
 .tab {
   font-size: 13px;
   font-weight: 500;
@@ -18,7 +17,6 @@
   transition: color var(--duration-normal) var(--ease-in-out);
   user-select: none;
 }
-
 .tab::after {
   content: '';
   position: absolute;
@@ -32,16 +30,13 @@
   transform-origin: left center;
   transition: transform var(--duration-normal) var(--ease-out);
 }
-
 .tab.active {
   color: var(--text-main, #0f172a);
   font-weight: 600;
 }
-
 .tab.active::after {
   transform: scaleX(1);
 }
-
 .badgeActive {
   background: var(--primary-light, #e6f2f2);
   color: var(--primary, #0d9488);
@@ -50,7 +45,6 @@
   font-size: 11px;
   transition: background var(--duration-normal), color var(--duration-normal);
 }
-
 .badgeInactive {
   background: var(--bg-color, #f1f5f9);
   color: var(--text-muted, #64748b);

@@ -472,7 +472,7 @@ export default function PedidoDetailPage() {
             </div>
 
             <div className={styles.stepperContainer}>
-              {/* Passo 1: Pedido Emitido */}
+              {}
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="receipt-check" />
@@ -490,7 +490,7 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isBilled ? styles.lineActive : ""}`} />
 
-              {/* Passo 2: Faturado (NF-e) */}
+              {}
               <div className={`${styles.step} ${isBilled ? styles.completed : styles.active}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-02" />
@@ -520,7 +520,7 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isInTransit ? styles.lineActive : ""}`} />
 
-              {/* Passo 3: Em Transporte */}
+              {}
               <div className={`${styles.step} ${isInTransit ? styles.completed : isBilled ? styles.active : styles.disabledStep}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="truck-01" />
@@ -552,7 +552,7 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isDelivered ? styles.lineActive : ""}`} />
 
-              {/* Passo 4: Entregue */}
+              {}
               <div className={`${styles.step} ${isDelivered ? styles.completed : isInTransit ? styles.active : styles.disabledStep}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="package-check" />

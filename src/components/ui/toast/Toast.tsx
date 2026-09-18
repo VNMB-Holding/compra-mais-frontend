@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { ToastItem, ToastVariant, useToast } from "@/contexts/ToastContext";
 import styles from "./Toast.module.css";
 
-
 const ICONS: Record<ToastVariant, React.ReactNode> = {
   success: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -31,7 +30,6 @@ const ICONS: Record<ToastVariant, React.ReactNode> = {
   ),
 };
 
-
 function ToastCard({ toast }: { toast: ToastItem }) {
   const { dismiss } = useToast();
   const [exiting, setExiting] = useState(false);
@@ -52,13 +50,11 @@ function ToastCard({ toast }: { toast: ToastItem }) {
         {ICONS[toast.variant]}
       </div>
 
-      
       <div className={styles.body}>
         <p className={styles.title}>{toast.title}</p>
         {toast.message && <p className={styles.message}>{toast.message}</p>}
       </div>
 
-      
       <button
         className={styles.closeBtn}
         onClick={handleDismiss}
@@ -72,7 +68,6 @@ function ToastCard({ toast }: { toast: ToastItem }) {
     </div>
   );
 }
-
 
 export default function ToastContainer() {
   const { toasts } = useToast();

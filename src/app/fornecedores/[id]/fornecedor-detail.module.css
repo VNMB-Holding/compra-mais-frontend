@@ -4,14 +4,11 @@
   gap: 24px;
   width: 100%;
 }
-
-
 .topSection {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .backBtn {
   display: flex;
   align-items: center;
@@ -25,45 +22,38 @@
   align-self: flex-start;
   padding: 0;
 }
-
 .backBtn span {
   font-size: 18px;
 }
-
 .headerRow {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
-
 .titleRow {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-bottom: 6px;
 }
-
 .titleRow h1 {
   font-size: 28px;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
 }
-
 .subtitleLarge {
   font-size: 18px;
   font-weight: 600;
   color: #334155;
   margin: 0 0 12px 0;
 }
-
 .metadataTags {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 14px;
 }
-
 .infoTag {
   background: white;
   border: 1px solid #e2e8f0;
@@ -75,7 +65,6 @@
   align-items: center;
   gap: 6px;
 }
-
 .btnOutline {
   background: white;
   border: 1px solid #cbd5e1;
@@ -90,19 +79,15 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .btnOutline:hover {
   background: #f8fafc;
   color: #0f172a;
 }
-
 .btnPrimary {
   background-color: #007d79 !important;
   font-size: 13px !important;
   font-weight: 600 !important;
 }
-
-
 .topSummaryCard {
   background: white;
   border: 1px solid #e2e8f0;
@@ -110,12 +95,10 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   overflow: hidden;
 }
-
 .summaryGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1.2fr;
 }
-
 .summaryColBase {
   display: flex;
   gap: 20px;
@@ -123,7 +106,6 @@
   border-right: 1px solid #e2e8f0;
   align-items: center;
 }
-
 .avatarBig {
   width: 64px;
   height: 64px;
@@ -136,31 +118,26 @@
   align-items: center;
   justify-content: center;
 }
-
 .avatarGreen {
   background: #e6f2f2;
   color: #007d79;
 }
-
 .baseInfo {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .titleRow {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .titleRow h2 {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
   color: #0f172a;
 }
-
 .badgeVerificado {
   font-size: 10px;
   background: #dcfce7;
@@ -169,18 +146,15 @@
   padding: 2px 8px;
   border: 1px solid #bbf7d0;
 }
-
 .docInfo {
   margin: 0;
   font-size: 13px;
   color: #475569;
 }
-
 .divider {
   color: #cbd5e1;
   margin: 0 4px;
 }
-
 .updateInfo {
   display: flex;
   align-items: center;
@@ -189,7 +163,6 @@
   color: #64748b;
   margin-top: 4px;
 }
-
 .btnRefresh {
   background: none;
   border: none;
@@ -202,11 +175,9 @@
   cursor: pointer;
   padding: 0;
 }
-
 .btnRefresh span {
   font-size: 16px;
 }
-
 .summaryColScore {
   padding: 24px;
   border-right: 1px solid #e2e8f0;
@@ -215,7 +186,6 @@
   justify-content: center;
   gap: 8px;
 }
-
 .scoreHeader {
   display: flex;
   align-items: center;
@@ -224,30 +194,25 @@
   color: #475569;
   font-weight: 500;
 }
-
 .scoreHeader span {
   color: #94a3b8;
 }
-
 .scoreValue {
   display: flex;
   align-items: baseline;
   gap: 2px;
 }
-
 .textGreen {
   font-size: 32px;
   font-weight: 700;
   color: #16a34a;
   line-height: 1;
 }
-
 .scoreValue small {
   font-size: 14px;
   color: #94a3b8;
   font-weight: 600;
 }
-
 .badgeScore {
   width: fit-content;
   background: #dcfce7;
@@ -256,7 +221,6 @@
   padding: 2px 8px;
   border-radius: 4px;
 }
-
 .summaryColStatus {
   padding: 24px;
   display: flex;
@@ -264,7 +228,6 @@
   justify-content: center;
   gap: 10px;
 }
-
 .statusRow {
   display: flex;
   justify-content: space-between;
@@ -273,7 +236,6 @@
   color: #475569;
   font-weight: 500;
 }
-
 .badgeHomologado {
   font-size: 11px;
   background: #dcfce7;
@@ -283,28 +245,23 @@
   border-radius: 4px;
   font-weight: 600;
 }
-
 .etapaText {
   margin: 0;
   font-size: 13px;
   color: #0f172a;
   font-weight: 500;
 }
-
 .subStatusText {
   margin: 0;
   font-size: 12px;
   color: #64748b;
 }
-
-
 .tabsContainer {
   display: flex;
   gap: 24px;
   border-bottom: 1px solid #e2e8f0;
   padding: 0 8px;
 }
-
 .tabsContainer button {
   background: none;
   border: none;
@@ -315,15 +272,12 @@
   cursor: pointer;
   position: relative;
 }
-
 .tabsContainer button:hover {
   color: #0f172a;
 }
-
 .tabActive {
   color: #007d79 !important;
 }
-
 .tabActive::after {
   content: '';
   position: absolute;
@@ -333,21 +287,16 @@
   height: 2px;
   background-color: #007d79;
 }
-
-
 .tabContent {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
-
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
-
-
 .infoCard {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
@@ -355,57 +304,47 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
   border-radius: 12px !important;
 }
-
 .sectionTitle {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 24px 0;
 }
-
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 32px 16px;
 }
-
 .infoItem {
   display: flex;
   align-items: flex-start;
   gap: 12px;
 }
-
 .infoItem>span {
   color: #94a3b8;
   font-size: 22px;
   margin-top: 2px;
 }
-
 .infoText {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .infoText small {
   font-size: 11px;
   color: #64748b;
   font-weight: 600;
 }
-
 .infoText span {
   font-size: 14px;
   color: #0f172a;
   font-weight: 500;
 }
-
 .colSpanFull {
   grid-column: 1 / -1;
   padding-top: 8px;
   border-top: 1px solid #f1f5f9;
 }
-
-
 .historicoBadge {
   display: inline-block;
   padding: 3px 10px;
@@ -413,38 +352,29 @@
   font-size: 11px;
   font-weight: 600;
 }
-
 .badgeHistoricoGreen {
   background: #dcfce7;
   color: #16a34a;
 }
-
 .badgeHistoricoBlue {
   background: #e0f2fe;
   color: #0284c7;
 }
-
 .badgeHistoricoYellow {
   background: #fef3c7;
   color: #d97706;
 }
-
-
 .starRow {
   display: flex;
   gap: 2px;
 }
-
 .starFilled {
   color: #ca8a04;
   fill: #ca8a04;
 }
-
 .starEmpty {
   color: #e2e8f0;
 }
-
-
 .itemsCard {
   background: white;
   border: 1px solid #e2e8f0;
@@ -452,13 +382,11 @@
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
 }
-
 .itemsCardHeader {
   padding: 20px 24px;
   border-bottom: 1px solid #e2e8f0;
   background: white;
 }
-
 .itemsCardHeader h3 {
   margin: 0;
   font-size: 16px;
@@ -468,18 +396,15 @@
   align-items: center;
   gap: 8px;
 }
-
 .itemsTableWrapper {
   overflow-x: auto;
 }
-
 .itemsTable {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
   background: white;
 }
-
 .itemsTable thead th {
   background: #f8fafc;
   padding: 14px 24px;
@@ -491,32 +416,26 @@
   letter-spacing: 0.05em;
   text-align: left;
 }
-
 .itemsTable tbody tr {
   transition: background 0.2s;
 }
-
 .itemsTable tbody tr:hover {
   background: #f8fafc;
 }
-
 .itemsTable td {
   padding: 20px 24px;
   border-bottom: 1px solid #e2e8f0;
   color: #1e293b;
   vertical-align: middle;
 }
-
 .itemsTable tr:last-child td {
   border-bottom: none;
 }
-
 .itemDesc {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
 .itemIconWrapper {
   width: 40px;
   height: 40px;
@@ -529,24 +448,20 @@
   color: #0d9488;
   flex-shrink: 0;
 }
-
 .itemDescText {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .itemDescText strong {
   font-size: 15px;
   color: #0f172a;
   font-weight: 700;
 }
-
 .itemDescText small {
   font-size: 13px;
   color: #64748b;
 }
-
 .linkAction {
   background: none;
   border: none;
@@ -558,25 +473,19 @@
   text-align: left;
   display: inline-block;
 }
-
 .linkAction:hover {
   text-decoration: underline;
 }
-
-
-
 .cadastraisGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
-
 .cadastraisCol {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
-
 .cadastraisCard {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
@@ -587,7 +496,6 @@
   flex-direction: column;
   gap: 20px;
 }
-
 .cadastraisCardHeader {
   display: flex;
   align-items: center;
@@ -595,14 +503,12 @@
   border-bottom: 1px solid #f1f5f9;
   padding-bottom: 14px;
 }
-
 .cadastraisCardHeader h3 {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
 }
-
 .headerIconCircle {
   width: 36px;
   height: 36px;
@@ -612,33 +518,27 @@
   justify-content: center;
   font-size: 18px;
 }
-
 .iconBlue {
   background: #eff6ff;
   color: #2563eb;
 }
-
 .iconPurple {
   background: #faf5ff;
   color: #9333ea;
 }
-
 .iconGreen {
   background: #f0fdf4;
   color: #16a34a;
 }
-
 .iconAmber {
   background: #fffbeb;
   color: #d97706;
 }
-
 .fieldsList {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .fieldRow {
   display: flex;
   justify-content: space-between;
@@ -647,12 +547,10 @@
   padding-bottom: 12px;
   border-bottom: 1px solid #f8fafc;
 }
-
 .fieldRow:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
-
 .fieldLabel {
   display: flex;
   align-items: center;
@@ -664,11 +562,9 @@
   letter-spacing: 0.03em;
   min-width: 140px;
 }
-
 .fieldLabel svg {
   color: #94a3b8;
 }
-
 .fieldValue {
   font-size: 14px;
   font-weight: 600;
@@ -676,20 +572,17 @@
   text-align: right;
   word-break: break-word;
 }
-
 .fieldValueSub {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
 }
-
 .fieldValueSub small {
   font-size: 12px;
   color: #64748b;
   font-weight: 400;
 }
-
 .pixHighlight {
   background: #f0fdf9;
   border: 1px solid #ccfbf1;
@@ -700,14 +593,12 @@
   justify-content: space-between;
   gap: 8px;
 }
-
 .pixHighlight span {
   font-family: monospace;
   font-size: 13px;
   font-weight: 700;
   color: #007d79;
 }
-
 .badgeCadastral {
   display: inline-flex;
   align-items: center;

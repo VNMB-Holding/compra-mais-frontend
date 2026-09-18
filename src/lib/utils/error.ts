@@ -1,6 +1,5 @@
 import { ApiError } from "@/lib/api-client";
 
-
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 401) {
@@ -28,7 +27,6 @@ export function getErrorMessage(error: unknown): string {
 
   return "Ocorreu um erro desconhecido. Tente novamente.";
 }
-
 
 export function logError(context: string, error: unknown): void {
   if (process.env.NODE_ENV !== "production") {

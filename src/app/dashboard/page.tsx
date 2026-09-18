@@ -72,7 +72,6 @@ export default function DashboardPage() {
       setEconomyData(economyChart || []);
       setCategories(categoriesData || []);
 
-
       const mapped: RFQRow[] = rfqsData.map((rfq) => {
         const codigo = rfq.code || "";
         const descricao = rfq.title || rfq.purchaseRequest?.description || "";

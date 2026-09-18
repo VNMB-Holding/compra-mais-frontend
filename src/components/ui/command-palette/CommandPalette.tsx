@@ -66,7 +66,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     [router, onClose]
   );
 
-  // Reset and focus when opening
   const prevIsOpen = useRef(isOpen);
   useEffect(() => {
     if (isOpen && !prevIsOpen.current) {
@@ -81,7 +80,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     prevIsOpen.current = isOpen;
   }, [isOpen]);
 
-  // Real-time backend search with 250ms debounce
   useEffect(() => {
     const trimmed = query.trim();
 
@@ -104,7 +102,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
         const results = await searchApi.globalSearch(trimmed, user?.tenantId, 6);
         const mappedItems: SearchItem[] = [];
 
-        // Map Solicitações
         if (results.solicitacoes && results.solicitacoes.length > 0) {
           results.solicitacoes.forEach((s) => {
             const st = formatSearchStatus(s.status);
@@ -124,7 +121,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           });
         }
 
-        // Map RFQs
         if (results.rfqs && results.rfqs.length > 0) {
           results.rfqs.forEach((q) => {
             const st = formatSearchStatus(q.status);
@@ -144,7 +140,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           });
         }
 
-        // Map Pedidos
         if (results.pedidos && results.pedidos.length > 0) {
           results.pedidos.forEach((p) => {
             const st = formatSearchStatus(p.status);
@@ -168,7 +163,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           });
         }
 
-        // Map Fornecedores
         if (results.fornecedores && results.fornecedores.length > 0) {
           results.fornecedores.forEach((f) => {
             const st = formatSearchStatus(f.status);
@@ -202,7 +196,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     };
   }, [query, user?.tenantId]);
 
-  // Filter static actions & pages
   const filteredStaticItems = useMemo(() => {
     if (!query.trim()) return STATIC_ITEMS;
     const lower = query.toLowerCase().trim();
@@ -212,7 +205,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     });
   }, [query]);
 
-  // Combined items ordered by priority categories
   const { itemsByCategory, flatItems } = useMemo(() => {
     const combined: SearchItem[] = [...dynamicResults, ...filteredStaticItems];
     const grouped: Partial<Record<SearchItem["category"], SearchItem[]>> = {};
@@ -230,7 +222,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
   const safeSelectedIndex = selectedIndex >= flatItems.length ? 0 : selectedIndex;
 
-  // Keyboard navigation
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (!isOpen) return;
@@ -256,7 +247,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, flatItems, safeSelectedIndex, handleSelect, onClose]);
 
-  // Scroll active item into view
   useEffect(() => {
     if (itemsContainerRef.current) {
       const activeElement = itemsContainerRef.current.querySelector(

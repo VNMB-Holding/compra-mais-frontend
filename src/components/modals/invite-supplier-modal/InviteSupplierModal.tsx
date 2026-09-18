@@ -82,7 +82,7 @@ export default function InviteSupplierModal({
 
         if (onSuccess) onSuccess(res.supplier);
       } else {
-        // RFQ being created in wizard: attempt creation or fallback gracefully
+        
         let createdSupplier = null;
         try {
           createdSupplier = await suppliersApi.create({
@@ -95,7 +95,7 @@ export default function InviteSupplierModal({
             status: "Pending",
           });
         } catch {
-          // Resilient client-side fallback
+          
           createdSupplier = {
             id: `temp-${Date.now()}`,
             corporateName,

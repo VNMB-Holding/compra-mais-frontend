@@ -253,7 +253,6 @@ export default function NovoFornecedorPage() {
           <Card className={styles.formCard}>
             <form onSubmit={handleSubmit}>
               
-              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -330,7 +329,6 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -396,7 +394,6 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -497,7 +494,6 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -572,7 +568,6 @@ export default function NovoFornecedorPage() {
                 </div>
               </section>
 
-              
               <div className={styles.formActions}>
                 <button
                   type="button"
@@ -599,9 +594,7 @@ export default function NovoFornecedorPage() {
           </Card>
         </div>
 
-        
         <aside className={styles.sideColumn}>
-          
           
           <Card className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
@@ -664,7 +657,6 @@ export default function NovoFornecedorPage() {
             </div>
           </Card>
 
-          
           <Card className={styles.checklistCard}>
             <div className={styles.sideTitle}>
               <Icon name="info-circle" />

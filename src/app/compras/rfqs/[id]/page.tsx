@@ -303,7 +303,6 @@ export default function RfqDetailPage() {
   const [publishing, setPublishing] = useState(false);
   const [creatingPo, setCreatingPo] = useState(false);
 
-
   const handlePublishRfq = async () => {
     try {
       setPublishing(true);
@@ -329,7 +328,6 @@ export default function RfqDetailPage() {
     }
   };
 
-
   useEffect(() => {
     async function load() {
       try {
@@ -341,7 +339,6 @@ export default function RfqDetailPage() {
         const winner = (data.proposals ?? []).find((p) => p.isWinner);
         if (winner) setVencedorId(winner.supplierId);
 
-        // Verifica se já existe um Pedido de Compra (PO) gerado
         try {
           const orders = await purchaseOrdersApi.list();
           const match = orders.find(
@@ -354,7 +351,7 @@ export default function RfqDetailPage() {
             setGeneratedPo({ id: match.id, code: match.code });
           }
         } catch {
-          // fallback silencioso
+          
         }
       } catch (err) {
         logError("rfqs/[id]/load", err);
@@ -396,7 +393,6 @@ export default function RfqDetailPage() {
       }
     }
   };
-
 
   const propostasRankeadas = [...recebidas].sort(
     (a, b) => ((a.unitPrice || 0) + (a.freightCost || 0)) - ((b.unitPrice || 0) + (b.freightCost || 0))
@@ -473,7 +469,6 @@ export default function RfqDetailPage() {
         onCancel={() => setDialog(null)}
       />
 
-      
       <ConfirmDialog
         open={dialog === "selecionar"}
         variant="success"
@@ -497,7 +492,6 @@ export default function RfqDetailPage() {
                 (p) => p.supplierId === pendingVencedorId
               )?.proposalId;
 
-              
               if (!propostaIdParaEnviar) {
                 const propLocal = propostas.find((p) => p.supplierId === pendingVencedorId);
                 const propCriada = await rfqsApi.createProposal(rfqId, {
@@ -518,7 +512,6 @@ export default function RfqDetailPage() {
 
               await rfqsApi.selectWinner(rfqId, propostaIdParaEnviar);
 
-              
               const updated = await rfqsApi.getById(rfqId);
               setRfq(updated);
               setPropostas(mapPropostas(updated));
@@ -544,7 +537,6 @@ export default function RfqDetailPage() {
         }}
       />
 
-      
       <ConfirmDialog
         open={dialog === "gerar"}
         variant="info"
@@ -594,7 +586,6 @@ export default function RfqDetailPage() {
         onCancel={() => setDialog(null)}
       />
 
-
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
         <Icon name="chevron-left" /> Voltar para Cotações
       </button>
@@ -637,7 +628,6 @@ export default function RfqDetailPage() {
         )}
       </div>
 
-      
       <Card className={styles.stepperCard}>
         <Stepper
           steps={[

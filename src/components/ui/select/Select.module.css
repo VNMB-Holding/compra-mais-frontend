@@ -3,7 +3,6 @@
   display: inline-block;
   width: 100%;
 }
-
 .trigger {
   display: flex;
   align-items: center;
@@ -23,18 +22,15 @@
   min-height: 36px;
   text-align: left;
 }
-
 .trigger:hover:not(:disabled) {
   border-color: var(--text-muted, #94a3b8);
   background-color: var(--bg-hover, #f8fafc);
 }
-
 .triggerOpen {
   border-color: var(--primary, #007d79);
   box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.1);
   background-color: #ffffff;
 }
-
 .triggerLeft {
   display: flex;
   align-items: center;
@@ -43,44 +39,36 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .leadingIcon, .optionIcon {
   color: var(--text-muted, #64748b);
   flex-shrink: 0;
   transition: color 0.2s ease;
 }
-
 .triggerOpen .leadingIcon {
   color: var(--primary, #007d79);
 }
-
 .valueText {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .chevron {
   color: var(--text-muted, #64748b);
   transition: transform 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
 }
-
 .triggerOpen .chevron {
   transform: rotate(180deg);
   color: var(--primary, #007d79);
 }
-
 .disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .disabled .trigger {
   cursor: not-allowed;
   background-color: #f1f5f9;
 }
-
 .dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -96,7 +84,6 @@
   animation: slideDown 0.18s var(--ease-out);
   transform-origin: top center;
 }
-
 .optionsList {
   list-style: none;
   margin: 0;
@@ -105,12 +92,10 @@
   flex-direction: column;
   gap: 2px;
 }
-
 .optionItem {
   margin: 0;
   padding: 0;
 }
-
 .optionButton {
   display: flex;
   align-items: center;
@@ -128,22 +113,18 @@
   outline: none;
   transition: all 0.15s ease;
 }
-
 .optionButton:hover {
   background-color: var(--bg-hover, #f1f5f9);
   color: var(--text-main, #0f172a);
 }
-
 .selected {
   background-color: rgba(0, 125, 121, 0.08) !important;
   color: var(--primary, #007d79) !important;
   font-weight: 600;
 }
-
 .selected .optionIcon {
   color: var(--primary, #007d79);
 }
-
 @keyframes slideDown {
   from {
     opacity: 0;

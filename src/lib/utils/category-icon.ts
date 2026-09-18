@@ -10,7 +10,6 @@ export enum CategoryType {
   GENERAL = "GENERAL",
 }
 
-
 export const CATEGORY_ICON_MAP: Record<CategoryType | string, string> = {
   [CategoryType.IT_SOFTWARE]: "monitor-01",
   [CategoryType.FUEL_LUBRICANTS]: "drop",
@@ -22,7 +21,6 @@ export const CATEGORY_ICON_MAP: Record<CategoryType | string, string> = {
   [CategoryType.GENERAL]: "folder",
 };
 
-
 export const CATEGORY_LABEL_MAP: Record<CategoryType | string, string> = {
   [CategoryType.IT_SOFTWARE]: "Tecnologia & TI",
   [CategoryType.FUEL_LUBRICANTS]: "Combustíveis & Lubrificantes",
@@ -33,7 +31,6 @@ export const CATEGORY_LABEL_MAP: Record<CategoryType | string, string> = {
   [CategoryType.INFRASTRUCTURE]: "Infraestrutura & Obras",
   [CategoryType.GENERAL]: "Geral / Outros",
 };
-
 
 export function getCategoryIcon(category?: CategoryType | string): string {
   if (!category) return CATEGORY_ICON_MAP[CategoryType.GENERAL];

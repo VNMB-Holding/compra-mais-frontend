@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter, usePathname } from "next/navigation";
 import { Icon, Button } from "@/components/ui";
+import { useTour } from "@/hooks/useTour";
+import { 
+  dashboardTour, 
+  solicitacoesTour, 
+  rfqsTour, 
+  pedidosTour, 
+  fornecedoresTour,
+  novaRfqTour 
+} from "@/lib/tours";
 import styles from "./HelpModal.module.css";
 
 interface HelpModalProps {
@@ -54,6 +64,10 @@ const FAQ_ITEMS = [
 ];
 
 export default function HelpModal({ open, onClose }: HelpModalProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { startTour, resetTour } = useTour();
+
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
@@ -78,6 +92,72 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
       item.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const AVAILABLE_TOURS = [
+    {
+      id: "dashboard-intro",
+      title: "Visão Geral (Dashboard)",
+      description: "Aprenda a navegar pelos KPIs, cotações e savings",
+      icon: "layout-grid-01",
+      path: "/dashboard",
+      tour: dashboardTour,
+    },
+    {
+      id: "solicitacoes-intro",
+      title: "Solicitações de Compra",
+      description: "Entenda o funil de demandas e filtros do ERP",
+      icon: "file-02",
+      path: "/compras/solicitacoes",
+      tour: solicitacoesTour,
+    },
+    {
+      id: "rfqs-intro",
+      title: "Cotações / RFQs",
+      description: "Como criar e gerenciar processos de cotação",
+      icon: "hourglass-01",
+      path: "/compras/rfqs",
+      tour: rfqsTour,
+    },
+    {
+      id: "pedidos-intro",
+      title: "Pedidos de Compra",
+      description: "Acompanhamento de entregas e contratos",
+      icon: "shopping-cart-01",
+      path: "/compras/pedidos",
+      tour: pedidosTour,
+    },
+    {
+      id: "fornecedores-intro",
+      title: "Diretório de Fornecedores",
+      description: "Consulta de homologação e scores de parceiros",
+      icon: "users-01",
+      path: "/fornecedores/diretorio",
+      tour: fornecedoresTour,
+    },
+    {
+      id: "nova-rfq-intro",
+      title: "Criar Nova Cotação",
+      description: "Passo a passo para abrir e publicar uma nova RFQ",
+      icon: "plus-circle",
+      path: "/compras/rfqs/nova",
+      tour: novaRfqTour,
+    },
+  ];
+
+  const handleLaunchTour = (item: typeof AVAILABLE_TOURS[0]) => {
+    onClose();
+    resetTour(item.id);
+    if (pathname === item.path) {
+      setTimeout(() => {
+        startTour(item.tour);
+      }, 200);
+    } else {
+      router.push(item.path);
+      setTimeout(() => {
+        startTour(item.tour);
+      }, 800);
+    }
+  };
+
   return createPortal(
     <div className={styles.modalOverlay} onClick={handleOverlayClick}>
       <div className={styles.modalBox}>
@@ -99,9 +179,39 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
           </button>
         </div>
 
-        
         <div className={styles.modalBody}>
           
+          <div className={styles.toursSection}>
+            <div className={styles.toursHeader}>
+              <h3 className={styles.toursTitle}>
+                <Icon name="compass" size={18} style={{ color: "#007d79" }} />
+                Tutoriais Interativos Guiados
+              </h3>
+            </div>
+            <div className={styles.toursGrid}>
+              {AVAILABLE_TOURS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={styles.tourCard}
+                  onClick={() => handleLaunchTour(t)}
+                >
+                  <div className={styles.tourCardLeft}>
+                    <div className={styles.tourIconWrap}>
+                      <Icon name={t.icon} size={18} />
+                    </div>
+                    <div className={styles.tourCardInfo}>
+                      <span className={styles.tourCardTitle}>{t.title}</span>
+                      <span className={styles.tourCardDesc}>{t.description}</span>
+                    </div>
+                  </div>
+                  <Icon name="play" size={16} className={styles.tourActionIcon} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <hr className={styles.sectionDivider} />
           
           <div className={styles.supportGrid}>
             <a href="https://wa.me/5511986055544?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20Compra%2B" target="_blank" rel="noopener noreferrer" className={styles.supportCard}>
@@ -129,11 +239,9 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
 
           <hr className={styles.sectionDivider} />
 
-          
           <div className={styles.faqSection}>
             <h3 className={styles.sectionTitle}>Perguntas Frequentes (FAQ)</h3>
 
-            
             <div className={styles.searchContainer}>
               <Icon name="search-md" className={styles.searchIcon} />
               <input
@@ -148,7 +256,6 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
               />
             </div>
 
-            
             <div className={styles.accordion}>
               {filteredFAQs.length > 0 ? (
                 filteredFAQs.map((faq, index) => {
@@ -195,7 +302,6 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
           </div>
         </div>
 
-        
         <div className={styles.modalFooter}>
           <Button variant="secondary" onClick={onClose}>
             Fechar

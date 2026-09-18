@@ -4,7 +4,6 @@
   gap: 16px;
   width: 100%;
 }
-
 .pageHeaderSimple {
   display: flex;
   align-items: center;
@@ -12,26 +11,22 @@
   gap: 14px;
   flex-wrap: wrap;
 }
-
 .pageHeaderSimple h1 {
   font-size: 22px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 4px 0;
 }
-
 .pageHeaderSimple p {
   font-size: 13px;
   color: #64748b;
   margin: 0;
 }
-
 .wave {
   display: inline-block;
   animation: wave-animation 2.5s infinite;
   transform-origin: 70% 70%;
 }
-
 @keyframes wave-animation {
   0% { transform: rotate( 0.0deg) }
   10% { transform: rotate(14.0deg) }
@@ -42,7 +37,6 @@
   65% { transform: rotate( 0.0deg) }
   100% { transform: rotate( 0.0deg) }
 }
-
 .heroBanner {
   background-image: url('/images/bg-hero-card.png');
   background-size: cover;
@@ -53,7 +47,6 @@
   color: white;
   min-height: 130px; 
 }
-
 .heroContent h2 {
   font-size: 22px;
   font-weight: 400;
@@ -61,12 +54,10 @@
   margin: 0 0 10px 0;
   color: #0f172a;
 }
-
 .heroContent h2 strong {
   font-weight: 700;
   color: #007d79;
 }
-
 .heroContent p {
   font-size: 13px;
   line-height: 1.5;
@@ -74,58 +65,48 @@
   margin: 0;
   color: #334155;
 }
-
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
 }
-
 .middleGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
 }
-
 .chartCard {
   display: flex;
   flex-direction: column;
 }
-
 .cardHeader {
   margin-bottom: 16px;
 }
-
 .cardHeader h4 {
   font-size: 16px;
   font-weight: 600;
   color: #0f172a;
   margin: 0;
 }
-
 .subtitle {
   font-size: 12px;
   color: #94a3b8;
 }
-
 .chartValue h3 {
   font-size: 24px;
   font-weight: 700;
   margin: 0 0 4px 0;
 }
-
 .chartPeriodMeta {
   display: block;
   font-size: 12px;
   color: #64748b;
   margin-top: 2px;
 }
-
 .chartPeriodMeta strong {
   color: #007d79;
   font-weight: 600;
 }
-
 .trend {
   display: inline-flex;
   align-items: center;
@@ -133,16 +114,13 @@
   font-size: 12px;
   font-weight: 600;
 }
-
 .pos { color: #16a34a; }
 .pos span { font-size: 14px; }
 .trend small { color: #94a3b8; font-weight: 400; margin-left: 2px;}
-
 .chartWrapperElement {
   flex-grow: 1;
   margin-top: 16px;
 }
-
 .cardLink {
   background: none;
   border: none;
@@ -158,60 +136,49 @@
   transition: gap 0.2s;
   width: fit-content;
 }
-
 .cardLink:hover { gap: 10px; }
 .cardLink span { font-size: 16px; }
-
-
 .urgentCardWrapper {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   overflow: hidden;
   min-height: 280px;
 }
-
 .uqContent {
   padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
-
 .uqTitle h3 {
   font-size: 18px;
   font-weight: 700;
   color: #0f172a;
   margin: 8px 0 2px 0;
 }
-
 .uqTitle span {
   font-size: 12px;
   color: #94a3b8;
   font-weight: 500;
 }
-
 .uqDetails {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin: 16px 0;
 }
-
 .uqDetails small {
   font-size: 11px;
   color: #94a3b8;
   text-transform: uppercase;
   font-weight: 600;
 }
-
 .uqDetails div {
   font-size: 13px;
   font-weight: 600;
   color: #334155;
 }
-
 .fullW { grid-column: span 2; }
-
 .uqImage {
   height: 140px;
   background-image: url('/images/bg-hero-card.png'); 
@@ -219,8 +186,6 @@
   background-position: center;
   margin-top: auto;
 }
-
-
 .donutChartContainer {
   display: flex;
   align-items: center;
@@ -228,14 +193,12 @@
   flex-grow: 1;
   min-height: 190px;
 }
-
 .donutGraphicBox {
   flex-shrink: 0;
   width: 140px;
   height: 140px; 
   position: relative; 
 }
-
 .donutLegend {
   display: flex;
   flex-direction: column;
@@ -243,7 +206,6 @@
   flex: 1;
   min-width: 0;
 }
-
 .legItem {
   display: flex;
   align-items: center;
@@ -252,7 +214,6 @@
   font-weight: 500;
   min-width: 0;
 }
-
 .dot {
   width: 8px;
   height: 8px;
@@ -260,7 +221,6 @@
   margin-right: 8px;
   flex-shrink: 0;
 }
-
 .legName {
   flex: 1;
   white-space: nowrap;
@@ -268,7 +228,6 @@
   text-overflow: ellipsis;
   min-width: 0;
 }
-
 .pct {
   font-weight: 600;
   color: #0f172a;
@@ -276,12 +235,9 @@
   flex-shrink: 0;
   font-size: 12px;
 }
-
-
 .tableCard {
   overflow: hidden;
 }
-
 .tableHeaderActions {
   display: flex;
   justify-content: space-between;
@@ -290,25 +246,20 @@
   padding: 16px 24px;
   margin-bottom: 0;
 }
-
 .tableHeaderActions :global(.Tabs_tabsWrapper__3nZ8x) {
   border-bottom: none;
   padding-bottom: 0;
 }
-
 .boldCode {
   font-weight: 600;
   color: #007d79 !important;
 }
-
 .rowActions {
   color: #94a3b8;
   cursor: pointer;
   transition: color 0.2s;
 }
-
 .rowActions:hover { color: #0f172a; }
-
 .emptyState {
   display: flex;
   flex-direction: column;
@@ -317,7 +268,6 @@
   padding: 48px 20px;
   text-align: center;
 }
-
 .emptyIcon {
   width: 56px;
   height: 56px;
@@ -329,14 +279,12 @@
   justify-content: center;
   margin-bottom: 16px;
 }
-
 .emptyState h4 {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 6px 0;
 }
-
 .emptyState p {
   font-size: 13px;
   color: #64748b;

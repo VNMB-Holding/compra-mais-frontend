@@ -18,73 +18,59 @@
     opacity          var(--duration-fast)   var(--ease-in-out),
     border-color     var(--duration-normal) var(--ease-in-out);
 }
-
 .btn:active {
   transform: scale(0.97) !important;
 }
-
 .primary {
   background-color: var(--primary, #0d9488);
   color: white;
 }
-
 .primary:hover {
   background-color: var(--primary, #0d9488);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 125, 121, 0.28);
 }
-
 .secondary {
   background-color: transparent;
   border: 1px solid var(--border, #e2e8f0);
   color: var(--text-main, #334155);
 }
-
 .secondary:hover {
   background-color: var(--bg-color, #f8fafc);
   border-color: var(--text-muted, #94a3b8);
   transform: translateY(-1px);
 }
-
 .danger {
   background-color: #ef4444;
   color: white;
 }
-
 .danger:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.28);
 }
-
-/* Loading State */
 .loading {
   cursor: not-allowed !important;
   opacity: 0.85;
   transform: none !important;
   pointer-events: none;
 }
-
 .spinner {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
   animation: spin 0.75s linear infinite;
 }
-
 .spinnerTrack {
   opacity: 0.25;
 }
-
 .spinnerHead {
   opacity: 0.95;
 }
-
 .label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -92,5 +78,4 @@
   to {
     transform: rotate(360deg);
   }
-}
-
+}

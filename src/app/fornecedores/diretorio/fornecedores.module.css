@@ -4,14 +4,11 @@
   gap: 16px;
   width: 100%;
 }
-
-
 .pageHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .pageHeader h1 {
   font-size: 21px;
   font-weight: 700;
@@ -19,18 +16,15 @@
   margin: 0 0 4px 0;
   letter-spacing: -0.02em;
 }
-
 .pageHeader p {
   margin: 0;
   color: #64748b;
   font-size: 13px;
 }
-
 .headerActions {
   display: flex;
   gap: 8px;
 }
-
 .btnExport {
   display: flex;
   align-items: center;
@@ -45,26 +39,21 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .btnExport:hover {
   background: #f8fafc;
   color: #0f172a;
 }
-
 .btnAdd {
   background-color: #007d79 !important;
   display: flex;
   align-items: center;
   gap: 4px;
 }
-
-
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
-
 .kpiCard {
   display: flex;
   align-items: flex-start;
@@ -75,7 +64,6 @@
   border-radius: 10px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
-
 .kpiIcon {
   width: 36px;
   height: 36px;
@@ -84,43 +72,35 @@
   align-items: center;
   justify-content: center;
 }
-
 .kpiIcon span {
   font-size: 18px;
 }
-
 .iconGreen {
   background: #dcfce7;
   color: #16a34a;
 }
-
 .iconYellow {
   background: #fef9c3;
   color: #ca8a04;
 }
-
 .iconBlue {
   background: #e0f2fe;
   color: #0284c7;
 }
-
 .iconPurple {
   background: #f3e8ff;
   color: #9333ea;
 }
-
 .kpiData {
   display: flex;
   flex-direction: column;
 }
-
 .kpiData small {
   font-size: 11.5px;
   color: #475569;
   font-weight: 600;
   margin-bottom: 2px;
 }
-
 .kpiData strong {
   font-size: 20px;
   color: #0f172a;
@@ -128,13 +108,10 @@
   line-height: 1;
   margin-bottom: 3px;
 }
-
 .kpiData span {
   font-size: 11.5px;
   color: #64748b;
 }
-
-
 .mainListCard {
   background: white;
   border: 1px solid #e2e8f0;
@@ -142,7 +119,6 @@
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
-
 .tableToolbar {
   padding: 12px 18px;
   display: flex;
@@ -150,7 +126,6 @@
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .searchBox {
   display: flex;
   align-items: center;
@@ -161,11 +136,9 @@
   border-radius: 6px;
   width: 260px;
 }
-
 .searchBox svg {
   color: #94a3b8;
 }
-
 .searchBox input {
   border: none;
   outline: none;
@@ -174,16 +147,13 @@
   width: 100%;
   background: transparent;
 }
-
 .filtersGroup {
   display: flex;
   gap: 10px;
 }
-
 .customSelectFilter {
   width: 170px;
 }
-
 .selectWrapper {
   display: flex;
   align-items: center;
@@ -193,11 +163,9 @@
   border-radius: 8px;
   background: white;
 }
-
 .selectWrapper svg {
   color: #64748b;
 }
-
 .selectWrapper select {
   border: none;
   outline: none;
@@ -207,14 +175,11 @@
   cursor: pointer;
   background: transparent;
 }
-
-
 .fornecedorCell {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
 .avatar {
   width: 40px;
   height: 40px;
@@ -225,40 +190,33 @@
   font-size: 13px;
   font-weight: 700;
 }
-
 .avatarGreen {
   background: #dcfce7;
   color: #166534;
 }
-
 .avatarOrange {
   background: #ffedd5;
   color: #c2410c;
 }
-
 .doubleText {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .doubleText strong {
   font-size: 14px;
   color: #0f172a;
   font-weight: 600;
 }
-
 .doubleText span {
   font-size: 12px;
   color: #64748b;
 }
-
 .dataTitle {
   font-size: 13px !important;
   color: #0f172a !important;
   font-weight: 500 !important;
 }
-
 .catCell {
   display: flex;
   align-items: center;
@@ -267,11 +225,9 @@
   color: #334155;
   font-weight: 500;
 }
-
 .catCell svg {
   color: #64748b;
 }
-
 .statusBadge {
   display: inline-flex;
   padding: 4px 8px;
@@ -280,54 +236,43 @@
   font-weight: 700;
   width: fit-content;
 }
-
 .badgeGreen {
   background: #dcfce7;
   color: #16a34a;
 }
-
 .badgeYellow {
   background: #fef9c3;
   color: #ca8a04;
 }
-
 .notaCell {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .notaCell strong {
   font-size: 16px;
   color: #0f172a;
 }
-
 .textGreen {
   color: #16a34a !important;
 }
-
 .mutedText {
   font-size: 12px;
   color: #94a3b8;
 }
-
 .starRow {
   display: flex;
   gap: 2px;
 }
-
 .starFilled {
   color: #16a34a;
 }
-
 .starEmpty {
   color: #cbd5e1;
 }
-
 .actionCell {
   text-align: right;
 }
-
 .iconBtn {
   background: white;
   border: 1px solid #e2e8f0;
@@ -341,13 +286,10 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .iconBtn:hover {
   background: #f1f5f9;
   color: #0f172a;
 }
-
-
 .tableFooter {
   display: flex;
   justify-content: space-between;
@@ -356,17 +298,14 @@
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
 }
-
 .tableFooter span {
   font-size: 13px;
   color: #64748b;
 }
-
 .paginationControls {
   display: flex;
   gap: 8px;
 }
-
 .pageBtn {
   background: white;
   border: 1px solid #e2e8f0;
@@ -381,14 +320,12 @@
   color: #475569;
   cursor: pointer;
 }
-
 .pageActive {
   background: #f1f5f9;
   color: #007d79;
   border-color: #cbd5e1;
   font-weight: 700;
 }
-
 .emptyState {
   display: flex;
   flex-direction: column;
@@ -397,7 +334,6 @@
   padding: 80px 20px;
   text-align: center;
 }
-
 .emptyIcon {
   width: 64px;
   height: 64px;
@@ -409,14 +345,12 @@
   justify-content: center;
   margin-bottom: 20px;
 }
-
 .emptyState h4 {
   font-size: 18px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 8px 0;
 }
-
 .emptyState p {
   font-size: 14px;
   color: #64748b;

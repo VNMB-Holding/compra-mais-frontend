@@ -8,7 +8,6 @@ import React, {
   useState,
 } from "react";
 
-
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
 export interface ToastItem {
@@ -25,9 +24,7 @@ interface ToastContextValue {
   dismiss: (id: string) => void;
 }
 
-
 const ToastContext = createContext<ToastContextValue | null>(null);
-
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -59,7 +56,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     </ToastContext.Provider>
   );
 }
-
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);

@@ -79,7 +79,6 @@ export default function FornecedorDetailPage() {
   return (
     <div className={styles.pageContainer}>
 
-
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório
@@ -108,10 +107,8 @@ export default function FornecedorDetailPage() {
         </div>
       </div>
 
-
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
-
 
           <div className={styles.summaryColBase}>
             <div className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}>
@@ -127,7 +124,6 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-
           <div className={styles.summaryColScore}>
             <div className={styles.scoreHeader}>
               <span>Nota de Performance</span>
@@ -142,7 +138,6 @@ export default function FornecedorDetailPage() {
             </div>
           </div>
 
-
           <div className={styles.summaryColStatus}>
             <div className={styles.statusRow}>
               <span>Situação Cadastral</span>
@@ -156,9 +151,8 @@ export default function FornecedorDetailPage() {
         </div>
       </Card>
 
-
       <div className={styles.tabContent}>
-        {/* KPI Cards em Grid */}
+        {}
         <div className={styles.kpiGrid}>
           <KpiCard
             title="Score de Performance"
@@ -186,7 +180,7 @@ export default function FornecedorDetailPage() {
           />
         </div>
 
-        {/* Grid com Dados Cadastrais e Operacionais */}
+        {}
         <div className={styles.cadastraisGrid}>
           <div className={styles.cadastraisCol}>
             <Card className={styles.cadastraisCard}>
@@ -228,7 +222,6 @@ export default function FornecedorDetailPage() {
                   <span className={styles.fieldValue}>{supplier.stateRegistration || "Isento / Não informado"}</span>
                 </div>
 
-
                 <div className={styles.fieldRow}>
                   <span className={styles.fieldLabel}>
                     <Icon name="calendar" size={14} /> Cadastrado em
@@ -239,7 +232,6 @@ export default function FornecedorDetailPage() {
                 </div>
               </div>
             </Card>
-
 
             <Card className={styles.cadastraisCard}>
               <div className={styles.cadastraisCardHeader}>
@@ -285,7 +277,6 @@ export default function FornecedorDetailPage() {
           </div>
 
           <div className={styles.cadastraisCol}>
-
 
             <Card className={styles.cadastraisCard}>
               <div className={styles.cadastraisCardHeader}>
@@ -348,7 +339,6 @@ export default function FornecedorDetailPage() {
                 </div>
               </div>
             </Card>
-
 
             <Card className={styles.cadastraisCard}>
               <div className={styles.cadastraisCardHeader}>

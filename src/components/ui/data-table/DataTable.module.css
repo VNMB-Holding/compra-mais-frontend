@@ -2,13 +2,11 @@
   width: 100%;
   overflow-x: auto;
 }
-
 .dataTable {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
-
 .dataTable th {
   padding: 9px 14px;
   font-size: 11px;
@@ -19,7 +17,6 @@
   border-bottom: 1px solid #e2e8f0;
   background: #ffffff;
 }
-
 .dataTable td {
   padding: 9px 14px;
   border-bottom: 1px solid #e2e8f0;
@@ -31,36 +28,27 @@
     background-color var(--duration-fast) var(--ease-in-out),
     color            var(--duration-fast) var(--ease-in-out);
 }
-
 .dataTable tbody tr:last-child td {
   border-bottom: none;
 }
-
 .compact th {
   padding: 6px 10px;
   font-size: 11px;
 }
-
 .compact td {
   padding: 6px 10px;
   font-size: 12px;
 }
-
-/* Linha clicável */
 .clickableRow {
   cursor: pointer;
 }
-
 .clickableRow:hover td {
   background-color: #f8fafc;
 }
-
-/* Animação de entrada das linhas (stagger via --row-index) */
 .animatedRow {
   animation: fadeInRow var(--duration-enter) var(--ease-out) both;
   animation-delay: calc(var(--row-index, 0) * 30ms);
 }
-
 @keyframes fadeInRow {
   from {
     opacity: 0;
@@ -71,4 +59,3 @@
     transform: translateY(0);
   }
 }
-

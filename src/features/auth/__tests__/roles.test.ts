@@ -33,4 +33,3 @@ describe('Auth Roles and Permissions', () => {
     expect(mapApiRole([])).toBe('solicitante');
   });
 });
-

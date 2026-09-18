@@ -37,7 +37,6 @@ export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProp
         </div>
       </div>
 
-      
       <div className={styles.quoteBox}>
         <div className={styles.quoteBoxHeader}>
           <span className={styles.codeTag}>{quote.code}</span>
@@ -62,7 +61,6 @@ export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProp
         </div>
       </div>
 
-      
       <button className={styles.cardLink} onClick={onAction}>
         Acessar cotação na íntegra <Icon name="arrow-right" size={16} />
       </button>

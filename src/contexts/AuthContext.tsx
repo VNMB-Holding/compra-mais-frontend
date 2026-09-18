@@ -52,7 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokenProvider(() => accessToken);
   }, [accessToken]);
 
-  
   const activeRefreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
   const doRefreshToken = useCallback(async (): Promise<string | null> => {
@@ -94,7 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return refreshPromise;
   }, []);
 
-  
   useEffect(() => {
     if (!accessToken) return;
 
@@ -188,8 +186,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               tenantName = currentTenantObj.name;
             }
 
-
-
             const enrichedUser: User = {
               ...updatedUser,
               tenantId: tenantId || updatedUser.tenantId,
@@ -268,8 +264,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!tenantName && currentTenantObj) {
         tenantName = currentTenantObj.name;
       }
-
-
 
       const role = mapApiRole(meRoles);
 

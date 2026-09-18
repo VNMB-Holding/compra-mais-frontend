@@ -26,6 +26,4 @@ export const rfqsService = {
   ) => rfqsApi.inviteUnregisteredSupplier(rfqId, data),
 };
 
-
 export type { Rfq, RfqListParams, RfqKpis, PublicRfq, PublicProposalPayload };
-

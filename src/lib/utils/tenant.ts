@@ -14,11 +14,9 @@ export interface TenantOption {
   acronym?: string;
 }
 
-
 export function isVnmbUser(_user: User | null): boolean {
   return true;
 }
-
 
 export function getCompanyFilterOptions(): { label: string; value: string }[] {
   return [
@@ -30,7 +28,6 @@ export function getCompanyFilterOptions(): { label: string; value: string }[] {
   ];
 }
 
-
 export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
   return COMPANY_BRANCHES.map((b) => ({
     id: b.code,
@@ -40,8 +37,6 @@ export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
     acronym: b.acronym,
   }));
 }
-
-
 
 export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?: string): TenantOption[] {
   if (selectedCompanyId && selectedCompanyId !== "TODAS" && selectedCompanyId !== "2313") {
@@ -63,24 +58,20 @@ export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?:
   }));
 }
 
-
 export function getTenantDisplayName(tenantId?: string, user?: User | null): string {
   if (!tenantId || tenantId === "TODAS") {
     return "VB AGRO LTDA";
   }
 
-  
   const branch = findCompanyBranch(tenantId);
   if (branch) {
     return `${branch.name} (${branch.acronym})`;
   }
 
-  
   if (tenantId.toUpperCase().includes("VNMB")) {
     return "VB AGRO LTDA";
   }
 
-  
   const foundInUser = user?.availableTenants?.find((t) => t.id === tenantId);
   if (foundInUser) {
     const matchInUser = findCompanyBranch(foundInUser.name) || findCompanyBranch(foundInUser.id);
@@ -90,7 +81,6 @@ export function getTenantDisplayName(tenantId?: string, user?: User | null): str
 
   return "VB AGRO LTDA";
 }
-
 
 export function formatCorporateBranch(
   coligada?: string | number,
@@ -121,5 +111,4 @@ export function formatCorporateBranch(
 
   return "VB AGRO LTDA";
 }
-
-
+

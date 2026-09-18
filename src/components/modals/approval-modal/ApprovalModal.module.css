@@ -10,7 +10,6 @@
   backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease;
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -19,7 +18,6 @@
     opacity: 1;
   }
 }
-
 .modalCard {
   position: relative;
   width: 100%;
@@ -32,7 +30,6 @@
   animation: slideUp 0.25s ease;
   text-align: center;
 }
-
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -43,7 +40,6 @@
     transform: translateY(0);
   }
 }
-
 .modalSuccessIcon {
   display: inline-flex;
   align-items: center;
@@ -56,16 +52,13 @@
   color: var(--color-primary, #007d79);
   font-size: 24px;
 }
-
 .modalSuccessIcon svg {
   width: 26px;
   height: 26px;
 }
-
 .modalHeader {
   margin-bottom: 16px;
 }
-
 .modalHeader h2 {
   margin: 0 0 6px;
   color: var(--text-primary, #0f172a);
@@ -74,14 +67,12 @@
   letter-spacing: -0.3px;
   line-height: 1.25;
 }
-
 .modalHeader p {
   margin: 0;
   color: var(--text-secondary, #64748b);
   font-size: 13px;
   line-height: 1.5;
 }
-
 .modalSummary {
   display: flex;
   flex-direction: column;
@@ -92,7 +83,6 @@
   overflow: hidden;
   text-align: left;
 }
-
 .modalSummaryRow {
   display: flex;
   align-items: center;
@@ -101,11 +91,9 @@
   padding: 13px 18px;
   border-bottom: 1px solid var(--bg-surface-secondary, #f1f5f9);
 }
-
 .modalSummaryRow:last-child {
   border-bottom: none;
 }
-
 .modalSummaryRow span {
   color: var(--text-muted, #94a3b8);
   font-size: 12px;
@@ -114,7 +102,6 @@
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
-
 .modalSummaryRow strong {
   color: var(--text-primary, #0f172a);
   font-size: 13px;
@@ -122,20 +109,17 @@
   text-align: right;
   line-height: 1.35;
 }
-
 .modalValueHighlight {
   color: var(--color-primary, #007d79) !important;
   font-size: 15px !important;
   font-weight: 900 !important;
 }
-
 .modalActions {
   display: flex;
   gap: 12px;
   align-items: center;
   justify-content: center;
 }
-
 .modalBtnSecondary {
   display: inline-flex;
   align-items: center;
@@ -153,12 +137,10 @@
   transition: border-color 0.2s ease, background 0.2s ease;
   white-space: nowrap;
 }
-
 .modalBtnSecondary:hover {
   border-color: #9fb3c8;
   background: #f8fafc;
 }
-
 .modalBtnPrimary {
   height: 46px !important;
   padding: 0 24px !important;

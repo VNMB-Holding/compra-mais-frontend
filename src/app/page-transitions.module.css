@@ -1,10 +1,4 @@
-/**
- * page-transitions.module.css
- * 
- * Animação de entrada de conteúdo de página.
- * Aplique a classe `pageEnter` no wrapper principal do conteúdo de cada página
- * para criar uma transição suave quando o conteúdo é carregado/navegado.
- */
+
 
 .pageEnter {
   animation: pageEnterAnim var(--duration-enter) var(--ease-out) both;

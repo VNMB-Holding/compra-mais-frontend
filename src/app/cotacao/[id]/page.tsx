@@ -53,9 +53,7 @@ export default function CotacaoFornecedorPage() {
     }
   }, [paramFornecedor, paramCnpj, paramSupId, rfq?.invitedSuppliers, supplierName, supplierCnpj]);
   
-  
   const [itemPrices, setItemPrices] = useState<Record<string, number>>({});
-  
   
   const [freightType, setFreightType] = useState<"CIF" | "FOB">("CIF");
   const [freightCost, setFreightCost] = useState<number>(0);
@@ -360,7 +358,7 @@ export default function CotacaoFornecedorPage() {
 
         <form onSubmit={handleSubmit}>
           
-          {/* SEÇÃO 1: IDENTIFICAÇÃO DA EMPRESA */}
+          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -490,7 +488,6 @@ export default function CotacaoFornecedorPage() {
             )}
           </div>
 
-          
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <Icon name="shopping-cart-01" size={20} className={styles.sectionIcon} />
@@ -562,7 +559,6 @@ export default function CotacaoFornecedorPage() {
             </div>
           </div>
 
-          
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <Icon name="truck-01" size={20} className={styles.sectionIcon} />
@@ -641,7 +637,7 @@ export default function CotacaoFornecedorPage() {
             </div>
           </div>
 
-          {/* SEÇÃO 4: DADOS BANCÁRIOS & HOMOLOGAÇÃO */}
+          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

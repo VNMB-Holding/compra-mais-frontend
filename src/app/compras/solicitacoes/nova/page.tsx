@@ -16,7 +16,6 @@ import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
 import { CATEGORY_LABEL_MAP } from "@/lib/utils/category-icon";
 import { ApprovalModal } from "@/components";
 
-
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";
 
 interface RequestItem {
@@ -141,8 +140,6 @@ export default function NovaSolicitacaoPage() {
     if (fromBranch) return `${fromBranch.name} (${fromBranch.acronym})`;
     return "VB AGRO LTDA (BRD)";
   }, [targetTenantId]);
-
-
 
   const [purchaseType, setPurchaseType] = useState("Material recorrente");
   const [justification, setJustification] = useState("");
@@ -278,7 +275,6 @@ export default function NovaSolicitacaoPage() {
     }
   };
 
-
   return (
     <div className={styles.formContainer}>
       {showApprovalModal && (
@@ -305,7 +301,6 @@ export default function NovaSolicitacaoPage() {
         </div>
       </div>
 
-      
       <div className={styles.stepperNav}>
         <div 
           className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
@@ -339,7 +334,6 @@ export default function NovaSolicitacaoPage() {
       <div className={styles.workspaceGrid}>
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
-            
             
             {currentStep === 1 && (
               <section className={styles.formSection}>
@@ -436,7 +430,6 @@ export default function NovaSolicitacaoPage() {
               </section>
             )}
 
-            
             {currentStep === 2 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -454,7 +447,6 @@ export default function NovaSolicitacaoPage() {
 
                     return (
                       <div className={styles.itemPanel} key={item.id}>
-                        
                         
                         <div 
                           className={styles.itemSummaryRow} 
@@ -506,7 +498,6 @@ export default function NovaSolicitacaoPage() {
                           </div>
                         </div>
 
-                        
                         {isExpanded && (
                           <div className={styles.accordionExpandable}>
                             <div className={styles.gridCol12}>
@@ -596,7 +587,6 @@ export default function NovaSolicitacaoPage() {
               </section>
             )}
 
-            
             {currentStep === 3 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
@@ -659,7 +649,6 @@ export default function NovaSolicitacaoPage() {
               </section>
             )}
 
-            
             <div className={styles.formActions}>
               {currentStep === 1 && (
                 <>
@@ -796,7 +785,6 @@ export default function NovaSolicitacaoPage() {
               <div><dt>Condição</dt><dd>{paymentTerms}</dd></div>
             </dl>
           </Card>
-
 
         </aside>
       </div>

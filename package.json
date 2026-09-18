@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "clean:comments": "npx tsx scripts/clean-comments.ts"
   },
   "dependencies": {
     "@geoapify/geocoder-autocomplete": "^3.1.0",
@@ -40,11 +41,13 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/strip-comments": "^2.0.4",
     "@vitejs/plugin-react": "^6.1.1",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "jsdom": "^30.0.1",
+    "strip-comments": "^2.0.1",
     "typescript": "^5",
     "vite": "^8.3.0",
     "vitest": "^5.0.0"

@@ -40,7 +40,6 @@ export default function HomologacaoDetailPage() {
     fetchSupplier();
   }, [fetchSupplier]);
 
-  
   const handleRunScreening = async () => {
     if (!supplier) return;
     try {
@@ -54,7 +53,6 @@ export default function HomologacaoDetailPage() {
       const result = await homologacaoApi.screen(supplier.corporateName || supplier.tradeName, supplier.cnpj);
       setScreeningResult(result);
 
-      
       const autoStatus: Supplier["status"] = result.score >= 70 ? "Active" : result.score >= 40 ? "UnderCertification" : "Suspended";
       const updatedScore = Number((result.score / 10).toFixed(1));
 
@@ -104,7 +102,6 @@ export default function HomologacaoDetailPage() {
   const isHomologado = supplier.status === "Active" || supplier.isActive === true;
   const isSuspended = supplier.status === "Suspended";
 
-  
   const displayScore = screeningResult ? screeningResult.score : supplier.performanceScore ? Math.round(Number(supplier.performanceScore) * 10) : 85;
   const riskCategory = displayScore >= 70 ? "Baixo" : displayScore >= 40 ? "Médio" : "Alto";
   const riskColorClass = displayScore >= 70 ? styles.textGreen : displayScore >= 40 ? styles.textYellow : styles.textRed;
@@ -127,7 +124,6 @@ export default function HomologacaoDetailPage() {
         <Icon name="arrow-left" size={16} /> Voltar para Homologação
       </button>
 
-      
       <div className={styles.pageHeader}>
         <div className={styles.headerLeft}>
           <div className={styles.titleRow}>
@@ -155,7 +151,6 @@ export default function HomologacaoDetailPage() {
         </div>
       </div>
 
-      
       <div className={styles.kpiStrip}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiLabel}>
@@ -203,7 +198,6 @@ export default function HomologacaoDetailPage() {
         </div>
       </div>
 
-      
       <div className={styles.tabsBar}>
         <button
           className={`${styles.tabBtn} ${activeTab === "diagnostico" ? styles.tabActive : ""}`}
@@ -231,7 +225,6 @@ export default function HomologacaoDetailPage() {
         </button>
       </div>
 
-      
       {activeTab === "diagnostico" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>
@@ -272,7 +265,6 @@ export default function HomologacaoDetailPage() {
             </div>
           </div>
 
-          
           <div>
             <h2 className={styles.sectionTitle} style={{ marginBottom: 12 }}>
               <Icon name="alert-triangle" size={18} /> Apontamentos & Diagnóstico
@@ -305,7 +297,6 @@ export default function HomologacaoDetailPage() {
             )}
           </div>
 
-          
           <div>
             <h2 className={styles.sectionTitle} style={{ marginBottom: 12 }}>
               <Icon name="globe-01" size={18} /> Fontes Oficiais Integradas
@@ -323,7 +314,6 @@ export default function HomologacaoDetailPage() {
         </div>
       )}
 
-      
       {activeTab === "cadastro" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>
@@ -372,7 +362,6 @@ export default function HomologacaoDetailPage() {
             </div>
           </div>
 
-          
           <div style={{ marginTop: 16 }}>
             <h2 className={styles.sectionTitle} style={{ marginBottom: 12 }}>
               <Icon name="users-01" size={18} /> Quadro de Sócios e Administradores (QSA)
@@ -397,7 +386,6 @@ export default function HomologacaoDetailPage() {
         </div>
       )}
 
-      
       {activeTab === "noticias" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>
@@ -427,7 +415,6 @@ export default function HomologacaoDetailPage() {
         </div>
       )}
 
-      
       {activeTab === "financeiro" && (
         <div className={styles.contentCard}>
           <h2 className={styles.sectionTitle}>

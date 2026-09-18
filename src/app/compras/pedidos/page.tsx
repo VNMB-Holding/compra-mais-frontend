@@ -24,6 +24,8 @@ import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tenant";
 import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
+import { useTour } from "@/hooks/useTour";
+import { pedidosTour } from "@/lib/tours";
 
 interface PedidoRow {
   id: string;
@@ -122,6 +124,17 @@ export default function PedidosPage() {
     fetchData();
   }, [fetchData]);
 
+  const { startTour, isTourCompleted } = useTour();
+
+  useEffect(() => {
+    if (!loading && !error && !isTourCompleted("pedidos-intro")) {
+      const timer = setTimeout(() => {
+        startTour(pedidosTour);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, error, isTourCompleted, startTour]);
+
   const supplierOptions = React.useMemo(() => [
     { label: "Todos os fornecedores", value: "Todos" },
     ...Array.from(new Set([...allSuppliers, ...pedidos.map((p) => p.fornecedor)]))
@@ -139,7 +152,6 @@ export default function PedidosPage() {
     { label: "Cancelado", value: "Cancelado" },
   ];
 
-  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -182,16 +194,16 @@ export default function PedidosPage() {
         </div>
       </div>
 
-      <div className={styles.kpiGrid}>
+      <div className={styles.kpiGrid} data-tour="pedidos-kpis">
         <KpiCard title="Total de pedidos" value={String(pedidos.length)} icon="shopping-cart-01" description="Este mês" loading={loading} />
         <KpiCard title="Pendentes" value={String(pendentCount)} icon="clock" description="Aguardando entrega" loading={loading} />
         <KpiCard title="Entregues" value={String(entregueCount)} icon="check-circle" description="Finalizados" loading={loading} />
         <KpiCard title="Valor total" value={formatCurrency(totalValue)} icon="currency-dollar-circle" description="Em pedidos" loading={loading} />
       </div>
 
-      <Card noPadding className={styles.mainListCard}>
+      <Card noPadding className={styles.mainListCard} data-tour="pedidos-table">
 
-        <div className={styles.tableToolbar}>
+        <div className={styles.tableToolbar} data-tour="pedidos-toolbar">
           <div className={styles.searchBox}>
             <Icon name="search-md" />
             <input

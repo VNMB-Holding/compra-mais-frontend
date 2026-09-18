@@ -7,7 +7,6 @@
   padding: 48px 24px;
   text-align: center;
 }
-
 .iconWrap {
   width: 64px;
   height: 64px;
@@ -19,7 +18,6 @@
   justify-content: center;
   flex-shrink: 0;
 }
-
 .imageWrap {
   width: 160px;
   height: 160px;
@@ -29,21 +27,18 @@
   flex-shrink: 0;
   user-select: none;
 }
-
 .illustration {
   width: 100%;
   height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.08));
 }
-
 .title {
   font-size: 15px;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
 }
-
 .message {
   font-size: 13px;
   color: #64748b;

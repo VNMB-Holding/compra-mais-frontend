@@ -5,7 +5,6 @@
   width: 100%;
   max-width: 320px;
 }
-
 .searchIcon {
   position: absolute;
   left: 9px;
@@ -14,11 +13,9 @@
   pointer-events: none;
   transition: color var(--duration-normal) var(--ease-in-out);
 }
-
 .searchWrapper:focus-within .searchIcon {
   color: var(--primary, #0d9488);
 }
-
 .input {
   width: 100%;
   padding: 6px 10px 6px 32px;
@@ -31,7 +28,6 @@
     border-color var(--duration-normal) var(--ease-in-out),
     box-shadow   var(--duration-normal) var(--ease-in-out);
 }
-
 .input:focus {
   border-color: var(--primary, #0d9488);
   box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.12);

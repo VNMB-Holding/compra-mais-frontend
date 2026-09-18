@@ -115,7 +115,6 @@ export default function LoginPage() {
               Entrar
             </Button>
 
-
             <div className={styles.divider}>
               <span>ou continue com</span>
             </div>

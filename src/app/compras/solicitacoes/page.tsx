@@ -26,6 +26,8 @@ import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tena
 import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { usePurchaseRequests } from "@/hooks/useQueries";
+import { useTour } from "@/hooks/useTour";
+import { solicitacoesTour } from "@/lib/tours";
 
 interface SolicitationCorporateRow {
   id: string;
@@ -79,7 +81,6 @@ export default function SolicitacoesPage() {
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
 
-  
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDrawerRequest, setSelectedDrawerRequest] = useState<PurchaseRequest | null>(null);
   const itemsPerPage = 10;
@@ -118,6 +119,16 @@ export default function SolicitacoesPage() {
     fetchKpis();
   }, [queryCompanyCode]);
 
+  const { startTour, isTourCompleted } = useTour();
+
+  useEffect(() => {
+    if (!loading && !loadingKpis && !isTourCompleted("solicitacoes-intro")) {
+      const timer = setTimeout(() => {
+        startTour(solicitacoesTour);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, loadingKpis, isTourCompleted, startTour]);
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
@@ -202,7 +213,7 @@ export default function SolicitacoesPage() {
         </div>
       </div>
 
-      <div className={styles.kpiGrid}>
+      <div className={styles.kpiGrid} data-tour="solicitacoes-kpis">
         <KpiCard
           title="Total de Solicitações"
           value={String(kpis?.total ?? rawRequests.length)}
@@ -229,9 +240,9 @@ export default function SolicitacoesPage() {
         />
       </div>
 
-      <Card noPadding className={styles.mainListCard}>
+      <Card noPadding className={styles.mainListCard} data-tour="solicitacoes-table">
         <div className={styles.tableToolbar}>
-          <div className={styles.searchBox}>
+          <div className={styles.searchBox} data-tour="solicitacoes-search">
             <Icon name="search-md" size={16} />
             <input
               type="text"
@@ -243,7 +254,7 @@ export default function SolicitacoesPage() {
               }}
             />
           </div>
-          <div className={styles.filtersGroup}>
+          <div className={styles.filtersGroup} data-tour="solicitacoes-filters">
             <Select
               options={companyOptions}
               value={selectedCompanyId}
@@ -330,7 +341,6 @@ export default function SolicitacoesPage() {
         )}
       </Card>
 
-      
       {selectedDrawerRequest && (
         <QuickDetailDrawer
           open={!!selectedDrawerRequest}
@@ -380,7 +390,6 @@ export default function SolicitacoesPage() {
               )}
             </div>
 
-            
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#334155", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6 }}>
                 <Icon name="package" size={16} /> Itens da Solicitação ({selectedDrawerRequest.items?.length || 0})

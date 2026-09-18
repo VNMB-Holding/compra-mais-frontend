@@ -3,8 +3,6 @@
   height: 100dvh;
   width: 100vw;
 }
-
-
 .left {
   flex: 1;
   background-image: url('/images/side-img.png');
@@ -12,18 +10,14 @@
   background-position: center;
   background-repeat: no-repeat;
 }
-
 .logoWrapper {
   text-align: center;
   margin-bottom: 32px;
 }
-
 .logoImg {
   height: 48px;
   width: auto;
 }
-
-
 .right {
   flex: 1;
   display: flex;
@@ -33,7 +27,6 @@
   padding: 40px;
   background: #fafbfc;
 }
-
 .card {
   background: white;
   width: 100%;
@@ -42,36 +35,30 @@
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.04);
 }
-
 .cardTitle {
   font-size: 22px;
   font-weight: 700;
   margin-bottom: 6px;
   color: #111;
 }
-
 .cardSub {
   font-size: 14px;
   color: #666;
   margin-bottom: 28px;
 }
-
 .form {
   display: flex;
   flex-direction: column;
 }
-
 .errorMessage {
   color: #e11d48;
   font-size: 13px;
   font-weight: 500;
   margin-top: 8px;
 }
-
 .field {
   margin-bottom: 18px;
 }
-
 .field label {
   display: block;
   font-size: 13px;
@@ -79,20 +66,17 @@
   margin-bottom: 6px;
   color: #111;
 }
-
 .inputWrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
-
 .inputIcon {
   position: absolute;
   left: 14px;
   color: #94a3b8;
   pointer-events: none;
 }
-
 .inputWrapper input {
   width: 100%;
   padding: 11px 14px 11px 42px;
@@ -104,22 +88,18 @@
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .inputWrapper input:focus {
   border-color: #008489;
   box-shadow: 0 0 0 3px rgba(0,132,137,0.1);
 }
-
 .inputWrapper input::placeholder {
   color: #a0aec0;
 }
-
 .inputWrapper input:disabled {
   background: #f8fafc;
   color: #94a3b8;
   cursor: not-allowed;
 }
-
 .eyeBtn {
   position: absolute;
   right: 12px;
@@ -133,11 +113,9 @@
   border-radius: 4px;
   transition: color 0.2s;
 }
-
 .eyeBtn:hover {
   color: #475569;
 }
-
 .actions {
   display: flex;
   justify-content: space-between;
@@ -145,7 +123,6 @@
   margin-bottom: 24px;
   font-size: 13px;
 }
-
 .checkbox {
   display: flex;
   align-items: center;
@@ -153,24 +130,20 @@
   cursor: pointer;
   color: #444;
 }
-
 .checkbox input {
   accent-color: #008489;
   width: 16px;
   height: 16px;
   cursor: pointer;
 }
-
 .forgot {
   color: #008489;
   text-decoration: none;
   font-weight: 500;
 }
-
 .forgot:hover {
   text-decoration: underline;
 }
-
 .submit {
   width: 100%;
   background: #008489;
@@ -184,16 +157,13 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .submit:hover:not(:disabled) {
   background: #006b6f;
 }
-
 .submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .divider {
   display: flex;
   align-items: center;
@@ -202,18 +172,15 @@
   color: #888;
   font-size: 13px;
 }
-
 .divider::before,
 .divider::after {
   content: '';
   flex: 1;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .divider span {
   padding: 0 16px;
 }
-
 .microsoft {
   width: 100%;
   background: white;
@@ -231,27 +198,22 @@
   gap: 10px;
   transition: background 0.2s;
 }
-
 .microsoft:hover {
   background: #f8fafc;
 }
-
 .register {
   margin-top: 32px;
   font-size: 14px;
   color: #666;
 }
-
 .register a {
   color: #008489;
   font-weight: 600;
   text-decoration: none;
 }
-
 .register a:hover {
   text-decoration: underline;
 }
-
 @media (max-width: 900px) {
   .container {
     flex-direction: column;
