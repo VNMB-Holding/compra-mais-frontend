@@ -1,4 +1,5 @@
 const config = {
+  buildCommand: "npx next build",
   default: {
     override: {
       wrapper: "cloudflare-node",
