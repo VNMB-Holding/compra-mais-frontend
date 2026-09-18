@@ -4,7 +4,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { TourProvider, useTourContext, TourDefinition } from "@/contexts/TourContext";
 import GuidedTour from "../GuidedTour";
 
-// Mock Tour Definition
 const mockTour: TourDefinition = {
   id: "test-tour",
   steps: [
@@ -88,7 +87,6 @@ describe("GuidedTour Component & TourContext", () => {
       fireEvent.click(screen.getByText("Iniciar Tour"));
     });
 
-    // Próximo
     const nextBtn = await screen.findByRole("button", { name: /próximo/i });
     act(() => {
       fireEvent.click(nextBtn);
@@ -98,7 +96,6 @@ describe("GuidedTour Component & TourContext", () => {
     expect(await screen.findByText("Segundo Passo")).toBeDefined();
     expect(screen.getByText("2 de 2")).toBeDefined();
 
-    // Botão Concluir no último passo
     const finishBtn = screen.getByRole("button", { name: /concluir/i });
     act(() => {
       fireEvent.click(finishBtn);

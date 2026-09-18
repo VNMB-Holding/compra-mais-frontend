@@ -1,4 +1,3 @@
-
 .formContainer {
   display: flex;
   flex-direction: column;
@@ -6,7 +5,6 @@
   width: 100%;
   color: #0f172a;
 }
-
 .backBtn {
   display: inline-flex;
   align-items: center;
@@ -20,15 +18,12 @@
   font-weight: 700;
   cursor: pointer;
 }
-
-
 .pageHeader {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
 }
-
 .eyebrow {
   display: block;
   margin-bottom: 6px;
@@ -38,7 +33,6 @@
   letter-spacing: 0;
   text-transform: uppercase;
 }
-
 .pageHeader h1 {
   margin: 0 0 4px;
   color: #0f172a;
@@ -46,7 +40,6 @@
   font-weight: 800;
   letter-spacing: 0;
 }
-
 .pageHeader p {
   max-width: 760px;
   margin: 0;
@@ -54,8 +47,6 @@
   font-size: 14px;
   line-height: 1.55;
 }
-
-
 .headerActions,
 .formActions {
   display: flex;
@@ -64,7 +55,6 @@
   gap: 12px;
   flex-wrap: wrap;
 }
-
 .secondaryAction,
 .btnCancel,
 .addItemButton {
@@ -83,12 +73,10 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
-
 .secondaryAction,
 .btnCancel {
   padding: 10px 16px;
 }
-
 .secondaryAction:hover,
 .btnCancel:hover,
 .addItemButton:hover {
@@ -96,23 +84,18 @@
   background: #f8fafc;
   color: #0f172a;
 }
-
 .btnSubmit {
   min-height: 42px;
   background-color: #007d79 !important;
 }
-
-
 .workspaceGrid {
   display: block;
   width: 100%;
 }
-
 .mainColumn {
   width: 100%;
   min-width: 0;
 }
-
 .linkedSolBadge {
   display: inline-flex;
   align-items: center;
@@ -125,7 +108,6 @@
   flex-shrink: 0;
   max-width: 600px;
 }
-
 .linkedSolIcon {
   display: flex;
   align-items: center;
@@ -133,7 +115,6 @@
   color: #007d79;
   flex-shrink: 0;
 }
-
 .linkedSolInfo {
   display: flex;
   align-items: center;
@@ -142,14 +123,12 @@
   min-width: 0;
   overflow: hidden;
 }
-
 .linkedSolLabel {
   color: #64748b;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
 }
-
 .linkedSolCode {
   color: #007d79;
   font-weight: 700;
@@ -160,12 +139,10 @@
   border-radius: 4px;
   font-size: 12px;
 }
-
 .linkedSolDivider {
   color: #cbd5e1;
   flex-shrink: 0;
 }
-
 .linkedSolTitle {
   color: #1e293b;
   font-weight: 600;
@@ -174,7 +151,6 @@
   text-overflow: ellipsis;
   max-width: 250px;
 }
-
 .btnTrocarSol {
   display: inline-flex;
   align-items: center;
@@ -191,36 +167,29 @@
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
-
 .btnTrocarSol:hover {
   background: #e6f4f4;
   border-color: #99d5d3;
 }
-
-
 .formCard {
   padding: 0 !important;
   border: 1px solid #e2e8f0;
   background: #fff;
   overflow: hidden;
 }
-
 .formSection {
   padding: 28px 32px;
   border-bottom: 1px solid #edf2f7;
 }
-
 .formSection:last-of-type {
   border-bottom: 0;
 }
-
 .sectionHeader {
   display: flex;
   gap: 14px;
   align-items: flex-start;
   margin-bottom: 22px;
 }
-
 .sectionIcon {
   display: inline-flex;
   align-items: center;
@@ -232,7 +201,6 @@
   color: #007d79;
   flex: 0 0 auto;
 }
-
 .sectionHeader h2 {
   margin: 0 0 4px;
   color: #0f172a;
@@ -240,39 +208,32 @@
   font-weight: 800;
   letter-spacing: 0;
 }
-
 .sectionHeader p {
   margin: 0;
   color: #64748b;
   font-size: 13px;
   line-height: 1.45;
 }
-
-
 .formRow {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 16px;
 }
-
 .formGroup {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 8px;
 }
-
 .fullWidth {
   margin-bottom: 16px;
 }
-
 .formGroup label {
   color: #1e293b;
   font-size: 13px;
   font-weight: 800;
 }
-
 .formControl {
   width: 100%;
   min-height: 36px;
@@ -287,27 +248,20 @@
   line-height: 1.35;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-
 textarea.formControl {
   resize: vertical;
 }
-
 .formControl:focus {
   border-color: #007d79;
   box-shadow: 0 0 0 3px #dff4f2;
 }
-
 .formControl[readonly] {
   background: #f8fafc;
   color: #475569;
 }
-
-
-
 .gateWrapper {
   width: 100%;
 }
-
 .gateCard {
   width: 100%;
   border: 1px solid #e2e8f0;
@@ -319,7 +273,6 @@ textarea.formControl {
   display: flex;
   flex-direction: column;
 }
-
 .gateHeader {
   padding: 22px 28px;
   border-bottom: 1px solid #edf2f7;
@@ -329,13 +282,11 @@ textarea.formControl {
   gap: 16px;
   background: #ffffff;
 }
-
 .gateHeaderLeft {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-
 .gateIconWrap {
   display: inline-flex;
   align-items: center;
@@ -348,7 +299,6 @@ textarea.formControl {
   color: #007d79;
   flex-shrink: 0;
 }
-
 .gateTitle {
   margin: 0 0 2px;
   color: #0f172a;
@@ -356,34 +306,29 @@ textarea.formControl {
   font-weight: 700;
   letter-spacing: -0.01em;
 }
-
 .gateSubtitle {
   margin: 0;
   color: #64748b;
   font-size: 13px;
   line-height: 1.45;
 }
-
 .gateBody {
   padding: 28px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-
 .gateSelectGroup {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .gateLabel {
   color: #1e293b;
   font-size: 13px;
   font-weight: 700;
 }
-
 .gateCardsDivider {
   display: flex;
   align-items: center;
@@ -395,7 +340,6 @@ textarea.formControl {
   letter-spacing: 0.04em;
   margin: 4px 0;
 }
-
 .gateCardsDivider::before,
 .gateCardsDivider::after {
   content: "";
@@ -403,13 +347,11 @@ textarea.formControl {
   height: 1px;
   background: #e2e8f0;
 }
-
 .quickRequestsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
 }
-
 .quickRequestCard {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
@@ -422,33 +364,28 @@ textarea.formControl {
   gap: 10px;
   text-align: left;
 }
-
 .quickRequestCard:hover {
   border-color: #007d79;
   background: #fafbfc;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 125, 121, 0.08);
 }
-
 .quickRequestCardActive {
   border-color: #007d79;
   background: #f0fdf9;
   box-shadow: 0 0 0 2px rgba(0, 125, 121, 0.15);
 }
-
 .quickCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
-
 .quickCardId {
   font-size: 12px;
   font-weight: 700;
   color: #007d79;
 }
-
 .quickCardTitle {
   font-size: 13px;
   font-weight: 600;
@@ -461,7 +398,6 @@ textarea.formControl {
   overflow: hidden;
   line-height: 1.35;
 }
-
 .quickCardMeta {
   display: flex;
   align-items: center;
@@ -471,12 +407,10 @@ textarea.formControl {
   padding-top: 8px;
   border-top: 1px solid #f1f5f9;
 }
-
 .quickCardValue {
   font-weight: 700;
   color: #0f172a;
 }
-
 .gateSelectedCard {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -486,7 +420,6 @@ textarea.formControl {
   flex-direction: column;
   gap: 14px;
 }
-
 .gateSelectedHeader {
   display: flex;
   align-items: center;
@@ -495,13 +428,11 @@ textarea.formControl {
   padding-bottom: 12px;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .gateSelectedDemandInfo {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .gateSelectedLabel {
   font-size: 11px;
   font-weight: 700;
@@ -509,31 +440,26 @@ textarea.formControl {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
 .gateSelectedTitle {
   font-size: 15px;
   font-weight: 700;
   color: #0f172a;
 }
-
 .gateSelectedGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
-
 @media (max-width: 640px) {
   .gateSelectedGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
 .gateSelectedCol {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .gateSelectedColLabel {
   font-size: 11px;
   font-weight: 700;
@@ -541,7 +467,6 @@ textarea.formControl {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-
 .gateSelectedColValue {
   font-size: 13px;
   font-weight: 600;
@@ -550,13 +475,11 @@ textarea.formControl {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .gateSelectedValueHighlight {
   font-size: 15px;
   font-weight: 800;
   color: #007d79;
 }
-
 .gateActions {
   padding: 20px 28px;
   border-top: 1px solid #edf2f7;
@@ -565,7 +488,6 @@ textarea.formControl {
   gap: 12px;
   background: #ffffff;
 }
-
 @media (max-width: 768px) {
   .gateHeader {
     padding: 18px 20px;
@@ -586,7 +508,6 @@ textarea.formControl {
     padding: 16px 20px;
   }
 }
-
 @media (max-width: 576px) {
   .gateActions {
     flex-direction: column-reverse;
@@ -595,15 +516,11 @@ textarea.formControl {
     width: 100%;
   }
 }
-
-
-
 .itemHeaderLeft {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .itemOrigemTag {
   display: inline-flex;
   align-items: center;
@@ -615,8 +532,6 @@ textarea.formControl {
   font-size: 11px;
   font-weight: 800;
 }
-
-
 .priorityPill {
   display: inline-flex;
   align-items: center;
@@ -627,13 +542,10 @@ textarea.formControl {
   font-weight: 900;
   white-space: nowrap;
 }
-
 .priorityBaixa { background: #f1f5f9; color: #475569; }
 .priorityMedia { background: #fef9c3; color: #92400e; }
 .priorityAlta  { background: #fee2e2; color: #b91c1c; }
 .priorityCritica { background: #0f172a; color: #fff; }
-
-
 .summaryBox {
   display: flex;
   gap: 12px;
@@ -645,7 +557,6 @@ textarea.formControl {
   align-items: flex-start;
   color: #007d79;
 }
-
 .summaryBox div {
   display: flex;
   flex-direction: column;
@@ -653,27 +564,22 @@ textarea.formControl {
   color: #0f172a;
   font-weight: 700;
 }
-
 .summaryBox small {
   font-weight: 400;
   color: #64748b;
   margin-top: 2px;
 }
-
-
 .itemsList {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
 .itemPanel {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #fbfdff;
   overflow: hidden;
 }
-
 .itemHeader {
   display: flex;
   align-items: center;
@@ -683,12 +589,10 @@ textarea.formControl {
   border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
 }
-
 .itemHeader strong {
   font-size: 14px;
   font-weight: 800;
 }
-
 .itemHeader button {
   display: inline-flex;
   align-items: center;
@@ -701,19 +605,16 @@ textarea.formControl {
   color: #64748b;
   cursor: pointer;
 }
-
 .itemHeader button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-
 .rfqItemGrid {
   display: grid;
   grid-template-columns: minmax(200px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr);
   gap: 16px;
   padding: 16px;
 }
-
 .addItemButton {
   width: 100%;
   margin-top: 14px;
@@ -721,9 +622,6 @@ textarea.formControl {
   border-style: dashed;
   color: #007d79;
 }
-
-
-
 .selectedTray {
   background: #f0fdf9;
   border: 1px solid #99f6e4;
@@ -734,7 +632,6 @@ textarea.formControl {
   flex-direction: column;
   gap: 10px;
 }
-
 .selectedTrayHeader {
   display: flex;
   justify-content: space-between;
@@ -743,7 +640,6 @@ textarea.formControl {
   font-weight: 700;
   color: #007d79;
 }
-
 .clearSelectionBtn {
   background: none;
   border: none;
@@ -756,13 +652,11 @@ textarea.formControl {
 .clearSelectionBtn:hover {
   text-decoration: underline;
 }
-
 .chipsContainer {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-
 .supplierChip {
   display: inline-flex;
   align-items: center;
@@ -776,7 +670,6 @@ textarea.formControl {
   border-radius: 20px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-
 .chipRemoveBtn {
   background: none;
   border: none;
@@ -790,8 +683,6 @@ textarea.formControl {
 .chipRemoveBtn:hover {
   color: #ef4444;
 }
-
-
 .supplierFilterToolbar {
   display: flex;
   gap: 12px;
@@ -799,7 +690,6 @@ textarea.formControl {
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
-
 .policyNotice {
   margin-top: 8px;
   padding: 8px 12px;
@@ -812,7 +702,6 @@ textarea.formControl {
   align-items: center;
   gap: 8px;
 }
-
 .supplierFilterToolbar {
   display: flex;
   gap: 12px;
@@ -820,13 +709,11 @@ textarea.formControl {
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
-
 .supplierSearchInput {
   flex: 1;
   min-width: 260px;
   position: relative;
 }
-
 .supplierSearchInput input {
   width: 100%;
   padding: 9px 12px 9px 36px;
@@ -840,7 +727,6 @@ textarea.formControl {
   border-color: #007d79;
   box-shadow: 0 0 0 3px #dff4f2;
 }
-
 .searchIconInside {
   position: absolute;
   left: 11px;
@@ -849,13 +735,11 @@ textarea.formControl {
   color: #94a3b8;
   pointer-events: none;
 }
-
 .filterTabs {
   display: flex;
   gap: 6px;
   align-items: center;
 }
-
 .filterTabBtn {
   background: #f1f5f9;
   border: 1px solid transparent;
@@ -874,13 +758,11 @@ textarea.formControl {
   background: #007d79 !important;
   color: #ffffff !important;
 }
-
 .fornecedoresList {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .fornecedorRow {
   display: flex;
   align-items: center;
@@ -892,17 +774,14 @@ textarea.formControl {
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
-
 .fornecedorRow:hover {
   border-color: #007d79;
   background: #f0fdf9;
 }
-
 .fornecedorSelecionado {
   border-color: #007d79 !important;
   background: #f0fdf9 !important;
 }
-
 .fornecedorCheck {
   width: 18px;
   height: 18px;
@@ -910,26 +789,22 @@ textarea.formControl {
   cursor: pointer;
   flex-shrink: 0;
 }
-
 .fornecedorInfo {
   display: flex;
   flex-direction: column;
   gap: 2px;
   flex: 1;
 }
-
 .fornecedorTitleRow {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .fornecedorInfo strong {
   font-size: 14px;
   font-weight: 700;
   color: #0f172a;
 }
-
 .segmentTag {
   background: #f1f5f9;
   color: #475569;
@@ -938,12 +813,10 @@ textarea.formControl {
   padding: 2px 6px;
   border-radius: 4px;
 }
-
 .fornecedorInfo span {
   font-size: 12px;
   color: #64748b;
 }
-
 .fornecedorBadge {
   display: inline-flex;
   align-items: center;
@@ -957,8 +830,6 @@ textarea.formControl {
   font-weight: 800;
   white-space: nowrap;
 }
-
-
 .supplierPaginationBar {
   display: flex;
   justify-content: space-between;
@@ -969,13 +840,11 @@ textarea.formControl {
   font-size: 12px;
   color: #64748b;
 }
-
 .paginationControls {
   display: flex;
   gap: 6px;
   align-items: center;
 }
-
 .pageBtn {
   background: #ffffff;
   border: 1px solid #dbe4ef;
@@ -995,22 +864,17 @@ textarea.formControl {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
-
 .formActions {
   padding: 22px 32px;
   border-top: 1px solid #edf2f7;
   background: #fbfdff;
 }
-
-
 .summaryCard,
 .checklistCard {
   padding: 20px !important;
   border: 1px solid #e2e8f0;
   background: #fff;
 }
-
 .summaryHeader {
   display: flex;
   align-items: center;
@@ -1018,14 +882,12 @@ textarea.formControl {
   gap: 12px;
   margin-bottom: 14px;
 }
-
 .summaryHeader span {
   color: #64748b;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
-
 .statusPill {
   display: inline-flex;
   align-items: center;
@@ -1037,7 +899,6 @@ textarea.formControl {
   background: #e6f5f4;
   color: #007d79;
 }
-
 .summaryCard h3 {
   margin: 0 0 18px;
   color: #0f172a;
@@ -1045,45 +906,38 @@ textarea.formControl {
   font-weight: 900;
   line-height: 1.3;
 }
-
 .summaryValue {
   padding: 14px;
   border-radius: 8px;
   background: #e6f5f4;
   color: #075e5b;
 }
-
 .summaryValue span {
   display: block;
   margin-bottom: 4px;
   font-size: 12px;
   font-weight: 800;
 }
-
 .summaryValue strong {
   font-size: 24px;
   font-weight: 900;
 }
-
 .summaryList {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin: 18px 0 0;
 }
-
 .summaryList div {
   display: grid;
   grid-template-columns: 96px 1fr;
   gap: 12px;
 }
-
 .summaryList dt {
   color: #94a3b8;
   font-size: 12px;
   font-weight: 800;
 }
-
 .summaryList dd {
   margin: 0;
   color: #334155;
@@ -1091,26 +945,21 @@ textarea.formControl {
   font-weight: 700;
   line-height: 1.35;
 }
-
-
 .sideTitle {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
 }
-
 .sideTitle svg {
   color: #007d79;
 }
-
 .sideTitle h3 {
   margin: 0;
   color: #0f172a;
   font-size: 15px;
   font-weight: 900;
 }
-
 .checklistCard ul {
   display: flex;
   flex-direction: column;
@@ -1119,7 +968,6 @@ textarea.formControl {
   margin: 0;
   padding: 0;
 }
-
 .checklistCard li {
   position: relative;
   padding-left: 26px;
@@ -1128,7 +976,6 @@ textarea.formControl {
   font-weight: 700;
   line-height: 1.35;
 }
-
 .checklistCard li::before {
   content: "";
   position: absolute;
@@ -1140,86 +987,68 @@ textarea.formControl {
   border-radius: 50%;
   background: #fff;
 }
-
 .checklistCard .done {
   color: #0f766e;
 }
-
 .checklistCard .done::before {
   border-color: #007d79;
   background: #007d79;
   box-shadow: inset 0 0 0 4px #fff;
 }
-
-
 @media (max-width: 1180px) {
   .workspaceGrid,
   .gateWrapper {
     grid-template-columns: 1fr;
   }
-
   .sideColumn {
     position: static;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .gateInfo {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
   }
 }
-
 @media (max-width: 960px) {
   .pageHeader {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .sideColumn {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .rfqItemGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 @media (max-width: 720px) {
   .formContainer {
     gap: 18px;
   }
-
   .pageHeader h1 {
     font-size: 24px;
   }
-
   .sideColumn,
   .formRow,
   .rfqItemGrid {
     grid-template-columns: 1fr;
   }
-
   .formSection,
   .formActions {
     padding: 22px;
   }
-
   .headerActions,
   .formActions {
     align-items: stretch;
     flex-direction: column;
     width: 100%;
   }
-
   .headerActions > *,
   .formActions > * {
     width: 100%;
   }
 }
-
-
-
 .stepperNav {
   display: flex;
   align-items: center;
@@ -1232,7 +1061,6 @@ textarea.formControl {
   margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
-
 .stepIndicator {
   display: flex;
   align-items: center;
@@ -1243,11 +1071,9 @@ textarea.formControl {
   transition: all 0.2s ease;
   user-select: none;
 }
-
 .stepIndicator:hover {
   background: #f8fafc;
 }
-
 .stepNumber {
   display: flex;
   align-items: center;
@@ -1262,61 +1088,47 @@ textarea.formControl {
   font-weight: 700;
   transition: all 0.2s ease;
 }
-
 .stepLabel {
   font-size: 13px;
   font-weight: 700;
   color: #64748b;
   transition: all 0.2s ease;
 }
-
 .stepConnectorLine {
   flex: 1;
   height: 2px;
   background: #e2e8f0;
   border-radius: 1px;
 }
-
-
 .stepActive .stepNumber {
   border-color: #007d79;
   background: #e6f5f4;
   color: #007d79;
 }
-
 .stepActive .stepLabel {
   color: #007d79;
 }
-
 .stepCompleted .stepNumber {
   border-color: #007d79;
   background: #007d79;
   color: #ffffff;
 }
-
 .stepCompleted .stepLabel {
   color: #0f172a;
 }
-
 .stepDisabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 .stepDisabled:hover {
   background: transparent;
 }
-
-
-
-
 .gridCol12 {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 16px;
   width: 100%;
 }
-
 .col12 { grid-column: span 12; }
 .col11 { grid-column: span 11; }
 .col10 { grid-column: span 10; }
@@ -1329,10 +1141,6 @@ textarea.formControl {
 .col3 { grid-column: span 3; }
 .col2 { grid-column: span 2; }
 .col1 { grid-column: span 1; }
-
-
-
-
 .itemSummaryRow {
   display: flex;
   align-items: center;
@@ -1341,17 +1149,14 @@ textarea.formControl {
   cursor: pointer;
   transition: background 0.2s ease;
 }
-
 .itemSummaryRow:hover {
   background: #f8fafc;
 }
-
 .itemSummaryLeft {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
 .itemSummaryBadge {
   display: flex;
   align-items: center;
@@ -1364,30 +1169,25 @@ textarea.formControl {
   padding: 0 10px;
   border-radius: 12px;
 }
-
 .itemSummaryText {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .itemSummaryTitle {
   font-size: 14px;
   font-weight: 700;
   color: #0f172a;
 }
-
 .itemSummaryMeta {
   font-size: 12px;
   color: #64748b;
 }
-
 .itemSummaryRight {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .actionIconBtn {
   display: inline-flex;
   align-items: center;
@@ -1401,24 +1201,20 @@ textarea.formControl {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .actionIconBtn:hover {
   background: #f1f5f9;
   color: #0f172a;
   border-color: #cbd5e1;
 }
-
 .actionDeleteBtn {
   color: #ef4444;
   border-color: #fca5a5;
 }
-
 .actionDeleteBtn:hover {
   background: #fef2f2;
   color: #dc2626;
   border-color: #f87171;
 }
-
 .actionDeleteBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1426,19 +1222,14 @@ textarea.formControl {
   border-color: #e2e8f0;
   color: #cbd5e1;
 }
-
-
 .accordionExpandable {
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
   padding: 20px;
 }
-
 .chevronRotate {
   transition: transform 0.2s ease;
 }
-
 .chevronRotateActive {
   transform: rotate(180deg);
 }
-

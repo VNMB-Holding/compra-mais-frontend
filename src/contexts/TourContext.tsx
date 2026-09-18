@@ -7,60 +7,54 @@ import React, {
   useState,
 } from "react";
 
-/* ─── Types ─── */
-
 export interface TourStep {
-  /** CSS selector of the target element (e.g. '[data-tour="kpi-grid"]') */
+  
   target: string;
-  /** Tooltip title */
+  
   title: string;
-  /** Tooltip body */
+  
   description: string;
-  /** Preferred placement relative to the element */
+  
   placement?: "top" | "bottom" | "left" | "right" | "auto";
+  
+  onBeforeStep?: () => void;
 }
 
 export interface TourDefinition {
-  /** Unique identifier (e.g. 'dashboard-intro') */
+  
   id: string;
-  /** Ordered list of steps */
+  
   steps: TourStep[];
+  
+  onTourStart?: () => void;
+  
+  onTourEnd?: () => void;
 }
 
 export interface TourContextValue {
-  /** Start a specific tour */
+  
   startTour: (tour: TourDefinition) => void;
-  /** Finish or dismiss the active tour */
+  
   endTour: () => void;
-  /** Advance to the next step */
+  
   nextStep: () => void;
-  /** Go back to the previous step */
+  
   prevStep: () => void;
-  /** Whether a tour is currently running */
+  
   isActive: boolean;
-  /** Zero-based index of the current step */
+  
   currentStep: number;
-  /** Total number of steps in the active tour */
+  
   totalSteps: number;
-  /** The active tour definition (null when inactive) */
+  
   currentTour: TourDefinition | null;
-  /** Check if the user has already completed a tour */
+  
   isTourCompleted: (tourId: string) => boolean;
-  /** Reset a specific tour so it can run again */
+  
   resetTour: (tourId: string) => void;
 }
 
-/* ─── Helpers ─── */
-
 const STORAGE_PREFIX = "compra-tour-done-";
-
-function markCompleted(tourId: string) {
-  try {
-    localStorage.setItem(`${STORAGE_PREFIX}${tourId}`, "1");
-  } catch {
-    /* SSR or quota exceeded — silent */
-  }
-}
 
 function checkCompleted(tourId: string): boolean {
   try {
@@ -70,15 +64,21 @@ function checkCompleted(tourId: string): boolean {
   }
 }
 
+function markCompleted(tourId: string) {
+  try {
+    localStorage.setItem(`${STORAGE_PREFIX}${tourId}`, "1");
+  } catch {
+    
+  }
+}
+
 function clearCompleted(tourId: string) {
   try {
     localStorage.removeItem(`${STORAGE_PREFIX}${tourId}`);
   } catch {
-    /* silent */
+    
   }
 }
-
-/* ─── Context ─── */
 
 const TourContext = createContext<TourContextValue | null>(null);
 
@@ -92,11 +92,14 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const startTour = useCallback((tour: TourDefinition) => {
     setCurrentTour(tour);
     setCurrentStep(0);
+    tour.onTourStart?.();
+    tour.steps[0]?.onBeforeStep?.();
   }, []);
 
   const endTour = useCallback(() => {
     if (currentTour) {
       markCompleted(currentTour.id);
+      currentTour.onTourEnd?.();
     }
     setCurrentTour(null);
     setCurrentStep(0);
@@ -105,15 +108,20 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const nextStep = useCallback(() => {
     if (!currentTour) return;
     if (currentStep < currentTour.steps.length - 1) {
-      setCurrentStep((s) => s + 1);
+      const nextIdx = currentStep + 1;
+      setCurrentStep(nextIdx);
+      currentTour.steps[nextIdx]?.onBeforeStep?.();
     } else {
       endTour();
     }
   }, [currentTour, currentStep, endTour]);
 
   const prevStep = useCallback(() => {
-    setCurrentStep((s) => Math.max(0, s - 1));
-  }, []);
+    if (!currentTour) return;
+    const prevIdx = Math.max(0, currentStep - 1);
+    setCurrentStep(prevIdx);
+    currentTour.steps[prevIdx]?.onBeforeStep?.();
+  }, [currentTour, currentStep]);
 
   const isTourCompleted = useCallback((tourId: string) => {
     return checkCompleted(tourId);

@@ -118,7 +118,6 @@ export interface PublicProposalPayload {
   bankDocumentFileName?: string;
 }
 
-
 export const rfqsApi = {
   list: (paramsOrTenant?: string | RfqListParams) => {
     const params = new URLSearchParams();
@@ -252,4 +251,4 @@ export const rfqsApi = {
       data,
     ),
 };
-
+

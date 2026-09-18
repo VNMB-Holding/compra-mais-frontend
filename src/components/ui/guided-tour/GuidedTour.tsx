@@ -7,8 +7,6 @@ import { Button } from "@/components/ui";
 import Icon from "../icon/Icon";
 import styles from "./GuidedTour.module.css";
 
-/* ─── Types ─── */
-
 interface Rect {
   top: number;
   left: number;
@@ -20,8 +18,6 @@ type Placement = "top" | "bottom" | "left" | "right";
 
 const SPOTLIGHT_PADDING = 8;
 const TOOLTIP_GAP = 14;
-
-/* ─── Placement Calculator ─── */
 
 function computePlacement(
   elRect: Rect,
@@ -42,7 +38,6 @@ function computePlacement(
 
   let placement: Placement;
 
-  // Verify if preferred fits. If not, pick the side with the most space
   if (preferred === "bottom" && spaceBottom >= neededH) {
     placement = "bottom";
   } else if (preferred === "top" && spaceTop >= neededH) {
@@ -52,7 +47,7 @@ function computePlacement(
   } else if (preferred === "left" && spaceLeft >= neededW) {
     placement = "left";
   } else {
-    // Pick the best available position based on available viewport space
+    
     const spaces = [
       { side: "bottom" as Placement, space: spaceBottom },
       { side: "top" as Placement, space: spaceTop },
@@ -94,14 +89,11 @@ function computePlacement(
       break;
   }
 
-  // Final viewport safety clamp — guarantees card never exits screen
   top = Math.max(16, Math.min(top, vh - tooltipHeight - 16));
   left = Math.max(16, Math.min(left, vw - tooltipWidth - 16));
 
   return { placement, top, left, caretLeft, caretTop };
 }
-
-/* ─── Component ─── */
 
 export default function GuidedTour() {
   const {
@@ -131,7 +123,6 @@ export default function GuidedTour() {
     setMounted(true);
   }, []);
 
-  // Measure target element and compute tooltip position
   const measure = useCallback(() => {
     if (!currentTour || !isActive) return;
 
@@ -139,7 +130,18 @@ export default function GuidedTour() {
     if (!step) return;
 
     const el = document.querySelector(step.target);
-    if (!el) return;
+    if (!el) {
+      
+      const retryTimer = setTimeout(() => {
+        const retryEl = document.querySelector(step.target);
+        if (!retryEl) return;
+        const r = retryEl.getBoundingClientRect();
+        const rRect = { top: r.top, left: r.left, width: r.width, height: r.height };
+        setTargetRect(rRect);
+        computeTooltip(rRect, step.placement);
+      }, 120);
+      return () => clearTimeout(retryTimer);
+    }
 
     const rect = el.getBoundingClientRect();
     setTargetRect({
@@ -149,7 +151,6 @@ export default function GuidedTour() {
       height: rect.height,
     });
 
-    // Scroll element into view if needed
     const inView =
       rect.top >= 0 &&
       rect.left >= 0 &&
@@ -174,7 +175,7 @@ export default function GuidedTour() {
   }, [currentTour, currentStep, isActive]);
 
   const computeTooltip = (rect: Rect, preferred?: "top" | "bottom" | "left" | "right" | "auto") => {
-    // Use a default tooltip size for initial calculation, will refine after render
+    
     const tooltipW = tooltipRef.current?.offsetWidth || 340;
     const tooltipH = tooltipRef.current?.offsetHeight || 200;
 
@@ -182,18 +183,15 @@ export default function GuidedTour() {
     setTooltipPos(pos);
   };
 
-  // Re-measure on step change
   useEffect(() => {
     if (!isActive) return;
 
     animationKey.current += 1;
 
-    // Small delay to allow DOM to settle (e.g. after navigation)
     const timer = setTimeout(measure, 80);
     return () => clearTimeout(timer);
   }, [isActive, currentStep, measure]);
 
-  // Re-measure on resize and scroll
   useEffect(() => {
     if (!isActive) return;
 
@@ -209,7 +207,6 @@ export default function GuidedTour() {
     };
   }, [isActive, measure]);
 
-  // Refine tooltip position after render (once we have actual dimensions)
   useEffect(() => {
     if (!tooltipRef.current || !targetRect || !isActive) return;
 
@@ -219,7 +216,7 @@ export default function GuidedTour() {
 
     const pos = computePlacement(targetRect, tooltipW, tooltipH, step?.placement);
     setTooltipPos((prev) => {
-      // Only update if significantly different to avoid infinite loops
+      
       if (prev && Math.abs(prev.top - pos.top) < 2 && Math.abs(prev.left - pos.left) < 2) {
         return prev;
       }
@@ -227,7 +224,6 @@ export default function GuidedTour() {
     });
   }, [targetRect, isActive, currentStep, currentTour]);
 
-  // Keyboard navigation
   useEffect(() => {
     if (!isActive) return;
 
@@ -273,10 +269,10 @@ export default function GuidedTour() {
 
   return createPortal(
     <>
-      {/* Clickable backdrop to dismiss */}
+      {}
       <div className={styles.backdropClick} onClick={endTour} />
 
-      {/* Spotlight */}
+      {}
       {targetRect && (
         <div
           className={styles.spotlight}
@@ -289,7 +285,7 @@ export default function GuidedTour() {
         />
       )}
 
-      {/* Tooltip */}
+      {}
       {tooltipPos && (
         <div
           ref={tooltipRef}
@@ -300,13 +296,13 @@ export default function GuidedTour() {
             left: tooltipPos.left,
           }}
         >
-          {/* Caret arrow */}
+          {}
           <div
             className={`${styles.caret} ${caretClass}`}
             style={caretStyle}
           />
 
-          {/* Progress bar */}
+          {}
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}
@@ -314,7 +310,7 @@ export default function GuidedTour() {
             />
           </div>
 
-          {/* Header */}
+          {}
           <div className={styles.tooltipHeader}>
             <h3 className={styles.tooltipTitle}>{step.title}</h3>
             <button
@@ -327,10 +323,10 @@ export default function GuidedTour() {
             </button>
           </div>
 
-          {/* Description */}
+          {}
           <p className={styles.tooltipDescription}>{step.description}</p>
 
-          {/* Footer */}
+          {}
           <div className={styles.tooltipFooter}>
             <button className={styles.skipBtn} onClick={endTour}>
               Pular tutorial

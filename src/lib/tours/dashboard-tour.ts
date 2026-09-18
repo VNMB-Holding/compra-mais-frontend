@@ -1,12 +1,5 @@
 import { TourDefinition } from "@/contexts/TourContext";
 
-/**
- * Tutorial guiado do Dashboard — apresenta ao usuário os principais
- * elementos do painel de controle do Compra+.
- *
- * Os seletores `data-tour` devem estar presentes nos elementos JSX
- * correspondentes no Dashboard page.
- */
 export const dashboardTour: TourDefinition = {
   id: "dashboard-intro",
   steps: [

@@ -64,9 +64,6 @@ export interface SearchItem {
   shortcut?: string;
 }
 
-/**
- * Maps raw backend status to Portuguese display text and badge variant
- */
 export function formatSearchStatus(status?: string): { label: string; variant: "primary" | "gray" | "success" | "warning" | "danger" | "dark" } {
   if (!status) return { label: "N/A", variant: "gray" };
   switch (status.toLowerCase()) {
@@ -105,10 +102,7 @@ export function formatSearchStatus(status?: string): { label: string; variant: "
 }
 
 export const searchApi = {
-  /**
-   * Performs global real-time search querying dedicated /api/search endpoint,
-   * falling back smoothly to parallel entity search if the endpoint is not yet available.
-   */
+  
   globalSearch: async (query: string, companyCode?: string, limit: number = 5): Promise<GlobalSearchResults> => {
     const trimmed = query.trim();
     if (!trimmed) {
@@ -121,7 +115,6 @@ export const searchApi = {
     if (cleanCompany) params.append("companyCode", cleanCompany);
     if (limit) params.append("limit", limit.toString());
 
-    // 1. Try dedicated unified backend endpoint
     try {
       const directResults = await apiClient.get<GlobalSearchResults>(`/api/search?${params.toString()}`);
       if (directResults && typeof directResults === "object") {
@@ -133,10 +126,9 @@ export const searchApi = {
         };
       }
     } catch (err: any) {
-      // If 404 or backend search module unavailable, gracefully fallback to parallel queries
+      
     }
 
-    // 2. Resilient fallback: Parallel querying existing endpoints
     const [reqsSettled, rfqsSettled, ordersSettled, supsSettled] = await Promise.allSettled([
       purchaseRequestsApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as PurchaseRequest[]),
       rfqsApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as Rfq[]),

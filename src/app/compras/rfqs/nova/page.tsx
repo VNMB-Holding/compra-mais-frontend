@@ -11,9 +11,10 @@ import { rfqsApi } from "@/lib/api/rfqs";
 import { formatUserDisplayName, formatCurrency } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
+import { useTour } from "@/hooks/useTour";
+import { novaRfqTour } from "@/lib/tours";
 import styles from "./rfq-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
-
 
 interface Solicitacao {
   id: string;
@@ -59,7 +60,6 @@ const PRIORITY_BADGE_CONFIG: Record<string, { variant: "gray" | "warning" | "dan
   Baixa: { variant: "gray", icon: "info-circle" },
 };
 
-
 export default function NewRfqPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -92,7 +92,6 @@ export default function NewRfqPage() {
   const [itens, setItens] = useState<ItemCotacao[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>([]);
 
-  
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierFilterTab, setSupplierFilterTab] = useState<"todos" | "selecionados">("todos");
   const [supplierPage, setSupplierPage] = useState(1);
@@ -181,6 +180,88 @@ export default function NewRfqPage() {
     loadApiData();
   }, []);
 
+  const { startTour, isTourCompleted } = useTour();
+
+  useEffect(() => {
+    if (!loadingData && !isTourCompleted("nova-rfq-intro")) {
+      const timer = setTimeout(() => {
+        startTour(novaRfqTour);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [loadingData, isTourCompleted, startTour]);
+
+  const initialTourStateRef = React.useRef<{
+    solicitacaoConfirmada: Solicitacao | null;
+    currentStep: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const handleTourStepChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ step: number; ensureDemandLinked?: boolean }>;
+      if (customEvent.detail) {
+        if (!initialTourStateRef.current) {
+          initialTourStateRef.current = {
+            solicitacaoConfirmada,
+            currentStep,
+          };
+        }
+
+        if (customEvent.detail.ensureDemandLinked && !solicitacaoConfirmada) {
+          
+          const sol = requestsApi[0] || {
+            id: "sol-tour-mock",
+            codigo: "SOL-2026-DEMO",
+            titulo: "Demanda Demonstrativa para Cotação",
+            area: "Operações & Logística",
+            solicitante: "Gestor de Compras",
+            prioridade: "Media",
+            valorEstimado: 25000,
+            itens: [
+              { id: 1, descricao: "Válvulas Reguladoras Industriais DN50", qtd: 10, unidade: "UN" },
+              { id: 2, descricao: "Tubulação de Alta Pressão em Inox 316L", qtd: 50, unidade: "M" }
+            ],
+            incoterm: "CIF",
+            condicaoPagamento: "30 dias DDL",
+            observacoes: "Material com certificação ISO 9001 e laudo de rastreabilidade.",
+          };
+          setSolicitacaoConfirmada(sol);
+          setSolicitacaoSelecionada(sol.id);
+          setTituloRfq(`RFQ — ${sol.titulo}`);
+          setIncoterm(sol.incoterm || "CIF");
+          setCondicaoPagamento(sol.condicaoPagamento || "30 dias DDL");
+          setObservacoes(sol.observacoes || "");
+          setItens(sol.itens.map((i) => ({ ...i })));
+          if (sol.itens.length > 0) setExpandedItemId(sol.itens[0].id);
+        }
+        if (typeof customEvent.detail.step === "number") {
+          setCurrentStep(customEvent.detail.step);
+        }
+      }
+    };
+
+    const handleTourReset = () => {
+      
+      if (initialTourStateRef.current) {
+        if (!initialTourStateRef.current.solicitacaoConfirmada) {
+          handleDesvincular();
+        } else {
+          setCurrentStep(1);
+        }
+        initialTourStateRef.current = null;
+      } else {
+        setCurrentStep(1);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.addEventListener("rfq-tour-set-step", handleTourStepChange);
+    window.addEventListener("rfq-tour-reset", handleTourReset);
+    return () => {
+      window.removeEventListener("rfq-tour-set-step", handleTourStepChange);
+      window.removeEventListener("rfq-tour-reset", handleTourReset);
+    };
+  }, [requestsApi, solicitacaoConfirmada, currentStep]);
 
   useEffect(() => {
     if (!paramSol || loadingData) return;
@@ -238,7 +319,6 @@ export default function NewRfqPage() {
     setCurrentStep(1);
   }, [paramSol, requestsApi, loadingData]);
 
-
   const handleConfirmarSolicitacao = () => {
     const sol = requestsApi.find((s) => s.id === solicitacaoSelecionada);
     if (!sol) return;
@@ -284,7 +364,6 @@ export default function NewRfqPage() {
     setItens((cur) => cur.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
   };
 
-
   const fornecedoresSelecionados = useMemo(
     () => fornecedores.filter((f) => f.selecionado),
     [fornecedores]
@@ -325,13 +404,11 @@ export default function NewRfqPage() {
     return filteredFornecedores.slice(start, start + SUPPLIERS_PER_PAGE);
   }, [filteredFornecedores, supplierPage]);
 
-  
   useEffect(() => {
     setSupplierPage(1);
   }, [supplierSearch, supplierFilterTab]);
 
   const solicitacaoPreview = requestsApi.find((s: Solicitacao) => s.id === solicitacaoSelecionada);
-
 
   if (!solicitacaoConfirmada) {
     return (
@@ -350,9 +427,8 @@ export default function NewRfqPage() {
           </div>
         </div>
 
-        
         <div className={styles.gateWrapper}>
-          <Card className={styles.gateCard}>
+          <Card className={styles.gateCard} data-tour="rfq-gate-card">
             <div className={styles.gateHeader}>
               <div className={styles.gateHeaderLeft}>
                 <div className={styles.gateIconWrap}>
@@ -395,7 +471,7 @@ export default function NewRfqPage() {
             ) : (
               <>
                 <div className={styles.gateBody}>
-                  <div className={styles.gateSelectGroup}>
+                  <div className={styles.gateSelectGroup} data-tour="rfq-gate-select">
                     <label className={styles.gateLabel}>
                       Solicitação de Compra Aprovada <span className="required-asterisk">*</span>
                     </label>
@@ -410,7 +486,6 @@ export default function NewRfqPage() {
                     />
                   </div>
 
-                  
                   {!solicitacaoPreview && requestsApi.length > 0 && (
                     <>
                       <div className={styles.gateCardsDivider}>
@@ -446,7 +521,6 @@ export default function NewRfqPage() {
                     </>
                   )}
 
-                  
                   {solicitacaoPreview && (
                     <div className={styles.gateSelectedCard}>
                       <div className={styles.gateSelectedHeader}>
@@ -494,7 +568,6 @@ export default function NewRfqPage() {
                   )}
                 </div>
 
-                
                 <div className={styles.gateActions}>
                   <button
                     className={styles.btnCancel}
@@ -505,6 +578,7 @@ export default function NewRfqPage() {
                   <Button
                     variant="primary"
                     className={styles.btnSubmit}
+                    data-tour="rfq-gate-continue"
                     onClick={handleConfirmarSolicitacao}
                     disabled={!solicitacaoSelecionada}
                   >
@@ -518,7 +592,6 @@ export default function NewRfqPage() {
       </div>
     );
   }
-
 
   return (
     <div className={styles.formContainer}>
@@ -563,11 +636,11 @@ export default function NewRfqPage() {
         </div>
       </div>
 
-      
-      <div className={styles.stepperNav}>
+      <div className={styles.stepperNav} data-tour="rfq-stepper">
         <div 
           className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
           onClick={() => setCurrentStep(1)}
+          data-tour="rfq-step-indicator-1"
         >
           <div className={styles.stepNumber}>
             {currentStep > 1 ? <Icon name="check" size={16} /> : "1"}
@@ -578,6 +651,7 @@ export default function NewRfqPage() {
         <div 
           className={`${styles.stepIndicator} ${currentStep === 2 ? styles.stepActive : currentStep > 2 ? styles.stepCompleted : ""} ${currentStep < 2 ? styles.stepDisabled : ""}`}
           onClick={() => currentStep >= 2 ? setCurrentStep(2) : undefined}
+          data-tour="rfq-step-indicator-2"
         >
           <div className={styles.stepNumber}>
             {currentStep > 2 ? <Icon name="check" size={16} /> : "2"}
@@ -588,6 +662,7 @@ export default function NewRfqPage() {
         <div 
           className={`${styles.stepIndicator} ${currentStep === 3 ? styles.stepActive : currentStep > 3 ? styles.stepCompleted : ""} ${currentStep < 3 ? styles.stepDisabled : ""}`}
           onClick={() => currentStep >= 3 ? setCurrentStep(3) : undefined}
+          data-tour="rfq-step-indicator-3"
         >
           <div className={styles.stepNumber}>
             {currentStep > 3 ? <Icon name="check" size={16} /> : "3"}
@@ -598,6 +673,7 @@ export default function NewRfqPage() {
         <div 
           className={`${styles.stepIndicator} ${currentStep === 4 ? styles.stepActive : ""} ${currentStep < 4 ? styles.stepDisabled : ""}`}
           onClick={() => currentStep >= 4 ? setCurrentStep(4) : undefined}
+          data-tour="rfq-step-indicator-4"
         >
           <div className={styles.stepNumber}>4</div>
           <span className={styles.stepLabel}>Compliance</span>
@@ -608,10 +684,9 @@ export default function NewRfqPage() {
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
 
-            
             {currentStep === 1 && (
               <>
-                <section className={styles.formSection}>
+                <section className={styles.formSection} data-tour="rfq-form-parameters">
                   <div className={styles.sectionHeader}>
                     <div className={styles.sectionIcon}><Icon name="settings-01" /></div>
                     <div>
@@ -657,9 +732,8 @@ export default function NewRfqPage() {
               </>
             )}
 
-            
             {currentStep === 2 && (
-              <section className={styles.formSection}>
+              <section className={styles.formSection} data-tour="rfq-form-items">
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
                   <div>
@@ -678,7 +752,6 @@ export default function NewRfqPage() {
 
                     return (
                       <div className={styles.itemPanel} key={item.id}>
-                        
                         
                         <div 
                           className={styles.itemSummaryRow} 
@@ -732,7 +805,6 @@ export default function NewRfqPage() {
                           </div>
                         </div>
 
-                        
                         {isExpanded && (
                           <div className={styles.accordionExpandable}>
                             <div className={styles.gridCol12}>
@@ -787,9 +859,8 @@ export default function NewRfqPage() {
               </section>
             )}
 
-            
             {currentStep === 3 && (
-              <section className={styles.formSection}>
+              <section className={styles.formSection} data-tour="rfq-form-suppliers">
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}><Icon name="building-07" /></div>
                   <div>
@@ -872,7 +943,6 @@ export default function NewRfqPage() {
                   </div>
                 )}
 
-                
                 {filteredFornecedores.length > SUPPLIERS_PER_PAGE && (
                   <div className={styles.supplierPaginationBar}>
                     <span>
@@ -904,9 +974,8 @@ export default function NewRfqPage() {
               </section>
             )}
 
-            
             {currentStep === 4 && (
-              <section className={styles.formSection}>
+              <section className={styles.formSection} data-tour="rfq-form-compliance">
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}><Icon name="truck-01" /></div>
                   <div>
@@ -967,7 +1036,6 @@ export default function NewRfqPage() {
               </section>
             )}
 
-            
             <div className={styles.formActions}>
               {currentStep === 1 && (
                 <>
@@ -1106,6 +1174,7 @@ export default function NewRfqPage() {
                   <Button
                     variant="primary"
                     className={styles.btnSubmit}
+                    data-tour="rfq-btn-publish"
                     disabled={isSubmitting || savingDraft}
                     loading={isSubmitting}
                     loadingText="Publicando..."
