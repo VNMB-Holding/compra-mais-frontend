@@ -84,7 +84,6 @@ export default function SpendPage() {
     }
   }, [queryCompanyCode, selectedCategory, selectedSupplier, dateFilter]);
 
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -208,7 +207,6 @@ export default function SpendPage() {
     })),
   ], [filterOptions.suppliers]);
 
-
   const handleClearFilters = () => {
     setDateFilter({ mode: "all", preset: "all" });
     setSelectedCategory("all");
@@ -227,7 +225,6 @@ export default function SpendPage() {
         <Loading variant="fullscreen" message={`Gerando relatório de Spend (${exportingType})...`} />
       )}
 
-      
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <div className={styles.titleText}>
@@ -281,7 +278,6 @@ export default function SpendPage() {
         </button>
       </div>
 
-      
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
@@ -347,7 +343,6 @@ export default function SpendPage() {
         </div>
       </div>
 
-      
       <div className={styles.middleGrid}>
         {loading ? (
           <ChartSkeleton type="area" height={320} />
@@ -358,18 +353,13 @@ export default function SpendPage() {
                 Evolução do spend
                 <Icon name="help-circle" size={14} className={styles.infoIcon} />
               </div>
-              <select className={styles.chartSelect} defaultValue="mensal">
-                <option value="mensal">Mensal</option>
-                <option value="trimestral">Trimestral</option>
-              </select>
             </div>
             <div className={styles.chartWrapper}>
               <AreaChart
                 data={monthlySpendData}
                 color="#007d79"
-                valueFormatter={(v) => `R$ ${v}k`}
                 label1="Spend"
-                height={220}
+                height={260}
               />
             </div>
           </div>
@@ -417,7 +407,6 @@ export default function SpendPage() {
         )}
       </div>
 
-      
       <div className={styles.bottomGrid}>
         <div className={styles.chartCard}>
           <div className={styles.cardHeader}>
@@ -484,7 +473,6 @@ export default function SpendPage() {
         </div>
       </div>
 
-      
       <div className={styles.footerRow}>
         <Icon name="refresh-ccw-01" size={14} />
         <span>Dados atualizados em 02/06/2025 às 08:30</span>

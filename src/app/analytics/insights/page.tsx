@@ -70,7 +70,6 @@ export default function InsightsPage() {
     fetchData();
   }, [fetchData]);
 
-  
   const totalSpend = useMemo(() => {
     if (!spendData?.categories) return 0;
     return spendData.categories.reduce((sum, c) => sum + (c.spendTotal || 0), 0);
@@ -82,12 +81,10 @@ export default function InsightsPage() {
     return fromCategories || fromSuppliers || 0;
   }, [economyData]);
 
-  
   const dynamicInsights = useMemo<DerivedInsight[]>(() => {
     const list: DerivedInsight[] = [];
     let count = 1;
 
-    
     if (spendData?.categories && spendData.categories.length > 0) {
       const topCategory = spendData.categories[0];
       const estimatedSaving = Math.round(topCategory.spendTotal * 0.08);
@@ -103,7 +100,6 @@ export default function InsightsPage() {
       });
     }
 
-    
     if (spendData?.suppliers && spendData.suppliers.length > 0) {
       const topSupplier = spendData.suppliers[0];
       if (topSupplier.pct > 30) {
@@ -120,7 +116,6 @@ export default function InsightsPage() {
       }
     }
 
-    
     if (economyData?.categories && economyData.categories.length > 0) {
       const bestSavingCat = economyData.categories[0];
       list.push({
@@ -138,13 +133,11 @@ export default function InsightsPage() {
     return list;
   }, [spendData, economyData]);
 
-  
   const filteredInsights = useMemo(() => {
     if (categoryFilter === "Todas") return dynamicInsights;
     return dynamicInsights.filter((i) => i.category === categoryFilter);
   }, [dynamicInsights, categoryFilter]);
 
-  
   const barChartData = useMemo(() => {
     if (!spendData?.categories || spendData.categories.length === 0) {
       return [{ name: "Sem dados", value: 0 }];

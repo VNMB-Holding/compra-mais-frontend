@@ -1,10 +1,6 @@
 import { NotificationItem } from '../api/notifications';
 
-/**
- * Normaliza e resolve URLs de notificações para as rotas corretas do Next.js App Router,
- * evitando erros 404 decorrentes de prefixos ausentes (/compras), rotas no singular
- * ou URLs absolutas vindas do backend.
- */
+
 export function resolveNotificationUrl(notif: Partial<NotificationItem>): string {
   let url = notif.actionUrl?.trim() || '';
 
@@ -23,17 +19,17 @@ export function resolveNotificationUrl(notif: Partial<NotificationItem>): string
     }
   }
 
-  // Se for uma URL absoluta (ex: http://... ou https://...), extrai apenas o path + query + hash
+  
   if (/^https?:\/\//i.test(url)) {
     try {
       const parsed = new URL(url);
       url = parsed.pathname + parsed.search + parsed.hash;
     } catch {
-      // Ignora erro de parsing e segue com url original
+      
     }
   }
 
-  // Separa pathname de search/hash (se houver)
+  
   const match = url.match(/^([^?#]*)(.*)$/);
   let pathname = match ? match[1] : url;
   const rest = match ? match[2] : '';
@@ -52,7 +48,7 @@ export function resolveNotificationUrl(notif: Partial<NotificationItem>): string
     }
   }
 
-  // Normalização de rotas singulares sob /compras/
+  
   pathname = pathname
     .replace(/^\/compras\/rfq(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/rfqs/' : '/compras/rfqs')
     .replace(/^\/compras\/pedido(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/pedidos/' : '/compras/pedidos')
@@ -60,7 +56,7 @@ export function resolveNotificationUrl(notif: Partial<NotificationItem>): string
     .replace(/^\/compras\/quote(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/rfqs/' : '/compras/rfqs')
     .replace(/^\/compras\/solicitac(?:ao|ão)(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/solicitacoes/' : '/compras/solicitacoes');
 
-  // Normalização de rotas raiz sem o prefixo /compras/
+  
   pathname = pathname
     .replace(/^\/rfq(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/rfqs/' : '/compras/rfqs')
     .replace(/^\/pedido(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/pedidos/' : '/compras/pedidos')

@@ -25,12 +25,19 @@ export default function AreaChart({
   data,
   color = "#007d79",
   color2 = "#7c3aed",
-  valueFormatter = (value: number) => `${value}`,
+  valueFormatter,
   height = 240,
   label1 = "Valor 1",
   label2 = "Valor 2"
 }: AreaChartProps) {
   const hasMultipleLines = data.some(d => d.value2 !== undefined);
+
+  const defaultFormatter = (v: number) => {
+    if (valueFormatter) return valueFormatter(v);
+    if (v >= 1000000) return `R$ ${(v / 1000000).toFixed(1)}M`;
+    if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}k`;
+    return `R$ ${v.toLocaleString('pt-BR')}`;
+  };
 
   return (
     <div className={styles.chartContainer} style={{ minWidth: 0, minHeight: 0 }}>
@@ -62,7 +69,7 @@ export default function AreaChart({
             tickLine={false} 
             axisLine={false} 
             width={65}
-            tickFormatter={valueFormatter}
+            tickFormatter={defaultFormatter}
           />
           <Tooltip 
             content={({ active, payload }) => {
@@ -74,11 +81,11 @@ export default function AreaChart({
                       {monthName}
                     </p>
                     <p style={{ margin: 0, fontWeight: 600, color: color, fontSize: 13 }}>
-                      {label1}: {valueFormatter(payload[0].value as number)}
+                      {label1}: {defaultFormatter(payload[0].value as number)}
                     </p>
                     {hasMultipleLines && payload[1] && (
                       <p style={{ margin: '4px 0 0 0', fontWeight: 600, color: color2, fontSize: 13 }}>
-                        {label2}: {valueFormatter(payload[1].value as number)}
+                        {label2}: {defaultFormatter(payload[1].value as number)}
                       </p>
                     )}
                   </div>

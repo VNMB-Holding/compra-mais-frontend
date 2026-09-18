@@ -110,7 +110,6 @@ export default function EconomiaPage() {
     }
   }, [queryCompanyCode, selectedCategory, selectedSupplier, dateFilter]);
 
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -296,7 +295,6 @@ export default function EconomiaPage() {
         <Loading variant="fullscreen" message={`Gerando relatório de Savings (${exportingType})...`} />
       )}
 
-      
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <div className={styles.titleText}>
@@ -350,7 +348,6 @@ export default function EconomiaPage() {
         </button>
       </div>
 
-      
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
@@ -415,7 +412,6 @@ export default function EconomiaPage() {
         </div>
       </div>
 
-      
       <div className={styles.middleGrid}>
         {loading ? (
           <ChartSkeleton type="area" height={320} />
@@ -426,18 +422,13 @@ export default function EconomiaPage() {
                 Evolução da economia gerada
                 <Icon name="help-circle" size={14} className={styles.infoIcon} />
               </div>
-              <select className={styles.chartSelect} defaultValue="mensal">
-                <option value="mensal">Mensal</option>
-                <option value="trimestral">Trimestral</option>
-              </select>
             </div>
             <div className={styles.chartWrapper}>
               <AreaChart
                 data={monthlyEconomyData}
                 color="#007d79"
-                valueFormatter={(v) => `R$ ${v}k`}
                 label1="Economia"
-                height={220}
+                height={260}
               />
             </div>
           </div>
@@ -513,7 +504,6 @@ export default function EconomiaPage() {
         </div>
       </div>
 
-      
       <div className={styles.bottomGrid}>
         <div className={styles.chartCard}>
           <div className={styles.cardHeader}>
@@ -599,7 +589,6 @@ export default function EconomiaPage() {
         </div>
       </div>
 
-      
       <div className={styles.footerRow}>
         <Icon name="refresh-ccw-01" size={14} />
         <span>Dados atualizados em 02/06/2025 às 08:30</span>
