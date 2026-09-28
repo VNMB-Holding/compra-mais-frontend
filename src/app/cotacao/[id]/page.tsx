@@ -358,7 +358,6 @@ export default function CotacaoFornecedorPage() {
 
         <form onSubmit={handleSubmit}>
           
-          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -637,7 +636,6 @@ export default function CotacaoFornecedorPage() {
             </div>
           </div>
 
-          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

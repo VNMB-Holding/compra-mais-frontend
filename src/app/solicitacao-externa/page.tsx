@@ -317,7 +317,6 @@ export default function SolicitacaoExternaPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
 
-          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
@@ -393,7 +392,6 @@ export default function SolicitacaoExternaPage() {
             </div>
           </div>
 
-          {}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
@@ -452,7 +450,6 @@ export default function SolicitacaoExternaPage() {
             </div>
           </div>
 
-          {}
           <div className={styles.sectionCard}>
             <div className={styles.itemsHeader}>
               <div className={styles.sectionHeaderNoBorder}>
@@ -561,7 +558,6 @@ export default function SolicitacaoExternaPage() {
             )}
           </div>
 
-          {}
           <div className={styles.submitActions}>
             <button type="submit" className={styles.btnSubmit} disabled={submitting}>
               <Icon name={submitting ? "loading-01" : "send-01"} size={18} />

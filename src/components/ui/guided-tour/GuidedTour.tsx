@@ -269,10 +269,8 @@ export default function GuidedTour() {
 
   return createPortal(
     <>
-      {}
       <div className={styles.backdropClick} onClick={endTour} />
 
-      {}
       {targetRect && (
         <div
           className={styles.spotlight}
@@ -285,7 +283,6 @@ export default function GuidedTour() {
         />
       )}
 
-      {}
       {tooltipPos && (
         <div
           ref={tooltipRef}
@@ -296,13 +293,11 @@ export default function GuidedTour() {
             left: tooltipPos.left,
           }}
         >
-          {}
           <div
             className={`${styles.caret} ${caretClass}`}
             style={caretStyle}
           />
 
-          {}
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}
@@ -310,7 +305,6 @@ export default function GuidedTour() {
             />
           </div>
 
-          {}
           <div className={styles.tooltipHeader}>
             <h3 className={styles.tooltipTitle}>{step.title}</h3>
             <button
@@ -323,10 +317,8 @@ export default function GuidedTour() {
             </button>
           </div>
 
-          {}
           <p className={styles.tooltipDescription}>{step.description}</p>
 
-          {}
           <div className={styles.tooltipFooter}>
             <button className={styles.skipBtn} onClick={endTour}>
               Pular tutorial

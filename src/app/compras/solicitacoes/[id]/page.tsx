@@ -18,7 +18,7 @@ import { PRIORITY_MAP, PURCHASE_REQUEST_STATUS_MAP as STATUS_LABEL_MAP } from "@
 
 import { usePurchaseRequest, useApprovePurchaseRequest, useRejectPurchaseRequest } from "@/hooks/useQueries";
 
-type DialogType = "approve" | "reject" | null;
+type DialogType = "approve" | "reject" | "cancel" | null;
 
 export default function SolicitacaoDetailPage() {
   const params = useParams();
@@ -139,17 +139,41 @@ export default function SolicitacaoDetailPage() {
     });
   };
 
+  const [cancelling, setCancelling] = useState(false);
+  const handleCancel = async () => {
+    if (!sol) return;
+    setCancelling(true);
+    try {
+      await purchaseRequestsApi.updateStatus(sol.id, "Cancelled", "Cancelado pelo usuário.");
+      const fresh = await purchaseRequestsApi.getById(sol.id);
+      setSolOverride(fresh);
+      setApproved(false);
+      toast({
+        variant: "warning",
+        title: "Solicitação cancelada",
+        message: `A solicitação ${fresh.code || solId} foi cancelada com sucesso.`,
+      });
+    } catch (e) {
+      logError("solicitacoes/[id]/cancel", e);
+      toast({ variant: "error", title: "Erro ao cancelar", message: getErrorMessage(e) });
+    } finally {
+      setCancelling(false);
+      setDialog(null);
+    }
+  };
+
   const isDraft = sol?.status === "Draft";
   const isApproved = approved === true || sol?.status === "Approved";
   const isInQuote = sol?.status === "InQuote" || (!!sol?.rfqs && sol.rfqs.length > 0);
   const isFinished = sol?.status === "Finished";
   const isRejected = approved === false || sol?.status === "Rejected";
+  const isCancelled = sol?.status === "Cancelled";
 
-  const isEligibleForRfq = isApproved && !isInQuote && !isFinished && (!sol?.rfqs || sol.rfqs.length === 0);
+  const isEligibleForRfq = isApproved && !isInQuote && !isFinished && !isCancelled && (!sol?.rfqs || sol.rfqs.length === 0);
   const hasApprovedGovernance = isApproved || isInQuote || isFinished;
-  const isFullyApproved = hasApprovedGovernance;
-  const isAwaitingApproval = !isDraft && !isFullyApproved && !isRejected;
-  const currentStatus = isDraft ? "Rascunho" : (STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente");
+  const isFullyApproved = hasApprovedGovernance && !isCancelled;
+  const isAwaitingApproval = !isDraft && !isFullyApproved && !isRejected && !isCancelled;
+  const currentStatus = isCancelled ? "Cancelada" : isDraft ? "Rascunho" : (STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente");
 
   const [sendingApproval, setSendingApproval] = useState(false);
 
@@ -230,6 +254,23 @@ export default function SolicitacaoDetailPage() {
         }
         confirmLabel="Sim, rejeitar"
         onConfirm={handleReject}
+        onCancel={() => setDialog(null)}
+      />
+
+      <ConfirmDialog
+        open={dialog === "cancel"}
+        variant="danger"
+        icon="trash-01"
+        title="Cancelar Solicitação de Compra?"
+        loading={cancelling}
+        loadingConfirmLabel="Cancelando..."
+        message={
+          <>
+            Tem certeza de que deseja cancelar a solicitação <strong>{sol?.code || solId}</strong>? Esta ação interromperá o fluxo de compras e arquivará a demanda.
+          </>
+        }
+        confirmLabel="Sim, cancelar solicitação"
+        onConfirm={handleCancel}
         onCancel={() => setDialog(null)}
       />
 
@@ -337,6 +378,19 @@ export default function SolicitacaoDetailPage() {
                 </Button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Opção de Cancelar Demanda */}
+        {!isCancelled && !isFinished && (
+          <div className={styles.headerActions}>
+            <Button
+              variant="danger"
+              onClick={() => setDialog("cancel")}
+              title="Cancelar esta solicitação de compra"
+            >
+              <Icon name="x-close" /> Cancelar Solicitação
+            </Button>
           </div>
         )}
       </div>

@@ -293,7 +293,7 @@ export default function RfqDetailPage() {
   const [propostas, setPropostas] = useState<LocalProposal[]>([]);
   const [vencedorId, setVencedorId] = useState<string | null>(null);
 
-  type DialogType = "encerrar" | "selecionar" | "gerar" | null;
+  type DialogType = "encerrar" | "selecionar" | "gerar" | "cancelar" | null;
   const [dialog, setDialog] = useState<DialogType>(null);
   const [pendingVencedorId, setPendingVencedorId] = useState<string | null>(null);
   const [generatedPo, setGeneratedPo] = useState<{ id: string; code: string } | null>(null);
@@ -302,6 +302,27 @@ export default function RfqDetailPage() {
   const { user } = useAuth();
   const [publishing, setPublishing] = useState(false);
   const [creatingPo, setCreatingPo] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancelRfq = async () => {
+    try {
+      setCancelling(true);
+      await rfqsApi.updateStatus(rfqId, "Cancelled");
+      const updated = await rfqsApi.getById(rfqId);
+      setRfq(updated);
+      toast({
+        variant: "warning",
+        title: "Cotação cancelada",
+        message: "A cotação foi cancelada. A solicitação de compra de origem foi reaberta para cotação.",
+      });
+    } catch (e) {
+      logError("rfqs/[id]/cancel", e);
+      toast({ variant: "error", title: "Erro ao cancelar cotação", message: getErrorMessage(e) });
+    } finally {
+      setCancelling(false);
+      setDialog(null);
+    }
+  };
 
   const handlePublishRfq = async () => {
     try {
@@ -419,8 +440,11 @@ export default function RfqDetailPage() {
 
   const isFinished = rfq?.status === "Finished" || rfq?.status === "Closed" || !!generatedPo;
   const isDraft = rfq?.status === "Draft";
+  const isCancelled = rfq?.status === "Cancelled";
   const badgeVariant: "primary" | "danger" | "gray" | "dark" | "success" | "warning" =
-    isDraft
+    isCancelled
+      ? "danger"
+      : isDraft
       ? "gray"
       : isFinished
       ? "success"
@@ -430,7 +454,9 @@ export default function RfqDetailPage() {
       ? "primary"
       : "success";
   const badgeLabel =
-    isDraft
+    isCancelled
+      ? "Cancelada"
+      : isDraft
       ? "Rascunho"
       : isFinished
       ? "Pedido Emitido"
@@ -586,6 +612,23 @@ export default function RfqDetailPage() {
         onCancel={() => setDialog(null)}
       />
 
+      <ConfirmDialog
+        open={dialog === "cancelar"}
+        variant="danger"
+        icon="trash-01"
+        title="Cancelar Cotação (RFQ)?"
+        loading={cancelling}
+        loadingConfirmLabel="Cancelando..."
+        message={
+          <>
+            Tem certeza de que deseja cancelar a cotação <strong>{rfqCode}</strong>? Esta ação anulará o processo de concorrência e reabrirá a demanda de compra de origem para uma nova cotação.
+          </>
+        }
+        confirmLabel="Sim, cancelar cotação"
+        onConfirm={handleCancelRfq}
+        onCancel={() => setDialog(null)}
+      />
+
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
         <Icon name="chevron-left" /> Voltar para Cotações
       </button>
@@ -612,8 +655,8 @@ export default function RfqDetailPage() {
             </span>
           </div>
         </div>
-        {isDraft && (
-          <div className={styles.headerActions}>
+        <div className={styles.headerActions}>
+          {isDraft && (
             <Button
               variant="primary"
               onClick={handlePublishRfq}
@@ -623,9 +666,18 @@ export default function RfqDetailPage() {
             >
               <Icon name="send-01" /> Publicar Cotação no Mercado
             </Button>
+          )}
 
-          </div>
-        )}
+          {!isCancelled && !isFinished && (
+            <Button
+              variant="danger"
+              onClick={() => setDialog("cancelar")}
+              title="Cancelar esta cotação de mercado"
+            >
+              <Icon name="x-close" /> Cancelar Cotação
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className={styles.stepperCard}>

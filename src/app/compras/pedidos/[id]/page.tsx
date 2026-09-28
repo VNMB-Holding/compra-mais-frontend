@@ -20,6 +20,7 @@ export default function PedidoDetailPage() {
   const [confirmFaturamento, setConfirmFaturamento] = useState(false);
   const [confirmTransporte, setConfirmTransporte] = useState(false);
   const [confirmRecebimento, setConfirmRecebimento] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [statusOverride, setStatusOverride] = useState<string | null>(null);
   const [savedNfe, setSavedNfe] = useState<string>("");
   const [savedRastreio, setSavedRastreio] = useState<string>("");
@@ -47,9 +48,36 @@ export default function PedidoDetailPage() {
   const displayId = po?.code || (isNewFlow ? `PED-${String(Date.now()).slice(-6)}` : rawId);
 
   const currentStatus = statusOverride || po?.status || (isNewFlow ? "Sent" : "Sent");
+  const isCancelled = currentStatus === "Cancelled";
   const isDelivered = currentStatus === "Delivered";
-  const isInTransit = currentStatus === "InTransit" || isDelivered;
-  const isBilled = currentStatus === "Signed" || isInTransit || isDelivered;
+  const isInTransit = (currentStatus === "InTransit" || isDelivered) && !isCancelled;
+  const isBilled = (currentStatus === "Signed" || isInTransit || isDelivered) && !isCancelled;
+
+  const handleCancelPo = async () => {
+    try {
+      const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
+      if (orderIdToUpdate) {
+        await updateStatusMutation.mutateAsync({
+          id: orderIdToUpdate,
+          status: "Cancelled",
+          notes: "Cancelado pelo usuário gestor.",
+        });
+      }
+      setStatusOverride("Cancelled");
+      setConfirmCancel(false);
+      toast({
+        variant: "warning",
+        title: "Pedido cancelado",
+        message: `O pedido de compra ${displayId} foi cancelado com sucesso.`,
+      });
+    } catch (e) {
+      toast({
+        variant: "error",
+        title: "Erro ao cancelar pedido",
+        message: e instanceof Error ? e.message : "Não foi possível cancelar o pedido.",
+      });
+    }
+  };
 
   const handleConfirmFaturamento = async () => {
     try {
@@ -379,6 +407,23 @@ export default function PedidoDetailPage() {
         }
       />
 
+      <ConfirmDialog
+        open={confirmCancel}
+        variant="danger"
+        icon="trash-01"
+        title="Cancelar Pedido de Compra?"
+        loading={updateStatusMutation.isPending}
+        loadingConfirmLabel="Cancelando..."
+        confirmLabel="Sim, cancelar pedido"
+        onConfirm={handleCancelPo}
+        onCancel={() => setConfirmCancel(false)}
+        message={
+          <>
+            Tem certeza de que deseja cancelar o pedido de compra <strong>{displayId}</strong>? Esta ação anulará o fornecimento e marcará o pedido como cancelado para controle de auditoria.
+          </>
+        }
+      />
+
       <button
         className={styles.backBtn}
         onClick={() => router.push("/compras/pedidos")}
@@ -390,8 +435,8 @@ export default function PedidoDetailPage() {
         <div>
           <div className={styles.titleRow}>
             <h1>{displayId}</h1>
-            <Badge variant={isDelivered ? "success" : isInTransit ? "primary" : isBilled ? "warning" : "gray"}>
-              {isDelivered ? "Entregue" : isInTransit ? "Em Transporte" : isBilled ? "Faturado" : "Emitido"}
+            <Badge variant={isCancelled ? "danger" : isDelivered ? "success" : isInTransit ? "primary" : isBilled ? "warning" : "gray"}>
+              {isCancelled ? "Cancelado" : isDelivered ? "Entregue" : isInTransit ? "Em Transporte" : isBilled ? "Faturado" : "Emitido"}
             </Badge>
           </div>
           <p className={styles.subtitleLarge}>{fornecedorNome}</p>
@@ -416,26 +461,31 @@ export default function PedidoDetailPage() {
         </div>
 
         <div className={styles.headerActions}>
-          {!isBilled && (
-            <Button variant="primary" onClick={() => setConfirmFaturamento(true)}>
-              <Icon name="file-02" /> Confirmar Faturamento
-            </Button>
+          {!isCancelled && (
+            <>
+              {!isBilled && (
+                <Button variant="primary" onClick={() => setConfirmFaturamento(true)}>
+                  <Icon name="file-02" /> Confirmar Faturamento
+                </Button>
+              )}
+              {isBilled && !isInTransit && (
+                <Button variant="primary" onClick={() => setConfirmTransporte(true)}>
+                  <Icon name="truck-01" /> Confirmar Despacho
+                </Button>
+              )}
+              {isInTransit && !isDelivered && (
+                <Button variant="secondary" onClick={() => setConfirmRecebimento(true)}>
+                  <Icon name="package-check" /> Confirmar Recebimento
+                </Button>
+              )}
+              {isDelivered && (
+                <Badge variant="success" icon="check">
+                  Pedido Concluído
+                </Badge>
+              )}
+            </>
           )}
-          {isBilled && !isInTransit && (
-            <Button variant="primary" onClick={() => setConfirmTransporte(true)}>
-              <Icon name="truck-01" /> Confirmar Despacho
-            </Button>
-          )}
-          {isInTransit && !isDelivered && (
-            <Button variant="secondary" onClick={() => setConfirmRecebimento(true)}>
-              <Icon name="package-check" /> Confirmar Recebimento
-            </Button>
-          )}
-          {isDelivered && (
-            <Badge variant="success" icon="check">
-              Pedido Concluído
-            </Badge>
-          )}
+
           <Button
             variant="primary"
             onClick={handlePrintPO}
@@ -445,6 +495,16 @@ export default function PedidoDetailPage() {
           >
             <Icon name="printer" /> Imprimir / Baixar PO
           </Button>
+
+          {!isCancelled && !isDelivered && (
+            <Button
+              variant="danger"
+              onClick={() => setConfirmCancel(true)}
+              title="Cancelar este pedido de compra"
+            >
+              <Icon name="x-close" /> Cancelar Pedido
+            </Button>
+          )}
         </div>
       </div>
 
@@ -472,7 +532,6 @@ export default function PedidoDetailPage() {
             </div>
 
             <div className={styles.stepperContainer}>
-              {}
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="receipt-check" />
@@ -490,7 +549,6 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isBilled ? styles.lineActive : ""}`} />
 
-              {}
               <div className={`${styles.step} ${isBilled ? styles.completed : styles.active}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-02" />
@@ -520,7 +578,6 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isInTransit ? styles.lineActive : ""}`} />
 
-              {}
               <div className={`${styles.step} ${isInTransit ? styles.completed : isBilled ? styles.active : styles.disabledStep}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="truck-01" />
@@ -552,7 +609,6 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isDelivered ? styles.lineActive : ""}`} />
 
-              {}
               <div className={`${styles.step} ${isDelivered ? styles.completed : isInTransit ? styles.active : styles.disabledStep}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="package-check" />

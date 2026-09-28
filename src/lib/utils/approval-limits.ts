@@ -23,7 +23,6 @@ export function getApprovalChainForRequest(
   const companyCode = resolveCompanyCode(companyOrTenantName);
   const normalizedCompany = (companyOrTenantName || "").toUpperCase();
 
-  // Se regras customizadas foram passadas ou se as regras do adminApi estão em cache
   let rulesToUse = customRules;
   if (!rulesToUse && typeof window !== "undefined") {
     try {
@@ -127,7 +126,6 @@ export function getApprovalChainForOrder(
   const companyCode = resolveCompanyCode(companyOrTenantName);
   const normalizedCompany = (companyOrTenantName || "").toUpperCase();
 
-  // Se regras customizadas foram passadas ou se as regras do adminApi estão em cache
   let rulesToUse = customRules;
   if (!rulesToUse && typeof window !== "undefined") {
     try {
@@ -258,17 +256,14 @@ export function isUserEligibleToApprove(
   const userId = (user.id || "").toLowerCase();
 
   return approverTargets.some((target) => {
-    // 1. Verificação por Role ou Identificador de Perfil
     if (userRole && (userRole === target || userRole.includes(target) || target.includes(userRole))) {
       return true;
     }
 
-    // 2. Verificação por ID de Usuário
     if (userId && userId === target) {
       return true;
     }
 
-    // 3. Verificação por Nome ou Primeiro Nome
     if (
       userName && (userName.includes(target) || (userName.split(" ")[0] && target.includes(userName.split(" ")[0])))
     ) {

@@ -152,7 +152,6 @@ export default function FornecedorDetailPage() {
       </Card>
 
       <div className={styles.tabContent}>
-        {}
         <div className={styles.kpiGrid}>
           <KpiCard
             title="Score de Performance"
@@ -180,7 +179,6 @@ export default function FornecedorDetailPage() {
           />
         </div>
 
-        {}
         <div className={styles.cadastraisGrid}>
           <div className={styles.cadastraisCol}>
             <Card className={styles.cadastraisCard}>

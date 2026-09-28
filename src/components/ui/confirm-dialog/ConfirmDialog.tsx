@@ -96,7 +96,7 @@ export default function ConfirmDialog({
 
         <div className={styles.body}>
           <h2 id="confirm-title" className={styles.title}>{title}</h2>
-          {message && <p className={styles.message}>{message}</p>}
+          {message && <div className={styles.message}>{message}</div>}
         </div>
 
         <div className={styles.actions}>

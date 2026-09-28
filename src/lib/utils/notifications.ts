@@ -4,7 +4,6 @@ import { NotificationItem } from '../api/notifications';
 export function resolveNotificationUrl(notif: Partial<NotificationItem>): string {
   let url = notif.actionUrl?.trim() || '';
 
-  // Se não houver actionUrl definida, deriva com base no tipo da notificação
   if (!url) {
     switch (notif.type) {
       case 'rfq':
@@ -34,7 +33,6 @@ export function resolveNotificationUrl(notif: Partial<NotificationItem>): string
   let pathname = match ? match[1] : url;
   const rest = match ? match[2] : '';
 
-  // Se a URL for apenas um identificador/UUID/código sem barra inicial
   if (!pathname.startsWith('/')) {
     switch (notif.type) {
       case 'rfq':

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, Button, Badge, Icon, ErrorState, Skeleton } from '@/components/ui';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/hooks/useAuth';
 import styles from './aprovacao.module.css';
 
 import { purchaseRequestsApi } from '@/lib/api/purchase-requests';
@@ -24,13 +25,17 @@ interface ApprovalDetails {
   justification: string;
   approverName: string;
   approverRole: string;
+  approverIdentifier?: string;
+  assignedApproverId?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   items: Item[];
 }
 
 export default function AprovacaoPage() {
   const params = useParams();
+  const router = useRouter();
   const token = params?.token as string;
+  const { user, isLoading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +69,39 @@ export default function AprovacaoPage() {
 
   const { toast } = useToast();
 
+  const isEligible = Boolean(
+    details &&
+    (
+      user?.role === 'admin' ||
+      user?.roles?.includes('diretor') ||
+      user?.roles?.includes('admin') ||
+      (user && (
+        (details.assignedApproverId && user.id === details.assignedApproverId) ||
+        (details.approverIdentifier && user.email?.toLowerCase() === details.approverIdentifier?.toLowerCase()) ||
+        (details.approverName && user.name?.toLowerCase() === details.approverName?.toLowerCase())
+      ))
+    )
+  );
+
   const handleApprove = async () => {
     if (!token) return;
+    if (!user) {
+      toast({
+        variant: "warning",
+        title: "Autenticação Obrigatória",
+        message: "Faça login para assinar e aprovar esta solicitação.",
+      });
+      router.push(`/login?redirect=/aprovacao/${token}`);
+      return;
+    }
+    if (!isEligible) {
+      toast({
+        variant: "error",
+        title: "Alçada Não Autorizada",
+        message: `Esta solicitação exige assinatura de ${details?.approverName}. Sua conta atual (${user.name}) não possui essa alçada.`,
+      });
+      return;
+    }
     setSubmitting(true);
     try {
       await purchaseRequestsApi.approveByToken(token);
@@ -88,6 +124,23 @@ export default function AprovacaoPage() {
 
   const handleReject = async () => {
     if (!token) return;
+    if (!user) {
+      toast({
+        variant: "warning",
+        title: "Autenticação Obrigatória",
+        message: "Faça login para recusar esta solicitação.",
+      });
+      router.push(`/login?redirect=/aprovacao/${token}`);
+      return;
+    }
+    if (!isEligible) {
+      toast({
+        variant: "error",
+        title: "Alçada Não Autorizada",
+        message: `Esta solicitação exige assinatura de ${details?.approverName}. Sua conta atual (${user.name}) não possui essa alçada.`,
+      });
+      return;
+    }
     if (!rejectionReason.trim()) {
       toast({
         variant: "warning",
@@ -197,7 +250,6 @@ export default function AprovacaoPage() {
         <div className={styles.contentWrapper}>
           <Card className={styles.approvalCard}>
             
-            {}
             <div className={styles.cardHeader}>
               <div className={styles.titleRow}>
                 <div className={styles.codeGroup}>
@@ -222,7 +274,6 @@ export default function AprovacaoPage() {
               </div>
             </div>
 
-            {}
             {completed ? (
               <div className={styles.resultStateBox}>
                 <div className={styles.successIconWrapper}>
@@ -245,7 +296,45 @@ export default function AprovacaoPage() {
               </div>
             ) : (
               <>
-                {}
+                {!authLoading && !user && (
+                  <div className={styles.authNoticeBox}>
+                    <div className={styles.authNoticeContent}>
+                      <Icon name="lock-01" size={20} />
+                      <div>
+                        <div className={styles.authNoticeTitle}>Identificação Obrigatória</div>
+                        <div className={styles.authNoticeText}>
+                          Esta alçada é designada a <strong>{details.approverName}</strong>. Faça login com sua conta institucional para assinar ou recusar.
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="primary"
+                      onClick={() => router.push(`/login?redirect=/aprovacao/${token}`)}
+                    >
+                      Fazer Login
+                    </Button>
+                  </div>
+                )}
+
+                {!authLoading && user && !isEligible && (
+                  <div className={styles.notEligibleNoticeBox}>
+                    <Icon name="alert-triangle" size={20} />
+                    <div>
+                      <div className={styles.notEligibleTitle}>Alçada Restrita</div>
+                      <div className={styles.notEligibleText}>
+                        Você está autenticado como <strong>{user.name}</strong> ({user.email}). No entanto, esta etapa de aprovação é restrita a <strong>{details.approverName}</strong>. Apenas o aprovador designado ou administradores podem validar este documento.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!authLoading && user && isEligible && (
+                  <div className={styles.signedAsBanner}>
+                    <Icon name="shield-tick" size={14} />
+                    <span>Conectado como <strong>{user.name}</strong> ({user.role})</span>
+                  </div>
+                )}
+
                 {details.justification && (
                   <div className={styles.justificationBox}>
                     <div className={styles.sectionLabel}>
@@ -255,7 +344,6 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {}
                 {details.items && details.items.length > 0 && (
                   <div className={styles.itemsSection}>
                     <div className={styles.sectionHeader}>
@@ -314,7 +402,6 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {}
                 {showRejectInput && (
                   <div className={styles.rejectInputArea}>
                     <label>Informe a justificativa da recusa *</label>
@@ -327,14 +414,14 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {}
+                {/* Ações */}
                 <div className={styles.actionsFooter}>
                   {!showRejectInput ? (
                     <div className={styles.actionButtonsRow}>
                       <Button
                         variant="primary"
                         onClick={handleApprove}
-                        disabled={submitting}
+                        disabled={submitting || !user || !isEligible}
                         loading={submitting}
                         loadingText="Assinando eletronicamente..."
                       >
@@ -343,7 +430,7 @@ export default function AprovacaoPage() {
                       <Button
                         variant="secondary"
                         onClick={() => setShowRejectInput(true)}
-                        disabled={submitting}
+                        disabled={submitting || !user || !isEligible}
                       >
                         <Icon name="x-close" /> Recusar Demanda
                       </Button>
@@ -353,7 +440,7 @@ export default function AprovacaoPage() {
                       <Button
                         variant="danger"
                         onClick={handleReject}
-                        disabled={submitting}
+                        disabled={submitting || !user || !isEligible}
                         loading={submitting}
                         loadingText="Gravando recusa..."
                       >
