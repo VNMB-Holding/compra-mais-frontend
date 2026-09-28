@@ -113,3 +113,23 @@
   color: #cbd5e1;
   border-color: #f1f5f9;
 }
+
+@media (max-width: 640px) {
+  .stepperContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .step {
+    flex-direction: row;
+    width: 100%;
+    text-align: left;
+    gap: 12px;
+  }
+  .stepInfo {
+    align-items: flex-start;
+  }
+  .stepLine {
+    display: none;
+  }
+}

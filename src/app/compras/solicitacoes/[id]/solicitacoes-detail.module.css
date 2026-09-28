@@ -118,3 +118,43 @@
 .itemsTable tr:hover td {
   background: #f8fafc;
 }
+
+@media (max-width: 768px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .headerActions button {
+    width: 100%;
+    justify-content: center;
+  }
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .span2 {
+    grid-column: span 1;
+  }
+  .stepperContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .step {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    gap: 12px;
+  }
+  .stepInfo {
+    align-items: flex-start;
+  }
+  .stepLine {
+    display: none;
+  }
+}

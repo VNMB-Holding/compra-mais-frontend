@@ -69,8 +69,29 @@
   width: 100%;
 }
 @media (max-width: 992px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .headerActions {
+    width: 100%;
+  }
+  .headerActions button {
+    width: 100%;
+    justify-content: center;
+  }
   .filterRow {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 16px;
+  }
+  .filterInput {
+    width: 100%;
+  }
+  .clearButton {
+    width: 100%;
+    justify-content: center;
   }
 }
 .filterInput {
@@ -402,4 +423,22 @@
   font-size: 11px;
   color: #94a3b8;
   margin-top: 10px;
+}
+
+@media (max-width: 640px) {
+  .donutRow {
+    flex-direction: column;
+    align-items: center;
+  }
+  .supplierRow {
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+  }
+  .progressBarBg {
+    grid-column: span 2;
+    order: 3;
+  }
+  .supplierPct {
+    display: none;
+  }
 }

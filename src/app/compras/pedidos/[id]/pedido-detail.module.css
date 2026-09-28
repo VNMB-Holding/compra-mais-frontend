@@ -3,12 +3,12 @@
 .titleRow { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
 .titleRow h1 { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0; }
 .subtitleLarge { font-size: 15px; font-weight: 600; color: #334155; margin: 0 0 8px 0; }
-.pageHeader { display: flex; justify-content: space-between; align-items: flex-start; }
+.pageHeader { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
 .metadataTags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .infoTag { background: white; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #475569; display: inline-flex; align-items: center; gap: 5px; }
-.headerActions { display: flex; gap: 8px; align-items: center; }
+.headerActions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .layout2Col { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
-.colMain, .colSide { display: flex; flex-direction: column; gap: 16px; }
+.colMain, .colSide { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .flowCardHeader {
   display: flex;
   justify-content: space-between;
@@ -596,7 +596,41 @@
     border-right: none !important;
   }
 }
+@media (max-width: 992px) {
+  .layout2Col {
+    grid-template-columns: 1fr;
+  }
+  .premiumMetricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .estagioPista {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px 20px;
+    gap: 12px;
+  }
+  .estagioConetor {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .headerActions button {
+    width: 100%;
+    justify-content: center;
+  }
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
   .stepperContainer {
     flex-direction: column;
     align-items: stretch;
@@ -618,5 +652,11 @@
   }
   .stepLine {
     display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .premiumMetricsGrid {
+    grid-template-columns: 1fr;
   }
 }

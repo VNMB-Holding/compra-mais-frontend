@@ -10,9 +10,16 @@ import { useAuth } from "@/hooks/useAuth";
 interface SidebarProps {
   isCollapsed?: boolean;
   onHelpClick?: () => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
-export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarProps) {
+export default function Sidebar({
+  isCollapsed = false,
+  onHelpClick,
+  mobileOpen = false,
+  onCloseMobile,
+}: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -85,32 +92,42 @@ export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarPro
   );
 
   return (
-    <aside className={`${styles.mainNav} ${isCollapsed ? styles.collapsed : ""}`}>
+    <>
+      {mobileOpen && <div className={styles.mobileBackdrop} onClick={onCloseMobile} />}
+      <aside className={`${styles.mainNav} ${isCollapsed ? styles.collapsed : ""} ${mobileOpen ? styles.mobileOpen : ""}`}>
+        <div className={styles.logoArea}>
+          <img
+            src="/images/logo-compra-mais.svg"
+            alt="Logo"
+            className={`${styles.logoImg} ${styles.fullLogo}`}
+          />
+          <img
+            src="/images/carrinho-logo.png"
+            alt="Logo"
+            className={`${styles.logoImg} ${styles.collapsedLogo}`}
+          />
+          {mobileOpen && (
+            <button
+              className={styles.mobileCloseBtn}
+              onClick={onCloseMobile}
+              aria-label="Fechar menu"
+            >
+              <Icon name="x-close" size={18} />
+            </button>
+          )}
+        </div>
 
-      <div className={styles.logoArea}>
-        <img
-          src="/images/logo-compra-mais.svg"
-          alt="Logo"
-          className={`${styles.logoImg} ${styles.fullLogo}`}
-        />
-        <img
-          src="/images/carrinho-logo.png"
-          alt="Logo"
-          className={`${styles.logoImg} ${styles.collapsedLogo}`}
-        />
-      </div>
+        <div className={styles.navContent} onClick={onCloseMobile}>
+          <Link
+            href="/dashboard"
+            className={`${styles.navItem} ${isActive("/dashboard") ? styles.active : ""}`}
+          >
+            <Icon name="layout-grid-01" />
+            <span className={styles.navText}>Dashboard</span>
+          </Link>
 
-      <div className={styles.navContent}>
-        <Link
-          href="/dashboard"
-          className={`${styles.navItem} ${isActive("/dashboard") ? styles.active : ""}`}
-        >
-          <Icon name="layout-grid-01" />
-          <span className={styles.navText}>Dashboard</span>
-        </Link>
-
-        {user?.role === "solicitante" ? solicitanteMenu : procuristMenu}
-      </div>
+          {user?.role === "solicitante" ? solicitanteMenu : procuristMenu}
+        </div>
 
       <div className={styles.sidebarFooter}>
         <div className={styles.helpCard} onClick={onHelpClick}>
@@ -122,5 +139,6 @@ export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarPro
         </div>
       </div>
     </aside>
+  </>
   );
 }

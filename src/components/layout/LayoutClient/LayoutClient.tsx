@@ -9,6 +9,7 @@ import styles from "./LayoutClient.module.css";
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const pathname = usePathname();
 
@@ -24,12 +25,25 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     return <>{children}</>;
   }
 
+  const handleToggleSidebar = () => {
+    if (typeof window !== "undefined" && window.innerWidth <= 768) {
+      setMobileSidebarOpen((prev) => !prev);
+    } else {
+      setSidebarCollapsed((prev) => !prev);
+    }
+  };
+
   return (
     <div className={styles.layoutRoot}>
-      <Sidebar isCollapsed={sidebarCollapsed} onHelpClick={() => setHelpOpen(true)} />
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+        onHelpClick={() => setHelpOpen(true)}
+      />
       <div className={styles.mainContainer}>
         <div className={styles.topbarWrapper}>
-          <Topbar isSidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
+          <Topbar isSidebarCollapsed={sidebarCollapsed} onToggleSidebar={handleToggleSidebar} />
         </div>
         <main className={styles.contentArea}>
           {children}

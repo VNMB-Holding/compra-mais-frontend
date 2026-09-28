@@ -33,15 +33,17 @@
 @media (max-width: 768px) {
   .layoutRoot {
     flex-direction: column;
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
   }
   .mainContainer {
-    height: auto;
-    overflow: visible;
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
   }
   .contentArea {
-    padding: 16px;
+    padding: 14px 12px;
+    -webkit-overflow-scrolling: touch;
   }
 }

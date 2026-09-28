@@ -385,4 +385,62 @@
 }
 .logoutItem {
   color: var(--color-danger, #ef4444);
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 12px;
+    height: 52px;
+  }
+  .topbarLeft {
+    gap: 8px;
+  }
+  .searchBar {
+    width: auto;
+    flex: 1;
+    max-width: 220px;
+    padding: 5px 8px;
+  }
+  .searchShortcut {
+    display: none;
+  }
+  .topbarRight {
+    gap: 8px;
+  }
+  .companyNameText {
+    max-width: 100px;
+  }
+  .companyBadgeWrapper {
+    padding-left: 8px;
+  }
+  .dropdownBox {
+    width: min(calc(100vw - 24px), 320px);
+    right: -10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .companyBadgeWrapper {
+    display: none;
+  }
+  .searchPlaceholder {
+    display: none;
+  }
+  .searchBar {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    max-width: 34px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .dropdownBox {
+    position: fixed;
+    top: 56px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+  }
 }

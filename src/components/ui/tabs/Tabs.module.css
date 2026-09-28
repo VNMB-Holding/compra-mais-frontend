@@ -3,6 +3,13 @@
   gap: 16px;
   border-bottom: 1px solid var(--border, #e2e8f0);
   padding-bottom: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  white-space: nowrap;
+}
+.tabsWrapper::-webkit-scrollbar {
+  display: none;
 }
 .tab {
   font-size: 13px;

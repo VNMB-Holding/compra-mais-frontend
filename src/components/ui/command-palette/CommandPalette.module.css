@@ -273,3 +273,24 @@
   border-radius: 6px;
   font-size: 11px;
 }
+
+@media (max-width: 640px) {
+  .overlay {
+    padding-top: 16px;
+    padding-left: 12px;
+    padding-right: 12px;
+    align-items: flex-start;
+  }
+  .modal {
+    max-height: calc(100vh - 32px);
+  }
+  .searchHeader {
+    padding: 12px 14px;
+  }
+  .footerHelp {
+    display: none;
+  }
+  .itemShortcut {
+    display: none;
+  }
+}

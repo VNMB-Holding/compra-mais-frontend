@@ -150,3 +150,20 @@
   background-color: var(--color-primary, #007d79) !important;
   color: #ffffff !important;
 }
+
+@media (max-width: 480px) {
+  .modalOverlay {
+    padding: 12px;
+  }
+  .modalCard {
+    padding: 20px 14px 16px;
+  }
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+  .modalBtnSecondary,
+  .modalBtnPrimary {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -69,8 +69,29 @@
   width: 100%;
 }
 @media (max-width: 992px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .headerActions {
+    width: 100%;
+  }
+  .headerActions button {
+    width: 100%;
+    justify-content: center;
+  }
   .filterRow {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 16px;
+  }
+  .filterInput {
+    width: 100%;
+  }
+  .clearButton {
+    width: 100%;
+    justify-content: center;
   }
 }
 .filterInput {

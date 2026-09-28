@@ -72,4 +72,12 @@
   .card {
     padding: 28px 20px;
   }
+  .actions {
+    flex-direction: column;
+  }
+  .actions button,
+  .actions a {
+    width: 100%;
+    justify-content: center;
+  }
 }

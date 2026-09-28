@@ -610,3 +610,80 @@
   background: #dcfce7;
   color: #16a34a;
 }
+
+@media (max-width: 1024px) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+  .summaryColBase,
+  .summaryColScore {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .infoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cadastraisGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerRow {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .headerRow > div:last-child {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .headerRow > div:last-child button {
+    width: 100%;
+    justify-content: center;
+  }
+  .titleRow {
+    flex-wrap: wrap;
+  }
+  .titleRow h1 {
+    font-size: 22px;
+  }
+  .tabsContainer {
+    overflow-x: auto;
+    gap: 16px;
+    padding-bottom: 2px;
+  }
+  .tabsContainer button {
+    white-space: nowrap;
+    padding: 10px 2px;
+  }
+  .infoCard {
+    padding: 18px 16px !important;
+  }
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .summaryColBase {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+  .fieldRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .fieldValue {
+    text-align: left;
+  }
+}

@@ -411,17 +411,6 @@ export default function SolicitacaoDetailPage() {
           <Card className={styles.flowCard}>
             <div className={styles.flowCardHeader}>
               <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length > 1 ? "s" : ""})</h4>
-              {isAwaitingApproval && (
-                <button
-                  type="button"
-                  className={styles.copyLinkActionBtn}
-                  onClick={() => handleCopyApprovalLink()}
-                  title="Copiar link do portal de aprovação direta para o gestor"
-                >
-                  <Icon name="copy-01" size={14} />
-                  <span>Copiar Link de Aprovação</span>
-                </button>
-              )}
             </div>
             <div className={styles.stepperContainer}>
 
@@ -475,19 +464,6 @@ export default function SolicitacaoDetailPage() {
                         {isLevelActive && !isLevelDone && !isRejected ? (
                           <div className={styles.stepActiveRow}>
                             <span className={styles.stepWarningBadge}>Falta aprovar</span>
-                            <button
-                              type="button"
-                              className={styles.stepCopyBtn}
-                              onClick={() => {
-                                const histories = (sol as any)?.approvalHistories || [];
-                                const token = (historyMatch as any)?.id || histories[index]?.id || sol?.id;
-                                handleCopyApprovalLink(token);
-                              }}
-                              title="Copiar link de aprovação desta alçada"
-                            >
-                              <Icon name="copy-01" size={11} />
-                              <span>Copiar</span>
-                            </button>
                           </div>
                         ) : isLevelDone ? (
                           <small>
