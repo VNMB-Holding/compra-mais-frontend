@@ -71,6 +71,16 @@ export default function Sidebar({ isCollapsed = false, onHelpClick }: SidebarPro
           <span className={styles.navText}>Análise de Savings</span>
         </Link>
       </div>
+
+      {(user?.role === "admin" || user?.role === "gerente") && (
+        <div className={styles.navSection}>
+          <div className={styles.sectionTitle}>SISTEMA</div>
+          <Link href="/admin" className={`${styles.navItem} ${isActive("/admin") ? styles.active : ""}`}>
+            <Icon name="settings-01" />
+            <span className={styles.navText}>Administração</span>
+          </Link>
+        </div>
+      )}
     </>
   );
 

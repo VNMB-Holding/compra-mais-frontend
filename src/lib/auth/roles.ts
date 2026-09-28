@@ -5,6 +5,7 @@ export const ROUTE_ROLES = {
   compras: ["procurist", "gerente", "admin"] as UserRole[],
   fornecedores: ["procurist", "gerente", "admin"] as UserRole[],
   solicitacoesRapidas: ["solicitante"] as UserRole[],
+  admin: ["admin", "gerente"] as UserRole[],
 };
 
 export function mapApiRole(roles: string[]): UserRole {
