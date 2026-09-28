@@ -29,11 +29,14 @@ export interface PurchaseRequest {
   items?: RequestItem[];
   approvalHistories?: {
     id: string;
-    action: string;
+    action?: string;
+    status?: "Awaiting" | "Approved" | "Rejected" | string;
+    limitId?: string;
     comments?: string;
     actionDate: string;
-    approverId: string;
+    approverId?: string;
   }[];
+
   rfqs?: {
     id: string;
     code: string;
@@ -116,6 +119,14 @@ export const purchaseRequestsApi = {
 
   getApprovalByToken: (token: string) =>
     apiClient.get<any>(`/api/purchase-requests/approval-link/${token}`),
+
+  getApprovalChain: (companyCode?: string, budget?: number) => {
+    const params = new URLSearchParams();
+    if (companyCode) params.set("companyCode", companyCode);
+    if (budget !== undefined) params.set("budget", String(budget));
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return apiClient.get<any[]>(`/api/purchase-requests/approval-chain${qs}`);
+  },
 
   approveByToken: (token: string, comments?: string) =>
     apiClient.post<any>(`/api/purchase-requests/approval-link/${token}/approve`, { comments }),

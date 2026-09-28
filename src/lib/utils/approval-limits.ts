@@ -15,108 +15,84 @@ function resolveCompanyCode(companyOrTenantName: string = "VB AGRO"): string {
   return "2313";
 }
 
+export function calculateChainFromRules(
+  rules: ApprovalRuleConfig[],
+  budget: number,
+  companyCode: string = "2313",
+  flowType: "solicitacao" | "pedido" = "solicitacao"
+): ApprovalChainLevel[] {
+  if (!Array.isArray(rules) || rules.length === 0) return [];
+
+  const filtered = rules.filter(
+    (r) =>
+      r.active &&
+      (r.companyCode === companyCode || r.companyCode === "TODAS") &&
+      (r.flowType || "solicitacao") === flowType
+  );
+
+  const sorted = [...filtered].sort((a, b) => a.minAmount - b.minAmount || a.level - b.level || (a.order || 0) - (b.order || 0));
+
+  const applicable: ApprovalChainLevel[] = [];
+  for (const r of sorted) {
+    if (budget >= r.minAmount) {
+      applicable.push({
+        level: r.level,
+        roleOrName: r.approverName || r.approverIdentifier,
+        maxLimit: r.maxAmount,
+        approverType: r.approverType,
+      });
+      if (r.maxAmount !== null && budget <= r.maxAmount) {
+        break;
+      }
+    }
+  }
+
+  return applicable;
+}
+
 export function getApprovalChainForRequest(
   companyOrTenantName: string = "VB AGRO",
   estimatedBudget: number,
   customRules?: ApprovalRuleConfig[]
 ): ApprovalChainLevel[] {
   const companyCode = resolveCompanyCode(companyOrTenantName);
-  const normalizedCompany = (companyOrTenantName || "").toUpperCase();
 
-  let rulesToUse = customRules;
-  if (!rulesToUse && typeof window !== "undefined") {
+  if (customRules && customRules.length > 0) {
+    const chain = calculateChainFromRules(customRules, estimatedBudget, companyCode, "solicitacao");
+    if (chain.length > 0) return chain;
+  }
+
+  if (typeof window !== "undefined") {
     try {
       const raw = localStorage.getItem("compra_mais_admin_rules");
       if (raw) {
         const parsed = JSON.parse(raw) as ApprovalRuleConfig[];
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const compRules = parsed.filter(
-            (r) =>
-              r.active &&
-              (r.companyCode === companyCode || r.companyCode === "2313") &&
-              (!r.flowType || r.flowType === "solicitacao")
-          );
-          if (compRules.length > 0 && companyCode === "2313" && !normalizedCompany.includes("IMÓVEIS") && !normalizedCompany.includes("PURA")) {
-            
-            const sorted = [...compRules].sort((a, b) => a.level - b.level || a.order - b.order);
-            const applicable: ApprovalChainLevel[] = [];
-            for (const r of sorted) {
-              if (estimatedBudget >= r.minAmount) {
-                applicable.push({
-                  level: r.level,
-                  roleOrName: r.approverName || r.approverIdentifier,
-                  maxLimit: r.maxAmount,
-                  approverType: r.approverType,
-                });
-                if (r.maxAmount !== null && estimatedBudget <= r.maxAmount) {
-                  break;
-                }
-              }
-            }
-            if (applicable.length > 0) return applicable;
-          }
+          const chain = calculateChainFromRules(parsed, estimatedBudget, companyCode, "solicitacao");
+          if (chain.length > 0) return chain;
         }
       }
     } catch {}
   }
 
-  
-  if (normalizedCompany.includes("VB AGRO") || normalizedCompany.includes("AGRO") || companyCode === "2313") {
-    if (estimatedBudget <= 10000) {
-      return [{ level: 1, roleOrName: "Henrique", maxLimit: 10000 }];
-    }
-    if (estimatedBudget <= 100000) {
-      return [
-        { level: 1, roleOrName: "Henrique", maxLimit: 10000 },
-        { level: 2, roleOrName: "Celso", maxLimit: 100000 },
-      ];
-    }
-    return [
-      { level: 1, roleOrName: "Celso", maxLimit: 100000 },
-      { level: 2, roleOrName: "Vanessa", maxLimit: 250000 },
-      { level: 3, roleOrName: "JAB", maxLimit: 500000 },
-      { level: 4, roleOrName: "Andressa", maxLimit: null },
-    ];
-  }
-
-  if (normalizedCompany.includes("IMÓVEIS") || normalizedCompany.includes("IMOVEIS") || normalizedCompany.includes("LORENA")) {
-    if (estimatedBudget <= 5000) {
-      return [{ level: 1, roleOrName: "Paula", maxLimit: 5000 }];
-    }
-    return [
-      { level: 1, roleOrName: "Paula", maxLimit: 5000 },
-      { level: 2, roleOrName: "Vanessa", maxLimit: 250000 },
-      { level: 3, roleOrName: "JAB", maxLimit: 500000 },
-      { level: 4, roleOrName: "Andressa", maxLimit: null },
-    ];
-  }
-
-  if (normalizedCompany.includes("PURA") || normalizedCompany.includes("IGREJA")) {
-    if (estimatedBudget <= 1000) {
-      return [{ level: 1, roleOrName: "Jane", maxLimit: 1000 }];
-    }
-    return [
-      { level: 1, roleOrName: "Jane", maxLimit: 1000 },
-      { level: 2, roleOrName: "Bispo Bruno", maxLimit: null },
-    ];
-  }
-
+  // Fallback padrão proporcional por nível caso ainda não haja regras cadastradas no backend
   if (estimatedBudget <= 10000) {
-    return [{ level: 1, roleOrName: "Henrique", maxLimit: 10000 }];
+    return [{ level: 1, roleOrName: "Gestor Imediato", maxLimit: 10000 }];
   }
   if (estimatedBudget <= 100000) {
     return [
-      { level: 1, roleOrName: "Henrique", maxLimit: 10000 },
-      { level: 2, roleOrName: "Celso", maxLimit: 100000 },
+      { level: 1, roleOrName: "Gestor Imediato", maxLimit: 10000 },
+      { level: 2, roleOrName: "Gerência da Área", maxLimit: 100000 },
     ];
   }
   return [
-    { level: 1, roleOrName: "Celso", maxLimit: 100000 },
-    { level: 2, roleOrName: "Vanessa", maxLimit: 250000 },
-    { level: 3, roleOrName: "JAB", maxLimit: 500000 },
-    { level: 4, roleOrName: "Andressa", maxLimit: null },
+    { level: 1, roleOrName: "Gerência da Área", maxLimit: 100000 },
+    { level: 2, roleOrName: "Controladoria", maxLimit: 250000 },
+    { level: 3, roleOrName: "Diretoria Financeira", maxLimit: 500000 },
+    { level: 4, roleOrName: "Diretoria Executiva", maxLimit: null },
   ];
 }
+
 
 export function getApprovalChainForOrder(
   companyOrTenantName: string = "VB AGRO",

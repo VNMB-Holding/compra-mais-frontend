@@ -176,6 +176,36 @@ export default function SolicitacaoDetailPage() {
   const currentStatus = isCancelled ? "Cancelada" : isDraft ? "Rascunho" : (STATUS_LABEL_MAP[sol?.status || ""] || sol?.status || "Pendente");
 
   const [sendingApproval, setSendingApproval] = useState(false);
+  const [remoteChain, setRemoteChain] = useState<any[] | null>(null);
+
+  const budget = Number(sol?.estimatedBudget || 0);
+  const companyCode = sol?.companyCode || "2313";
+
+  useEffect(() => {
+    if (!sol) return;
+    let cancelled = false;
+    purchaseRequestsApi
+      .getApprovalChain(companyCode, budget)
+      .then((res) => {
+        if (!cancelled && Array.isArray(res) && res.length > 0) {
+          setRemoteChain(
+            res.map((r: any) => ({
+              level: r.level,
+              roleOrName: r.approverName || r.approverIdentifier,
+              maxLimit: r.maxAmount,
+              approverType: "user",
+            }))
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn("Falha ao carregar cadeia dinâmica de aprovação:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sol?.id, companyCode, budget]);
 
   const handleSendToApproval = async () => {
     if (!sol) return;
@@ -201,17 +231,18 @@ export default function SolicitacaoDetailPage() {
     }
   };
 
-  const budget = Number(sol?.estimatedBudget || 0);
   const companyName = formatCorporateBranch(sol?.corporateColigada, sol?.corporateFilial, sol?.tenantId, user);
-  const chain = getApprovalChainForRequest(companyName, budget);
+  const chain = remoteChain || getApprovalChainForRequest(companyName, budget);
 
-  const pendingHistoryCount = sol?.approvalHistories?.length || 0;
-  const currentPendingLevel = chain[pendingHistoryCount];
+  const pendingHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Awaiting");
+  const approvedHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Approved");
+  const currentStepIndex = approvedHistories.length;
+  const currentPendingLevel = chain[currentStepIndex] || chain[chain.length - 1];
   const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
 
   const handleCopyApprovalLink = (tokenOverride?: string) => {
-    const histories = (sol as any)?.approvalHistories || [];
-    const activeToken = tokenOverride || (pendingHistoryCount >= 0 && histories[pendingHistoryCount]?.id) || sol?.id;
+    const activePending = pendingHistories[0];
+    const activeToken = tokenOverride || activePending?.id || sol?.id;
     if (!activeToken) return;
     const link = `${window.location.origin}/aprovacao/${activeToken}`;
     navigator.clipboard.writeText(link);
@@ -427,15 +458,15 @@ export default function SolicitacaoDetailPage() {
               </div>
 
               {chain.map((lvl, index) => {
-                const historyMatch = sol?.approvalHistories && sol.approvalHistories[index];
-                const isLevelDone = isFullyApproved || !!historyMatch;
-                const isLevelActive = !isDraft && !isLevelDone && !isRejected && (index === 0 || !!(sol?.approvalHistories && sol.approvalHistories[index - 1]));
+                const approvedHistory = approvedHistories[index];
+                const isLevelDone = isFullyApproved || !!approvedHistory;
+                const isLevelActive = !isDraft && !isLevelDone && !isRejected && index === currentStepIndex;
 
                 return (
                   <React.Fragment key={lvl.level}>
                     <div className={`${styles.stepLine} ${isLevelDone || isLevelActive ? styles.lineActive : ""}`} />
 
-                    <div className={`${styles.step} ${isLevelDone ? styles.completed : isRejected ? styles.pending : isLevelActive ? styles.active : styles.pending}`}>
+                    <div className={`${styles.step} ${isLevelDone ? styles.completed : isRejected && isLevelActive ? styles.pending : isLevelActive ? styles.active : styles.pending}`}>
                       <div className={styles.stepIcon}>
                         {isLevelDone ? (
                           <>
@@ -452,8 +483,8 @@ export default function SolicitacaoDetailPage() {
                         <strong>Alçada {lvl.level}</strong>
                         <span>
                           {isLevelDone
-                            ? historyMatch?.approverId && !isUuid(historyMatch.approverId)
-                              ? historyMatch.approverId
+                            ? approvedHistory?.approverId && !isUuid(approvedHistory.approverId)
+                              ? approvedHistory.approverId
                               : lvl.roleOrName
                             : isRejected && isLevelActive
                             ? `Rejeitado por ${lvl.roleOrName}`
@@ -467,8 +498,8 @@ export default function SolicitacaoDetailPage() {
                           </div>
                         ) : isLevelDone ? (
                           <small>
-                            {historyMatch?.actionDate
-                              ? new Date(historyMatch.actionDate).toLocaleDateString("pt-BR")
+                            {approvedHistory?.actionDate
+                              ? new Date(approvedHistory.actionDate).toLocaleDateString("pt-BR")
                               : new Date().toLocaleDateString("pt-BR")}
                           </small>
                         ) : (
@@ -479,6 +510,7 @@ export default function SolicitacaoDetailPage() {
                   </React.Fragment>
                 );
               })}
+
 
               <div className={`${styles.stepLine} ${isFullyApproved ? styles.lineActive : ""}`} />
 

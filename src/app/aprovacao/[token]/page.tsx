@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import styles from './aprovacao.module.css';
 
 import { purchaseRequestsApi } from '@/lib/api/purchase-requests';
+import { isUserEligibleToApprove } from '@/lib/utils/approval-limits';
 
 interface Item {
   description: string;
@@ -75,13 +76,15 @@ export default function AprovacaoPage() {
       user?.role === 'admin' ||
       user?.roles?.includes('diretor') ||
       user?.roles?.includes('admin') ||
-      (user && (
-        (details.assignedApproverId && user.id === details.assignedApproverId) ||
-        (details.approverIdentifier && user.email?.toLowerCase() === details.approverIdentifier?.toLowerCase()) ||
-        (details.approverName && user.name?.toLowerCase() === details.approverName?.toLowerCase())
-      ))
+      user?.roles?.includes('Diretor') ||
+      user?.roles?.includes('Admin') ||
+      (user && isUserEligibleToApprove(user, details.approverName || details.approverRole || '')) ||
+      (user && details.assignedApproverId && user.id === details.assignedApproverId) ||
+      (user && details.approverIdentifier && user.email?.toLowerCase() === details.approverIdentifier?.toLowerCase())
     )
   );
+
+
 
   const handleApprove = async () => {
     if (!token) return;
