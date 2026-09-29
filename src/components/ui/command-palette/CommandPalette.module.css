@@ -273,7 +273,6 @@
   border-radius: 6px;
   font-size: 11px;
 }
-
 @media (max-width: 640px) {
   .overlay {
     padding-top: 16px;

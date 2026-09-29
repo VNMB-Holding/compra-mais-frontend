@@ -6,7 +6,10 @@ import path from "path";
  * sem afetar strings, diretivas ("use client") ou regexes.
  */
 
-const TARGET_DIR = path.resolve(process.cwd(), "src");
+const TARGET_DIRS = [
+  path.resolve(process.cwd(), "src"),
+  path.resolve(process.cwd(), "tests"),
+];
 
 // Extensões de arquivos para processar
 const ALLOWED_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css", ".scss"];
@@ -65,6 +68,10 @@ function processDirectory(dirPath: string) {
   }
 }
 
-console.log("🚀 Iniciando remoção de comentários na pasta src...");
-processDirectory(TARGET_DIR);
-console.log("✅ Concluído! Todos os comentários de código em src/ foram removidos com sucesso.");
+console.log("🚀 Iniciando remoção de comentários em src/ e tests/...");
+for (const dir of TARGET_DIRS) {
+  if (fs.existsSync(dir)) {
+    processDirectory(dir);
+  }
+}
+console.log("✅ Concluído! Todos os comentários de código foram removidos com sucesso.");

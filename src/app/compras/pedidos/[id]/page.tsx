@@ -45,9 +45,9 @@ export default function PedidoDetailPage() {
   const foundInList = poList?.find((p) => p.id === rawId || p.code === rawId);
   const po: PurchaseOrder | null = directPo || foundInList || null;
 
-  const displayId = po?.code || (isNewFlow ? `PED-${String(Date.now()).slice(-6)}` : rawId);
+  const displayId = po?.code || rawId;
 
-  const currentStatus = statusOverride || po?.status || (isNewFlow ? "Sent" : "Sent");
+  const currentStatus = statusOverride || po?.status || "Sent";
   const isCancelled = currentStatus === "Cancelled";
   const isDelivered = currentStatus === "Delivered";
   const isInTransit = (currentStatus === "InTransit" || isDelivered) && !isCancelled;
@@ -80,9 +80,18 @@ export default function PedidoDetailPage() {
   };
 
   const handleConfirmFaturamento = async () => {
+    const nfeVal = inputNfe.trim();
+    if (!nfeVal) {
+      toast({
+        variant: "error",
+        title: "Número da NF-e obrigatório",
+        message: "Por favor, informe o número da Nota Fiscal para confirmar o faturamento.",
+      });
+      return;
+    }
+
     try {
       const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
-      const nfeVal = inputNfe.trim() || `NF-${String(Date.now()).slice(-6)}`;
       const note = `NF-e confirmada: ${nfeVal}${inputChaveNfe ? ` (Chave: ${inputChaveNfe})` : ""}`;
       
       if (orderIdToUpdate) {

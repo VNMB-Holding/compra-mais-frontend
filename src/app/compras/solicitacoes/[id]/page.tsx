@@ -177,13 +177,15 @@ export default function SolicitacaoDetailPage() {
 
   const [sendingApproval, setSendingApproval] = useState(false);
   const [remoteChain, setRemoteChain] = useState<any[] | null>(null);
+  const [isChainLoading, setIsChainLoading] = useState(true);
 
   const budget = Number(sol?.estimatedBudget || 0);
-  const companyCode = sol?.companyCode || "2313";
+  const companyCode = sol?.companyCode;
 
   useEffect(() => {
     if (!sol) return;
     let cancelled = false;
+    setIsChainLoading(true);
     purchaseRequestsApi
       .getApprovalChain(companyCode, budget)
       .then((res) => {
@@ -200,6 +202,9 @@ export default function SolicitacaoDetailPage() {
       })
       .catch((err) => {
         console.warn("Falha ao carregar cadeia dinâmica de aprovação:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsChainLoading(false);
       });
 
     return () => {
@@ -232,7 +237,8 @@ export default function SolicitacaoDetailPage() {
   };
 
   const companyName = formatCorporateBranch(sol?.corporateColigada, sol?.corporateFilial, sol?.tenantId, user);
-  const chain = remoteChain || getApprovalChainForRequest(companyName, budget);
+  
+  const chain = remoteChain ?? getApprovalChainForRequest(companyName, budget);
 
   const pendingHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Awaiting");
   const approvedHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Approved");
@@ -253,7 +259,8 @@ export default function SolicitacaoDetailPage() {
     });
   };
 
-  const canUserApproveCurrentLevel = isUserEligibleToApprove(user, currentApproverName);
+  
+  const canUserApproveCurrentLevel = !isChainLoading && isUserEligibleToApprove(user, currentApproverName);
 
   return (
     <div className={styles.detailContainer}>
@@ -412,7 +419,7 @@ export default function SolicitacaoDetailPage() {
           </div>
         )}
 
-        {/* Opção de Cancelar Demanda */}
+        {}
         {!isCancelled && !isFinished && (
           <div className={styles.headerActions}>
             <Button

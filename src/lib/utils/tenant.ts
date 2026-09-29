@@ -60,7 +60,7 @@ export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?:
 
 export function getTenantDisplayName(tenantId?: string, user?: User | null): string {
   if (!tenantId || tenantId === "TODAS") {
-    return "VB AGRO LTDA";
+    return "Todas as Unidades";
   }
 
   const branch = findCompanyBranch(tenantId);
@@ -79,7 +79,7 @@ export function getTenantDisplayName(tenantId?: string, user?: User | null): str
     if (!foundInUser.name.toUpperCase().includes("VNMB")) return foundInUser.name;
   }
 
-  return "VB AGRO LTDA";
+  return tenantId;
 }
 
 export function formatCorporateBranch(

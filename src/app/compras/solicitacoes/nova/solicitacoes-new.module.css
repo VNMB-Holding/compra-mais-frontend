@@ -698,7 +698,6 @@ textarea.formControl {
 .chevronRotateActive {
   transform: rotate(180deg);
 }
-
 @media (max-width: 768px) {
   .stepperNav {
     padding: 10px 14px;
@@ -735,7 +734,6 @@ textarea.formControl {
     padding: 14px;
   }
 }
-
 @media (max-width: 520px) {
   .stepperNav {
     flex-direction: column;

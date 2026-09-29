@@ -292,7 +292,6 @@
   max-width: 400px;
   line-height: 1.4;
 }
-
 @media (max-width: 1024px) {
   .urgentCardWrapper {
     grid-template-columns: 1fr;
@@ -301,7 +300,6 @@
     display: none;
   }
 }
-
 @media (max-width: 768px) {
   .heroBanner {
     padding: 18px 20px;
@@ -339,7 +337,6 @@
     grid-column: span 1;
   }
 }
-
 @media (max-width: 480px) {
   .kpiGrid {
     grid-template-columns: 1fr;

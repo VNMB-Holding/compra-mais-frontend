@@ -19,7 +19,7 @@ describe('TC-SYS-01 / TC-SYS-05: Resiliência de Sistema, Idempotência e Tratam
       const firstCall = await processTransactionalRequest(key, { amount: 5000 });
       expect(firstCall.status).toBe('CREATED');
 
-      // Segunda chamada com a mesma chave (ex: reenvio após timeout de rede)
+      
       const duplicateCall = await processTransactionalRequest(key, { amount: 5000 });
       expect(duplicateCall.status).toBe('ALREADY_PROCESSED');
       expect(duplicateCall.cached).toBe(true);
@@ -31,7 +31,7 @@ describe('TC-SYS-01 / TC-SYS-05: Resiliência de Sistema, Idempotência e Tratam
       const conflictError = new ApiError('Conflict: record was modified by another transaction', 409);
       expect(conflictError.status).toBe(409);
 
-      // Função de parsing amigável
+      
       const userMessage = conflictError.status === 409
         ? 'Este registro foi alterado por outro usuário. Por favor, atualize a página.'
         : getErrorMessage(conflictError);
@@ -106,18 +106,18 @@ describe('TC-SYS-01 / TC-SYS-05: Resiliência de Sistema, Idempotência e Tratam
       const failingExternalApi = vi.fn().mockRejectedValue(new Error('API Terceira Inoperante (504 Gateway Timeout)'));
       const fallbackValue = { fallback: true, message: 'Cotação estimada em modo contingencial' };
 
-      // 1ª falha
+      
       await expect(breaker.execute(failingExternalApi, () => fallbackValue)).rejects.toThrow();
       expect(breaker.getState()).toBe('CLOSED');
 
-      // 2ª falha -> atinge limiar e abre circuito
+      
       await expect(breaker.execute(failingExternalApi, () => fallbackValue)).rejects.toThrow();
       expect(breaker.getState()).toBe('OPEN');
 
-      // 3ª chamada -> circuito aberto, aciona fallback imediatamente sem chamar a API externa
+      
       const fallbackResult = await breaker.execute(failingExternalApi, () => fallbackValue);
       expect(fallbackResult).toEqual(fallbackValue);
-      expect(failingExternalApi).toHaveBeenCalledTimes(2); // Não foi chamada a 3ª vez
+      expect(failingExternalApi).toHaveBeenCalledTimes(2); 
     });
   });
 });

@@ -118,7 +118,6 @@
 .itemsTable tr:hover td {
   background: #f8fafc;
 }
-
 @media (max-width: 768px) {
   .pageHeader {
     flex-direction: column;

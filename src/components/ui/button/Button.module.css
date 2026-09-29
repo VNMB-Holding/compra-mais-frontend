@@ -55,7 +55,6 @@
   transform: none !important;
   box-shadow: none !important;
 }
-
 .loading {
   cursor: not-allowed !important;
   opacity: 0.85;

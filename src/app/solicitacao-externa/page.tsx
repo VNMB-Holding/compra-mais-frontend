@@ -158,14 +158,11 @@ export default function SolicitacaoExternaPage() {
         })),
       };
 
-      let res: any;
-      try {
-        res = await purchaseRequestsApi.createPublic(payload);
-      } catch {
-        res = await purchaseRequestsApi.create(payload);
+      const res = await purchaseRequestsApi.createPublic(payload);
+      const code = res?.code;
+      if (!code) {
+        throw new Error("O servidor não retornou o código da solicitação criada.");
       }
-
-      const code = res?.code || `SOL-${String(Date.now()).slice(-6)}`;
       setProtocoloGerado(code);
       toast({
         variant: "success",

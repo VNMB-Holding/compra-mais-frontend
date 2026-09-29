@@ -130,9 +130,9 @@ export const adminApi = {
       flowType,
       rules: newRules,
     });
-    if (remote && Array.isArray(remote)) {
-      return remote;
+    if (!remote || !Array.isArray(remote)) {
+      throw new Error(`Falha ao salvar regras: o servidor não retornou uma lista válida. Resposta: ${JSON.stringify(remote)}`);
     }
-    return newRules;
+    return remote;
   },
 };

@@ -34,7 +34,7 @@ export default function AdminPage() {
   const [costCenters, setCostCenters] = useState<CostCenterOption[]>([]);
 
   const [companySearch, setCompanySearch] = useState("");
-  const [selectedWorkflowCompany, setSelectedWorkflowCompany] = useState<string>("2313");
+  const [selectedWorkflowCompany, setSelectedWorkflowCompany] = useState<string>("");
   const [activeFlowType, setActiveFlowType] = useState<"solicitacao" | "pedido">("solicitacao");
   const [selectedCostCenterFilter, setSelectedCostCenterFilter] = useState<string>("TODOS");
 
@@ -541,7 +541,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* KPI Stats Bar */}
+      {}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <span className={styles.statTitle}>Empresas & Unidades</span>
@@ -586,7 +586,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Navegação por Abas */}
+      {}
       <Tabs tabs={ADMIN_TABS} activeTab={activeTab} onChange={setActiveTab} />
 
       {loading ? (
@@ -595,10 +595,10 @@ export default function AdminPage() {
         </Card>
       ) : (
         <>
-          {/* TAB 1: WORKFLOW DE ALÇADAS */}
+          {}
           {activeTab === "alcadas" && (
             <div className={styles.tableCard}>
-              {/* Barra de Filtros e Seleção */}
+              {}
               <div className={styles.workflowToolbar}>
                 <div className={styles.filterGroup}>
                   <label htmlFor="companySelectWorkflow" style={{ fontSize: "0.85rem", fontWeight: 700 }}>
@@ -643,7 +643,7 @@ export default function AdminPage() {
                   </select>
                 </div>
 
-                {/* Alternância Solicitação / Pedido */}
+                {}
                 <div className={styles.flowTypeToggle}>
                   <button
                     type="button"
@@ -679,7 +679,7 @@ export default function AdminPage() {
                   </button>
                 </div>
 
-                {/* Simulador Interativo */}
+                {}
                 <div className={styles.simulatorBox}>
                   <span className={styles.simulatorLabel}>
                     <Icon name="search" size={15} />
@@ -706,7 +706,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Banner de Diagnóstico e Validação */}
+              {}
               <div
                 className={`${styles.diagnosticsBanner} ${
                   diagnostics.isValid
@@ -734,7 +734,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Canvas Visual de Faixas e Níveis */}
+              {}
               <div className={styles.workflowCanvas}>
                 {valueRanges.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#64748b" }}>
@@ -763,7 +763,7 @@ export default function AdminPage() {
                         key={rg.rangeKey}
                         className={`${styles.rangeCard} ${isSimulatedMatch ? styles.rangeCardActive : ""}`}
                       >
-                        {/* Header da Faixa */}
+                        {}
                         <div className={styles.rangeCardHeader}>
                           <div className={styles.rangeTitleGroup}>
                             <div className={styles.rangeBadgeIcon}>
@@ -810,7 +810,7 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {/* Sequência Resumida em Pills */}
+                        {}
                         <div style={{ padding: "0.75rem 1.25rem 0" }}>
                           <div className={styles.flowSequencePills}>
                             <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b" }}>
@@ -843,7 +843,7 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {/* Corpo Visual com Conectores */}
+                        {}
                         <div className={styles.flowBody}>
                           <div className={styles.flowStartNode}>
                             <Icon
@@ -983,7 +983,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Barra Fixa de Persistência em Lote */}
+              {}
               {isDirty && (
                 <div className={styles.saveBar}>
                   <div className={styles.saveBarText}>
@@ -1013,7 +1013,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* TAB 2: GESTÃO DE EMPRESAS & FILIAIS */}
+          {}
           {activeTab === "empresas" && (
             <>
               <div className={styles.filterBar}>
@@ -1103,7 +1103,7 @@ export default function AdminPage() {
             </>
           )}
 
-          {/* TAB 3: GOVERNANÇA E PAPÉIS */}
+          {}
           {activeTab === "governanca" && (
             <div className={styles.tableCard}>
               <div className={styles.tableHeader}>
@@ -1161,7 +1161,7 @@ export default function AdminPage() {
         </>
       )}
 
-      {/* Modal: Faixa de Valor */}
+      {}
       {rangeModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
@@ -1220,7 +1220,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Modal: Nível de Aprovação */}
+      {}
       {stepModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
@@ -1348,7 +1348,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Modal: Empresa / Filial */}
+      {}
       {companyModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
@@ -1455,7 +1455,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Confirmação de Remoção de Nível */}
+      {}
       <ConfirmDialog
         open={Boolean(deleteRuleId)}
         title="Remover Nível de Aprovação"
@@ -1467,7 +1467,7 @@ export default function AdminPage() {
         onCancel={() => setDeleteRuleId(null)}
       />
 
-      {/* Confirmação de Exclusão de Faixa */}
+      {}
       <ConfirmDialog
         open={Boolean(deleteRangeKey)}
         title="Excluir Faixa de Valor"
@@ -1479,7 +1479,7 @@ export default function AdminPage() {
         onCancel={() => setDeleteRangeKey(null)}
       />
 
-      {/* Confirmação de Duplicação de Faixa */}
+      {}
       <ConfirmDialog
         open={Boolean(duplicateRangeKey)}
         title="Duplicar Faixa de Valor"
@@ -1491,7 +1491,7 @@ export default function AdminPage() {
         onCancel={() => setDuplicateRangeKey(null)}
       />
 
-      {/* Confirmação de Status da Unidade */}
+      {}
       <ConfirmDialog
         open={Boolean(toggleCompanyConfirm)}
         title={toggleCompanyConfirm?.active ? "Desativar Unidade" : "Ativar Unidade"}

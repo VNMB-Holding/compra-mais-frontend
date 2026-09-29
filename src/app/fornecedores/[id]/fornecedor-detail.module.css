@@ -610,7 +610,6 @@
   background: #dcfce7;
   color: #16a34a;
 }
-
 @media (max-width: 1024px) {
   .summaryGrid {
     grid-template-columns: 1fr;
@@ -630,7 +629,6 @@
     grid-template-columns: 1fr;
   }
 }
-
 @media (max-width: 768px) {
   .headerRow {
     flex-direction: column;
@@ -673,7 +671,6 @@
     align-items: flex-start;
   }
 }
-
 @media (max-width: 520px) {
   .kpiGrid {
     grid-template-columns: 1fr;

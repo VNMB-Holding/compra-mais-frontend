@@ -65,9 +65,9 @@ describe('Tenant Utilities', () => {
   });
 
   describe('getTenantDisplayName', () => {
-    it('deve retornar VB AGRO LTDA para tenant vazio ou TODAS', () => {
-      expect(getTenantDisplayName()).toBe('VB AGRO LTDA');
-      expect(getTenantDisplayName('TODAS')).toBe('VB AGRO LTDA');
+    it('deve retornar Todas as Unidades para tenant vazio ou TODAS', () => {
+      expect(getTenantDisplayName()).toBe('Todas as Unidades');
+      expect(getTenantDisplayName('TODAS')).toBe('Todas as Unidades');
     });
 
     it('deve retornar VB AGRO LTDA quando o ID contiver VNMB', () => {

@@ -424,7 +424,6 @@
   color: #94a3b8;
   margin-top: 10px;
 }
-
 @media (max-width: 640px) {
   .donutRow {
     flex-direction: column;

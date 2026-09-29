@@ -126,7 +126,7 @@ export default function NovaSolicitacaoPage() {
     }
   }, [user, editId]);
 
-  const [targetTenantId, setTargetTenantId] = useState<string>("2313");
+  const [targetTenantId, setTargetTenantId] = useState<string>(() => user?.tenantId || COMPANY_BRANCHES[0]?.code || "");
 
   const tenantOptions = useMemo(() => {
     return COMPANY_BRANCHES.map((b) => ({
@@ -138,7 +138,7 @@ export default function NovaSolicitacaoPage() {
   const selectedTenantName = useMemo(() => {
     const fromBranch = findCompanyBranch(targetTenantId);
     if (fromBranch) return `${fromBranch.name} (${fromBranch.acronym})`;
-    return "VB AGRO LTDA (BRD)";
+    return targetTenantId || "Selecione a empresa";
   }, [targetTenantId]);
 
   const [purchaseType, setPurchaseType] = useState("Material recorrente");
@@ -215,8 +215,19 @@ export default function NovaSolicitacaoPage() {
         ? new Date(Math.min(...validDates)).toISOString()
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+      const selectedCompanyCode = targetTenantId || user?.tenantId || (COMPANY_BRANCHES[0]?.code);
+      if (!selectedCompanyCode) {
+        toast({
+          variant: "error",
+          title: "Empresa obrigatória",
+          message: "Selecione a empresa / unidade de faturamento para continuar.",
+        });
+        return;
+      }
+
       const payload = {
-        tenantId: targetTenantId || user?.tenantId,
+        tenantId: selectedCompanyCode,
+        companyCode: selectedCompanyCode,
         description: title,
         requesterId: user?.id,
         requesterName: requester || user?.name || user?.email,

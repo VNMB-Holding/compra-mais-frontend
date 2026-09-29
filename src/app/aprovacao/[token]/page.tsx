@@ -417,7 +417,7 @@ export default function AprovacaoPage() {
                   </div>
                 )}
 
-                {/* Ações */}
+                {}
                 <div className={styles.actionsFooter}>
                   {!showRejectInput ? (
                     <div className={styles.actionButtonsRow}>

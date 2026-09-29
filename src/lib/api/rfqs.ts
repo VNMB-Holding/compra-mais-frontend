@@ -144,73 +144,15 @@ export const rfqsApi = {
   
   getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
 
-  getPublicRfq: async (id: string): Promise<PublicRfq> => {
-    try {
-      return await apiClient.get<PublicRfq>(`/api/rfqs/public/${id}`);
-    } catch (err: any) {
-      
-      try {
-        const fallback = await apiClient.get<any>(`/api/rfqs/${id}`);
-        if (fallback) {
-          return {
-            id: fallback.id,
-            code: fallback.code || id,
-            title: fallback.title || fallback.purchaseRequest?.description || "Cotação de Mercado",
-            closesAt: fallback.closesAt || new Date(Date.now() + 7 * 86400000).toISOString(),
-            status: fallback.status || "Open",
-            createdAt: fallback.createdAt || new Date().toISOString(),
-            companyCode: fallback.companyCode || fallback.purchaseRequest?.companyCode || "VNMB",
-            costCenterName: fallback.purchaseRequest?.costCenterName || fallback.purchaseRequest?.category || "Geral",
-            description: fallback.purchaseRequest?.description || fallback.title || "Demanda de Compras",
-            notes: fallback.purchaseRequest?.notes || "",
-            items: ((fallback.purchaseRequest?.items || fallback.items || []) as any[]).map((item: any) => ({
-              id: item.id,
-              description: item.description,
-              quantity: Number(item.quantity) || 1,
-              unit: item.unit || "UN",
-              notes: item.notes || "",
-            })),
-          };
-        }
-      } catch (innerErr) {
-        
-      }
-      throw err;
-    }
+  getPublicRfq: (id: string): Promise<PublicRfq> => {
+    return apiClient.get<PublicRfq>(`/api/rfqs/public/${id}`);
   },
 
-  submitPublicProposal: async (id: string, data: PublicProposalPayload) => {
-    try {
-      return await apiClient.post<{ success: boolean; protocol: string; supplierName: string; message: string }>(
-        `/api/rfqs/public/${id}/proposal`,
-        data
-      );
-    } catch (err: any) {
-      
-      try {
-        const rfq = await apiClient.get<any>(`/api/rfqs/${id}`);
-        if (rfq?.id) {
-          const totalVal = data.items.reduce((s, it) => s + (Number(it.unitPrice) || 0), 0);
-          await apiClient.post(`/api/rfqs/${rfq.id}/proposals`, {
-            supplierId: data.supplierCnpj,
-            unitPrice: totalVal,
-            freightCost: data.freightCost || 0,
-            paymentTerms: data.paymentTerms || "30 dias DDL",
-            deliveryTime: data.deliveryTime || 5,
-            notes: data.notes || "",
-          });
-          return {
-            success: true,
-            protocol: `PROP-${Date.now()}`,
-            supplierName: data.supplierName,
-            message: "Proposta comercial registrada com sucesso!",
-          };
-        }
-      } catch (fallbackErr) {
-        
-      }
-      throw err;
-    }
+  submitPublicProposal: (id: string, data: PublicProposalPayload) => {
+    return apiClient.post<{ success: boolean; protocol: string; supplierName: string; message: string }>(
+      `/api/rfqs/public/${id}/proposal`,
+      data
+    );
   },
   
   getKpis: (tenantId?: string) => {

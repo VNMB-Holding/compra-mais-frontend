@@ -150,7 +150,6 @@
   background-color: var(--color-primary, #007d79) !important;
   color: #ffffff !important;
 }
-
 @media (max-width: 480px) {
   .modalOverlay {
     padding: 12px;
