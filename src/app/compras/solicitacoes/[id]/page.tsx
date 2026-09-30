@@ -189,13 +189,15 @@ export default function SolicitacaoDetailPage() {
     purchaseRequestsApi
       .getApprovalChain(companyCode, budget)
       .then((res) => {
-        if (!cancelled && Array.isArray(res) && res.length > 0) {
+        if (cancelled) return;
+        if (Array.isArray(res) && res.length > 0) {
           setRemoteChain(
             res.map((r: any) => ({
               level: r.level,
               roleOrName: r.approverName || r.approverIdentifier,
               maxLimit: r.maxAmount,
               approverType: "user",
+              approverIdentifier: r.approverIdentifier,
             }))
           );
         }
@@ -240,11 +242,12 @@ export default function SolicitacaoDetailPage() {
   
   const chain = remoteChain ?? getApprovalChainForRequest(companyName, budget);
 
-  const pendingHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Awaiting");
+  const pendingHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Pending");
   const approvedHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Approved");
   const currentStepIndex = approvedHistories.length;
   const currentPendingLevel = chain[currentStepIndex] || chain[chain.length - 1];
   const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
+  const currentApproverIdentifier = currentPendingLevel?.approverIdentifier || currentApproverName;
 
   const handleCopyApprovalLink = (tokenOverride?: string) => {
     const activePending = pendingHistories[0];
@@ -260,7 +263,7 @@ export default function SolicitacaoDetailPage() {
   };
 
   
-  const canUserApproveCurrentLevel = !isChainLoading && isUserEligibleToApprove(user, currentApproverName);
+  const canUserApproveCurrentLevel = !isChainLoading && isUserEligibleToApprove(user, currentApproverIdentifier);
 
   return (
     <div className={styles.detailContainer}>

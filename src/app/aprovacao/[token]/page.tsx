@@ -78,9 +78,8 @@ export default function AprovacaoPage() {
       user?.roles?.includes('admin') ||
       user?.roles?.includes('Diretor') ||
       user?.roles?.includes('Admin') ||
-      (user && isUserEligibleToApprove(user, details.approverName || details.approverRole || '')) ||
       (user && details.assignedApproverId && user.id === details.assignedApproverId) ||
-      (user && details.approverIdentifier && user.email?.toLowerCase() === details.approverIdentifier?.toLowerCase())
+      (user && isUserEligibleToApprove(user, details.approverIdentifier || details.approverRole || details.approverName || ''))
     )
   );
 

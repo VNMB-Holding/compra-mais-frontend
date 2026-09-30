@@ -30,7 +30,7 @@ export interface PurchaseRequest {
   approvalHistories?: {
     id: string;
     action?: string;
-    status?: "Awaiting" | "Approved" | "Rejected" | string;
+    status?: "Pending" | "Approved" | "Rejected" | string;
     limitId?: string;
     comments?: string;
     actionDate: string;

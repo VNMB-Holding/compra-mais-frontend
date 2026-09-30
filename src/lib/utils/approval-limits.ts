@@ -5,6 +5,7 @@ export interface ApprovalChainLevel {
   roleOrName: string;
   maxLimit: number | null;
   approverType?: "user" | "role" | "group";
+  approverIdentifier?: string;
 }
 
 import { findCompanyBranch } from "@/lib/constants/companies";
@@ -51,6 +52,7 @@ export function calculateChainFromRules(
         roleOrName: r.approverName || r.approverIdentifier,
         maxLimit: r.maxAmount,
         approverType: r.approverType,
+        approverIdentifier: r.approverIdentifier,
       });
       if (r.maxAmount !== null && budget <= r.maxAmount) {
         break;
