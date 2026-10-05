@@ -32,9 +32,12 @@ describe('Status & Priority Constants & Mappings', () => {
   describe('PURCHASE_ORDER_STATUS_MAP', () => {
     it('deve mapear os status do pedido de compra', () => {
       expect(PURCHASE_ORDER_STATUS_MAP.Sent).toBe('Emitido');
-      expect(PURCHASE_ORDER_STATUS_MAP.AwaitingSignature).toBe('Emitido');
+      expect(PURCHASE_ORDER_STATUS_MAP.AwaitingSignature).toBe('Aguardando assinatura');
       expect(PURCHASE_ORDER_STATUS_MAP.Signed).toBe('Faturado');
+      expect(PURCHASE_ORDER_STATUS_MAP.Processing).toBe('Em processamento');
+      expect(PURCHASE_ORDER_STATUS_MAP.InTransit).toBe('Em transporte');
       expect(PURCHASE_ORDER_STATUS_MAP.Delivered).toBe('Entregue');
+      expect(PURCHASE_ORDER_STATUS_MAP.Cancelled).toBe('Cancelado');
     });
   });
 
@@ -57,8 +60,13 @@ describe('Status & Priority Constants & Mappings', () => {
     });
 
     it('deve identificar cotaÃ§Ã£o encerrando hoje', () => {
-      const today = new Date().toISOString();
+      const today = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       expect(mapRfqStatus({ status: 'Open', closesAt: today })).toBe('Encerrando hoje');
+    });
+
+    it('deve tratar cotação vencida como encerrada', () => {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      expect(mapRfqStatus({ status: 'Open', closesAt: yesterday })).toBe('Encerrada');
     });
   });
 

@@ -115,7 +115,7 @@ describe('TC-USR-05 / TC-ADM-02: Solicitações Workflow & Ciclo de Vida', () =>
       );
     });
 
-    it('deve consultar KPIs filtrando por tenantId', async () => {
+    it('deve consultar KPIs filtrando por companyCode', async () => {
       const mockKpis = {
         total: 45,
         awaitingApproval: 8,
@@ -128,7 +128,7 @@ describe('TC-USR-05 / TC-ADM-02: Solicitações Workflow & Ciclo de Vida', () =>
 
       const result = await solicitacoesService.getKpis('tenant-vb-agro');
 
-      expect(getSpy).toHaveBeenCalledWith('/api/purchase-requests/kpis?tenantId=tenant-vb-agro');
+      expect(getSpy).toHaveBeenCalledWith('/api/purchase-requests/kpis?companyCode=tenant-vb-agro');
       expect(result.awaitingApproval).toBe(8);
       expect(result.total).toBe(45);
     });

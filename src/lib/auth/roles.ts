@@ -5,7 +5,7 @@ export const ROUTE_ROLES = {
   compras: ["procurist", "gerente", "admin"] as UserRole[],
   fornecedores: ["procurist", "gerente", "admin"] as UserRole[],
   solicitacoesRapidas: ["solicitante"] as UserRole[],
-  admin: ["admin", "gerente"] as UserRole[],
+  admin: ["admin"] as UserRole[],
 };
 
 export function mapApiRole(roles: string[]): UserRole {
@@ -14,7 +14,10 @@ export function mapApiRole(roles: string[]): UserRole {
   if (normalized.some((r) => r === "admin" || r === "administrator" || r === "administrador")) {
     return "admin";
   }
-  if (normalized.some((r) => r === "gerente" || r === "manager" || r === "diretor")) {
+  if (normalized.some((r) => r === "diretor")) {
+    return "gerente";
+  }
+  if (normalized.some((r) => r === "gerente" || r === "manager")) {
     return "gerente";
   }
   if (

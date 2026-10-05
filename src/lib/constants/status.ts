@@ -16,13 +16,27 @@ export const PRIORITY_MAP: Record<string, string> = {
   High: "Alta",
   Urgent: "Urgente",
   Critical: "Crítica",
+  Baixa: "Baixa",
+  Media: "Média",
+  Média: "Média",
+  Alta: "Alta",
+  Critica: "Crítica",
+  Crítica: "Crítica",
 };
 
-export const PURCHASE_ORDER_STATUS_MAP: Record<string, "Emitido" | "Faturado" | "Entregue"> = {
+export function formatPriority(priority?: string | null): string {
+  if (!priority) return "Média";
+  return PRIORITY_MAP[priority] || priority;
+}
+
+export const PURCHASE_ORDER_STATUS_MAP: Record<string, string> = {
+  AwaitingSignature: "Aguardando assinatura",
   Sent: "Emitido",
-  AwaitingSignature: "Emitido",
+  Processing: "Em processamento",
   Signed: "Faturado",
+  InTransit: "Em transporte",
   Delivered: "Entregue",
+  Cancelled: "Cancelado",
 };
 
 export function mapRfqStatus(rfq: { status: string; closesAt?: string | null }): string {
@@ -31,8 +45,12 @@ export function mapRfqStatus(rfq: { status: string; closesAt?: string | null }):
   if (rfq.status === "Cancelled") return "Cancelada";
   if (rfq.status === "UnderAnalysis") return "Em análise";
   if (rfq.closesAt) {
-    const today = new Date().toISOString().split("T")[0];
-    const closes = new Date(rfq.closesAt).toISOString().split("T")[0];
+    const now = new Date();
+    const closesAt = new Date(rfq.closesAt);
+    if (closesAt.getTime() < now.getTime()) return "Encerrada";
+
+    const today = now.toISOString().split("T")[0];
+    const closes = closesAt.toISOString().split("T")[0];
     if (today === closes) return "Encerrando hoje";
   }
   return "Aberta";

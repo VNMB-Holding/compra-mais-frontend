@@ -18,7 +18,22 @@ export const createSolicitacaoSchema = z.object({
   estimatedBudget: z.number().min(0, "O orçamento estimado não pode ser negativo"),
   deliveryLocation: z.string().min(5, "O local de entrega é obrigatório"),
   deadline: z.string().min(1, "O prazo desejado é obrigatório"),
-  priority: z.enum(["Low", "Medium", "High", "Urgent", "Critical"]),
+  priority: z.enum(["Low", "Medium", "High", "Urgent", "Critical", "Baixa", "Media", "Média", "Alta", "Critica", "Crítica"]).transform((val) => {
+    const map: Record<string, "Low" | "Medium" | "High" | "Urgent" | "Critical"> = {
+      Baixa: "Low",
+      Media: "Medium",
+      Média: "Medium",
+      Alta: "High",
+      Critica: "Critical",
+      Crítica: "Critical",
+      Low: "Low",
+      Medium: "Medium",
+      High: "High",
+      Urgent: "Urgent",
+      Critical: "Critical",
+    };
+    return map[val] || "Medium";
+  }),
   department: z.string().default("Operações"),
   purchaseType: z.string().default("Material recorrente"),
   paymentTerms: z.string().optional(),

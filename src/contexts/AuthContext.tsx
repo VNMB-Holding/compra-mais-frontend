@@ -157,8 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           try {
             let tenantId = updatedUser.tenantId;
-            let meRoles = updatedUser.roles || [];
-            let meScopes = updatedUser.scopes || [];
+            const meRoles = updatedUser.roles || [];
+            const meScopes = updatedUser.scopes || [];
 
             if (updatedUser.id) {
               const userData = await getUserByIdApi(updatedUser.id).catch(() => null);
@@ -180,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             let tenantName = updatedUser.tenantName;
-            let currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
+            const currentTenantObj = availableTenants.find((t: any) => t.id === tenantId);
 
             if (!tenantName && currentTenantObj) {
               tenantName = currentTenantObj.name;
@@ -259,7 +259,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      let currentTenantObj = availableTenants.find((t) => t.id === tenantId);
+      const currentTenantObj = availableTenants.find((t) => t.id === tenantId);
 
       if (!tenantName && currentTenantObj) {
         tenantName = currentTenantObj.name;

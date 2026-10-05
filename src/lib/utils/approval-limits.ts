@@ -103,9 +103,14 @@ export function isUserEligibleToApprove(
     scopes?: string[];
     id?: string | null;
   } | null | undefined,
-  approverRoleOrName: string
+  approverRoleOrName: string,
+  assignedApproverId?: string
 ): boolean {
-  if (!user || !approverRoleOrName) return false;
+  if (!user) return false;
+
+  if (assignedApproverId && user.id && user.id === assignedApproverId) {
+    return true;
+  }
 
   if (
     user.role === "admin" ||
@@ -116,41 +121,41 @@ export function isUserEligibleToApprove(
     return true;
   }
 
+  if (!approverRoleOrName) return false;
+
+  const normalize = (value?: string | null) => (value || "").trim().toLowerCase();
   const approverTargets = approverRoleOrName
     .split(/[\/,]| e /i)
-    .map((s) => s.trim().toLowerCase())
+    .map(normalize)
     .filter(Boolean);
 
-  const userName = (user.name || "").toLowerCase();
-  const userEmail = (user.email || "").toLowerCase();
-  const userRole = (user.role || "").toLowerCase();
-  const userRoles = (user.roles || []).map((r) => r.toLowerCase());
-  const userId = (user.id || "").toLowerCase();
+  const exactUserValues = new Set([
+    normalize(user.id),
+    normalize(user.email),
+    normalize(user.name),
+    normalize(user.role),
+    ...(user.roles || []).map(normalize),
+  ].filter(Boolean));
 
-  return approverTargets.some((target) => {
-    if (userRole && (userRole === target || userRole.includes(target) || target.includes(userRole))) {
-      return true;
-    }
+  if (approverTargets.some((target) => exactUserValues.has(target))) {
+    return true;
+  }
 
-    if (userId && userId === target) {
-      return true;
-    }
+  const isDiretor =
+    user.role?.toLowerCase().includes("diretor") ||
+    (user.roles || []).some((r) => r.toLowerCase().includes("diretor"));
 
-    if (
-      userName &&
-      (userName === target || userName.includes(target))
-    ) {
-      return true;
-    }
+  if (isDiretor && approverTargets.some((target) => target.includes("diretor") || target.includes("diretoria"))) {
+    return true;
+  }
 
-    if (userEmail && userEmail.includes(target)) {
-      return true;
-    }
+  const isGerente =
+    user.role?.toLowerCase().includes("gerente") ||
+    (user.roles || []).some((r) => r.toLowerCase().includes("gerente"));
 
-    if (userRoles.some((r) => r && (r.includes(target) || target.includes(r)))) {
-      return true;
-    }
+  if (isGerente && approverTargets.some((target) => target.includes("gerente") || target.includes("gestor"))) {
+    return true;
+  }
 
-    return false;
-  });
+  return false;
 }
