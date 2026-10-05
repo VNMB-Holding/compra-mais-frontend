@@ -71,17 +71,25 @@ export const adminApi = {
   },
 
   async getApprovers(): Promise<ApproverOption[]> {
-    const remote = await apiClient.get<ApproverOption[]>("/api/admin/approvers");
-    if (remote && Array.isArray(remote)) {
-      return remote;
+    try {
+      const remote = await apiClient.get<ApproverOption[]>("/api/admin/approvers");
+      if (remote && Array.isArray(remote)) {
+        return remote;
+      }
+    } catch (err: any) {
+      console.warn("Falha ao consultar /api/admin/approvers:", err?.message);
     }
     return [];
   },
 
   async getCostCenters(): Promise<CostCenterOption[]> {
-    const remote = await apiClient.get<CostCenterOption[]>("/api/admin/cost-centers");
-    if (remote && Array.isArray(remote)) {
-      return remote;
+    try {
+      const remote = await apiClient.get<CostCenterOption[]>("/api/admin/cost-centers");
+      if (remote && Array.isArray(remote)) {
+        return remote;
+      }
+    } catch (err: any) {
+      console.warn("Falha ao consultar /api/admin/cost-centers:", err?.message);
     }
     return [];
   },
@@ -99,14 +107,18 @@ export const adminApi = {
   },
 
   async getApprovalRules(companyCode?: string, flowType?: ApprovalFlowType): Promise<ApprovalRuleConfig[]> {
-    const validCompany = cleanCompanyParam(companyCode);
-    const params = new URLSearchParams();
-    if (validCompany) params.set("companyCode", validCompany);
-    if (flowType) params.set("flowType", flowType);
-    const qs = params.toString() ? `?${params.toString()}` : "";
-    const remote = await apiClient.get<ApprovalRuleConfig[]>(`/api/admin/approval-rules${qs}`);
-    if (remote && Array.isArray(remote)) {
-      return remote;
+    try {
+      const validCompany = cleanCompanyParam(companyCode);
+      const params = new URLSearchParams();
+      if (validCompany) params.set("companyCode", validCompany);
+      if (flowType) params.set("flowType", flowType);
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      const remote = await apiClient.get<ApprovalRuleConfig[]>(`/api/admin/approval-rules${qs}`);
+      if (remote && Array.isArray(remote)) {
+        return remote;
+      }
+    } catch (err: any) {
+      console.warn("Falha ao consultar /api/admin/approval-rules:", err?.message);
     }
     return [];
   },

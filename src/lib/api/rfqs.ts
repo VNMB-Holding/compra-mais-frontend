@@ -16,6 +16,7 @@ export interface Rfq {
     description: string;
     category: string;
     tenantId?: string;
+    companyCode?: string;
     items?: { id: string; description: string; quantity: number; unit: string }[];
   };
   rfqSuppliers?: {
@@ -44,8 +45,9 @@ export interface Rfq {
     };
     items?: {
       id: string;
+      requestItemId?: string;
       unitPrice: number;
-      freightCost: number;
+      freightCost?: number;
     }[];
   }[];
 }
@@ -141,7 +143,7 @@ export const rfqsApi = {
     const qs = params.toString();
     return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ''}`);
   },
-  
+
   getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
 
   getPublicRfq: (id: string): Promise<PublicRfq> => {
@@ -154,18 +156,28 @@ export const rfqsApi = {
       data
     );
   },
-  
-  getKpis: (tenantId?: string) => {
-    const validTenant = cleanTenantParam(tenantId);
+
+  getKpis: (companyCode?: string) => {
+    const validTenant = cleanTenantParam(companyCode);
     const params = new URLSearchParams();
-    if (validTenant) params.append("tenantId", validTenant);
+    if (validTenant) params.append("companyCode", validTenant);
     const qs = params.toString();
     return apiClient.get<RfqKpis>(`/api/rfqs/kpis${qs ? `?${qs}` : ''}`);
   },
-  
-  create: (data: { requestId: string; title: string; closesAt: string; supplierIds?: string[]; status?: 'Draft' | 'Open' }) =>
+
+  create: (data: {
+    requestId: string;
+    title: string;
+    closesAt: string;
+    supplierIds?: string[];
+    status?: 'Draft' | 'Open';
+    incoterm?: string;
+    paymentTerms?: string;
+    currency?: string;
+    notes?: string;
+  }) =>
     apiClient.post<Rfq>("/api/rfqs", data),
-  
+
   createProposal: (rfqId: string, data: { supplierId: string; unitPrice: number; freightCost?: number; paymentTerms?: string; deliveryTime?: number; notes?: string }) =>
     apiClient.post<{ id: string; rfqId: string; supplierId: string; status: string; isWinner: boolean }>(`/api/rfqs/${rfqId}/proposals`, data),
 
@@ -175,8 +187,8 @@ export const rfqsApi = {
   createPo: (rfqId: string) =>
     apiClient.post(`/api/rfqs/${rfqId}/create-po`, {}),
 
-  updateStatus: (id: string, status: Rfq["status"]) =>
-    apiClient.patch<Rfq>(`/api/rfqs/${id}/status`, { status }),
+  updateStatus: (id: string, status: Rfq["status"], reason?: string) =>
+    apiClient.patch<Rfq>(`/api/rfqs/${id}/status`, { status, reason }),
 
   inviteUnregisteredSupplier: (
     rfqId: string,
@@ -193,4 +205,3 @@ export const rfqsApi = {
       data,
     ),
 };
-

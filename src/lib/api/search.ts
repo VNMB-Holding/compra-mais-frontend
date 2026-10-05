@@ -133,7 +133,7 @@ export const searchApi = {
       purchaseRequestsApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as PurchaseRequest[]),
       rfqsApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as Rfq[]),
       purchaseOrdersApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as PurchaseOrder[]),
-      suppliersApi.list({ search: trimmed }).catch(() => [] as Supplier[]),
+      suppliersApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as Supplier[]),
     ]);
 
     const solicitacoesRaw = reqsSettled.status === "fulfilled" ? (reqsSettled.value as PurchaseRequest[]) || [] : [];

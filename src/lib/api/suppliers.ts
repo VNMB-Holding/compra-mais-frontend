@@ -73,6 +73,7 @@ export interface SupplierKpis {
 
 export interface SupplierListParams {
   tenantId?: string;
+  companyCode?: string;
   status?: string;
   state?: string;
   city?: string;
@@ -85,8 +86,11 @@ export const suppliersApi = {
     const params = new URLSearchParams();
     if (typeof paramsOrTenant === 'string') {
       const validTenant = cleanTenantParam(paramsOrTenant);
-      if (validTenant) params.append("tenantId", validTenant);
+      if (validTenant) params.append("companyCode", validTenant);
     } else if (paramsOrTenant) {
+      const validCompany = cleanTenantParam(paramsOrTenant.companyCode || paramsOrTenant.tenantId);
+      if (validCompany) params.append("companyCode", validCompany);
+
       const status = cleanFilterParam(paramsOrTenant.status);
       if (status) params.append("status", status);
 
@@ -105,21 +109,21 @@ export const suppliersApi = {
     const qs = params.toString();
     return apiClient.get<Supplier[]>(`/api/suppliers${qs ? `?${qs}` : ''}`);
   },
-  
+
   getById: (id: string) => apiClient.get<Supplier>(`/api/suppliers/${id}`),
-  
-  getKpis: (tenantId?: string) => {
-    const validTenant = cleanTenantParam(tenantId);
+
+  getKpis: (companyCode?: string) => {
+    const validTenant = cleanTenantParam(companyCode);
     const params = new URLSearchParams();
-    if (validTenant) params.append("tenantId", validTenant);
+    if (validTenant) params.append("companyCode", validTenant);
     const qs = params.toString();
     return apiClient.get<SupplierKpis>(`/api/suppliers/kpis${qs ? `?${qs}` : ''}`);
   },
-  
+
   create: (data: Partial<Supplier>) => apiClient.post<Supplier>("/api/suppliers", data),
-  
+
   update: (id: string, data: Partial<Supplier>) => apiClient.patch<Supplier>(`/api/suppliers/${id}`, data),
-  
+
   remove: (id: string) => apiClient.delete(`/api/suppliers/${id}`),
 };
 

@@ -97,10 +97,10 @@ export const purchaseRequestsApi = {
 
   getById: (id: string) => apiClient.get<PurchaseRequest>(`/api/purchase-requests/${id}`),
 
-  getKpis: (tenantId?: string) => {
-    const validTenant = cleanTenantParam(tenantId);
+  getKpis: (companyCode?: string) => {
+    const validTenant = cleanTenantParam(companyCode);
     const params = new URLSearchParams();
-    if (validTenant) params.append("tenantId", validTenant);
+    if (validTenant) params.append("companyCode", validTenant);
     const qs = params.toString();
     return apiClient.get<PurchaseRequestKpis>(`/api/purchase-requests/kpis${qs ? `?${qs}` : ''}`);
   },

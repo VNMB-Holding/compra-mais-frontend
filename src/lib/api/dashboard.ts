@@ -27,6 +27,8 @@ export interface RecentRfqItem {
   createdAt: string;
   purchaseRequest?: {
     description?: string;
+    companyCode?: string;
+    tenantId?: string;
   };
 }
 
@@ -224,4 +226,3 @@ export const dashboardApi = {
     return filename;
   },
 };
-
