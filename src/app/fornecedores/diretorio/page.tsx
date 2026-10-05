@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Card, 
-  Button, 
-  Icon, 
-  Select, 
-  ErrorState, 
-  EmptyState, 
-  TableSkeleton, 
-  Badge, 
-  DataTable, 
-  ColumnDef, 
-  KpiCard 
+import {
+  Card,
+  Button,
+  Icon,
+  Select,
+  ErrorState,
+  EmptyState,
+  TableSkeleton,
+  Badge,
+  DataTable,
+  ColumnDef,
+  KpiCard
 } from "@/components/ui";
 import styles from "./fornecedores.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
@@ -46,7 +46,7 @@ interface FornecedorRow {
 }
 
 function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRow {
-  const isHomologado = s.status === "Active" || s.isActive === true;
+  const isHomologado = s.status === "Active" && s.isActive !== false;
 
   const rawScore = s.performanceScore !== undefined && s.performanceScore !== null ? Number(s.performanceScore) : null;
   const nota = rawScore !== null && rawScore > 0 ? rawScore.toFixed(1).replace(".", ",") : "—";
@@ -132,7 +132,7 @@ export default function FornecedoresListPage() {
           segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
         }),
-        suppliersApi.getKpis(),
+        suppliersApi.getKpis(user?.tenantId),
       ]);
       const rows = (suppliers || []).map((s) => mapSupplierToRow(s, user));
       setFornecedores(rows);
@@ -260,7 +260,7 @@ export default function FornecedoresListPage() {
       width: "50px",
       cell: (row) => (
         <div className={styles.actionCell}>
-          <button 
+          <button
             className={styles.iconBtn}
             title="Ver detalhes do fornecedor"
             onClick={(e) => {

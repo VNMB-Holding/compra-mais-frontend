@@ -29,7 +29,7 @@ interface HomologacaoRow {
 
 function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
   const rawScore = s.performanceScore ? Math.round(Number(s.performanceScore) * 10) : 85;
-  const isHomologado = s.status === "Active" || s.isActive === true;
+  const isHomologado = s.status === "Active" && s.isActive !== false;
   const isUnderCert = s.status === "UnderCertification";
   const statusStr = isHomologado ? "Conforme" : isUnderCert ? "Em Auditoria" : "Apontamento";
   const etapaStr = isHomologado ? "Monitoramento Ativo" : isUnderCert ? "Varredura Periódica" : "Apontamento Fiscal";
@@ -102,7 +102,7 @@ export default function HomologacaoPage() {
           state: selectedUf !== "Todas" && selectedUf !== "Todos" ? selectedUf : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
         }),
-        suppliersApi.getKpis(),
+        suppliersApi.getKpis(user?.tenantId),
       ]);
       const rows = (suppliers || []).map(mapSupplierToHomologacao);
       setFornecedores(rows);

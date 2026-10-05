@@ -3,21 +3,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
-import { 
-  Button, 
-  Card, 
-  Badge, 
-  Tabs, 
-  KpiCard, 
-  LineChart, 
-  PieChart, 
-  UrgentQuoteCard, 
-  Icon, 
-  Select, 
-  Loading, 
-  ErrorState, 
+import {
+  Button,
+  Card,
+  Badge,
+  Tabs,
+  KpiCard,
+  LineChart,
+  PieChart,
+  UrgentQuoteCard,
+  Icon,
+  Select,
+  Loading,
+  ErrorState,
   EmptyState,
-  TableSkeleton, 
+  TableSkeleton,
   ChartSkeleton,
   DataTable,
   ColumnDef
@@ -75,16 +75,16 @@ export default function DashboardPage() {
       const mapped: RFQRow[] = rfqsData.map((rfq) => {
         const codigo = rfq.code || "";
         const descricao = rfq.title || rfq.purchaseRequest?.description || "";
-        const centroCustoOuAlmoxarifado = (rfq.purchaseRequest as any)?.costCenterName || 
-          (rfq.purchaseRequest as any)?.corporateStockLocation || 
-          (rfq.purchaseRequest as any)?.costCenterCode || 
-          (rfq.purchaseRequest as any)?.category?.name || 
+        const centroCustoOuAlmoxarifado = (rfq.purchaseRequest as any)?.costCenterName ||
+          (rfq.purchaseRequest as any)?.corporateStockLocation ||
+          (rfq.purchaseRequest as any)?.costCenterCode ||
+          (rfq.purchaseRequest as any)?.category?.name ||
           "Almoxarifado Geral";
         const dataAbertura = formatDate(rfq.createdAt);
         const dataEncerramento = formatDate(rfq.closesAt);
         const tipoSegmento = (rfq.purchaseRequest as any)?.category?.name || (rfq.purchaseRequest as any)?.costCenterName || "Geral";
         const status = mapRfqStatus(rfq);
-        const empresa = getTenantDisplayName(rfq.tenantId || rfq.purchaseRequest?.tenantId, user);
+        const empresa = getTenantDisplayName(rfq.purchaseRequest?.companyCode || rfq.tenantId || rfq.purchaseRequest?.tenantId, user);
 
         return {
           id: rfq.id,
@@ -148,7 +148,7 @@ export default function DashboardPage() {
       }))
     : [{ name: "Sem dados", value: 100, color: "#e2e8f0" }];
 
-  const rfqMaisUrgente = rfqs.find((r) => r.status === "Encerrando hoje") || rfqs[0];
+  const rfqMaisUrgente = rfqs.find((r) => r.status === "Encerrando hoje") || rfqs.find((r) => r.status === "Aberta") || null;
 
   const tabsConfig = [
     { id: "Todas", label: "Todas", count: rfqs.length },
@@ -186,7 +186,7 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.viewDashboard}>
-      
+
       <div className={styles.pageHeaderSimple}>
         <div>
           <h1>Bom dia, {firstName}. <span className={styles.wave}>👋</span></h1>
@@ -210,45 +210,45 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.kpiGrid} data-tour="kpi-grid">
-        <KpiCard 
-          title="RFQs em andamento" 
-          value={String(kpis?.rfqsInProgress || 0)} 
-          icon="receipt-check" 
-          linkLabel="Ver todas" 
+        <KpiCard
+          title="RFQs em andamento"
+          value={String(kpis?.rfqsInProgress || 0)}
+          icon="receipt-check"
+          linkLabel="Ver todas"
           loading={loading}
           onClick={() => router.push("/compras/rfqs")}
         />
-        <KpiCard 
-          title="Economia acumulada" 
-          value={formatCurrency(totalEconomyValue)} 
-          icon="trend-up-01" 
-          linkLabel="Ver detalhes" 
+        <KpiCard
+          title="Economia acumulada"
+          value={formatCurrency(totalEconomyValue)}
+          icon="trend-up-01"
+          linkLabel="Ver detalhes"
           loading={loading}
           onClick={() => router.push("/analytics/economia")}
         />
-        <KpiCard 
-          title="Pedidos emitidos" 
-          value={String(kpis?.ordersEmitted || 0)} 
-          icon="box" 
-          linkLabel="Ver todos" 
+        <KpiCard
+          title="Pedidos emitidos"
+          value={String(kpis?.ordersEmitted || 0)}
+          icon="box"
+          linkLabel="Ver todos"
           loading={loading}
           onClick={() => router.push("/compras/pedidos")}
         />
-        <KpiCard 
-          title="Fornecedores ativos" 
-          value={String(kpis?.suppliersActive || 0)} 
-          icon="users-01" 
-          linkLabel="Ver todos" 
+        <KpiCard
+          title="Fornecedores ativos"
+          value={String(kpis?.suppliersActive || 0)}
+          icon="users-01"
+          linkLabel="Ver todos"
           loading={loading}
           onClick={() => router.push("/fornecedores/diretorio")}
         />
       </div>
 
       <div className={styles.middleGrid}>
-        
+
         {rfqMaisUrgente && (
           <div data-tour="urgent-quote">
-            <UrgentQuoteCard 
+            <UrgentQuoteCard
               quote={{
                 title: rfqMaisUrgente.descricao,
                 code: rfqMaisUrgente.codigo,
@@ -257,8 +257,8 @@ export default function DashboardPage() {
                 costCenter: rfqMaisUrgente.categoria,
                 type: rfqMaisUrgente.tipoSegmento,
                 timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
-              }} 
-              onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.id}`)} 
+              }}
+              onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.id}`)}
             />
           </div>
         )}

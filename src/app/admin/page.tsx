@@ -114,7 +114,7 @@ export default function AdminPage() {
   const companyRules = useMemo(() => {
     return rules
       .filter((r) => {
-        const matchCompany = r.companyCode === selectedWorkflowCompany || r.companyCode === "TODAS";
+        const matchCompany = r.companyCode === selectedWorkflowCompany;
         const matchFlow = (r.flowType || "solicitacao") === activeFlowType;
         const matchCostCenter =
           selectedCostCenterFilter === "TODOS" ||
@@ -273,6 +273,18 @@ export default function AdminPage() {
         active: true,
       };
       setRules((prev) => [...prev, newRule]);
+      setTargetRangeKey(`${min}_${max ?? "inf"}`);
+      setEditingRule(newRule);
+      setStepForm({
+        level: 1,
+        order: 1,
+        approverType: "user",
+        approverIdentifier: defaultApprover ? defaultApprover.id : "",
+        approverName: defaultApprover ? defaultApprover.name : "",
+        department: selectedCostCenterFilter !== "TODOS" ? selectedCostCenterFilter : "",
+        active: true,
+      });
+      setStepModalOpen(true);
     }
 
     setIsDirty(true);
@@ -421,11 +433,26 @@ export default function AdminPage() {
   const handleSaveAllRules = async () => {
     setSavingBatch(true);
     try {
-      const currentCompanyRules = rules.filter(
-        (r) =>
-          r.companyCode === selectedWorkflowCompany &&
-          (r.flowType || "solicitacao") === activeFlowType
-      );
+      const currentCompanyRules = rules
+        .filter(
+          (r) =>
+            r.companyCode === selectedWorkflowCompany &&
+            (r.flowType || "solicitacao") === activeFlowType
+        )
+        .map((r) => ({
+          ...r,
+          companyCode: selectedWorkflowCompany,
+          flowType: activeFlowType,
+          level: Number(r.level) || 1,
+          order: Number(r.order) || Number(r.level) || 1,
+          minAmount: Number(r.minAmount) || 0,
+          maxAmount: r.maxAmount === null || r.maxAmount === undefined ? null : Number(r.maxAmount),
+          approverType: r.approverType || "user",
+          approverIdentifier: String(r.approverIdentifier || "").trim(),
+          approverName: String(r.approverName || r.approverIdentifier || "").trim(),
+          department: r.department || undefined,
+          active: r.active !== false,
+        }));
       await adminApi.batchSaveApprovalRules(selectedWorkflowCompany, currentCompanyRules, activeFlowType);
       setIsDirty(false);
       setSaveSuccessMessage("Alçadas sincronizadas e gravadas com sucesso no backend!");
@@ -514,7 +541,6 @@ export default function AdminPage() {
 
   return (
     <div className={styles.container}>
-      {/* Page Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1>
@@ -541,7 +567,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <span className={styles.statTitle}>Empresas & Unidades</span>
@@ -586,7 +611,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {}
       <Tabs tabs={ADMIN_TABS} activeTab={activeTab} onChange={setActiveTab} />
 
       {loading ? (
@@ -595,10 +619,8 @@ export default function AdminPage() {
         </Card>
       ) : (
         <>
-          {}
           {activeTab === "alcadas" && (
             <div className={styles.tableCard}>
-              {}
               <div className={styles.workflowToolbar}>
                 <div className={styles.filterGroup}>
                   <label htmlFor="companySelectWorkflow" style={{ fontSize: "0.85rem", fontWeight: 700 }}>
@@ -643,7 +665,6 @@ export default function AdminPage() {
                   </select>
                 </div>
 
-                {}
                 <div className={styles.flowTypeToggle}>
                   <button
                     type="button"
@@ -679,7 +700,6 @@ export default function AdminPage() {
                   </button>
                 </div>
 
-                {}
                 <div className={styles.simulatorBox}>
                   <span className={styles.simulatorLabel}>
                     <Icon name="search" size={15} />
@@ -706,7 +726,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {}
               <div
                 className={`${styles.diagnosticsBanner} ${
                   diagnostics.isValid
@@ -734,7 +753,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {}
               <div className={styles.workflowCanvas}>
                 {valueRanges.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#64748b" }}>
@@ -763,7 +781,6 @@ export default function AdminPage() {
                         key={rg.rangeKey}
                         className={`${styles.rangeCard} ${isSimulatedMatch ? styles.rangeCardActive : ""}`}
                       >
-                        {}
                         <div className={styles.rangeCardHeader}>
                           <div className={styles.rangeTitleGroup}>
                             <div className={styles.rangeBadgeIcon}>
@@ -810,7 +827,6 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {}
                         <div style={{ padding: "0.75rem 1.25rem 0" }}>
                           <div className={styles.flowSequencePills}>
                             <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b" }}>
@@ -843,7 +859,6 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {}
                         <div className={styles.flowBody}>
                           <div className={styles.flowStartNode}>
                             <Icon
@@ -983,7 +998,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {}
               {isDirty && (
                 <div className={styles.saveBar}>
                   <div className={styles.saveBarText}>
@@ -1013,7 +1027,6 @@ export default function AdminPage() {
             </div>
           )}
 
-          {}
           {activeTab === "empresas" && (
             <>
               <div className={styles.filterBar}>
@@ -1103,7 +1116,6 @@ export default function AdminPage() {
             </>
           )}
 
-          {}
           {activeTab === "governanca" && (
             <div className={styles.tableCard}>
               <div className={styles.tableHeader}>
@@ -1161,7 +1173,6 @@ export default function AdminPage() {
         </>
       )}
 
-      {}
       {rangeModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
@@ -1220,7 +1231,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {}
       {stepModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
@@ -1348,7 +1358,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {}
       {companyModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
@@ -1455,7 +1464,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {}
       <ConfirmDialog
         open={Boolean(deleteRuleId)}
         title="Remover Nível de Aprovação"
@@ -1467,7 +1475,6 @@ export default function AdminPage() {
         onCancel={() => setDeleteRuleId(null)}
       />
 
-      {}
       <ConfirmDialog
         open={Boolean(deleteRangeKey)}
         title="Excluir Faixa de Valor"
@@ -1479,7 +1486,6 @@ export default function AdminPage() {
         onCancel={() => setDeleteRangeKey(null)}
       />
 
-      {}
       <ConfirmDialog
         open={Boolean(duplicateRangeKey)}
         title="Duplicar Faixa de Valor"
@@ -1491,7 +1497,6 @@ export default function AdminPage() {
         onCancel={() => setDuplicateRangeKey(null)}
       />
 
-      {}
       <ConfirmDialog
         open={Boolean(toggleCompanyConfirm)}
         title={toggleCompanyConfirm?.active ? "Desativar Unidade" : "Ativar Unidade"}

@@ -72,9 +72,11 @@ export default function FornecedorDetailPage() {
   const hasScore = supplier.performanceScore !== undefined && supplier.performanceScore !== null && Number(supplier.performanceScore) > 0;
   const score = hasScore ? Number(supplier.performanceScore) : null;
   const scoreFormatted = score !== null ? score.toFixed(1).replace(".", ",") : "—";
-  const isActive = supplier.status === "Active" || supplier.isActive === true;
-  const statusLabel = isActive ? "Homologado" : supplier.status === "Inactive" ? "Inativo" : "Em homologação";
-  const statusVariant = isActive ? "success" : "gray";
+  const isActive = supplier.status === "Active" && supplier.isActive !== false;
+  const isSuspended = supplier.status === "Suspended";
+  const isInactive = supplier.status === "Inactive" || supplier.isActive === false;
+  const statusLabel = isActive ? "Homologado" : isSuspended ? "Suspenso" : isInactive ? "Inativo" : "Em homologação";
+  const statusVariant = isActive ? "success" : isSuspended ? "danger" : "gray";
 
   return (
     <div className={styles.pageContainer}>
