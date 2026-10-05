@@ -105,7 +105,7 @@ export default function PedidosPage() {
       });
       const rows = data.map((po) => mapToRow(po, user));
       setPedidos(rows);
-      setTotalValue(data.reduce((sum, po) => sum + Number(po.totalValue), 0));
+      setTotalValue(data.filter((po) => po.status !== "Cancelled").reduce((sum, po) => sum + Number(po.totalValue), 0));
 
       const currentSups = rows.map((p) => p.fornecedor).filter((f) => f && f !== "—");
       if (currentSups.length > 0) {
@@ -145,11 +145,12 @@ export default function PedidosPage() {
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
-    { label: "Aguardando assinatura", value: "Aguardando assinatura" },
-    { label: "Assinado", value: "Assinado" },
-    { label: "Enviado", value: "Enviado" },
-    { label: "Entregue", value: "Entregue" },
-    { label: "Cancelado", value: "Cancelado" },
+    { label: "Aguardando assinatura", value: "AwaitingSignature" },
+    { label: "Emitido", value: "Sent" },
+    { label: "Faturado", value: "Signed" },
+    { label: "Em transporte", value: "InTransit" },
+    { label: "Entregue", value: "Delivered" },
+    { label: "Cancelado", value: "Cancelled" },
   ];
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -160,7 +161,7 @@ export default function PedidosPage() {
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const entregueCount = pedidos.filter((p) => p.status === "Entregue").length;
-  const pendentCount = pedidos.filter((p) => p.status !== "Entregue").length;
+  const pendentCount = pedidos.filter((p) => p.status !== "Entregue" && p.status !== "Cancelado").length;
 
   const columns: ColumnDef<PedidoRow>[] = [
     { header: "Número", cell: (row) => <span className={styles.boldCode}>{row.numero}</span> },

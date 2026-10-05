@@ -162,11 +162,11 @@ export default function RfqsPage() {
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
-    { label: "Rascunho", value: "Rascunho" },
-    { label: "Aberta", value: "Aberta" },
-    { label: "Em análise", value: "Em análise" },
-    { label: "Encerrando hoje", value: "Encerrando hoje" },
-    { label: "Encerrada", value: "Encerrada" },
+    { label: "Rascunho", value: "Draft" },
+    { label: "Aberta", value: "Open" },
+    { label: "Em análise", value: "UnderAnalysis" },
+    { label: "Encerrada / Emitida", value: "Finished" },
+    { label: "Cancelada", value: "Cancelled" },
   ];
 
   const filtered = rfqs;

@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { getTenantDisplayName, formatCorporateBranch } from "@/lib/utils/tenant";
 import { findCompanyBranch } from "@/lib/constants/companies";
-import { PRIORITY_MAP, PURCHASE_REQUEST_STATUS_MAP as STATUS_LABEL_MAP } from "@/lib/constants/status";
+import { formatPriority, PURCHASE_REQUEST_STATUS_MAP as STATUS_LABEL_MAP } from "@/lib/constants/status";
 
 import { usePurchaseRequest, useApprovePurchaseRequest, useRejectPurchaseRequest } from "@/hooks/useQueries";
 
@@ -31,6 +31,7 @@ export default function SolicitacaoDetailPage() {
   const [solOverride, setSolOverride] = useState<PurchaseRequest | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
   const [dialog, setDialog] = useState<DialogType>(null);
+  const [cancelReason, setCancelReason] = useState("");
   const [approved, setApproved] = useState<boolean | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -142,12 +143,22 @@ export default function SolicitacaoDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const handleCancel = async () => {
     if (!sol) return;
+    const reason = cancelReason.trim();
+    if (!reason) {
+      toast({
+        variant: "warning",
+        title: "Motivo obrigatório",
+        message: "Por favor, informe a justificativa do cancelamento.",
+      });
+      return;
+    }
     setCancelling(true);
     try {
-      await purchaseRequestsApi.updateStatus(sol.id, "Cancelled", "Cancelado pelo usuário.");
+      await purchaseRequestsApi.updateStatus(sol.id, "Cancelled", reason);
       const fresh = await purchaseRequestsApi.getById(sol.id);
       setSolOverride(fresh);
       setApproved(false);
+      setCancelReason("");
       toast({
         variant: "warning",
         title: "Solicitação cancelada",
@@ -164,12 +175,14 @@ export default function SolicitacaoDetailPage() {
 
   const isDraft = sol?.status === "Draft";
   const isApproved = approved === true || sol?.status === "Approved";
-  const isInQuote = sol?.status === "InQuote" || (!!sol?.rfqs && sol.rfqs.length > 0);
+  const activeRfqs = (sol?.rfqs ?? []).filter((r: any) => r.status !== "Cancelled");
+  const hasActiveRfq = activeRfqs.length > 0;
+  const isInQuote = sol?.status === "InQuote" || hasActiveRfq;
   const isFinished = sol?.status === "Finished";
   const isRejected = approved === false || sol?.status === "Rejected";
   const isCancelled = sol?.status === "Cancelled";
 
-  const isEligibleForRfq = isApproved && !isInQuote && !isFinished && !isCancelled && (!sol?.rfqs || sol.rfqs.length === 0);
+  const isEligibleForRfq = isApproved && !hasActiveRfq && !isFinished && !isCancelled;
   const hasApprovedGovernance = isApproved || isInQuote || isFinished;
   const isFullyApproved = hasApprovedGovernance && !isCancelled;
   const isAwaitingApproval = !isDraft && !isFullyApproved && !isRejected && !isCancelled;
@@ -263,7 +276,10 @@ export default function SolicitacaoDetailPage() {
   };
 
   
-  const canUserApproveCurrentLevel = !isChainLoading && isUserEligibleToApprove(user, currentApproverIdentifier);
+  const currentAssignedApproverId = pendingHistories[0]?.approverId;
+  const canUserApproveCurrentLevel =
+    !isChainLoading &&
+    isUserEligibleToApprove(user, currentApproverIdentifier, currentAssignedApproverId);
 
   return (
     <div className={styles.detailContainer}>
@@ -305,6 +321,7 @@ export default function SolicitacaoDetailPage() {
         title="Cancelar Solicitação de Compra?"
         loading={cancelling}
         loadingConfirmLabel="Cancelando..."
+        confirmDisabled={!cancelReason.trim()}
         message={
           <>
             Tem certeza de que deseja cancelar a solicitação <strong>{sol?.code || solId}</strong>? Esta ação interromperá o fluxo de compras e arquivará a demanda.
@@ -312,8 +329,34 @@ export default function SolicitacaoDetailPage() {
         }
         confirmLabel="Sim, cancelar solicitação"
         onConfirm={handleCancel}
-        onCancel={() => setDialog(null)}
-      />
+        onCancel={() => {
+          setDialog(null);
+          setCancelReason("");
+        }}
+      >
+        <div style={{ marginTop: 12, textAlign: "left" }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+            Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
+          </label>
+          <textarea
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="Descreva detalhadamente a justificativa para o cancelamento..."
+            rows={3}
+            style={{
+              width: "100%",
+              padding: "8px 10px",
+              borderRadius: 6,
+              border: "1px solid #cbd5e1",
+              fontSize: 13,
+              fontFamily: "inherit",
+              resize: "vertical",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+      </ConfirmDialog>
 
       <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
         <Icon name="chevron-left" /> Voltar para Solicitações
@@ -355,6 +398,11 @@ export default function SolicitacaoDetailPage() {
             <span className={styles.infoTag}><Icon name="building-01" /> {companyName}</span>
             <span className={styles.infoTag}><Icon name="marker-pin-01" /> Centro de Custo: {sol?.costCenterName || sol?.costCenterCode || "Geral"}</span>
             <span className={styles.infoTag}><Icon name="archive" /> Estoque: {sol?.corporateStockLocation || "Almoxarifado Principal"}</span>
+            {Boolean((sol as any)?.priority || (sol as any)?.prioridade) && (
+              <span className={styles.infoTag}>
+                <Icon name="clock" /> Prioridade: {formatPriority((sol as any)?.priority || (sol as any)?.prioridade)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -375,9 +423,9 @@ export default function SolicitacaoDetailPage() {
           </div>
         ) : isInQuote ? (
           <div className={styles.headerActions}>
-            {sol?.rfqs && sol.rfqs.length > 0 ? (
-              <Button variant="primary" onClick={() => router.push(`/compras/rfqs/${sol?.rfqs?.[0]?.id || sol?.rfqs?.[0]?.code}`)}>
-                <Icon name="arrow-right" /> Ver Cotação ({sol?.rfqs?.[0]?.code || "RFQ"})
+            {activeRfqs.length > 0 ? (
+              <Button variant="primary" onClick={() => router.push(`/compras/rfqs/${activeRfqs[0]?.id || activeRfqs[0]?.code}`)}>
+                <Icon name="arrow-right" /> Ver Cotação ({activeRfqs[0]?.code || "RFQ"})
               </Button>
             ) : (
               <Button variant="secondary" onClick={() => router.push(`/compras/rfqs`)}>
@@ -422,7 +470,6 @@ export default function SolicitacaoDetailPage() {
           </div>
         )}
 
-        {}
         {!isCancelled && !isFinished && (
           <div className={styles.headerActions}>
             <Button
@@ -451,7 +498,7 @@ export default function SolicitacaoDetailPage() {
 
           <Card className={styles.flowCard}>
             <div className={styles.flowCardHeader}>
-              <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length > 1 ? "s" : ""})</h4>
+              <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length !== 1 ? "s" : ""})</h4>
             </div>
             <div className={styles.stepperContainer}>
 

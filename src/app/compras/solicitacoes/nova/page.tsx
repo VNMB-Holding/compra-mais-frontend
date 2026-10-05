@@ -418,7 +418,7 @@ export default function NovaSolicitacaoPage() {
                       options={[
                         { label: "Material recorrente", value: "Material recorrente" },
                         { label: "Compra spot", value: "Compra spot" },
-                        { label: "Serviço técnico", value: "Servico tecnico" },
+                        { label: "Serviço técnico", value: "Serviço técnico" },
                         { label: "Contrato recorrente", value: "Contrato recorrente" },
                         { label: "Projeto especial", value: "Projeto especial" }
                       ]}

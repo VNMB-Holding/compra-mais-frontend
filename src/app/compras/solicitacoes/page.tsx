@@ -132,11 +132,13 @@ export default function SolicitacoesPage() {
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
-    { label: "Rascunho", value: "Rascunho" },
-    { label: "Aprovada / Pronta p/ Cotação", value: "Aprovada" },
-    { label: "Em Cotação", value: "Em Cotação" },
-    { label: "Finalizada", value: "Finalizada" },
-    { label: "Cancelada", value: "Cancelada" },
+    { label: "Rascunho", value: "Draft" },
+    { label: "Aguardando aprovação", value: "AwaitingApproval" },
+    { label: "Aprovada / Pronta p/ Cotação", value: "Approved" },
+    { label: "Em Cotação", value: "InQuote" },
+    { label: "Rejeitada", value: "Rejected" },
+    { label: "Atendida / Concluída", value: "Finished" },
+    { label: "Cancelada", value: "Cancelled" },
   ];
 
   const filtered = solicitacoes;

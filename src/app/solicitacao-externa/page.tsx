@@ -144,7 +144,7 @@ export default function SolicitacaoExternaPage() {
         department: setorNomeFormatado,
         branchName: branchName,
         justification: justificativa.trim() || "Não informada",
-        priority: prioridade,
+        priority: prioridade === "Critica" ? "Critical" : prioridade === "Alta" ? "High" : prioridade === "Baixa" ? "Low" : "Medium",
         items: itens.map((it) => ({
           description: it.linkReferencia?.trim()
             ? `${it.descricao.trim()} (Ref: ${it.linkReferencia.trim()})`

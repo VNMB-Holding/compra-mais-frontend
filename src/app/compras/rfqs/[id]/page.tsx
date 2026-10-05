@@ -7,6 +7,7 @@ import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkelet
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
+import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { purchaseOrdersApi } from "@/lib/api/purchase-orders";
 import { useAuth } from "@/hooks/useAuth";
 import { getTenantDisplayName } from "@/lib/utils/tenant";
@@ -26,6 +27,8 @@ interface LocalProposal {
   deliveryTime?: number;
   paymentTerms?: string;
   notes?: string;
+  totalCalculated?: number;
+  isWinner?: boolean;
 }
 
 function mapPropostas(rfq: Rfq): LocalProposal[] {
@@ -42,18 +45,41 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
     }
   });
 
+  const reqItems = rfq.purchaseRequest?.items ?? [];
+  const rawQtdTotal = reqItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0) || 1;
+
   (rfq.proposals ?? []).forEach((p) => {
     if (p.supplierId) {
       const existing = mapBySupplier.get(p.supplierId);
-      const unitPrice = (p.items && p.items.length > 0)
-        ? p.items[0].unitPrice
-        : (p.totalValue ?? 0);
-      const freight = (p.items && p.items.length > 0)
-        ? (p.items[0].freightCost ?? (p as any).freightCost ?? (p as any).shippingCost ?? 0)
-        : ((p as any).freightCost ?? (p as any).shippingCost ?? 0);
 
-      const isDeclined = p.status === "Declined";
-      const isDraftWithoutPrice = p.status === "Draft" && Number(unitPrice) === 0;
+      let subtotal = 0;
+      let hasItemPrices = false;
+      if (p.items && p.items.length > 0) {
+        for (const item of p.items) {
+          const reqItem = reqItems.find((ri) => ri.id === (item.requestItemId || item.id));
+          const qty = reqItem ? Number(reqItem.quantity || 1) : 1;
+          const uPrice = Number(item.unitPrice) || 0;
+          if (uPrice > 0) hasItemPrices = true;
+          subtotal += uPrice * qty;
+        }
+      }
+
+      const freight = Number((p.items && p.items.length > 0)
+        ? (p.items[0].freightCost ?? (p as any).freightCost ?? (p as any).shippingCost ?? 0)
+        : ((p as any).freightCost ?? (p as any).shippingCost ?? 0));
+
+      const firstItemUnitPrice = Number(p.items?.[0]?.unitPrice) || 0;
+      const unitPrice = hasItemPrices
+        ? (subtotal / rawQtdTotal)
+        : (firstItemUnitPrice || Number(p.totalValue ?? 0));
+
+      const totalCalculated = subtotal > 0
+        ? (subtotal + freight)
+        : (unitPrice * rawQtdTotal + freight);
+
+      const hasPrices = hasItemPrices || Number(unitPrice) > 0 || subtotal > 0 || Number(p.totalValue ?? 0) > 0;
+      const isDeclined = p.status === "Declined" && !hasPrices;
+      const isDraftWithoutPrice = p.status === "Draft" && !hasPrices;
       const status: LocalProposal["status"] = isDeclined
         ? "declined"
         : isDraftWithoutPrice
@@ -70,6 +96,8 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
         freightCost: Number(freight),
         deliveryTime: p.deliveryTime ?? 0,
         paymentTerms: p.paymentTerms || "Não informada",
+        totalCalculated,
+        isWinner: !!p.isWinner,
       });
     }
   });
@@ -144,7 +172,8 @@ function PropostaCard({
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
-  const totalEqualizado = (draft.unitPrice + draft.freightCost) * (totalQtd || 1);
+  const subtotalItens = (draft.unitPrice || 0) * (totalQtd || 1);
+  const totalEqualizado = subtotalItens + (draft.freightCost || 0);
 
   return (
     <div
@@ -233,7 +262,7 @@ function PropostaCard({
               />
             </div>
             <div className={styles.propostaField}>
-              <label>Custo de frete unitário (R$)</label>
+              <label>Custo de frete total / entrega (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -301,15 +330,40 @@ export default function RfqDetailPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [publishing, setPublishing] = useState(false);
+  const [selectingWinner, setSelectingWinner] = useState(false);
   const [creatingPo, setCreatingPo] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   const handleCancelRfq = async () => {
+    const reason = cancelReason.trim();
+    if (!reason) {
+      toast({
+        variant: "warning",
+        title: "Motivo obrigatório",
+        message: "Por favor, informe a justificativa do cancelamento da cotação.",
+      });
+      return;
+    }
+
     try {
       setCancelling(true);
-      await rfqsApi.updateStatus(rfqId, "Cancelled");
+      await rfqsApi.updateStatus(rfqId, "Cancelled", reason);
+      const originReqId = rfq?.purchaseRequest?.id || rfq?.requestId;
+      if (originReqId) {
+        try {
+          await purchaseRequestsApi.updateStatus(
+            originReqId,
+            "Approved",
+            `Cotação ${rfqCode} cancelada. Motivo: ${reason}`
+          );
+        } catch (reqErr) {
+          console.warn("Falha ao reabrir solicitação de compra de origem:", reqErr);
+        }
+      }
       const updated = await rfqsApi.getById(rfqId);
       setRfq(updated);
+      setCancelReason("");
       toast({
         variant: "warning",
         title: "Cotação cancelada",
@@ -372,7 +426,7 @@ export default function RfqDetailPage() {
             setGeneratedPo({ id: match.id, code: match.code });
           }
         } catch {
-          
+
         }
       } catch (err) {
         logError("rfqs/[id]/load", err);
@@ -400,7 +454,7 @@ export default function RfqDetailPage() {
           paymentTerms: dados.paymentTerms || "30 dias DDL",
           deliveryTime: Number(dados.deliveryTime) || 5,
         });
-        
+
         if (propostaCriada?.id) {
           setPropostas((c) =>
             c.map((p) =>
@@ -415,17 +469,25 @@ export default function RfqDetailPage() {
     }
   };
 
-  const propostasRankeadas = [...recebidas].sort(
-    (a, b) => ((a.unitPrice || 0) + (a.freightCost || 0)) - ((b.unitPrice || 0) + (b.freightCost || 0))
-  );
-  const melhorProposta = propostasRankeadas[0] || null;
-
   const rawQtd =
     rfq?.purchaseRequest?.items?.reduce(
       (s: number, i: { quantity: number }) => s + Number(i.quantity || 0),
       0
     ) ?? 0;
   const totalQtd = rawQtd > 0 ? rawQtd : 1;
+
+  const getProposalTotal = (p: LocalProposal | null | undefined) => {
+    if (!p) return 0;
+    if (p.totalCalculated !== undefined && p.totalCalculated > 0) {
+      return p.totalCalculated;
+    }
+    return ((p.unitPrice || 0) * totalQtd) + (p.freightCost || 0);
+  };
+
+  const propostasRankeadas = [...recebidas].sort((a, b) => {
+    return getProposalTotal(a) - getProposalTotal(b);
+  });
+  const melhorProposta = propostasRankeadas[0] || null;
 
   const vencedor = propostas.find((p) => p.supplierId === vencedorId);
   const pendingVencedor = propostas.find((p) => p.supplierId === pendingVencedorId);
@@ -436,7 +498,7 @@ export default function RfqDetailPage() {
   const closesAt = rfq?.closesAt
     ? new Date(rfq.closesAt).toLocaleDateString("pt-BR")
     : "—";
-  const companyName = getTenantDisplayName(rfq?.tenantId || rfq?.purchaseRequest?.tenantId, user);
+  const companyName = getTenantDisplayName(rfq?.purchaseRequest?.companyCode || rfq?.tenantId || rfq?.purchaseRequest?.tenantId, user);
 
   const isFinished = rfq?.status === "Finished" || rfq?.status === "Closed" || !!generatedPo;
   const isDraft = rfq?.status === "Draft";
@@ -468,7 +530,7 @@ export default function RfqDetailPage() {
 
   const Header = () => (
     <>
-      
+
       <ConfirmDialog
         open={dialog === "encerrar"}
         variant="warning"
@@ -500,6 +562,8 @@ export default function RfqDetailPage() {
         variant="success"
         icon="trophy-01"
         title="Selecionar este fornecedor como vencedor?"
+        loading={selectingWinner}
+        loadingConfirmLabel="Selecionando..."
         message={
           pendingVencedor ? (
             <>
@@ -513,6 +577,7 @@ export default function RfqDetailPage() {
         confirmLabel="Confirmar seleção"
         onConfirm={async () => {
           if (pendingVencedorId) {
+            setSelectingWinner(true);
             try {
               let propostaIdParaEnviar = propostas.find(
                 (p) => p.supplierId === pendingVencedorId
@@ -533,6 +598,7 @@ export default function RfqDetailPage() {
               if (!propostaIdParaEnviar) {
                 toast({ variant: "error", title: "Proposta não encontrada", message: "Não foi possível registrar a proposta para este fornecedor." });
                 setDialog(null);
+                setPendingVencedorId(null);
                 return;
               }
 
@@ -541,7 +607,8 @@ export default function RfqDetailPage() {
               const updated = await rfqsApi.getById(rfqId);
               setRfq(updated);
               setPropostas(mapPropostas(updated));
-              setVencedorId(pendingVencedorId);
+              const winner = (updated.proposals ?? []).find((p) => p.isWinner);
+              setVencedorId(winner ? winner.supplierId : pendingVencedorId);
               setStage(getStage(updated));
 
               toast({
@@ -553,6 +620,8 @@ export default function RfqDetailPage() {
               logError("rfqs/[id]/selectWinner", e);
               toast({ variant: "error", title: "Erro ao selecionar vencedor", message: getErrorMessage(e) });
             } finally {
+              setSelectingWinner(false);
+              setPendingVencedorId(null);
               setDialog(null);
             }
           }
@@ -575,7 +644,7 @@ export default function RfqDetailPage() {
             <>
               O PO será emitido para <strong>{vencedor.supplierName}</strong> no valor total de{" "}
               <strong>
-                {formatCurrency(((vencedor.unitPrice ?? 0) + (vencedor.freightCost ?? 0)) * totalQtd)}
+                {formatCurrency(getProposalTotal(vencedor))}
               </strong>
               . Esta ação é definitiva.
             </>
@@ -619,6 +688,7 @@ export default function RfqDetailPage() {
         title="Cancelar Cotação (RFQ)?"
         loading={cancelling}
         loadingConfirmLabel="Cancelando..."
+        confirmDisabled={!cancelReason.trim()}
         message={
           <>
             Tem certeza de que deseja cancelar a cotação <strong>{rfqCode}</strong>? Esta ação anulará o processo de concorrência e reabrirá a demanda de compra de origem para uma nova cotação.
@@ -626,8 +696,34 @@ export default function RfqDetailPage() {
         }
         confirmLabel="Sim, cancelar cotação"
         onConfirm={handleCancelRfq}
-        onCancel={() => setDialog(null)}
-      />
+        onCancel={() => {
+          setDialog(null);
+          setCancelReason("");
+        }}
+      >
+        <div style={{ marginTop: 12, textAlign: "left" }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+            Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
+          </label>
+          <textarea
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="Descreva detalhadamente a justificativa para o cancelamento da cotação..."
+            rows={3}
+            style={{
+              width: "100%",
+              padding: "8px 10px",
+              borderRadius: 6,
+              border: "1px solid #cbd5e1",
+              fontSize: 13,
+              fontFamily: "inherit",
+              resize: "vertical",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+      </ConfirmDialog>
 
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
         <Icon name="chevron-left" /> Voltar para Cotações
@@ -761,7 +857,7 @@ export default function RfqDetailPage() {
               <PropostaCard
                 key={p.supplierId}
                 proposta={p}
-                isWinner={false}
+                isWinner={vencedorId === p.supplierId || !!p.isWinner}
                 totalQtd={totalQtd}
                 rfqCode={rfqCode}
                 rfqTitle={rfqTitle}
@@ -801,7 +897,7 @@ export default function RfqDetailPage() {
                     <Icon name="trend-up-01" />
                   </div>
                   <h3>
-                    {formatCurrency((melhorProposta?.unitPrice || 0) + (melhorProposta?.freightCost || 0))}/un
+                    {formatCurrency(getProposalTotal(melhorProposta) / totalQtd)}/un
                   </h3>
                   <span className={styles.subTextDark}>{melhorProposta?.supplierName || "—"}</span>
                 </div>
@@ -873,7 +969,7 @@ export default function RfqDetailPage() {
                       ))}
                     </tr>
                     <tr>
-                      <td className={styles.rowHeader}>Custo de Frete (unit)</td>
+                      <td className={styles.rowHeader}>Custo de Frete (Total)</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
                           key={p.supplierId}
@@ -912,7 +1008,7 @@ export default function RfqDetailPage() {
                           key={p.supplierId}
                           className={i === 0 ? styles.winnerCellTotal : styles.totalMutedText}
                         >
-                          {formatCurrency((p.unitPrice! + p.freightCost!) * totalQtd)}
+                          {formatCurrency(getProposalTotal(p))}
                         </td>
                       ))}
                     </tr>
@@ -924,12 +1020,22 @@ export default function RfqDetailPage() {
                             className={
                               i === 0 ? styles.btnSelecionarVencedor : styles.btnSelecionarSecundario
                             }
+                            disabled={isFinished || !!generatedPo}
+                            title={isFinished || !!generatedPo ? "Pedido já emitido para esta cotação" : undefined}
                             onClick={() => {
                               setPendingVencedorId(p.supplierId);
                               setDialog("selecionar");
                             }}
                           >
-                            {i === 0 ? (
+                            {isFinished || !!generatedPo ? (
+                              vencedor?.supplierId === p.supplierId ? (
+                                <>
+                                  <Icon name="check" size={14} /> Contratado
+                                </>
+                              ) : (
+                                "—"
+                              )
+                            ) : i === 0 ? (
                               <>
                                 <Icon name="trophy-01" size={14} /> Selecionar vencedor
                               </>
@@ -1055,7 +1161,7 @@ export default function RfqDetailPage() {
             </div>
             <div className={styles.aprovacaoDataRow}>
               <span>Custo de Frete Adicional</span>
-              <strong>{formatCurrency(vencedor?.freightCost ?? 0)} / unidade</strong>
+              <strong>{formatCurrency(vencedor?.freightCost ?? 0)} (Total do lote)</strong>
             </div>
           </Card>
         </div>
@@ -1066,9 +1172,7 @@ export default function RfqDetailPage() {
             <p>Já contemplando impostos, taxas e frete incidentes</p>
           </div>
           <div className={styles.aprovacaoTotalValue}>
-            {formatCurrency(
-              ((vencedor?.unitPrice ?? 0) + (vencedor?.freightCost ?? 0)) * totalQtd
-            )}
+            {formatCurrency(getProposalTotal(vencedor))}
           </div>
         </div>
 

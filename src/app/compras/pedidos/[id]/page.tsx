@@ -7,6 +7,7 @@ import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { formatCorporateBranch } from "@/lib/utils/tenant";
+import { getApprovalChainForOrder } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import { usePurchaseOrder, usePurchaseOrders, useUpdatePurchaseOrderStatus } from "@/hooks/useQueries";
@@ -17,10 +18,12 @@ export default function PedidoDetailPage() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
+  const [confirmAssinatura, setConfirmAssinatura] = useState(false);
   const [confirmFaturamento, setConfirmFaturamento] = useState(false);
   const [confirmTransporte, setConfirmTransporte] = useState(false);
   const [confirmRecebimento, setConfirmRecebimento] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const [statusOverride, setStatusOverride] = useState<string | null>(null);
   const [savedNfe, setSavedNfe] = useState<string>("");
   const [savedRastreio, setSavedRastreio] = useState<string>("");
@@ -54,17 +57,28 @@ export default function PedidoDetailPage() {
   const isBilled = (currentStatus === "Signed" || isInTransit || isDelivered) && !isCancelled;
 
   const handleCancelPo = async () => {
+    const reason = cancelReason.trim();
+    if (!reason) {
+      toast({
+        variant: "warning",
+        title: "Motivo obrigatório",
+        message: "Por favor, informe a justificativa do cancelamento do pedido.",
+      });
+      return;
+    }
+
     try {
       const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
       if (orderIdToUpdate) {
         await updateStatusMutation.mutateAsync({
           id: orderIdToUpdate,
           status: "Cancelled",
-          notes: "Cancelado pelo usuário gestor.",
+          notes: `Cancelado: ${reason}`,
         });
       }
       setStatusOverride("Cancelled");
       setConfirmCancel(false);
+      setCancelReason("");
       toast({
         variant: "warning",
         title: "Pedido cancelado",
@@ -75,6 +89,32 @@ export default function PedidoDetailPage() {
         variant: "error",
         title: "Erro ao cancelar pedido",
         message: e instanceof Error ? e.message : "Não foi possível cancelar o pedido.",
+      });
+    }
+  };
+
+  const handleConfirmAssinatura = async () => {
+    try {
+      const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
+      if (orderIdToUpdate) {
+        await updateStatusMutation.mutateAsync({
+          id: orderIdToUpdate,
+          status: "Sent",
+          notes: "Pedido de compra assinado e formalizado pelo gestor responsável.",
+        });
+      }
+      setStatusOverride("Sent");
+      setConfirmAssinatura(false);
+      toast({
+        variant: "success",
+        title: "Pedido Assinado!",
+        message: `O pedido ${displayId} foi assinado com sucesso e está emitido para o fornecedor.`,
+      });
+    } catch (e) {
+      toast({
+        variant: "error",
+        title: "Erro ao assinar pedido",
+        message: e instanceof Error ? e.message : "Não foi possível assinar o pedido.",
       });
     }
   };
@@ -210,13 +250,17 @@ export default function PedidoDetailPage() {
   const rfqOrigem = searchParams.get("rfq") || "—";
   const solOrigem = searchParams.get("origem") || "—";
 
-  const valorTotal = po?.totalValue ?? ((precoUnit + frete) * qtdTotal);
+  const valorTotal = po?.totalValue ?? ((precoUnit * qtdTotal) + frete);
 
   const dataEntrega = po?.estimatedDeliveryDate ? new Date(po.estimatedDeliveryDate) : new Date(Date.now() + prazo * 86400000);
   const dataEntregaFormatada = dataEntrega.toLocaleDateString("pt-BR");
 
   const dataVencimento = new Date(Date.now() + 30 * 86400000);
   const dataVencimentoFormatada = dataVencimento.toLocaleDateString("pt-BR");
+
+  const orderApprovalLevels = React.useMemo(() => {
+    return getApprovalChainForOrder(po?.companyCode || po?.tenantId || "", Number(valorTotal || 0));
+  }, [po?.companyCode, po?.tenantId, valorTotal]);
 
   if (!isNewFlow && (isDirectLoading || (isListLoading && !po))) {
     return (
@@ -259,6 +303,23 @@ export default function PedidoDetailPage() {
 
   return (
     <div className={styles.detailContainer}>
+      <ConfirmDialog
+        open={confirmAssinatura}
+        variant="success"
+        icon="check-circle"
+        title="Assinar e Formalizar Pedido de Compra?"
+        loading={updateStatusMutation.isPending}
+        loadingConfirmLabel="Assinando..."
+        confirmLabel="Assinar Pedido"
+        onConfirm={handleConfirmAssinatura}
+        onCancel={() => setConfirmAssinatura(false)}
+        message={
+          <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
+            Ao assinar, o pedido <strong>{displayId}</strong> será formalizado com o fornecedor <strong>{fornecedorNome}</strong> e liberado para faturamento e despacho logístico.
+          </p>
+        }
+      />
+
       <ConfirmDialog
         open={confirmFaturamento}
         variant="info"
@@ -423,15 +484,42 @@ export default function PedidoDetailPage() {
         title="Cancelar Pedido de Compra?"
         loading={updateStatusMutation.isPending}
         loadingConfirmLabel="Cancelando..."
+        confirmDisabled={!cancelReason.trim()}
         confirmLabel="Sim, cancelar pedido"
         onConfirm={handleCancelPo}
-        onCancel={() => setConfirmCancel(false)}
+        onCancel={() => {
+          setConfirmCancel(false);
+          setCancelReason("");
+        }}
         message={
           <>
             Tem certeza de que deseja cancelar o pedido de compra <strong>{displayId}</strong>? Esta ação anulará o fornecimento e marcará o pedido como cancelado para controle de auditoria.
           </>
         }
-      />
+      >
+        <div style={{ marginTop: 12, textAlign: "left" }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+            Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
+          </label>
+          <textarea
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="Descreva detalhadamente a justificativa para o cancelamento do pedido..."
+            rows={3}
+            style={{
+              width: "100%",
+              padding: "8px 10px",
+              borderRadius: 6,
+              border: "1px solid #cbd5e1",
+              fontSize: 13,
+              fontFamily: "inherit",
+              resize: "vertical",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+      </ConfirmDialog>
 
       <button
         className={styles.backBtn}
@@ -444,8 +532,8 @@ export default function PedidoDetailPage() {
         <div>
           <div className={styles.titleRow}>
             <h1>{displayId}</h1>
-            <Badge variant={isCancelled ? "danger" : isDelivered ? "success" : isInTransit ? "primary" : isBilled ? "warning" : "gray"}>
-              {isCancelled ? "Cancelado" : isDelivered ? "Entregue" : isInTransit ? "Em Transporte" : isBilled ? "Faturado" : "Emitido"}
+            <Badge variant={isCancelled ? "danger" : isDelivered ? "success" : isInTransit ? "primary" : isBilled ? "warning" : currentStatus === "AwaitingSignature" ? "warning" : "gray"}>
+              {isCancelled ? "Cancelado" : isDelivered ? "Entregue" : isInTransit ? "Em Transporte" : isBilled ? "Faturado" : currentStatus === "AwaitingSignature" ? "Aguardando Assinatura" : "Emitido"}
             </Badge>
           </div>
           <p className={styles.subtitleLarge}>{fornecedorNome}</p>
@@ -472,7 +560,12 @@ export default function PedidoDetailPage() {
         <div className={styles.headerActions}>
           {!isCancelled && (
             <>
-              {!isBilled && (
+              {currentStatus === "AwaitingSignature" && (
+                <Button variant="primary" onClick={() => setConfirmAssinatura(true)}>
+                  <Icon name="check-circle" /> Assinar Pedido
+                </Button>
+              )}
+              {!isBilled && currentStatus !== "AwaitingSignature" && (
                 <Button variant="primary" onClick={() => setConfirmFaturamento(true)}>
                   <Icon name="file-02" /> Confirmar Faturamento
                 </Button>
@@ -535,24 +628,38 @@ export default function PedidoDetailPage() {
                     ? "Em Transporte"
                     : isBilled
                     ? "Faturado (Aguardando Envio)"
+                    : currentStatus === "AwaitingSignature"
+                    ? "Aguardando Assinatura do Gestor"
                     : "Emitido (Aguardando Faturamento)"}
                 </strong>
               </div>
             </div>
 
             <div className={styles.stepperContainer}>
-              <div className={`${styles.step} ${styles.completed}`}>
+              <div className={`${styles.step} ${currentStatus === "AwaitingSignature" ? styles.active : styles.completed}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="receipt-check" />
-                  <div className={styles.checkBadge}><Icon name="check" /></div>
+                  {currentStatus !== "AwaitingSignature" && (
+                    <div className={styles.checkBadge}><Icon name="check" /></div>
+                  )}
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>Pedido Emitido</strong>
+                  <strong>{currentStatus === "AwaitingSignature" ? "Assinatura Pendente" : "Pedido Emitido"}</strong>
                   <span>{po?.createdAt ? new Date(po.createdAt).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</span>
-                  <small>Ordem gerada</small>
-                  <span className={styles.stepStatusBadgeCompleted}>
-                    <Icon name="check" size={11} /> Concluído
-                  </span>
+                  <small>{currentStatus === "AwaitingSignature" ? "Aguardando gestor" : "Ordem formalizada"}</small>
+                  {currentStatus === "AwaitingSignature" ? (
+                    <button
+                      type="button"
+                      className={styles.btnStepActionHighlight}
+                      onClick={() => setConfirmAssinatura(true)}
+                    >
+                      <Icon name="check-circle" size={12} /> Assinar Pedido
+                    </button>
+                  ) : (
+                    <span className={styles.stepStatusBadgeCompleted}>
+                      <Icon name="check" size={11} /> Concluído
+                    </span>
+                  )}
                 </div>
               </div>
 

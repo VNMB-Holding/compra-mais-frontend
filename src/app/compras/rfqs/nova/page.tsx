@@ -15,6 +15,7 @@ import { useTour } from "@/hooks/useTour";
 import { novaRfqTour } from "@/lib/tours";
 import styles from "./rfq-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
+import { formatPriority } from "@/lib/constants/status";
 
 interface Solicitacao {
   id: string;
@@ -49,15 +50,23 @@ interface FornecedorConvidado {
 const PRIORITY_CLASS: Record<string, string> = {
   Alta: styles.priorityAlta,
   Critica: styles.priorityCritica,
+  Crítica: styles.priorityCritica,
   Media: styles.priorityMedia,
+  Média: styles.priorityMedia,
   Baixa: styles.priorityBaixa,
 };
 
 const PRIORITY_BADGE_CONFIG: Record<string, { variant: "gray" | "warning" | "danger" | "dark"; icon: string }> = {
   Critica: { variant: "dark", icon: "zap" },
+  Crítica: { variant: "dark", icon: "zap" },
+  Critical: { variant: "dark", icon: "zap" },
   Alta: { variant: "danger", icon: "alert-triangle" },
+  High: { variant: "danger", icon: "alert-triangle" },
   Media: { variant: "warning", icon: "clock" },
+  Média: { variant: "warning", icon: "clock" },
+  Medium: { variant: "warning", icon: "clock" },
   Baixa: { variant: "gray", icon: "info-circle" },
+  Low: { variant: "gray", icon: "info-circle" },
 };
 
 export default function NewRfqPage() {
@@ -83,7 +92,7 @@ export default function NewRfqPage() {
 
   const [tituloRfq, setTituloRfq] = useState("");
 
-  const [estrategia, setEstrategia] = useState("Menor Preco Equalizado");
+  const [estrategia, setEstrategia] = useState("Menor Preço Equalizado");
   const [dataEncerramento, setDataEncerramento] = useState("");
   const [incoterm, setIncoterm] = useState("CIF");
   const [condicaoPagamento, setCondicaoPagamento] = useState("30 dias DDL");
@@ -118,15 +127,16 @@ export default function NewRfqPage() {
     async function loadApiData() {
       try {
         const [reqs, sups] = await Promise.all([
-          purchaseRequestsApi.list(),
-          suppliersApi.list(),
+          purchaseRequestsApi.list({ companyCode: user?.tenantId }),
+          suppliersApi.list({ tenantId: user?.tenantId }),
         ]);
 
         if (reqs && reqs.length > 0) {
           const eligibleReqs = reqs.filter(
             (r) =>
               r.status === "Approved" &&
-              (!r.rfqs || r.rfqs.length === 0)
+              (!user?.tenantId || r.companyCode === user.tenantId || r.tenantId === user.tenantId) &&
+              (!r.rfqs || !r.rfqs.some((q: any) => q.status !== "Cancelled"))
           );
 
           const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => ({
@@ -135,7 +145,7 @@ export default function NewRfqPage() {
             titulo: r.description,
             area: r.costCenterName || r.costCenterCode || "Operações",
             solicitante: r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
-            prioridade: "Media",
+            prioridade: formatPriority((r as any).priority || (r as any).prioridade),
             valorEstimado: Number(r.estimatedBudget) || 0,
             itens: (r.items || []).map((it, idx) => ({
               id: idx + 1,
@@ -215,7 +225,7 @@ export default function NewRfqPage() {
             titulo: "Demanda Demonstrativa para Cotação",
             area: "Operações & Logística",
             solicitante: "Gestor de Compras",
-            prioridade: "Media",
+            prioridade: "Média",
             valorEstimado: 25000,
             itens: [
               { id: 1, descricao: "Válvulas Reguladoras Industriais DN50", qtd: 10, unidade: "UN" },
@@ -288,7 +298,7 @@ export default function NewRfqPage() {
             titulo: r.description,
             area: r.costCenterName || r.costCenterCode || "Operações",
             solicitante: r.corporateRequester || r.requesterName || "Solicitante",
-            prioridade: "Media",
+            prioridade: formatPriority((r as any).priority || (r as any).prioridade),
             valorEstimado: Number(r.estimatedBudget) || 0,
             itens: (r.items || []).map((it, idx) => ({
               id: idx + 1,
@@ -507,7 +517,7 @@ export default function NewRfqPage() {
                                 variant={PRIORITY_BADGE_CONFIG[s.prioridade]?.variant ?? "gray"}
                                 icon={PRIORITY_BADGE_CONFIG[s.prioridade]?.icon ?? "info-circle"}
                               >
-                                {s.prioridade}
+                                {formatPriority(s.prioridade)}
                               </Badge>
                             </div>
                             <p className={styles.quickCardTitle}>{s.titulo}</p>
@@ -531,7 +541,7 @@ export default function NewRfqPage() {
                         <Badge
                           variant={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"}
                         >
-                          Prioridade {solicitacaoPreview.prioridade}
+                          Prioridade {formatPriority(solicitacaoPreview.prioridade)}
                         </Badge>
                       </div>
 
@@ -710,8 +720,8 @@ export default function NewRfqPage() {
                       <label>Estratégia de compra <span className="required-asterisk">*</span></label>
                       <Select
                         options={[
-                          { label: "Menor Preço Equalizado", value: "Menor Preco Equalizado" },
-                          { label: "Técnica e Preço", value: "Tecnica e Preco" },
+                          { label: "Menor Preço Equalizado", value: "Menor Preço Equalizado" },
+                          { label: "Técnica e Preço", value: "Técnica e Preço" },
                           { label: "Melhor Valor Total", value: "Melhor Valor Total" }
                         ]}
                         value={estrategia}
@@ -1101,7 +1111,7 @@ export default function NewRfqPage() {
                       else if (valor > 1000) minSuppliers = 2;
 
                       if (fornecedoresSelecionados.length < minSuppliers) {
-                        toast({ variant: "warning", title: "Política de Compras", message: `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedore(s).` });
+                        toast({ variant: "warning", title: "Política de Compras", message: `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedor(es).` });
                         return;
                       }
                       setCurrentStep(4);
@@ -1149,6 +1159,10 @@ export default function NewRfqPage() {
                           closesAt: endClosesAt,
                           supplierIds: selectedSupplierIds,
                           status: "Draft",
+                          incoterm: incoterm || "CIF",
+                          paymentTerms: condicaoPagamento || "30 dias DDL",
+                          currency: moeda || "BRL",
+                          notes: observacoes || undefined,
                         });
 
                         toast({
@@ -1197,6 +1211,10 @@ export default function NewRfqPage() {
                           closesAt: endClosesAt,
                           supplierIds: selectedSupplierIds,
                           status: "Open",
+                          incoterm: incoterm || "CIF",
+                          paymentTerms: condicaoPagamento || "30 dias DDL",
+                          currency: moeda || "BRL",
+                          notes: observacoes || undefined,
                         });
 
                         router.push(`/compras/rfqs/${createdRfq.id}`);

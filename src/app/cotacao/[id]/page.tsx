@@ -211,6 +211,15 @@ export default function CotacaoFornecedorPage() {
     e.preventDefault();
     if (!rfq) return;
 
+    if (isClosedOrExpired) {
+      toast({
+        variant: "error",
+        title: "Cotação Encerrada",
+        message: "O prazo para recebimento de propostas desta cotação já foi finalizado.",
+      });
+      return;
+    }
+
     if (!supplierCnpj.trim() || !supplierName.trim()) {
       toast({
         variant: "warning",
@@ -316,6 +325,15 @@ export default function CotacaoFornecedorPage() {
       </div>
     );
   }
+
+  const isClosedOrExpired = Boolean(
+    rfq && (
+      rfq.status === "Closed" ||
+      rfq.status === "Finished" ||
+      rfq.status === "Cancelled" ||
+      (rfq.closesAt && new Date(rfq.closesAt).getTime() < Date.now())
+    )
+  );
 
   const closesDate = new Date(rfq.closesAt).toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -782,7 +800,7 @@ export default function CotacaoFornecedorPage() {
             <Button
               type="submit"
               variant="primary"
-              disabled={submitting}
+              disabled={submitting || isClosedOrExpired}
               loading={submitting}
               loadingText="Enviando Proposta..."
               className={styles.submitBtn}
