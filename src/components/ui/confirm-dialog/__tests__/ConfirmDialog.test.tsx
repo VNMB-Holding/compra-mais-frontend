@@ -55,4 +55,23 @@ describe('ConfirmDialog Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
     expect(handleCancel).toHaveBeenCalledTimes(1);
   });
+
+  it('deve desabilitar o botão de confirmação quando confirmDisabled for true e renderizar children', () => {
+    render(
+      <ConfirmDialog
+        open={true}
+        title="Cancelar com justificativa"
+        confirmDisabled={true}
+        confirmLabel="Confirmar cancelamento"
+        onConfirm={() => {}}
+        onCancel={() => {}}
+      >
+        <textarea data-testid="motivo-input" placeholder="Digite o motivo..." />
+      </ConfirmDialog>
+    );
+
+    expect(screen.getByTestId('motivo-input')).toBeInTheDocument();
+    const confirmButton = screen.getByRole('button', { name: /confirmar cancelamento/i });
+    expect(confirmButton).toBeDisabled();
+  });
 });

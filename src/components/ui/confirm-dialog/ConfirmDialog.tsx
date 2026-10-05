@@ -15,6 +15,8 @@ export interface ConfirmDialogProps {
   
   message?: React.ReactNode;
   
+  children?: React.ReactNode;
+  
   confirmLabel?: string;
   
   cancelLabel?: string;
@@ -24,6 +26,8 @@ export interface ConfirmDialogProps {
   loading?: boolean;
   
   loadingConfirmLabel?: string;
+  
+  confirmDisabled?: boolean;
   
   onConfirm: () => void;
   
@@ -62,11 +66,13 @@ export default function ConfirmDialog({
   variant = "info",
   title,
   message,
+  children,
   confirmLabel,
   cancelLabel = "Cancelar",
   icon,
   loading = false,
   loadingConfirmLabel,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -97,6 +103,7 @@ export default function ConfirmDialog({
         <div className={styles.body}>
           <h2 id="confirm-title" className={styles.title}>{title}</h2>
           {message && <div className={styles.message}>{message}</div>}
+          {children && <div className={styles.children}>{children}</div>}
         </div>
 
         <div className={styles.actions}>
@@ -106,7 +113,7 @@ export default function ConfirmDialog({
           <button
             className={`${styles.confirmBtn} ${cfg.confirmBtn} ${loading ? styles.loadingBtn : ''}`}
             onClick={onConfirm}
-            disabled={loading}
+            disabled={loading || confirmDisabled}
             aria-busy={loading ? 'true' : undefined}
           >
             {loading && (

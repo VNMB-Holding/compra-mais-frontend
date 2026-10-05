@@ -104,6 +104,14 @@
 .confirmWarning { background: #d97706; }
 .confirmSuccess { background: #007d79; }
 .confirmInfo    { background: #0284c7; }
+.confirmBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.children {
+  margin-top: 14px;
+  text-align: left;
+}
 .loadingBtn {
   cursor: not-allowed !important;
   opacity: 0.85 !important;
