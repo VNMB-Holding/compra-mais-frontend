@@ -91,8 +91,35 @@ export function getCompanyNameByCode(code?: string): string | undefined {
   return COMPANY_BY_CODE_MAP[code]?.name;
 }
 
+function normalizeBranchQuery(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
 export function findCompanyBranch(query?: string): CompanyBranchMapping | undefined {
   if (!query) return undefined;
-  const normalized = query.trim().toUpperCase();
-  return COMPANY_BY_CODE_MAP[normalized] || COMPANY_BY_ACRONYM_MAP[normalized];
+  const raw = query.trim().toUpperCase();
+  const direct = COMPANY_BY_CODE_MAP[raw] || COMPANY_BY_ACRONYM_MAP[raw];
+  if (direct) return direct;
+
+  const normalized = normalizeBranchQuery(query);
+  return COMPANY_BRANCHES.find((b) => {
+    const bName = normalizeBranchQuery(b.name);
+    const bUnit = normalizeBranchQuery(b.unitName);
+    const bAcronym = normalizeBranchQuery(b.acronym);
+    const bCode = normalizeBranchQuery(b.code);
+
+    return (
+      bCode === normalized ||
+      bAcronym === normalized ||
+      bName === normalized ||
+      bUnit === normalized ||
+      bName.includes(normalized) ||
+      normalized.includes(bUnit) ||
+      normalized.includes(bName)
+    );
+  });
 }

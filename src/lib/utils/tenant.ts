@@ -1,4 +1,5 @@
 import { User } from "@/types/auth";
+import { isUuid } from "@/lib/utils/format-display";
 import {
   COMPANY_BRANCHES,
   COMPANY_BY_CODE_MAP,
@@ -109,6 +110,74 @@ export function formatCorporateBranch(
     return `Coligada ${coligada} / Filial ${filialStr}`;
   }
 
+  if (filialStr && !isUuid(filialStr) && filialStr.length >= 3 && !filialStr.toUpperCase().includes("VNMB")) {
+    return filialStr;
+  }
+
   return "VB AGRO LTDA";
 }
+
+export function resolvePurchaseRequestBranch(
+  pr?: {
+    corporateColigada?: string | number;
+    corporateFilial?: string | number;
+    filialCode?: string | number;
+    companyCode?: string;
+    branchName?: string;
+    tenantId?: string;
+    notes?: string;
+  } | null,
+  user?: User | null
+): string {
+  if (!pr) return formatCorporateBranch(undefined, undefined, undefined, user);
+
+  if (pr.notes) {
+    const match = pr.notes.match(/Empresa\/Unidade:\s*([^\n\r]+)/i);
+    if (match && match[1]) {
+      const parsed = match[1].trim();
+      const branchFromNotes = findCompanyBranch(parsed);
+      if (branchFromNotes) {
+        return `${branchFromNotes.name} (${branchFromNotes.acronym})`;
+      }
+      if (parsed && !parsed.toUpperCase().includes("VNMB")) {
+        return parsed;
+      }
+    }
+  }
+
+  const rawBranch = (pr as any).branchName || pr.branchName;
+  if (rawBranch) {
+    const b = findCompanyBranch(rawBranch);
+    if (b) return `${b.name} (${b.acronym})`;
+    if (!rawBranch.toUpperCase().includes("VNMB")) return rawBranch;
+  }
+
+  if (pr.companyCode) {
+    const b = findCompanyBranch(pr.companyCode);
+    if (b) return `${b.name} (${b.acronym})`;
+  }
+
+  if (pr.filialCode) {
+    const b = findCompanyBranch(String(pr.filialCode));
+    if (b) return `${b.name} (${b.acronym})`;
+  }
+
+  if (pr.corporateFilial) {
+    const b = findCompanyBranch(String(pr.corporateFilial));
+    if (b) return `${b.name} (${b.acronym})`;
+  }
+
+  if (pr.tenantId) {
+    const b = findCompanyBranch(pr.tenantId);
+    if (b) return `${b.name} (${b.acronym})`;
+  }
+
+  return formatCorporateBranch(
+    pr.corporateColigada,
+    pr.corporateFilial || pr.filialCode || pr.companyCode,
+    pr.tenantId,
+    user
+  );
+}
+
 

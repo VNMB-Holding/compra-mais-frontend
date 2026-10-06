@@ -118,5 +118,35 @@ describe('Approval Limits Workflow', () => {
       const chain = getApprovalChainForRequest('VB AGRO', 50, positiveRulesOnly);
       expect(chain).toHaveLength(0);
     });
+
+    it('não deve incluir aprovadores de faixas inferiores quando a faixa tiver sua própria alçada nível 1', () => {
+      const discreteRangeRules = [
+        { id: 'f1-1', companyCode: '2345', flowType: 'solicitacao' as const, level: 1, minAmount: 0, maxAmount: 10000, approverType: 'user' as const, approverIdentifier: 'coord', approverName: 'Coordenador', active: true, order: 1 },
+        { id: 'f2-1', companyCode: '2345', flowType: 'solicitacao' as const, level: 1, minAmount: 10000.01, maxAmount: 50000, approverType: 'user' as const, approverIdentifier: 'gerente', approverName: 'Gerente da Filial', active: true, order: 1 },
+        { id: 'f2-2', companyCode: '2345', flowType: 'solicitacao' as const, level: 2, minAmount: 10000.01, maxAmount: 50000, approverType: 'user' as const, approverIdentifier: 'diretor', approverName: 'Diretor de Operações', active: true, order: 2 },
+        { id: 'f3-1', companyCode: '2345', flowType: 'solicitacao' as const, level: 1, minAmount: 50000.01, maxAmount: null, approverType: 'user' as const, approverIdentifier: 'ceo', approverName: 'Diretoria Executiva', active: true, order: 1 },
+      ];
+
+      const chain25k = getApprovalChainForRequest('Vargem Grande', 25000, discreteRangeRules);
+      expect(chain25k).toHaveLength(2);
+      expect(chain25k.map((l) => l.roleOrName)).toEqual(['Gerente da Filial', 'Diretor de Operações']);
+      expect(chain25k.some((l) => l.roleOrName === 'Coordenador')).toBe(false);
+
+      const chain80k = getApprovalChainForRequest('Vargem Grande', 80000, discreteRangeRules);
+      expect(chain80k).toHaveLength(1);
+      expect(chain80k[0].roleOrName).toBe('Diretoria Executiva');
+    });
+
+    it('deve priorizar regras da empresa específica e não vazar aprovadores de outras empresas', () => {
+      const multiCompanyRules = [
+        { id: 'c1', companyCode: '2313', flowType: 'solicitacao' as const, level: 1, minAmount: 0, maxAmount: null, approverType: 'user' as const, approverIdentifier: 'matriz-user', approverName: 'Aprovador Matriz', active: true, order: 1 },
+        { id: 'c2', companyCode: '2345', flowType: 'solicitacao' as const, level: 1, minAmount: 0, maxAmount: null, approverType: 'user' as const, approverIdentifier: 'vba-user', approverName: 'Aprovador Vargem Grande', active: true, order: 1 },
+      ];
+
+      const chainVBA = getApprovalChainForRequest('Vargem Grande', 5000, multiCompanyRules);
+      expect(chainVBA).toHaveLength(1);
+      expect(chainVBA[0].roleOrName).toBe('Aprovador Vargem Grande');
+      expect(chainVBA.some((l) => l.roleOrName === 'Aprovador Matriz')).toBe(false);
+    });
   });
 });

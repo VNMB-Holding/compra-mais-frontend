@@ -33,34 +33,88 @@ export function calculateChainFromRules(
 
   const targetCode = companyCode ? companyCode.trim() : "";
 
-  const filtered = rules.filter(
-    (r) =>
-      r.active &&
-      (r.companyCode === targetCode || r.companyCode === "TODAS" || !targetCode) &&
-      (r.flowType || "solicitacao") === flowType
+  const companySpecific = targetCode
+    ? rules.filter(
+        (r) =>
+          r.active !== false &&
+          r.companyCode === targetCode &&
+          (r.flowType || "solicitacao") === flowType
+      )
+    : [];
+
+  const candidateRules =
+    companySpecific.length > 0
+      ? companySpecific
+      : rules.filter(
+          (r) =>
+            r.active !== false &&
+            (r.companyCode === "TODAS" || !r.companyCode || !targetCode) &&
+            (r.flowType || "solicitacao") === flowType
+        );
+
+  if (candidateRules.length === 0) return [];
+
+  const rangeMap = new Map<string, { minAmount: number; maxAmount: number | null; rules: ApprovalRuleConfig[] }>();
+  for (const r of candidateRules) {
+    const key = `${r.minAmount}_${r.maxAmount ?? "inf"}`;
+    if (!rangeMap.has(key)) {
+      rangeMap.set(key, { minAmount: r.minAmount, maxAmount: r.maxAmount, rules: [] });
+    }
+    rangeMap.get(key)!.rules.push(r);
+  }
+
+  const sortedRanges = Array.from(rangeMap.values()).sort((a, b) => a.minAmount - b.minAmount);
+
+  const matchingRangeIndex = sortedRanges.findIndex(
+    (rg) => budget >= rg.minAmount && (rg.maxAmount === null || budget <= rg.maxAmount)
   );
 
-  const sorted = [...filtered].sort(
-    (a, b) => a.level - b.level || (a.order || 0) - (b.order || 0)
-  );
+  let targetRange: { minAmount: number; maxAmount: number | null; rules: ApprovalRuleConfig[] } | undefined;
+  if (matchingRangeIndex !== -1) {
+    targetRange = sortedRanges[matchingRangeIndex];
+  } else if (budget >= sortedRanges[sortedRanges.length - 1].minAmount) {
+    targetRange = sortedRanges[sortedRanges.length - 1];
+  } else {
+    return [];
+  }
 
-  const applicable: ApprovalChainLevel[] = [];
-  for (const r of sorted) {
-    if (budget >= r.minAmount) {
-      applicable.push({
+  if (!targetRange) return [];
+
+  const hasSelfContainedLevel1 = targetRange.rules.some((r) => r.level === 1);
+
+  if (hasSelfContainedLevel1) {
+    return targetRange.rules
+      .sort((a, b) => a.level - b.level || (a.order || 0) - (b.order || 0))
+      .map((r) => ({
         level: r.level,
         roleOrName: r.approverName || r.approverIdentifier,
         maxLimit: r.maxAmount,
         approverType: r.approverType,
         approverIdentifier: r.approverIdentifier,
-      });
-      if (r.maxAmount !== null && budget <= r.maxAmount) {
-        break;
+      }));
+  }
+
+  const levelMap = new Map<number, ApprovalChainLevel>();
+  const rangesToConsider = sortedRanges.slice(
+    0,
+    matchingRangeIndex !== -1 ? matchingRangeIndex + 1 : sortedRanges.length
+  );
+
+  for (const rg of rangesToConsider) {
+    for (const r of rg.rules) {
+      if (!levelMap.has(r.level)) {
+        levelMap.set(r.level, {
+          level: r.level,
+          roleOrName: r.approverName || r.approverIdentifier,
+          maxLimit: r.maxAmount,
+          approverType: r.approverType,
+          approverIdentifier: r.approverIdentifier,
+        });
       }
     }
   }
 
-  return applicable;
+  return Array.from(levelMap.values()).sort((a, b) => a.level - b.level);
 }
 
 export function getApprovalChainForRequest(

@@ -83,5 +83,19 @@ describe('Tenant Utilities', () => {
     it('deve formatar coligada e filial quando não encontrar branch mapeado', () => {
       expect(formatCorporateBranch(999, 888)).toBe('Coligada 999 / Filial 888');
     });
+
+    it('deve formatar corretamente por código da filial', () => {
+      expect(formatCorporateBranch(undefined, '2345')).toBe('VB AGRO LTDA - Vargem Grande (VBA)');
+    });
+
+    it('deve formatar corretamente por nome da unidade/filial sem acento', () => {
+      expect(formatCorporateBranch(undefined, 'Vargem Grande')).toBe('VB AGRO LTDA - Vargem Grande (VBA)');
+      expect(formatCorporateBranch(undefined, 'Juina')).toBe('VB AGRO LTDA - JUINA (VBJ)');
+      expect(formatCorporateBranch(undefined, 'Terenos')).toBe('VB AGRO LTDA - TERENOS (VMS)');
+    });
+
+    it('deve formatar corretamente por sigla da filial', () => {
+      expect(formatCorporateBranch(undefined, 'VBT')).toBe('VB AGRO LTDA - CASTANHEIRA (VBT)');
+    });
   });
 });
