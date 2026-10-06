@@ -21,7 +21,7 @@ import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tenant";
+import { getCompanyFilterOptions, formatCorporateBranch, resolvePurchaseRequestBranch } from "@/lib/utils/tenant";
 
 import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
@@ -44,7 +44,7 @@ interface SolicitationCorporateRow {
 }
 
 function mapToCorporateRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationCorporateRow {
-  const empresaFilial = formatCorporateBranch(pr.corporateColigada, pr.corporateFilial || pr.filialCode || pr.companyCode, pr.tenantId, currentUser);
+  const empresaFilial = resolvePurchaseRequestBranch(pr, currentUser);
 
   const codigo = pr.corporateCode ? `#${pr.corporateCode}` : pr.code || "";
   const descricao = pr.description || pr.notes || "Solicitação de Compra";
@@ -363,19 +363,13 @@ export default function SolicitacoesPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Unidade / Empresa</span>
                 <strong style={{ fontSize: 13, color: "#0f172a" }}>
-                  {formatCorporateBranch(selectedDrawerRequest.corporateColigada, selectedDrawerRequest.corporateFilial || selectedDrawerRequest.filialCode, selectedDrawerRequest.tenantId, user)}
+                  {resolvePurchaseRequestBranch(selectedDrawerRequest, user)}
                 </strong>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Solicitante</span>
                 <span style={{ fontSize: 13, color: "#0f172a" }}>
                   {selectedDrawerRequest.corporateRequester || selectedDrawerRequest.requesterName || formatUserDisplayName(selectedDrawerRequest.requesterId, user)}
-                </span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Centro de Custo</span>
-                <span style={{ fontSize: 13, color: "#334155" }}>
-                  {selectedDrawerRequest.costCenterCode ? `[${selectedDrawerRequest.costCenterCode}] ` : ""}{selectedDrawerRequest.costCenterName || "Geral"}
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>

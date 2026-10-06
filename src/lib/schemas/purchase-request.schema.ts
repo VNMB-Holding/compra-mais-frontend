@@ -7,7 +7,7 @@ export const purchaseRequestItemSchema = z.object({
   quantity: z.number().positive("A quantidade deve ser maior que zero"),
   unit: z.string().min(1, "A unidade é obrigatória"),
   estimatedUnitPrice: z.number().min(0, "O preço estimado não pode ser negativo").optional(),
-  costCenter: z.string().min(2, "O centro de custo é obrigatório"),
+  costCenter: z.string().optional(),
   requiredDate: z.string().optional(),
 });
 

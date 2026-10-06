@@ -15,6 +15,7 @@ import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
 import { CATEGORY_LABEL_MAP } from "@/lib/utils/category-icon";
 import { ApprovalModal } from "@/components";
+import { itemsApi, CatalogItem } from "@/lib/api/items";
 
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";
 
@@ -27,6 +28,10 @@ interface RequestItem {
   unitPrice: number;
   costCenter: string;
   requiredDate: string;
+  baseSupplierName?: string;
+  baseSupplierCnpj?: string;
+  lastPurchasePrice?: number;
+  lastPurchaseDate?: string;
 }
 
 const priorityLabels: Record<Priority, string> = {
@@ -97,7 +102,7 @@ export default function NovaSolicitacaoPage() {
               quantity: Number(item.quantity) || 1,
               unit: item.unit || "UN",
               unitPrice: Number(item.estimatedUnitPrice) || 0,
-              costCenter: item.costCenterCode || "Administrativo",
+              costCenter: "",
               requiredDate: item.requiredDate ? new Date(item.requiredDate).toISOString().split("T")[0] : "",
             }))
           );
@@ -173,6 +178,55 @@ export default function NovaSolicitacaoPage() {
     );
   };
 
+  const [activeSearchItemId, setActiveSearchItemId] = useState<number | null>(null);
+  const [suggestedItems, setSuggestedItems] = useState<CatalogItem[]>([]);
+
+  const handleDescriptionChange = async (itemId: number, text: string) => {
+    updateItem(itemId, "description", text);
+    if (text.trim().length >= 2) {
+      setActiveSearchItemId(itemId);
+      try {
+        const results = await itemsApi.search(text.trim());
+        setSuggestedItems(results || []);
+      } catch {
+        setSuggestedItems([]);
+      }
+    } else {
+      setSuggestedItems([]);
+      setActiveSearchItemId(null);
+    }
+  };
+
+  const handleSelectCatalogItem = (itemId: number, catalogItem: CatalogItem) => {
+    const supName = catalogItem.lastSupplier?.tradeName || catalogItem.lastSupplier?.corporateName;
+    const supCnpj = catalogItem.lastSupplier?.cnpj;
+    const lastPrice = catalogItem.lastUnitPrice ? Number(catalogItem.lastUnitPrice) : 0;
+
+    setItems((current) =>
+      current.map((item) => {
+        if (item.id !== itemId) return item;
+        return {
+          ...item,
+          description: catalogItem.description,
+          category: catalogItem.category || item.category || "MRO / Peças",
+          unit: catalogItem.unit || item.unit,
+          unitPrice: lastPrice > 0 ? lastPrice : item.unitPrice,
+          baseSupplierName: supName,
+          baseSupplierCnpj: supCnpj,
+          lastPurchasePrice: lastPrice,
+          lastPurchaseDate: catalogItem.lastPurchaseDate,
+        };
+      })
+    );
+
+    if (supName && !preferredSupplier) {
+      setPreferredSupplier(supName);
+    }
+
+    setActiveSearchItemId(null);
+    setSuggestedItems([]);
+  };
+
   const addItem = () => {
     const nextId = Math.max(...items.map((item) => item.id), 0) + 1;
     setItems((current) => [
@@ -184,7 +238,7 @@ export default function NovaSolicitacaoPage() {
         quantity: 1,
         unit: "UN",
         unitPrice: 0,
-        costCenter: "Administrativo",
+        costCenter: "",
         requiredDate: "",
       },
     ]);
@@ -514,12 +568,60 @@ export default function NovaSolicitacaoPage() {
                             <div className={styles.gridCol12}>
                               <div className={`${styles.formGroup} ${styles.col8}`}>
                                 <label>Descrição do item/serviço <span className="required-asterisk">*</span></label>
-                                <input
-                                  className={styles.formControl}
-                                  value={item.description}
-                                  onChange={(event) => updateItem(item.id, "description", event.target.value)}
-                                  placeholder="Ex: Filtro de ar motor X1"
-                                />
+                                <div className={styles.itemAutocompleteWrapper}>
+                                  <input
+                                    className={styles.formControl}
+                                    value={item.description}
+                                    onChange={(event) => handleDescriptionChange(item.id, event.target.value)}
+                                    placeholder="Ex: Filtro de ar motor X1 (digite para sugestões do catálogo...)"
+                                  />
+                                  {activeSearchItemId === item.id && suggestedItems.length > 0 && (
+                                    <div className={styles.autocompleteDropdown}>
+                                      {suggestedItems.map((sug) => (
+                                        <div
+                                          key={sug.id}
+                                          className={styles.autocompleteItem}
+                                          onClick={() => handleSelectCatalogItem(item.id, sug)}
+                                        >
+                                          <div className={styles.autocompleteItemMain}>
+                                            <span className={styles.autocompleteItemTitle}>{sug.description}</span>
+                                            <span className={styles.autocompleteItemSub}>
+                                              {sug.lastSupplier ? (
+                                                <span className={styles.autocompleteItemSupplier}>
+                                                  ⭐ Base: {sug.lastSupplier.tradeName || sug.lastSupplier.corporateName}
+                                                </span>
+                                              ) : (
+                                                <span>Sem fornecedor base</span>
+                                              )}
+                                              <span>• {sug.category || "Geral"}</span>
+                                              <span>• {sug.unit}</span>
+                                            </span>
+                                          </div>
+                                          {sug.lastUnitPrice && (
+                                            <div className={styles.autocompleteItemPrice}>
+                                              {formatCurrency(Number(sug.lastUnitPrice))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                {item.baseSupplierName && (
+                                  <div className={styles.baseSupplierNotice}>
+                                    <div className={styles.baseSupplierNoticeLeft}>
+                                      <Icon name="check-circle" size={14} />
+                                      <span>Fornecedor de Base Auditado: <strong>{item.baseSupplierName}</strong></span>
+                                      {item.baseSupplierCnpj && <small>({item.baseSupplierCnpj})</small>}
+                                    </div>
+                                    {Boolean(item.lastPurchasePrice) && (
+                                      <span>
+                                        Última compra: <strong>{formatCurrency(Number(item.lastPurchasePrice))}</strong>
+                                        {item.lastPurchaseDate && ` em ${new Date(item.lastPurchaseDate).toLocaleDateString("pt-BR")}`}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               <div className={`${styles.formGroup} ${styles.col4}`}>
                                 <label>Categoria <span className="required-asterisk">*</span></label>
@@ -571,11 +673,7 @@ export default function NovaSolicitacaoPage() {
                                 <strong style={{ fontSize: "14px" }}>{formatCurrency(itemTotalValue)}</strong>
                               </div>
 
-                              <div className={`${styles.formGroup} ${styles.col6}`}>
-                                <label>Centro de custo <span className="required-asterisk">*</span></label>
-                                <input className={styles.formControl} value={item.costCenter} onChange={(event) => updateItem(item.id, "costCenter", event.target.value)} placeholder="Ex: Administrativo, Operacional..." required />
-                              </div>
-                              <div className={`${styles.formGroup} ${styles.col6}`}>
+                              <div className={`${styles.formGroup} ${styles.col12}`}>
                                 <label>Necessário até <span className="required-asterisk">*</span></label>
                                 <input
                                   type="date"

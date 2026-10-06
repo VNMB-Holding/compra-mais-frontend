@@ -9,10 +9,10 @@ import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
-import { getApprovalChainForRequest, isUserEligibleToApprove } from "@/lib/utils/approval-limits";
+import { getApprovalChainForRequest, calculateChainFromRules, isUserEligibleToApprove } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
-import { getTenantDisplayName, formatCorporateBranch } from "@/lib/utils/tenant";
+import { getTenantDisplayName, formatCorporateBranch, resolvePurchaseRequestBranch } from "@/lib/utils/tenant";
 import { findCompanyBranch } from "@/lib/constants/companies";
 import { formatPriority, PURCHASE_REQUEST_STATUS_MAP as STATUS_LABEL_MAP } from "@/lib/constants/status";
 
@@ -50,7 +50,7 @@ export default function SolicitacaoDetailPage() {
       setCodeLoading(true);
       (async () => {
         try {
-          const list = await purchaseRequestsApi.list();
+          const list = await purchaseRequestsApi.list({ companyCode: "TODAS" });
           const found = list.find((item) => item.code === solId || item.id === solId);
           if (cancelled) return;
           setSolOverride(found || null);
@@ -143,6 +143,15 @@ export default function SolicitacaoDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const handleCancel = async () => {
     if (!sol) return;
+    if (isInQuote) {
+      toast({
+        variant: "warning",
+        title: "Cancelamento bloqueado",
+        message: "Não é possível cancelar uma solicitação que já está em processo de cotação.",
+      });
+      setDialog(null);
+      return;
+    }
     const reason = cancelReason.trim();
     if (!reason) {
       toast({
@@ -193,7 +202,8 @@ export default function SolicitacaoDetailPage() {
   const [isChainLoading, setIsChainLoading] = useState(true);
 
   const budget = Number(sol?.estimatedBudget || 0);
-  const companyCode = sol?.companyCode;
+  const rawBranchCode = sol?.companyCode || sol?.corporateFilial || (sol as any)?.filialCode;
+  const companyCode = rawBranchCode ? String(rawBranchCode).trim() : undefined;
 
   useEffect(() => {
     if (!sol) return;
@@ -204,15 +214,16 @@ export default function SolicitacaoDetailPage() {
       .then((res) => {
         if (cancelled) return;
         if (Array.isArray(res) && res.length > 0) {
-          setRemoteChain(
-            res.map((r: any) => ({
-              level: r.level,
-              roleOrName: r.approverName || r.approverIdentifier,
-              maxLimit: r.maxAmount,
-              approverType: "user",
-              approverIdentifier: r.approverIdentifier,
-            }))
-          );
+          const activeRules = res.filter((r: any) => r.active !== false && (r.flowType === "solicitacao" || !r.flowType));
+          const calculated = calculateChainFromRules(activeRules, budget, companyCode, "solicitacao");
+          const finalChain = calculated.length > 0 ? calculated : activeRules.map((r: any) => ({
+            level: r.level,
+            roleOrName: r.approverName || r.approverIdentifier,
+            maxLimit: r.maxAmount,
+            approverType: "user",
+            approverIdentifier: r.approverIdentifier,
+          }));
+          setRemoteChain(finalChain);
         }
       })
       .catch((err) => {
@@ -251,16 +262,24 @@ export default function SolicitacaoDetailPage() {
     }
   };
 
-  const companyName = formatCorporateBranch(sol?.corporateColigada, sol?.corporateFilial, sol?.tenantId, user);
+  const companyName = resolvePurchaseRequestBranch(sol, user);
   
   const chain = remoteChain ?? getApprovalChainForRequest(companyName, budget);
 
   const pendingHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Pending");
   const approvedHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Approved");
   const currentStepIndex = approvedHistories.length;
+  const activePendingHistory = pendingHistories[0];
   const currentPendingLevel = chain[currentStepIndex] || chain[chain.length - 1];
-  const currentApproverName = currentPendingLevel?.roleOrName || "Gestor";
-  const currentApproverIdentifier = currentPendingLevel?.approverIdentifier || currentApproverName;
+  const currentApproverName =
+    (activePendingHistory as any)?.approverName ||
+    (activePendingHistory?.approverId && !isUuid(activePendingHistory.approverId) ? activePendingHistory.approverId : "") ||
+    currentPendingLevel?.roleOrName ||
+    "Gestor";
+  const currentApproverIdentifier =
+    activePendingHistory?.approverId ||
+    currentPendingLevel?.approverIdentifier ||
+    currentApproverName;
 
   const handleCopyApprovalLink = (tokenOverride?: string) => {
     const activePending = pendingHistories[0];
@@ -396,7 +415,6 @@ export default function SolicitacaoDetailPage() {
           <p className={styles.subtitleLarge}>{sol?.description || "SolicitaÃ§Ã£o de Compra"}</p>
           <div className={styles.metadataTags}>
             <span className={styles.infoTag}><Icon name="building-01" /> {companyName}</span>
-            <span className={styles.infoTag}><Icon name="marker-pin-01" /> Centro de Custo: {sol?.costCenterName || sol?.costCenterCode || "Geral"}</span>
             <span className={styles.infoTag}><Icon name="archive" /> Estoque: {sol?.corporateStockLocation || "Almoxarifado Principal"}</span>
             {Boolean((sol as any)?.priority || (sol as any)?.prioridade) && (
               <span className={styles.infoTag}>
@@ -470,7 +488,7 @@ export default function SolicitacaoDetailPage() {
           </div>
         )}
 
-        {!isCancelled && !isFinished && (
+        {!isCancelled && !isFinished && !isInQuote && (
           <div className={styles.headerActions}>
             <Button
               variant="danger"
@@ -540,13 +558,14 @@ export default function SolicitacaoDetailPage() {
                         <strong>AlÃ§ada {lvl.level}</strong>
                         <span>
                           {isLevelDone
-                            ? approvedHistory?.approverId && !isUuid(approvedHistory.approverId)
-                              ? approvedHistory.approverId
-                              : lvl.roleOrName
+                            ? (approvedHistory as any)?.approverName ||
+                              (approvedHistory?.approverId && !isUuid(approvedHistory.approverId)
+                                ? approvedHistory.approverId
+                                : lvl.roleOrName)
                             : isRejected && isLevelActive
-                            ? `Rejeitado por ${lvl.roleOrName}`
+                            ? `Rejeitado por ${(activePendingHistory as any)?.approverName || lvl.roleOrName}`
                             : isLevelActive
-                            ? `Aguardando ${lvl.roleOrName}`
+                            ? `Aguardando ${(activePendingHistory as any)?.approverName || lvl.roleOrName}`
                             : `Pendente (${lvl.roleOrName})`}
                         </span>
                         {isLevelActive && !isLevelDone && !isRejected ? (
@@ -646,30 +665,23 @@ export default function SolicitacaoDetailPage() {
                     <strong style={{ color: "#007d79", fontSize: 14 }}>#{sol.corporateCode}</strong>
                   </div>
 
-                  {(sol?.corporateColigada || sol?.corporateFilial) && (() => {
-                    const branch = findCompanyBranch(sol?.corporateFilial);
+                  {(sol?.corporateColigada || sol?.corporateFilial || sol?.companyCode) && (() => {
+                    const branch = findCompanyBranch(sol?.companyCode || sol?.corporateFilial);
                     return (
                       <div className={styles.infoItem}>
                         <label>Unidade ERP (Filial / Coligada)</label>
                         <span>
                           {branch ? (
                             <>
-                              <strong>{branch.name}</strong> ({branch.acronym}) â€” CÃ³d. <strong>{sol?.corporateFilial || branch.code}</strong>
+                              <strong>{branch.name}</strong> ({branch.acronym}) â€” CÃ³d. <strong>{branch.code}</strong>
                             </>
                           ) : (
-                            <>Coligada: <strong>{sol?.corporateColigada || "1"}</strong> | Filial: <strong>{sol?.corporateFilial || "1"}</strong></>
+                            <>Coligada: <strong>{sol?.corporateColigada || "1"}</strong> | Filial: <strong>{sol?.corporateFilial || sol?.companyCode || "1"}</strong></>
                           )}
                         </span>
                       </div>
                     );
                   })()}
-
-                  {(sol?.costCenterCode || sol?.costCenterName) && (
-                    <div className={styles.infoItem}>
-                      <label>Centro de Custo</label>
-                      <span>{sol.costCenterCode ? `[${sol.costCenterCode}] ` : ""}{sol.costCenterName || "â€”"}</span>
-                    </div>
-                  )}
 
                   <div className={styles.infoItem}>
                     <label>Local de Estoque</label>
@@ -716,7 +728,6 @@ export default function SolicitacaoDetailPage() {
                       <th>DescriÃ§Ã£o do Material / ServiÃ§o</th>
                       <th style={{ width: "120px", textAlign: "right" }}>Quantidade</th>
                       <th style={{ width: "80px", textAlign: "center" }}>Unidade</th>
-                      <th>Centro de Custo / Obra Destino</th>
                       <th style={{ width: "120px", textAlign: "center" }}>Necessidade</th>
                     </tr>
                   </thead>
@@ -745,11 +756,6 @@ export default function SolicitacaoDetailPage() {
                         <td style={{ textAlign: "center" }}>
                           <span style={{ fontSize: 12, background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: "#475569", fontWeight: 600 }}>
                             {item.unit}
-                          </span>
-                        </td>
-                        <td>
-                          <span style={{ fontSize: 12, color: "#334155" }}>
-                            {item.costCenterCode ? `[${item.costCenterCode}] ` : ""}{item.costCenterName || item.corporateWorkSite || sol?.costCenterName || "â€”"}
                           </span>
                         </td>
                         <td style={{ textAlign: "center", fontSize: 12, color: "#475569" }}>
