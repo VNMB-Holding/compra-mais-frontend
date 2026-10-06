@@ -8,7 +8,6 @@ import {
   ApprovalRuleConfig,
   ApproverType,
   ApproverOption,
-  CostCenterOption,
 } from "@/lib/api/admin";
 import styles from "./admin.module.css";
 
@@ -31,12 +30,10 @@ export default function AdminPage() {
   const [companies, setCompanies] = useState<CompanyBranchConfig[]>([]);
   const [rules, setRules] = useState<ApprovalRuleConfig[]>([]);
   const [approverOptions, setApproverOptions] = useState<ApproverOption[]>([]);
-  const [costCenters, setCostCenters] = useState<CostCenterOption[]>([]);
 
   const [companySearch, setCompanySearch] = useState("");
   const [selectedWorkflowCompany, setSelectedWorkflowCompany] = useState<string>("");
   const [activeFlowType, setActiveFlowType] = useState<"solicitacao" | "pedido">("solicitacao");
-  const [selectedCostCenterFilter, setSelectedCostCenterFilter] = useState<string>("TODOS");
 
   const [simulationAmount, setSimulationAmount] = useState<string>("25000");
 
@@ -86,16 +83,14 @@ export default function AdminPage() {
     setLoading(true);
     setApiError(null);
     try {
-      const [comps, rls, approvers, cCenters] = await Promise.all([
+      const [comps, rls, approvers] = await Promise.all([
         adminApi.getCompanies(),
         adminApi.getApprovalRules(),
         adminApi.getApprovers(),
-        adminApi.getCostCenters(),
       ]);
       setCompanies(comps);
       setRules(rls);
       setApproverOptions(approvers);
-      setCostCenters(cCenters);
       if (comps.length > 0 && !comps.some((c) => c.code === selectedWorkflowCompany)) {
         setSelectedWorkflowCompany(comps[0].code);
       }
@@ -116,15 +111,10 @@ export default function AdminPage() {
       .filter((r) => {
         const matchCompany = r.companyCode === selectedWorkflowCompany;
         const matchFlow = (r.flowType || "solicitacao") === activeFlowType;
-        const matchCostCenter =
-          selectedCostCenterFilter === "TODOS" ||
-          !r.department ||
-          r.department === "TODOS" ||
-          r.department === selectedCostCenterFilter;
-        return matchCompany && matchFlow && matchCostCenter;
+        return matchCompany && matchFlow;
       })
       .sort((a, b) => a.minAmount - b.minAmount || a.level - b.level || a.order - b.order);
-  }, [rules, selectedWorkflowCompany, activeFlowType, selectedCostCenterFilter]);
+  }, [rules, selectedWorkflowCompany, activeFlowType]);
 
   const valueRanges = useMemo(() => {
     const groups: Record<string, ValueRangeGroup> = {};
@@ -269,7 +259,7 @@ export default function AdminPage() {
         approverType: "user",
         approverIdentifier: defaultApprover ? defaultApprover.id : "",
         approverName: defaultApprover ? defaultApprover.name : "",
-        department: selectedCostCenterFilter !== "TODOS" ? selectedCostCenterFilter : undefined,
+        department: undefined,
         active: true,
       };
       setRules((prev) => [...prev, newRule]);
@@ -281,7 +271,7 @@ export default function AdminPage() {
         approverType: "user",
         approverIdentifier: defaultApprover ? defaultApprover.id : "",
         approverName: defaultApprover ? defaultApprover.name : "",
-        department: selectedCostCenterFilter !== "TODOS" ? selectedCostCenterFilter : "",
+        department: "",
         active: true,
       });
       setStepModalOpen(true);
@@ -333,7 +323,7 @@ export default function AdminPage() {
       approverType: "user",
       approverIdentifier: defaultApprover ? defaultApprover.id : "",
       approverName: defaultApprover ? defaultApprover.name : "",
-      department: selectedCostCenterFilter !== "TODOS" ? selectedCostCenterFilter : "",
+      department: "",
       active: true,
     });
     setStepModalOpen(true);
@@ -646,25 +636,6 @@ export default function AdminPage() {
                   </select>
                 </div>
 
-                <div className={styles.filterGroup}>
-                  <label htmlFor="costCenterSelectWorkflow" style={{ fontSize: "0.85rem", fontWeight: 700 }}>
-                    Centro de Custo / Área:
-                  </label>
-                  <select
-                    id="costCenterSelectWorkflow"
-                    className={styles.select}
-                    value={selectedCostCenterFilter}
-                    onChange={(e) => setSelectedCostCenterFilter(e.target.value)}
-                  >
-                    <option value="TODOS">Todos os Centros de Custo</option>
-                    {costCenters.map((cc) => (
-                      <option key={cc.code} value={cc.code}>
-                        {cc.code} - {cc.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div className={styles.flowTypeToggle}>
                   <button
                     type="button"
@@ -907,12 +878,6 @@ export default function AdminPage() {
                                       <span className={styles.stepIdTag}>
                                         {step.approverIdentifier}
                                       </span>
-                                      {step.department && (
-                                        <span className={styles.deptFilterBadge}>
-                                          <Icon name="tag" size={12} />
-                                          CC: {step.department}
-                                        </span>
-                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -1144,7 +1109,7 @@ export default function AdminPage() {
                   </tr>
                   <tr>
                     <td><code>gerente</code></td>
-                    <td>Gerentes de Unidade / Centro de Custo</td>
+                    <td>Gerentes de Unidade</td>
                     <td><Badge variant="success">Sim (Até R$ 10.000 / Nível 1)</Badge></td>
                     <td><Badge variant="success">Acesso Configuração</Badge></td>
                   </tr>
@@ -1318,22 +1283,6 @@ export default function AdminPage() {
                       placeholder="Ex: joao.silva@empresa.com ou ID"
                     />
                   </div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Centro de Custo Específico (Opcional)</label>
-                  <select
-                    className={styles.select}
-                    value={stepForm.department}
-                    onChange={(e) => setStepForm({ ...stepForm, department: e.target.value })}
-                  >
-                    <option value="">Todos os centros de custo da empresa</option>
-                    {costCenters.map((cc) => (
-                      <option key={cc.code} value={cc.code}>
-                        {cc.code} - {cc.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <label className={styles.checkboxLabel}>

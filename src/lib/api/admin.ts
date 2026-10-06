@@ -73,12 +73,27 @@ export const adminApi = {
   async getApprovers(): Promise<ApproverOption[]> {
     try {
       const remote = await apiClient.get<ApproverOption[]>("/api/admin/approvers");
-      if (remote && Array.isArray(remote)) {
+      if (remote && Array.isArray(remote) && remote.length > 0) {
         return remote;
       }
     } catch (err: any) {
       console.warn("Falha ao consultar /api/admin/approvers:", err?.message);
     }
+
+    try {
+      const idUsers = await apiClient.get<any[]>("/api/users", { auth: true });
+      if (idUsers && Array.isArray(idUsers) && idUsers.length > 0) {
+        return idUsers.map((u: any) => ({
+          id: u.id || u.email,
+          name: u.name || u.email,
+          email: u.email,
+          role: u.roles?.[0] || u.role,
+        }));
+      }
+    } catch (err: any) {
+      console.warn("Falha ao consultar /api/users do identity:", err?.message);
+    }
+
     return [];
   },
 

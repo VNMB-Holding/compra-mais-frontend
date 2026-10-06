@@ -21,7 +21,7 @@ const TEMPLATES: ReportTemplate[] = [
   {
     id: "rep-spend",
     title: "Spend Analítico por Empresa & Categoria",
-    description: "Visão consolidada de valores pagos, volume por centro de custo, fornecedores e filiais.",
+    description: "Visão consolidada de valores pagos, fornecedores e filiais por categoria.",
     icon: "bar-chart-square-02",
     category: "Financeiro",
     type: "spend",
@@ -195,11 +195,10 @@ export default function RelatoriosPage() {
           filename = "Relatorio_Spend_Analitico";
           const filteredRequests = requests.filter((r) => matchesDate(r.createdAt));
           rows = [
-            ["ID Solicitação", "Descrição", "Centro de Custo", "Empresa", "Valor Estimado (R$)", "Status", "Data"],
+            ["ID Solicitação", "Descrição", "Empresa", "Valor Estimado (R$)", "Status", "Data"],
             ...filteredRequests.map((r) => [
               r.code || r.id,
               r.description || "—",
-              r.costCenterName || r.costCenterCode || "Geral",
               r.companyCode || "Matriz",
               String(r.estimatedBudget || 0),
               r.status || "—",
