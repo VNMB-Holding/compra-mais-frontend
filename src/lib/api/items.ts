@@ -73,7 +73,7 @@ export const itemsApi = {
       if (params?.supplierId && params.supplierId !== "Todos") searchParams.set("supplierId", params.supplierId);
 
       const qs = searchParams.toString();
-      const res = await apiClient.get<CatalogItem[]>(`/items${qs ? `?${qs}` : ""}`);
+      const res = await apiClient.get<CatalogItem[]>(`/api/items${qs ? `?${qs}` : ""}`);
       return res || [];
     } catch {
       return [];
@@ -83,7 +83,7 @@ export const itemsApi = {
   search: async (query: string): Promise<CatalogItem[]> => {
     try {
       if (!query || query.trim().length === 0) return [];
-      const res = await apiClient.get<CatalogItem[]>(`/items/search?q=${encodeURIComponent(query.trim())}`);
+      const res = await apiClient.get<CatalogItem[]>(`/api/items/search?q=${encodeURIComponent(query.trim())}`);
       return res || [];
     } catch {
       return [];
@@ -91,12 +91,12 @@ export const itemsApi = {
   },
 
   getById: async (id: string): Promise<CatalogItem> => {
-    return apiClient.get<CatalogItem>(`/items/${id}`);
+    return apiClient.get<CatalogItem>(`/api/items/${id}`);
   },
 
   getKpis: async (): Promise<ItemKpis> => {
     try {
-      return await apiClient.get<ItemKpis>("/items/kpis");
+      return await apiClient.get<ItemKpis>("/api/items/kpis");
     } catch {
       return {
         totalItems: 0,
@@ -117,15 +117,15 @@ export const itemsApi = {
     lastUnitPrice?: number;
     notes?: string;
   }): Promise<CatalogItem> => {
-    return apiClient.post<CatalogItem>("/items", data);
+    return apiClient.post<CatalogItem>("/api/items", data);
   },
 
   update: async (id: string, data: Partial<CatalogItem>): Promise<CatalogItem> => {
-    return apiClient.patch<CatalogItem>(`/items/${id}`, data);
+    return apiClient.patch<CatalogItem>(`/api/items/${id}`, data);
   },
 
   remove: async (id: string): Promise<void> => {
-    return apiClient.delete(`/items/${id}`);
+    return apiClient.delete(`/api/items/${id}`);
   },
 
   auditPurchase: async (data: {
@@ -143,6 +143,6 @@ export const itemsApi = {
     companyCode?: string;
     notes?: string;
   }): Promise<{ item: CatalogItem; audit: ItemPurchaseAudit }> => {
-    return apiClient.post<{ item: CatalogItem; audit: ItemPurchaseAudit }>("/items/audit", data);
+    return apiClient.post<{ item: CatalogItem; audit: ItemPurchaseAudit }>("/api/items/audit", data);
   },
 };
