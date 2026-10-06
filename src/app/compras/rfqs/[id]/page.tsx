@@ -1037,7 +1037,12 @@ export default function RfqDetailPage() {
               <strong>
                 {formatCurrency(getProposalTotal(vencedor))}
               </strong>
-              . Esta ação é definitiva.
+              . Esta ação é definitiva e consolidará o processo de compras.
+              {recebidas.length < 3 && (
+                <div style={{ marginTop: 10, padding: "8px 12px", background: "#fef3c7", borderRadius: 6, fontSize: 12, color: "#92400e" }}>
+                  <strong>Aviso de Governança:</strong> Processo concluído com {recebidas.length} proposta(s) recebida(s). Certifique-se de que a dispensa ou exclusividade de fornecedor está documentada.
+                </div>
+              )}
             </>
           ) : (
             "Confirmar emissão do Pedido de Compra."
@@ -1055,10 +1060,24 @@ export default function RfqDetailPage() {
               setGeneratedPo({ id: createdId, code: createdCode });
             }
             setRfq((prev) => prev ? { ...prev, status: "Finished" } : null);
+
+            const originReqId = rfq?.purchaseRequest?.id || rfq?.requestId;
+            if (originReqId) {
+              try {
+                await purchaseRequestsApi.updateStatus(
+                  originReqId,
+                  "Finished",
+                  `Pedido de Compra ${createdCode} emitido a partir da RFQ ${rfqCode}. Demanda finalizada com sucesso.`
+                );
+              } catch (reqErr) {
+                console.warn("Falha ao finalizar solicitação de compra de origem:", reqErr);
+              }
+            }
+
             toast({
               variant: "success",
               title: "Pedido de Compra emitido com sucesso!",
-              message: `PO ${createdCode} gerado para ${vencedor?.supplierName ?? "fornecedor"}.`,
+              message: `PO ${createdCode} gerado para ${vencedor?.supplierName ?? "fornecedor"}. Demanda de compra finalizada.`,
               duration: 6000,
             });
             setDialog(null);

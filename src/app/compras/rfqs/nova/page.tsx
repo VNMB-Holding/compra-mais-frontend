@@ -161,7 +161,7 @@ export default function NewRfqPage() {
           id: r.id,
           codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
           titulo: r.description || r.notes || "Demanda de Compra",
-          area: r.costCenterName || r.costCenterCode || "Operações",
+          area: (r as any).department || "Operações",
           solicitante: r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
           prioridade: formatPriority((r as any).priority || (r as any).prioridade),
           valorEstimado: Number(r.estimatedBudget) || 0,
@@ -323,7 +323,7 @@ export default function NewRfqPage() {
             id: r.id,
             codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
             titulo: r.description || r.notes || "Demanda de Compra",
-            area: r.costCenterName || r.costCenterCode || "Operações",
+            area: (r as any).department || "Operações",
             solicitante: r.corporateRequester || r.requesterName || "Solicitante",
             prioridade: formatPriority((r as any).priority || (r as any).prioridade),
             valorEstimado: Number(r.estimatedBudget) || 0,
@@ -376,7 +376,6 @@ export default function NewRfqPage() {
       setExpandedItemId(sol.itens[0].id);
     }
 
-    // Identifica se algum item da demanda possui fornecedor de base histórico
     (async () => {
       try {
         const catalogItems = await itemsApi.list();
@@ -401,7 +400,6 @@ export default function NewRfqPage() {
           });
         }
       } catch {
-        // silencioso
       }
     })();
   };

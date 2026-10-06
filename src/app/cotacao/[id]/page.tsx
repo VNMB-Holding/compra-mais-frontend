@@ -229,26 +229,6 @@ export default function CotacaoFornecedorPage() {
       return;
     }
 
-    if (!isRegisteredSupplier) {
-      if (!bankNumber.trim()) {
-        toast({
-          variant: "warning",
-          title: "Dados Bancários",
-          message: "Por favor, preencha a Agência e Conta Bancária da empresa.",
-        });
-        return;
-      }
-
-      if (!bankDocumentImage) {
-        toast({
-          variant: "warning",
-          title: "Anexo Obrigatório",
-          message: "É obrigatório anexar uma imagem com os dados bancários (comprovante ou cartão da conta).",
-        });
-        return;
-      }
-    }
-
     const unquotedItems = (rfq.items || []).filter((item) => !itemPrices[item.id] || itemPrices[item.id] <= 0);
     if (unquotedItems.length > 0) {
       setConfirmZeroPriceOpen(true);
@@ -682,13 +662,13 @@ export default function CotacaoFornecedorPage() {
                 <div className={styles.requiredNotice}>
                   <Icon name="info-circle" size={18} />
                   <span>
-                    <strong>Atenção:</strong> Como sua empresa é nova no sistema, estas informações e o <strong>comprovante da conta bancária</strong> serão utilizados pelo setor de suprimentos e financeiro para homologar os pagamentos caso sua proposta seja vencedora.
+                    <strong>Opcional na fase de cotação:</strong> Caso sua empresa seja declarada vencedora, estes dados serão solicitados para validação fiscal e emissão do Pedido de Compra.
                   </span>
                 </div>
 
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
-                    <label>Banco <span className={styles.required}>*</span></label>
+                    <label>Banco (opcional)</label>
                     <select
                       className={styles.inputField}
                       value={bankCode}
@@ -707,7 +687,7 @@ export default function CotacaoFornecedorPage() {
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>Agência e Conta Corrente com Dígito <span className={styles.required}>*</span></label>
+                    <label>Agência e Conta Corrente (opcional)</label>
                     <input
                       type="text"
                       placeholder="Ex: Ag: 1234-5 / CC: 98765-4"
