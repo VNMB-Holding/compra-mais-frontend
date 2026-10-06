@@ -178,7 +178,25 @@ export const rfqsApi = {
   }) =>
     apiClient.post<Rfq>("/api/rfqs", data),
 
-  createProposal: (rfqId: string, data: { supplierId: string; unitPrice: number; freightCost?: number; paymentTerms?: string; deliveryTime?: number; notes?: string }) =>
+  createProposal: (
+    rfqId: string,
+    data: {
+      supplierId: string;
+      unitPrice: number;
+      freightCost?: number;
+      freightType?: "CIF" | "FOB";
+      paymentTerms?: string;
+      deliveryTime?: number;
+      validityDays?: number;
+      warrantyMonths?: number;
+      brandModel?: string;
+      contactName?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      notes?: string;
+      items?: { requestItemId: string; unitPrice: number; notes?: string }[];
+    }
+  ) =>
     apiClient.post<{ id: string; rfqId: string; supplierId: string; status: string; isWinner: boolean }>(`/api/rfqs/${rfqId}/proposals`, data),
 
   selectWinner: (rfqId: string, proposalId: string) =>

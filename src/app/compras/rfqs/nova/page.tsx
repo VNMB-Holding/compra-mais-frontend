@@ -8,6 +8,7 @@ import { InviteSupplierModal } from "@/components/modals";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 import { rfqsApi } from "@/lib/api/rfqs";
+import { itemsApi } from "@/lib/api/items";
 import { formatUserDisplayName, formatCurrency } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
@@ -16,6 +17,7 @@ import { novaRfqTour } from "@/lib/tours";
 import styles from "./rfq-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatPriority } from "@/lib/constants/status";
+import { getCompanyFilterOptions, resolvePurchaseRequestBranch } from "@/lib/utils/tenant";
 
 interface Solicitacao {
   id: string;
@@ -29,6 +31,8 @@ interface Solicitacao {
   incoterm: string;
   condicaoPagamento: string;
   observacoes: string;
+  empresa?: string;
+  companyCode?: string;
 }
 
 interface ItemCotacao {
@@ -120,75 +124,98 @@ export default function NewRfqPage() {
     setIsInviteModalOpen(false);
   };
 
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
+  const companyOptions = useMemo(() => getCompanyFilterOptions(), []);
+
   const [requestsApi, setRequestsApi] = useState<Solicitacao[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  useEffect(() => {
-    async function loadApiData() {
-      try {
-        const [reqs, sups] = await Promise.all([
-          purchaseRequestsApi.list({ companyCode: user?.tenantId }),
-          suppliersApi.list({ tenantId: user?.tenantId }),
-        ]);
+  const loadApiData = React.useCallback(async () => {
+    setLoadingData(true);
+    try {
+      const [reqs, sups] = await Promise.all([
+        purchaseRequestsApi.list(),
+        suppliersApi.list(),
+      ]);
 
-        if (reqs && reqs.length > 0) {
-          const eligibleReqs = reqs.filter(
-            (r) =>
-              r.status === "Approved" &&
-              (!user?.tenantId || r.companyCode === user.tenantId || r.tenantId === user.tenantId) &&
-              (!r.rfqs || !r.rfqs.some((q: any) => q.status !== "Cancelled"))
-          );
+      if (reqs && reqs.length > 0) {
+        const isApprovedStatus = (s?: string) => {
+          if (!s) return false;
+          const lower = String(s).toLowerCase().trim();
+          return lower === "approved" || lower === "aprovada" || lower === "aprovado";
+        };
 
-          const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => ({
-            id: r.id,
-            codigo: r.code || r.id,
-            titulo: r.description,
-            area: r.costCenterName || r.costCenterCode || "Operações",
-            solicitante: r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
-            prioridade: formatPriority((r as any).priority || (r as any).prioridade),
-            valorEstimado: Number(r.estimatedBudget) || 0,
-            itens: (r.items || []).map((it, idx) => ({
-              id: idx + 1,
-              descricao: it.description,
-              qtd: Number(it.quantity) || 1,
-              unidade: it.unit || "UN",
-            })),
-            incoterm: "CIF",
-            condicaoPagamento: "30 dias DDL",
-            observacoes: r.notes || "",
-          }));
-
-          setRequestsApi(mappedReqs);
-        } else {
-          setRequestsApi([]);
-        }
-
-        if (sups && sups.length > 0) {
-          const mappedSups: FornecedorConvidado[] = sups.map((s) => ({
-            id: s.id,
-            nome: s.corporateName || s.tradeName || "Fornecedor",
-            cnpj: s.cnpj,
-            segmento: s.segment || "Geral",
-            isHomologado: s.status === "Active" || s.isActive === true,
-            selecionado: false,
-          }));
-          setFornecedores(mappedSups);
-        } else {
-          setFornecedores([]);
-        }
-      } catch (e) {
-        logError("rfqs/nova/loadApiData", e);
-        toast({
-          variant: "error",
-          title: "Erro ao Carregar Dados",
-          message: getErrorMessage(e) || "Não foi possível carregar as solicitações e fornecedores para abertura de cotação.",
+        const eligibleReqs = reqs.filter((r) => {
+          if (!isApprovedStatus(r.status)) return false;
+          if (r.rfqs && r.rfqs.length > 0) {
+            const hasActive = r.rfqs.some((q: any) => {
+              const qs = (q.status || "").toLowerCase().trim();
+              return qs !== "cancelled" && qs !== "cancelada" && qs !== "draft" && qs !== "rascunho";
+            });
+            if (hasActive) return false;
+          }
+          return true;
         });
-      } finally {
-        setLoadingData(false);
+
+        const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => ({
+          id: r.id,
+          codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
+          titulo: r.description || r.notes || "Demanda de Compra",
+          area: r.costCenterName || r.costCenterCode || "Operações",
+          solicitante: r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
+          prioridade: formatPriority((r as any).priority || (r as any).prioridade),
+          valorEstimado: Number(r.estimatedBudget) || 0,
+          itens: (r.items || []).map((it, idx) => ({
+            id: idx + 1,
+            descricao: it.description,
+            qtd: Number(it.quantity) || 1,
+            unidade: it.unit || "UN",
+          })),
+          incoterm: "CIF",
+          condicaoPagamento: "30 dias DDL",
+          observacoes: r.notes || "",
+          empresa: resolvePurchaseRequestBranch(r, user),
+          companyCode: r.companyCode,
+        }));
+
+        setRequestsApi(mappedReqs);
+      } else {
+        setRequestsApi([]);
       }
+
+      if (sups && sups.length > 0) {
+        const mappedSups: FornecedorConvidado[] = sups.map((s) => ({
+          id: s.id,
+          nome: s.corporateName || s.tradeName || "Fornecedor",
+          cnpj: s.cnpj,
+          segmento: s.segment || "Geral",
+          isHomologado: s.status === "Active" || s.isActive === true,
+          selecionado: false,
+        }));
+        setFornecedores(mappedSups);
+      } else {
+        setFornecedores([]);
+      }
+    } catch (e) {
+      logError("rfqs/nova/loadApiData", e);
+      toast({
+        variant: "error",
+        title: "Erro ao Carregar Dados",
+        message: getErrorMessage(e) || "Não foi possível carregar as solicitações e fornecedores para abertura de cotação.",
+      });
+    } finally {
+      setLoadingData(false);
     }
+  }, [user, toast]);
+
+  useEffect(() => {
     loadApiData();
-  }, []);
+  }, [loadApiData]);
+
+  const displayRequests = useMemo(() => {
+    if (selectedCompanyId === "TODAS") return requestsApi;
+    return requestsApi.filter((s) => s.companyCode === selectedCompanyId);
+  }, [requestsApi, selectedCompanyId]);
 
   const { startTour, isTourCompleted } = useTour();
 
@@ -294,8 +321,8 @@ export default function NewRfqPage() {
         if (r) {
           const mapped: Solicitacao = {
             id: r.id,
-            codigo: r.code || r.id,
-            titulo: r.description,
+            codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
+            titulo: r.description || r.notes || "Demanda de Compra",
             area: r.costCenterName || r.costCenterCode || "Operações",
             solicitante: r.corporateRequester || r.requesterName || "Solicitante",
             prioridade: formatPriority((r as any).priority || (r as any).prioridade),
@@ -309,10 +336,16 @@ export default function NewRfqPage() {
             incoterm: "CIF",
             condicaoPagamento: "30 dias DDL",
             observacoes: r.notes || "",
+            empresa: resolvePurchaseRequestBranch(r, user),
+            companyCode: r.companyCode,
           };
+          setRequestsApi((prev) => (prev.some((x) => x.id === mapped.id) ? prev : [mapped, ...prev]));
           setSolicitacaoConfirmada(mapped);
           setSolicitacaoSelecionada(mapped.id);
           setTituloRfq(`RFQ — ${mapped.titulo}`);
+          setIncoterm(mapped.incoterm);
+          setCondicaoPagamento(mapped.condicaoPagamento);
+          setObservacoes(mapped.observacoes);
           setItens(mapped.itens.map((i) => ({ ...i })));
           if (mapped.itens.length > 0) {
             setExpandedItemId(mapped.itens[0].id);
@@ -327,7 +360,7 @@ export default function NewRfqPage() {
       });
     }
     setCurrentStep(1);
-  }, [paramSol, requestsApi, loadingData]);
+  }, [paramSol, requestsApi, loadingData, user, toast]);
 
   const handleConfirmarSolicitacao = () => {
     const sol = requestsApi.find((s) => s.id === solicitacaoSelecionada);
@@ -342,6 +375,35 @@ export default function NewRfqPage() {
     if (sol.itens.length > 0) {
       setExpandedItemId(sol.itens[0].id);
     }
+
+    // Identifica se algum item da demanda possui fornecedor de base histórico
+    (async () => {
+      try {
+        const catalogItems = await itemsApi.list();
+        const baseSupplierIds = new Set<string>();
+        sol.itens.forEach((solItem) => {
+          const match = catalogItems.find(
+            (ci) => ci.description.trim().toLowerCase() === solItem.descricao.trim().toLowerCase()
+          );
+          if (match?.lastSupplierId) {
+            baseSupplierIds.add(match.lastSupplierId);
+          }
+        });
+
+        if (baseSupplierIds.size > 0) {
+          setFornecedores((cur) =>
+            cur.map((f) => (baseSupplierIds.has(f.id) ? { ...f, selecionado: true } : f))
+          );
+          toast({
+            variant: "info",
+            title: "Fornecedor de Base Identificado!",
+            message: "Fornecedor prévio encontrado para itens desta demanda e pré-selecionado na cotação.",
+          });
+        }
+      } catch {
+        // silencioso
+      }
+    })();
   };
 
   const handleDesvincular = () => {
@@ -481,29 +543,56 @@ export default function NewRfqPage() {
             ) : (
               <>
                 <div className={styles.gateBody}>
-                  <div className={styles.gateSelectGroup} data-tour="rfq-gate-select">
-                    <label className={styles.gateLabel}>
-                      Solicitação de Compra Aprovada <span className="required-asterisk">*</span>
-                    </label>
-                    <Select
-                      options={requestsApi.map((s) => ({
-                        label: s.codigo ? `${s.codigo} — ${s.titulo}` : s.titulo,
-                        value: s.id,
-                      }))}
-                      value={solicitacaoSelecionada}
-                      onChange={setSolicitacaoSelecionada}
-                      placeholder="Selecione uma solicitação aprovada..."
-                    />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, alignItems: "flex-end" }}>
+                    <div className={styles.gateSelectGroup}>
+                      <label className={styles.gateLabel}>Filtrar por Empresa / Unidade</label>
+                      <Select
+                        options={companyOptions}
+                        value={selectedCompanyId}
+                        onChange={(v) => {
+                          setSelectedCompanyId(v);
+                          if (solicitacaoSelecionada) {
+                            const stillPresent = requestsApi.find((x) => x.id === solicitacaoSelecionada && (v === "TODAS" || x.companyCode === v));
+                            if (!stillPresent) setSolicitacaoSelecionada("");
+                          }
+                        }}
+                        icon="building-07"
+                      />
+                    </div>
+                    <div className={styles.gateSelectGroup} data-tour="rfq-gate-select">
+                      <label className={styles.gateLabel}>
+                        Solicitação de Compra Aprovada <span className="required-asterisk">*</span>
+                      </label>
+                      <Select
+                        options={displayRequests.map((s) => ({
+                          label: `${s.codigo ? `${s.codigo} — ` : ""}${s.titulo}${s.empresa ? ` (${s.empresa})` : ""}`,
+                          value: s.id,
+                        }))}
+                        value={solicitacaoSelecionada}
+                        onChange={setSolicitacaoSelecionada}
+                        placeholder={displayRequests.length === 0 ? "Nenhuma solicitação encontrada..." : "Selecione uma solicitação aprovada..."}
+                        disabled={displayRequests.length === 0}
+                      />
+                    </div>
                   </div>
 
-                  {!solicitacaoPreview && requestsApi.length > 0 && (
+                  {displayRequests.length === 0 && selectedCompanyId !== "TODAS" && (
+                    <div style={{ padding: "14px 18px", background: "#f8fafc", borderRadius: 8, border: "1px dashed #cbd5e1", color: "#64748b", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                      <span>Nenhuma demanda aprovada encontrada para esta unidade.</span>
+                      <Button variant="secondary" onClick={() => setSelectedCompanyId("TODAS")}>
+                        Ver Todas as Empresas ({requestsApi.length})
+                      </Button>
+                    </div>
+                  )}
+
+                  {!solicitacaoPreview && displayRequests.length > 0 && (
                     <>
                       <div className={styles.gateCardsDivider}>
                         <span>Ou selecione diretamente na fila de demandas</span>
                       </div>
 
                       <div className={styles.quickRequestsGrid}>
-                        {requestsApi.slice(0, 4).map((s, idx) => (
+                        {displayRequests.slice(0, 4).map((s, idx) => (
                           <div
                             key={s.id}
                             className={`${styles.quickRequestCard} ${solicitacaoSelecionada === s.id ? styles.quickRequestCardActive : ""}`}
@@ -522,7 +611,7 @@ export default function NewRfqPage() {
                             </div>
                             <p className={styles.quickCardTitle}>{s.titulo}</p>
                             <div className={styles.quickCardMeta}>
-                              <span>{s.area || "Geral"} • {s.itens.length} {s.itens.length === 1 ? "item" : "itens"}</span>
+                              <span>{s.empresa || s.area || "Geral"} • {s.itens.length} {s.itens.length === 1 ? "item" : "itens"}</span>
                               <span className={styles.quickCardValue}>{formatCurrency(s.valorEstimado)}</span>
                             </div>
                           </div>
@@ -535,7 +624,14 @@ export default function NewRfqPage() {
                     <div className={styles.gateSelectedCard}>
                       <div className={styles.gateSelectedHeader}>
                         <div className={styles.gateSelectedDemandInfo}>
-                          <span className={styles.gateSelectedLabel}>Demanda selecionada</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                            <span className={styles.gateSelectedLabel}>Demanda selecionada</span>
+                            {solicitacaoPreview.empresa && (
+                              <Badge variant="gray" icon="building-07">
+                                {solicitacaoPreview.empresa}
+                              </Badge>
+                            )}
+                          </div>
                           <strong className={styles.gateSelectedTitle}>{solicitacaoPreview.titulo}</strong>
                         </div>
                         <Badge
@@ -546,6 +642,13 @@ export default function NewRfqPage() {
                       </div>
 
                       <div className={styles.gateSelectedGrid}>
+                        <div className={styles.gateSelectedCol}>
+                          <span className={styles.gateSelectedColLabel}>Empresa / Unidade</span>
+                          <span className={styles.gateSelectedColValue} title={solicitacaoPreview.empresa || "Matriz"}>
+                            {solicitacaoPreview.empresa || "VB AGRO LTDA"}
+                          </span>
+                        </div>
+
                         <div className={styles.gateSelectedCol}>
                           <span className={styles.gateSelectedColLabel}>Área Requisitante</span>
                           <span className={styles.gateSelectedColValue} title={solicitacaoPreview.area || "Geral"}>
@@ -626,6 +729,14 @@ export default function NewRfqPage() {
             <strong className={styles.linkedSolCode}>
               {solicitacaoConfirmada.codigo || solicitacaoConfirmada.id}
             </strong>
+            {solicitacaoConfirmada.empresa && (
+              <>
+                <span className={styles.linkedSolDivider}>•</span>
+                <span style={{ fontWeight: 600, color: "#007d79" }}>
+                  {solicitacaoConfirmada.empresa}
+                </span>
+              </>
+            )}
             {solicitacaoConfirmada.titulo && (
               <>
                 <span className={styles.linkedSolDivider}>•</span>

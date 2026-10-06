@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton, EmptyState, Stepper } from "@/components/ui";
 
@@ -10,7 +10,7 @@ import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { purchaseOrdersApi } from "@/lib/api/purchase-orders";
 import { useAuth } from "@/hooks/useAuth";
-import { getTenantDisplayName } from "@/lib/utils/tenant";
+import { getTenantDisplayName, formatCorporateBranch, resolvePurchaseRequestBranch } from "@/lib/utils/tenant";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 
@@ -24,9 +24,17 @@ interface LocalProposal {
   status: "awaiting" | "received" | "declined";
   unitPrice?: number;
   freightCost?: number;
+  freightType?: "CIF" | "FOB";
   deliveryTime?: number;
+  validityDays?: number;
   paymentTerms?: string;
+  warrantyMonths?: number;
+  brandModel?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
   notes?: string;
+  itemPrices?: Record<string, number>;
   totalCalculated?: number;
   isWinner?: boolean;
 }
@@ -86,6 +94,15 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
         ? "awaiting"
         : "received";
 
+      const initialItemPrices: Record<string, number> = {};
+      if (p.items && p.items.length > 0) {
+        for (const it of p.items) {
+          const reqId = it.requestItemId || it.id;
+          if (reqId) initialItemPrices[reqId] = Number(it.unitPrice) || 0;
+        }
+      }
+
+      const pAny = p as any;
       mapBySupplier.set(p.supplierId, {
         supplierId: p.supplierId,
         proposalId: p.id,
@@ -94,8 +111,17 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
         status,
         unitPrice: Number(unitPrice),
         freightCost: Number(freight),
-        deliveryTime: p.deliveryTime ?? 0,
-        paymentTerms: p.paymentTerms || "Não informada",
+        freightType: (pAny.freightType as "CIF" | "FOB") || (freight > 0 ? "FOB" : "CIF"),
+        deliveryTime: p.deliveryTime ?? 5,
+        validityDays: pAny.validityDays ?? 15,
+        paymentTerms: p.paymentTerms || "30 dias DDL",
+        warrantyMonths: pAny.warrantyMonths ?? 12,
+        brandModel: pAny.brandModel || pAny.brand || "",
+        contactName: pAny.contactName || "",
+        contactEmail: pAny.contactEmail || "",
+        contactPhone: pAny.contactPhone || "",
+        notes: pAny.notes || "",
+        itemPrices: initialItemPrices,
         totalCalculated,
         isWinner: !!p.isWinner,
       });
@@ -116,6 +142,7 @@ function PropostaCard({
   proposta,
   isWinner,
   totalQtd,
+  rfqItems,
   rfqCode,
   rfqTitle,
   onSalvar,
@@ -123,6 +150,7 @@ function PropostaCard({
   proposta: LocalProposal;
   isWinner: boolean;
   totalQtd: number;
+  rfqItems?: { id: string; description: string; quantity: number; unit: string }[];
   rfqCode: string;
   rfqTitle: string;
   onSalvar: (id: string, dados: Partial<LocalProposal>) => void;
@@ -132,21 +160,70 @@ function PropostaCard({
   const [draft, setDraft] = useState({
     unitPrice: proposta.unitPrice ?? 0,
     freightCost: proposta.freightCost ?? 0,
-    deliveryTime: proposta.deliveryTime ?? 0,
-    paymentTerms: proposta.paymentTerms || "",
+    freightType: (proposta.freightType || ((proposta.freightCost ?? 0) > 0 ? "FOB" : "CIF")) as "CIF" | "FOB",
+    deliveryTime: proposta.deliveryTime ?? 5,
+    validityDays: proposta.validityDays ?? 15,
+    paymentTerms: proposta.paymentTerms || "30 dias DDL",
+    warrantyMonths: proposta.warrantyMonths ?? 12,
+    brandModel: proposta.brandModel || "",
+    contactName: proposta.contactName || "",
+    contactEmail: proposta.contactEmail || "",
+    contactPhone: proposta.contactPhone || "",
+    notes: proposta.notes || "",
+    itemPrices: (proposta.itemPrices || {}) as Record<string, number>,
   });
 
   useEffect(() => {
     setDraft({
       unitPrice: proposta.unitPrice ?? 0,
       freightCost: proposta.freightCost ?? 0,
-      deliveryTime: proposta.deliveryTime ?? 0,
-      paymentTerms: proposta.paymentTerms || "",
+      freightType: (proposta.freightType || ((proposta.freightCost ?? 0) > 0 ? "FOB" : "CIF")) as "CIF" | "FOB",
+      deliveryTime: proposta.deliveryTime ?? 5,
+      validityDays: proposta.validityDays ?? 15,
+      paymentTerms: proposta.paymentTerms || "30 dias DDL",
+      warrantyMonths: proposta.warrantyMonths ?? 12,
+      brandModel: proposta.brandModel || "",
+      contactName: proposta.contactName || "",
+      contactEmail: proposta.contactEmail || "",
+      contactPhone: proposta.contactPhone || "",
+      notes: proposta.notes || "",
+      itemPrices: (proposta.itemPrices || {}) as Record<string, number>,
     });
-  }, [proposta.unitPrice, proposta.freightCost, proposta.deliveryTime, proposta.paymentTerms]);
+  }, [
+    proposta.unitPrice,
+    proposta.freightCost,
+    proposta.freightType,
+    proposta.deliveryTime,
+    proposta.validityDays,
+    proposta.paymentTerms,
+    proposta.warrantyMonths,
+    proposta.brandModel,
+    proposta.contactName,
+    proposta.contactEmail,
+    proposta.contactPhone,
+    proposta.notes,
+    proposta.itemPrices,
+  ]);
+
+  const hasSpecificItems = Boolean(rfqItems && rfqItems.length > 0);
+
+  const subtotalItens = hasSpecificItems
+    ? (rfqItems || []).reduce((acc, it) => {
+        const p = draft.itemPrices[it.id] !== undefined ? draft.itemPrices[it.id] : (draft.unitPrice || 0);
+        return acc + p * (it.quantity || 1);
+      }, 0)
+    : (draft.unitPrice || 0) * (totalQtd || 1);
+
+  const effectiveFreight = draft.freightType === "CIF" ? 0 : Number(draft.freightCost || 0);
+  const totalEqualizado = subtotalItens + effectiveFreight;
 
   const handleSalvar = () => {
-    onSalvar(proposta.supplierId, { ...draft, status: "received" });
+    onSalvar(proposta.supplierId, {
+      ...draft,
+      freightCost: effectiveFreight,
+      totalCalculated: totalEqualizado,
+      status: "received",
+    });
     setAberto(false);
   };
 
@@ -171,9 +248,6 @@ function PropostaCard({
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
-
-  const subtotalItens = (draft.unitPrice || 0) * (totalQtd || 1);
-  const totalEqualizado = subtotalItens + (draft.freightCost || 0);
 
   return (
     <div
@@ -209,7 +283,7 @@ function PropostaCard({
                 {formatCurrency(proposta.unitPrice!)} / un
               </span>
               <span className={styles.propostaPrazo}>
-                {proposta.deliveryTime} dia(s) · {proposta.paymentTerms}
+                {proposta.deliveryTime} dia(s) · {proposta.paymentTerms} · Frete {proposta.freightType || (proposta.freightCost ? "FOB" : "CIF")}
               </span>
             </div>
           )}
@@ -250,59 +324,295 @@ function PropostaCard({
       {aberto && (
         <div className={styles.propostaForm}>
           <div className={styles.propostaFormDivider} />
-          <div className={styles.propostaFormGrid}>
-            <div className={styles.propostaField}>
-              <label>Preço unitário líquido (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                className={styles.propostaInput}
-                value={draft.unitPrice}
-                onChange={(e) => setDraft((d) => ({ ...d, unitPrice: Number(e.target.value) }))}
-              />
+
+          {hasSpecificItems ? (
+            <div className={styles.propostaFormSection}>
+              <div className={styles.propostaSectionTitle}>
+                <Icon name="package" size={13} /> Itens da Cotação & Preços Ofertados
+              </div>
+              <div className={styles.propostaItemsTableWrapper}>
+                <table className={styles.propostaItemsTable}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: "left" }}>Item / Descrição</th>
+                      <th style={{ width: "90px", textAlign: "right" }}>Qtd / Un</th>
+                      <th style={{ width: "150px", textAlign: "right" }}>Preço Unit. (R$) *</th>
+                      <th style={{ width: "130px", textAlign: "right" }}>Total Item</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rfqItems!.map((item, idx) => {
+                      const price =
+                        draft.itemPrices[item.id] !== undefined
+                          ? draft.itemPrices[item.id]
+                          : draft.unitPrice || 0;
+                      const itemTotal = price * (item.quantity || 1);
+                      return (
+                        <tr key={item.id || idx}>
+                          <td>
+                            <strong>{item.description}</strong>
+                          </td>
+                          <td style={{ textAlign: "right", color: "#64748b" }}>
+                            {item.quantity} {item.unit || "UN"}
+                          </td>
+                          <td style={{ textAlign: "right" }}>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              className={styles.propostaInput}
+                              style={{ textAlign: "right", width: "100%", boxSizing: "border-box" }}
+                              value={price || ""}
+                              placeholder="0,00"
+                              onChange={(e) => {
+                                const val = Number(e.target.value) || 0;
+                                const newPrices = { ...draft.itemPrices, [item.id]: val };
+                                const sum = rfqItems!.reduce((acc, it) => {
+                                  const p = newPrices[it.id] !== undefined ? newPrices[it.id] : 0;
+                                  return acc + p * (it.quantity || 1);
+                                }, 0);
+                                const avg = totalQtd > 0 ? sum / totalQtd : val;
+                                setDraft((d) => ({
+                                  ...d,
+                                  itemPrices: newPrices,
+                                  unitPrice: avg,
+                                }));
+                              }}
+                            />
+                          </td>
+                          <td style={{ textAlign: "right", fontWeight: 600, color: "#0f172a" }}>
+                            {formatCurrency(itemTotal)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.propostaFormSection}>
+              <div className={styles.propostaSectionTitle}>
+                <Icon name="tag" size={13} /> Valor da Proposta
+              </div>
+              <div className={styles.propostaFormGrid}>
+                <div className={styles.propostaField}>
+                  <label>Preço Unitário Líquido (R$) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className={styles.propostaInput}
+                    value={draft.unitPrice || ""}
+                    placeholder="0,00"
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, unitPrice: Number(e.target.value) || 0 }))
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.propostaFormSection}>
+            <div className={styles.propostaSectionTitle}>
+              <Icon name="truck-01" size={13} /> Frete, Logística & Prazos
+            </div>
+            <div className={styles.propostaFormGrid}>
+              <div className={styles.propostaField}>
+                <label>Tipo de Frete (Incoterm)</label>
+                <select
+                  className={styles.propostaSelect}
+                  value={draft.freightType}
+                  onChange={(e) => {
+                    const type = e.target.value as "CIF" | "FOB";
+                    setDraft((d) => ({
+                      ...d,
+                      freightType: type,
+                      freightCost: type === "CIF" ? 0 : d.freightCost,
+                    }));
+                  }}
+                >
+                  <option value="CIF">CIF (Incluso pelo fornecedor)</option>
+                  <option value="FOB">FOB (A pagar pelo comprador)</option>
+                </select>
+              </div>
+
+              <div className={styles.propostaField}>
+                <label>Custo de Frete Total (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  disabled={draft.freightType === "CIF"}
+                  className={styles.propostaInput}
+                  placeholder={draft.freightType === "CIF" ? "Incluso no preço" : "0,00"}
+                  value={draft.freightType === "CIF" ? "" : draft.freightCost || ""}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, freightCost: Number(e.target.value) || 0 }))
+                  }
+                />
+              </div>
+
+              <div className={styles.propostaField}>
+                <label>Prazo de Entrega (dias úteis)</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={styles.propostaInput}
+                  value={draft.deliveryTime || ""}
+                  placeholder="Ex: 5"
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, deliveryTime: Number(e.target.value) || 0 }))
+                  }
+                />
+              </div>
+
+              <div className={styles.propostaField}>
+                <label>Validade da Proposta (dias)</label>
+                <input
+                  type="number"
+                  min="1"
+                  className={styles.propostaInput}
+                  value={draft.validityDays || ""}
+                  placeholder="Ex: 15"
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, validityDays: Number(e.target.value) || 0 }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.propostaFormSection}>
+            <div className={styles.propostaSectionTitle}>
+              <Icon name="bank-note-01" size={13} /> Condições Comerciais & Garantia
+            </div>
+            <div className={styles.propostaFormGrid}>
+              <div className={styles.propostaField}>
+                <label>Condição de Pagamento</label>
+                <input
+                  className={styles.propostaInput}
+                  list={`paymentTerms-${proposta.supplierId}`}
+                  value={draft.paymentTerms}
+                  placeholder="Ex: 30 dias DDL, À vista..."
+                  onChange={(e) => setDraft((d) => ({ ...d, paymentTerms: e.target.value }))}
+                />
+                <datalist id={`paymentTerms-${proposta.supplierId}`}>
+                  <option value="30 dias DDL" />
+                  <option value="28 dias DDL" />
+                  <option value="14 dias DDL" />
+                  <option value="À vista / PIX" />
+                  <option value="28/56 dias DDL" />
+                  <option value="45 dias DDL" />
+                  <option value="60 dias DDL" />
+                </datalist>
+              </div>
+
+              <div className={styles.propostaField}>
+                <label>Garantia Ofertada (meses)</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={styles.propostaInput}
+                  value={draft.warrantyMonths || ""}
+                  placeholder="Ex: 12"
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, warrantyMonths: Number(e.target.value) || 0 }))
+                  }
+                />
+              </div>
+
+              <div className={styles.propostaField} style={{ gridColumn: "span 2" }}>
+                <label>Marca / Fabricante / Modelo Cotado</label>
+                <input
+                  className={styles.propostaInput}
+                  value={draft.brandModel}
+                  placeholder="Ex: Bosch / SKF / Modelo Industrial..."
+                  onChange={(e) => setDraft((d) => ({ ...d, brandModel: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.propostaFormSection}>
+            <div className={styles.propostaSectionTitle}>
+              <Icon name="users-01" size={13} /> Dados do Vendedor / Representante Comercial
+            </div>
+            <div className={styles.propostaFormGrid} style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+              <div className={styles.propostaField}>
+                <label>Nome do Vendedor / Contato</label>
+                <input
+                  className={styles.propostaInput}
+                  value={draft.contactName}
+                  placeholder="Ex: João da Silva"
+                  onChange={(e) => setDraft((d) => ({ ...d, contactName: e.target.value }))}
+                />
+              </div>
+              <div className={styles.propostaField}>
+                <label>Telefone / WhatsApp Comercial</label>
+                <input
+                  className={styles.propostaInput}
+                  value={draft.contactPhone}
+                  placeholder="Ex: (11) 98765-4321"
+                  onChange={(e) => setDraft((d) => ({ ...d, contactPhone: e.target.value }))}
+                />
+              </div>
+              <div className={styles.propostaField}>
+                <label>E-mail Comercial</label>
+                <input
+                  type="email"
+                  className={styles.propostaInput}
+                  value={draft.contactEmail}
+                  placeholder="Ex: comercial@fornecedor.com"
+                  onChange={(e) => setDraft((d) => ({ ...d, contactEmail: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.propostaFormSection}>
+            <div className={styles.propostaSectionTitle}>
+              <Icon name="file-01" size={13} /> Observações Comerciais & Justificativa
             </div>
             <div className={styles.propostaField}>
-              <label>Custo de frete total / entrega (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                className={styles.propostaInput}
-                value={draft.freightCost}
-                onChange={(e) => setDraft((d) => ({ ...d, freightCost: Number(e.target.value) }))}
-              />
-            </div>
-            <div className={styles.propostaField}>
-              <label>Prazo de entrega (dias)</label>
-              <input
-                type="number"
-                className={styles.propostaInput}
-                value={draft.deliveryTime}
-                onChange={(e) => setDraft((d) => ({ ...d, deliveryTime: Number(e.target.value) }))}
-              />
-            </div>
-            <div className={styles.propostaField}>
-              <label>Condição de pagamento</label>
-              <input
-                className={styles.propostaInput}
-                value={draft.paymentTerms}
-                onChange={(e) => setDraft((d) => ({ ...d, paymentTerms: e.target.value }))}
+              <textarea
+                className={styles.propostaTextarea}
+                rows={2}
+                value={draft.notes}
+                placeholder="Observações complementares, impostos inclusos (ICMS/IPI), lote mínimo de entrega, etc..."
+                onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
               />
             </div>
           </div>
 
-          {draft.unitPrice > 0 && (
-            <div className={styles.propostaTotalPreview}>
-              <span>Custo total equalizado estimado:</span>
+          <div className={styles.propostaTotalBreakdown}>
+            <div className={styles.breakdownItems}>
+              <span>
+                <strong>Subtotal itens:</strong> {formatCurrency(subtotalItens)}
+              </span>
+              <span>
+                <strong>Frete:</strong>{" "}
+                {draft.freightType === "CIF" ? "Incluso (CIF)" : formatCurrency(effectiveFreight)}
+              </span>
+              {draft.deliveryTime > 0 && (
+                <span>
+                  <strong>Prazo:</strong> {draft.deliveryTime} dias
+                </span>
+              )}
+            </div>
+            <div className={styles.breakdownTotal}>
+              <span>Custo Total Equalizado:</span>
               <strong>{formatCurrency(totalEqualizado)}</strong>
             </div>
-          )}
+          </div>
 
           <div className={styles.propostaFormActions}>
             <button className={styles.btnCancelarForm} onClick={() => setAberto(false)}>
               Cancelar
             </button>
             <button className={styles.btnSalvarProposta} onClick={handleSalvar}>
-              <Icon name="save-01" size={15} /> Salvar proposta
+              <Icon name="save-01" size={15} /> Salvar proposta comercial
             </button>
           </div>
         </div>
@@ -334,6 +644,11 @@ export default function RfqDetailPage() {
   const [creatingPo, setCreatingPo] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+
+  const [proposalPage, setProposalPage] = useState(1);
+  const [proposalSearch, setProposalSearch] = useState("");
+  const [proposalStatusFilter, setProposalStatusFilter] = useState<"todos" | "awaiting" | "received" | "declined">("todos");
+  const PROPOSALS_PER_PAGE = 5;
 
   const handleCancelRfq = async () => {
     const reason = cancelReason.trim();
@@ -408,6 +723,18 @@ export default function RfqDetailPage() {
       try {
         setLoading(true);
         const data = await rfqsApi.getById(rfqId);
+        let pr = data.purchaseRequest as any;
+        const targetReqId = data.requestId || pr?.id;
+        if (targetReqId && (!pr || (!pr.corporateFilial && !pr.filialCode && !pr.companyCode))) {
+          try {
+            const fullPr = await purchaseRequestsApi.getById(targetReqId);
+            if (fullPr) {
+              pr = { ...fullPr, ...pr };
+              data.purchaseRequest = pr;
+            }
+          } catch {
+          }
+        }
         setRfq(data);
         setPropostas(mapPropostas(data));
         setStage(getStage(data));
@@ -443,34 +770,96 @@ export default function RfqDetailPage() {
   }, [rfqId]);
 
   const recebidas = propostas.filter((p) => p.status === "received");
+
+  const filteredPropostas = useMemo(() => {
+    return propostas.filter((p) => {
+      const q = proposalSearch.trim().toLowerCase();
+      const matchSearch =
+        !q ||
+        p.supplierName.toLowerCase().includes(q) ||
+        (p.cnpj && p.cnpj.toLowerCase().includes(q));
+      const matchStatus =
+        proposalStatusFilter === "todos" || p.status === proposalStatusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [propostas, proposalSearch, proposalStatusFilter]);
+
+  const totalProposalPages = Math.ceil(filteredPropostas.length / PROPOSALS_PER_PAGE) || 1;
+
+  const paginatedPropostas = useMemo(() => {
+    const start = (proposalPage - 1) * PROPOSALS_PER_PAGE;
+    return filteredPropostas.slice(start, start + PROPOSALS_PER_PAGE);
+  }, [filteredPropostas, proposalPage]);
+
+  useEffect(() => {
+    setProposalPage(1);
+  }, [proposalSearch, proposalStatusFilter]);
+
+  useEffect(() => {
+    if (proposalPage > totalProposalPages) {
+      setProposalPage(totalProposalPages);
+    }
+  }, [proposalPage, totalProposalPages]);
   const handleSalvarProposta = async (id: string, dados: Partial<LocalProposal>) => {
-    setPropostas((c) => c.map((p) => (p.supplierId === id ? { ...p, ...dados } : p)));
-    if (dados.unitPrice) {
+    setPropostas((c) =>
+      c.map((p) => (p.supplierId === id ? { ...p, ...dados, status: "received" } : p))
+    );
+
+    if (dados.unitPrice !== undefined || (dados.itemPrices && Object.keys(dados.itemPrices).length > 0)) {
       try {
+        const itemsPayload =
+          dados.itemPrices && Object.keys(dados.itemPrices).length > 0
+            ? Object.entries(dados.itemPrices).map(([requestItemId, unitPrice]) => ({
+                requestItemId,
+                unitPrice: Number(unitPrice) || 0,
+              }))
+            : undefined;
+
         const propostaCriada = await rfqsApi.createProposal(rfqId, {
           supplierId: id,
           unitPrice: Number(dados.unitPrice) || 0,
-          freightCost: Number(dados.freightCost) || 0,
+          freightCost: dados.freightType === "CIF" ? 0 : Number(dados.freightCost) || 0,
+          freightType: dados.freightType,
           paymentTerms: dados.paymentTerms || "30 dias DDL",
           deliveryTime: Number(dados.deliveryTime) || 5,
+          validityDays: Number(dados.validityDays) || 15,
+          warrantyMonths: Number(dados.warrantyMonths) || 12,
+          brandModel: dados.brandModel,
+          contactName: dados.contactName,
+          contactEmail: dados.contactEmail,
+          contactPhone: dados.contactPhone,
+          notes: dados.notes,
+          items: itemsPayload,
         });
 
         if (propostaCriada?.id) {
           setPropostas((c) =>
             c.map((p) =>
-              p.supplierId === id ? { ...p, proposalId: propostaCriada.id } : p
+              p.supplierId === id
+                ? { ...p, ...dados, proposalId: propostaCriada.id, status: "received" }
+                : p
             )
           );
         }
-        toast({ variant: "success", title: "Proposta salva!", message: "A proposta comercial foi salva no servidor com sucesso." });
+        toast({
+          variant: "success",
+          title: "Proposta salva!",
+          message: "A proposta comercial foi consolidada e salva com sucesso.",
+        });
       } catch (err) {
         logError("rfqs/[id]/createProposal", err);
+        toast({
+          variant: "error",
+          title: "Erro ao salvar proposta",
+          message: getErrorMessage(err),
+        });
       }
     }
   };
 
+  const rfqItems = rfq?.purchaseRequest?.items ?? (rfq as any)?.items ?? [];
   const rawQtd =
-    rfq?.purchaseRequest?.items?.reduce(
+    rfqItems.reduce(
       (s: number, i: { quantity: number }) => s + Number(i.quantity || 0),
       0
     ) ?? 0;
@@ -498,7 +887,9 @@ export default function RfqDetailPage() {
   const closesAt = rfq?.closesAt
     ? new Date(rfq.closesAt).toLocaleDateString("pt-BR")
     : "—";
-  const companyName = getTenantDisplayName(rfq?.purchaseRequest?.companyCode || rfq?.tenantId || rfq?.purchaseRequest?.tenantId, user);
+
+  const prObj = rfq?.purchaseRequest as any;
+  const companyName = resolvePurchaseRequestBranch(prObj || rfq, user);
 
   const isFinished = rfq?.status === "Finished" || rfq?.status === "Closed" || !!generatedPo;
   const isDraft = rfq?.status === "Draft";
@@ -827,15 +1218,22 @@ export default function RfqDetailPage() {
         <Header />
 
         <div className={styles.coletaHeader}>
-          <h2 className={styles.coletaTitulo}>
-            Fornecedores Convocados & Propostas
-            {propostas.length === 0 && (
-              <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8", marginLeft: 8 }}>
-                Aguardando envio de propostas
+          <div>
+            <h2 className={styles.coletaTitulo}>
+              Fornecedores Convidados & Propostas
+              {propostas.length === 0 && (
+                <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8", marginLeft: 8 }}>
+                  Aguardando envio de propostas
+                </span>
+              )}
+            </h2>
+            {propostas.length > 0 && (
+              <span style={{ fontSize: 13, color: "#64748b" }}>
+                {propostas.length} fornecedor{propostas.length !== 1 ? "es convidados" : " convidado"} para esta cotação
               </span>
             )}
-          </h2>
-          <div style={{ display: "flex", gap: 8 }}>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {recebidas.length > 0 && (
               <Button variant="primary" onClick={() => setDialog("encerrar")}>
                 Encerrar coleta e ir para análise
@@ -843,6 +1241,54 @@ export default function RfqDetailPage() {
             )}
           </div>
         </div>
+
+        {propostas.length > 0 && (
+          <div className={styles.proposalFilterToolbar}>
+            <div className={styles.proposalSearchInput}>
+              <Icon name="search-sm" size={16} className={styles.searchIconInside} />
+              <input
+                type="text"
+                placeholder="Buscar por razão social ou CNPJ..."
+                value={proposalSearch}
+                onChange={(e) => setProposalSearch(e.target.value)}
+              />
+              {proposalSearch && (
+                <button
+                  type="button"
+                  onClick={() => setProposalSearch("")}
+                  className={styles.clearSearchBtn}
+                  title="Limpar busca"
+                >
+                  <Icon name="x-close" size={14} />
+                </button>
+              )}
+            </div>
+
+            <div className={styles.filterTabs}>
+              <button
+                type="button"
+                className={`${styles.filterTabBtn} ${proposalStatusFilter === "todos" ? styles.filterTabBtnActive : ""}`}
+                onClick={() => setProposalStatusFilter("todos")}
+              >
+                Todos ({propostas.length})
+              </button>
+              <button
+                type="button"
+                className={`${styles.filterTabBtn} ${proposalStatusFilter === "awaiting" ? styles.filterTabBtnActive : ""}`}
+                onClick={() => setProposalStatusFilter("awaiting")}
+              >
+                Aguardando ({propostas.filter((p) => p.status === "awaiting").length})
+              </button>
+              <button
+                type="button"
+                className={`${styles.filterTabBtn} ${proposalStatusFilter === "received" ? styles.filterTabBtnActive : ""}`}
+                onClick={() => setProposalStatusFilter("received")}
+              >
+                Recebidas ({recebidas.length})
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className={styles.propostasList}>
           {propostas.length === 0 ? (
@@ -852,18 +1298,68 @@ export default function RfqDetailPage() {
               description="Convide fornecedores parceiros para enviarem suas propostas e cotações para esta demanda."
               size="sm"
             />
+          ) : filteredPropostas.length === 0 ? (
+            <div className={styles.emptyFiltered}>
+              <Icon name="search-sm" size={24} style={{ color: "#94a3b8", margin: "0 auto 6px", display: "block" }} />
+              <strong>Nenhum fornecedor encontrado</strong>
+              <span>Nenhum fornecedor corresponde aos filtros de busca aplicados.</span>
+              <button
+                type="button"
+                className={styles.btnClearFilter}
+                onClick={() => {
+                  setProposalSearch("");
+                  setProposalStatusFilter("todos");
+                }}
+              >
+                Limpar filtros
+              </button>
+            </div>
           ) : (
-            propostas.map((p) => (
-              <PropostaCard
-                key={p.supplierId}
-                proposta={p}
-                isWinner={vencedorId === p.supplierId || !!p.isWinner}
-                totalQtd={totalQtd}
-                rfqCode={rfqCode}
-                rfqTitle={rfqTitle}
-                onSalvar={handleSalvarProposta}
-              />
-            ))
+            <>
+              {paginatedPropostas.map((p) => (
+                <PropostaCard
+                  key={p.supplierId}
+                  proposta={p}
+                  isWinner={vencedorId === p.supplierId || !!p.isWinner}
+                  totalQtd={totalQtd}
+                  rfqItems={rfqItems}
+                  rfqCode={rfqCode}
+                  rfqTitle={rfqTitle}
+                  onSalvar={handleSalvarProposta}
+                />
+              ))}
+
+              {filteredPropostas.length > 0 && (
+                <div className={styles.supplierPaginationBar}>
+                  <span>
+                    Exibindo {(proposalPage - 1) * PROPOSALS_PER_PAGE + 1} -{" "}
+                    {Math.min(proposalPage * PROPOSALS_PER_PAGE, filteredPropostas.length)} de{" "}
+                    {filteredPropostas.length} fornecedor{filteredPropostas.length !== 1 ? "es" : ""}
+                  </span>
+                  <div className={styles.paginationControls}>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      disabled={proposalPage <= 1}
+                      onClick={() => setProposalPage((p) => Math.max(1, p - 1))}
+                    >
+                      <Icon name="chevron-left" size={14} /> Anterior
+                    </button>
+                    <span className={styles.pageNumber}>
+                      Página {proposalPage} de {totalProposalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      disabled={proposalPage >= totalProposalPages}
+                      onClick={() => setProposalPage((p) => Math.min(totalProposalPages, p + 1))}
+                    >
+                      Próxima <Icon name="chevron-right" size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -998,6 +1494,50 @@ export default function RfqDetailPage() {
                           className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                         >
                           {p.paymentTerms}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className={styles.rowHeader}>Tipo de Frete (Incoterm)</td>
+                      {propostasRankeadas.map((p, i) => (
+                        <td
+                          key={p.supplierId}
+                          className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
+                        >
+                          {p.freightType === "CIF" ? "CIF (Incluso)" : "FOB (À parte)"}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className={styles.rowHeader}>Validade da Proposta</td>
+                      {propostasRankeadas.map((p, i) => (
+                        <td
+                          key={p.supplierId}
+                          className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
+                        >
+                          {p.validityDays ? `${p.validityDays} dias` : "15 dias"}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className={styles.rowHeader}>Marca / Fabricante</td>
+                      {propostasRankeadas.map((p, i) => (
+                        <td
+                          key={p.supplierId}
+                          className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
+                        >
+                          {p.brandModel || "—"}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className={styles.rowHeader}>Garantia</td>
+                      {propostasRankeadas.map((p, i) => (
+                        <td
+                          key={p.supplierId}
+                          className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
+                        >
+                          {p.warrantyMonths ? `${p.warrantyMonths} meses` : "—"}
                         </td>
                       ))}
                     </tr>
