@@ -80,7 +80,10 @@ describe('TC-USR-05 / TC-ADM-02: Pedidos de Compra (Purchase Orders) Workflow', 
 
     const result = await pedidosService.generatePdf('po-1001');
 
-    expect(getRawSpy).toHaveBeenCalledWith('/api/purchase-orders/po-1001/pdf');
+    expect(getRawSpy).toHaveBeenCalledWith('/api/purchase-orders/po-1001/pdf', {
+      headers: { Accept: 'application/pdf' },
+      timeoutMs: 60_000,
+    });
     expect(result).toBe(mockBlob);
   });
 

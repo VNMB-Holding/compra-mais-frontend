@@ -74,5 +74,9 @@ export const purchaseOrdersApi = {
   updateStatus: (id: string, status: PurchaseOrder["status"], notes?: string) =>
     apiClient.patch<PurchaseOrder>(`/api/purchase-orders/${id}/status`, { status, notes }),
 
-  generatePdf: (id: string) => apiClient.getRaw(`/api/purchase-orders/${id}/pdf`),
+  generatePdf: (id: string) =>
+    apiClient.getRaw(`/api/purchase-orders/${id}/pdf`, {
+      headers: { Accept: "application/pdf" },
+      timeoutMs: 60_000,
+    }),
 };
