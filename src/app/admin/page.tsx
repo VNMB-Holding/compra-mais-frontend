@@ -516,15 +516,18 @@ export default function AdminPage() {
   };
 
   const filteredCompanies = useMemo(() => {
-    return companies.filter((c) => {
-      const term = companySearch.toLowerCase();
-      return (
+    const term = companySearch.toLowerCase();
+    return companies
+      .filter((c) => (
         c.code.toLowerCase().includes(term) ||
         c.name.toLowerCase().includes(term) ||
         c.acronym.toLowerCase().includes(term) ||
         c.unitName.toLowerCase().includes(term)
-      );
-    });
+      ))
+      .sort((a, b) => {
+        if (a.type !== b.type) return a.type === "Matriz" ? -1 : 1;
+        return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) || a.code.localeCompare(b.code);
+      });
   }, [companies, companySearch]);
 
   const selectedCompanyObj = companies.find((c) => c.code === selectedWorkflowCompany);

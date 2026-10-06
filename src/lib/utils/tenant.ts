@@ -4,6 +4,7 @@ import {
   COMPANY_BRANCHES,
   COMPANY_BY_CODE_MAP,
   COMPANY_BY_ACRONYM_MAP,
+  CompanyBranchMapping,
   findCompanyBranch,
 } from "@/lib/constants/companies";
 
@@ -14,6 +15,22 @@ export interface TenantOption {
   code?: string;
   acronym?: string;
 }
+function sortMatrixFirst<T extends { type?: "Matriz" | "Filial"; name?: string; code?: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (a.type !== b.type) return a.type === "Matriz" ? -1 : 1;
+    return (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" }) ||
+      (a.code || "").localeCompare(b.code || "");
+  });
+}
+
+function sortCompanyBranchesMatrixFirst(branches: CompanyBranchMapping[]): CompanyBranchMapping[] {
+  return [...branches].sort((a, b) => {
+    const aIsMatrix = a.unitName.toLowerCase().includes("matriz") || a.code === "2313";
+    const bIsMatrix = b.unitName.toLowerCase().includes("matriz") || b.code === "2313";
+    if (aIsMatrix !== bIsMatrix) return aIsMatrix ? -1 : 1;
+    return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) || a.code.localeCompare(b.code);
+  });
+}
 
 export function isVnmbUser(_user: User | null): boolean {
   return true;
@@ -22,7 +39,7 @@ export function isVnmbUser(_user: User | null): boolean {
 export function getCompanyFilterOptions(): { label: string; value: string }[] {
   return [
     { label: "Unidade: Todas as Unidades", value: "TODAS" },
-    ...COMPANY_BRANCHES.map((b) => ({
+    ...sortCompanyBranchesMatrixFirst(COMPANY_BRANCHES).map((b) => ({
       label: `${b.code} - ${b.name} (${b.acronym})`,
       value: b.code,
     })),
@@ -30,13 +47,13 @@ export function getCompanyFilterOptions(): { label: string; value: string }[] {
 }
 
 export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
-  return COMPANY_BRANCHES.map((b) => ({
+  return sortMatrixFirst(COMPANY_BRANCHES.map((b) => ({
     id: b.code,
     name: `${b.name} (${b.acronym})`,
     type: b.code === "2313" ? "Matriz" : "Filial",
     code: b.code,
     acronym: b.acronym,
-  }));
+  })));
 }
 
 export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?: string): TenantOption[] {
