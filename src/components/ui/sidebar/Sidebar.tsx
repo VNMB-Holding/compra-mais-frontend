@@ -57,6 +57,10 @@ export default function Sidebar({
           <Icon name="shopping-cart-01" />
           <span className={styles.navText}>Pedidos de Compra</span>
         </Link>
+        <Link href="/compras/itens" className={`${styles.navItem} ${isActive("/compras/itens") ? styles.active : ""}`}>
+          <Icon name="package" />
+          <span className={styles.navText}>Itens & Catálogo</span>
+        </Link>
       </div>
 
       <div className={styles.navSection}>

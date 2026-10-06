@@ -21,6 +21,7 @@ const STATIC_ITEMS: SearchItem[] = [
   { id: "page-sols", title: "Solicitações de Compra", category: "Páginas", description: "Lista de demandas de compra internas", url: "/compras/solicitacoes", icon: "list" },
   { id: "page-rfqs", title: "Processos de Cotação (RFQs)", category: "Páginas", description: "Listagem de RFQs ativas e propostas", url: "/compras/rfqs", icon: "send-03" },
   { id: "page-orders", title: "Pedidos de Compra", category: "Páginas", description: "Ordens de compra enviadas para fornecedores", url: "/compras/pedidos", icon: "clipboard-check" },
+  { id: "page-items", title: "Itens & Catálogo Auditado", category: "Páginas", description: "Catálogo de materiais com histórico de compras e fornecedores de base", url: "/compras/itens", icon: "package" },
   { id: "page-reports", title: "Relatórios Exportáveis", category: "Páginas", description: "Filtros customizados e relatórios consolidados", url: "/analytics/relatorios", icon: "bar-chart-01" },
   { id: "page-savings", title: "Painel de Economia Gerada (Saving)", category: "Páginas", description: "Savings absoluto, percentual e histórico", url: "/analytics/economia", icon: "piggy-bank-01" },
   { id: "page-admin", title: "Administração Geral", category: "Páginas", description: "Gestão de empresas, filiais e alçadas de aprovação", url: "/admin", icon: "settings-01" },

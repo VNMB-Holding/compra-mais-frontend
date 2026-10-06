@@ -4,6 +4,7 @@ import { rfqsApi, RfqListParams } from "@/lib/api/rfqs";
 import { suppliersApi, SupplierListParams } from "@/lib/api/suppliers";
 import { purchaseOrdersApi, PurchaseOrderListParams } from "@/lib/api/purchase-orders";
 import { dashboardApi } from "@/lib/api/dashboard";
+import { itemsApi, CatalogItem } from "@/lib/api/items";
 
 export const QUERY_KEYS = {
   purchaseRequests: (params?: string | PurchaseRequestListParams) => ["purchase-requests", "list", params] as const,
@@ -139,3 +140,38 @@ export function useUpdatePurchaseOrderStatus() {
     },
   });
 }
+
+export function useItems(params?: { search?: string; category?: string; supplierId?: string }) {
+  return useQuery({
+    queryKey: ["catalog-items", "list", params] as const,
+    queryFn: () => itemsApi.list(params),
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useItem(id: string) {
+  return useQuery({
+    queryKey: ["catalog-items", "detail", id] as const,
+    queryFn: () => itemsApi.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useItemKpis() {
+  return useQuery({
+    queryKey: ["catalog-items", "kpis"] as const,
+    queryFn: () => itemsApi.getKpis(),
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useCreateItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof itemsApi.create>[0]) => itemsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["catalog-items"] });
+    },
+  });
+}
+
