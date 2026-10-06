@@ -66,4 +66,31 @@ describe('Select Component', () => {
     fireEvent.click(screen.getByText('Opção 1'));
     expect(screen.queryByText('Opção 3')).not.toBeInTheDocument();
   });
+  it('deve exibir busca e paginação quando houver muitas opções', () => {
+    const manyOptions = Array.from({ length: 12 }, (_, index) => ({
+      label: `Opção ${index + 1}`,
+      value: String(index + 1),
+    }));
+
+    render(
+      <Select
+        options={manyOptions}
+        value="1"
+        onChange={() => {}}
+      />
+    );
+
+    fireEvent.click(screen.getByText('Opção 1'));
+
+    expect(screen.getByPlaceholderText('Buscar opção...')).toBeInTheDocument();
+    expect(screen.getByText('1-8 de 12')).toBeInTheDocument();
+    expect(screen.queryByText('Opção 9')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Próxima página'));
+    expect(screen.getByText('Opção 9')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText('Buscar opção...'), { target: { value: '12' } });
+    expect(screen.getByText('Opção 12')).toBeInTheDocument();
+    expect(screen.getByText('1-1 de 1')).toBeInTheDocument();
+  });
 });

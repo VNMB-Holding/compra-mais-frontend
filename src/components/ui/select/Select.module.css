@@ -70,25 +70,83 @@
   background-color: #f1f5f9;
 }
 .dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 50;
+  position: fixed;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
   background-color: #ffffff;
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 10px 15px -3px rgba(0, 0, 0, 0.06);
-  max-height: 250px;
-  overflow-y: auto;
+  overflow: hidden;
   animation: slideDown 0.18s var(--ease-out);
   transform-origin: top center;
+}
+.enhancedDropdown {
+  border-radius: 8px;
+}
+.searchArea {
+  padding: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+.searchInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+}
+.searchIcon {
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.searchInput {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font: inherit;
+  font-size: 12.5px;
+}
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+.clearSearchBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.clearSearchBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 .optionsList {
   list-style: none;
   margin: 0;
   padding: 4px;
   display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   flex-direction: column;
   gap: 2px;
 }
@@ -113,9 +171,20 @@
   outline: none;
   transition: all 0.15s ease;
 }
+.optionButton span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .optionButton:hover {
   background-color: var(--bg-hover, #f1f5f9);
   color: var(--text-main, #0f172a);
+}
+.emptyOption {
+  padding: 18px 12px;
+  color: #64748b;
+  font-size: 12.5px;
+  text-align: center;
 }
 .selected {
   background-color: rgba(0, 125, 121, 0.08) !important;
@@ -124,6 +193,49 @@
 }
 .selected .optionIcon {
   color: var(--primary, #007d79);
+}
+.paginationBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11.5px;
+  flex-shrink: 0;
+}
+.paginationActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+}
+.pageButton:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.pageButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pageIndicator {
+  min-width: 34px;
+  text-align: center;
+  color: #334155;
+  font-weight: 700;
 }
 @keyframes slideDown {
   from {
