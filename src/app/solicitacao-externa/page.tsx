@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import styles from "./solicitacao-externa.module.css";
 import { Icon, Select } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/hooks/useAuth";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
+import { CatalogItem } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
-import { COMPANY_BRANCHES } from "@/lib/constants/companies";
+import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
 
 interface ItemDemanda {
   id: number;
@@ -15,6 +17,8 @@ interface ItemDemanda {
   unidade: string;
   valorEstimado?: number;
   linkReferencia?: string;
+  catalogItemId?: string;
+  fornecedorBase?: string;
 }
 
 const SETOR_OPTIONS = [
@@ -37,6 +41,43 @@ const PRIORIDADE_OPTIONS = [
   { label: "Planejada (Baixa) - sem urgência", value: "Baixa" },
 ];
 
+const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com").replace(/\/+$/, "");
+function normalizeIdentityText(value?: string) {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function resolveSetorFromIdentity(department?: string) {
+  const normalizedDepartment = normalizeIdentityText(department);
+  if (!normalizedDepartment) return undefined;
+
+  return SETOR_OPTIONS.find((option) => {
+    const normalizedLabel = normalizeIdentityText(option.label);
+    const normalizedValue = normalizeIdentityText(option.value);
+    return (
+      normalizedValue === normalizedDepartment ||
+      normalizedLabel === normalizedDepartment ||
+      normalizedLabel.includes(normalizedDepartment) ||
+      normalizedDepartment.includes(normalizedValue)
+    );
+  })?.value;
+}
+
+
+async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
+  const trimmed = query.trim();
+  const endpoint = trimmed.length >= 2
+    ? `/api/items/public/search?q=${encodeURIComponent(trimmed)}`
+    : "/api/items/public";
+
+  const response = await fetch(`${BIZ_API_URL}${endpoint}`);
+  if (!response.ok) return [];
+  const data = await response.json();
+  return Array.isArray(data) ? data.slice(0, 20) : [];
+}
 const UNIDADE_MEDIDA_OPTIONS = [
   { label: "Unidade (UN)", value: "UN" },
   { label: "Caixa (CX)", value: "CX" },
@@ -50,6 +91,7 @@ const UNIDADE_MEDIDA_OPTIONS = [
 
 export default function SolicitacaoExternaPage() {
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
 
   const [solicitanteNome, setSolicitanteNome] = useState("");
   const [solicitanteWhats, setSolicitanteWhats] = useState("");
@@ -68,6 +110,50 @@ export default function SolicitacaoExternaPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [protocoloGerado, setProtocoloGerado] = useState<string | null>(null);
+  const [activeSearchItemId, setActiveSearchItemId] = useState<number | null>(null);
+  const [suggestedItems, setSuggestedItems] = useState<CatalogItem[]>([]);
+  const [loadingSearchItemId, setLoadingSearchItemId] = useState<number | null>(null);
+  const [identityApplied, setIdentityApplied] = useState(false);
+  const searchRequestRef = useRef(0);
+
+
+  const applyIdentityData = useCallback((overwrite = false) => {
+    if (!user) return;
+
+    if (overwrite || !solicitanteNome.trim()) setSolicitanteNome(user.name || "");
+    if (overwrite || !solicitanteEmail.trim()) setSolicitanteEmail(user.email || "");
+
+    const setorFromIdentity = resolveSetorFromIdentity(user.department);
+    if (setorFromIdentity && (overwrite || setor === "Administracao")) {
+      setSetor(setorFromIdentity);
+    }
+
+    const branchFromIdentity = findCompanyBranch(user.tenantId) || findCompanyBranch(user.tenantName);
+    if (branchFromIdentity && (overwrite || empresaCode === (COMPANY_BRANCHES[0]?.code || "AGRO"))) {
+      setEmpresaCode(branchFromIdentity.code);
+    }
+
+    setIdentityApplied(true);
+  }, [empresaCode, setor, solicitanteEmail, solicitanteNome, user]);
+
+  useEffect(() => {
+    if (!user || identityApplied) return;
+    applyIdentityData(false);
+  }, [user, identityApplied, applyIdentityData]);
+
+  const handleIdentityAction = () => {
+    if (!user) {
+      window.location.href = "/login?redirect=/solicitacao-externa";
+      return;
+    }
+
+    applyIdentityData(true);
+    toast({
+      variant: "success",
+      title: "Dados carregados",
+      message: "Preenchi os campos disponíveis na sua conta.",
+    });
+  };
 
   const totalEstimado = useMemo(() => {
     return itens.reduce((sum, item) => {
@@ -93,6 +179,83 @@ export default function SolicitacaoExternaPage() {
     setItens((prev) =>
       prev.map((it) => (it.id === id ? { ...it, [field]: value } : it))
     );
+  };
+
+  const handleDescriptionChange = async (id: number, value: string) => {
+    handleUpdateItem(id, "descricao", value);
+    const requestId = searchRequestRef.current + 1;
+    searchRequestRef.current = requestId;
+
+    if (value.trim().length < 2) {
+      setActiveSearchItemId(null);
+      setSuggestedItems([]);
+      setLoadingSearchItemId(null);
+      return;
+    }
+
+    setActiveSearchItemId(id);
+    setLoadingSearchItemId(id);
+    try {
+      const results = await loadCatalogItems(value.trim());
+      if (searchRequestRef.current === requestId) {
+        setSuggestedItems(results || []);
+      }
+    } catch {
+      if (searchRequestRef.current === requestId) {
+        setSuggestedItems([]);
+      }
+    } finally {
+      if (searchRequestRef.current === requestId) {
+        setLoadingSearchItemId(null);
+      }
+    }
+  };
+
+  const handleCatalogInputFocus = async (id: number, value: string) => {
+    setActiveSearchItemId(id);
+    if (suggestedItems.length > 0) return;
+
+    const requestId = searchRequestRef.current + 1;
+    searchRequestRef.current = requestId;
+    setLoadingSearchItemId(id);
+
+    try {
+      const results = await loadCatalogItems(value.trim());
+      if (searchRequestRef.current === requestId) {
+        setSuggestedItems(results || []);
+      }
+    } catch {
+      if (searchRequestRef.current === requestId) {
+        setSuggestedItems([]);
+      }
+    } finally {
+      if (searchRequestRef.current === requestId) {
+        setLoadingSearchItemId(null);
+      }
+    }
+  };
+  const handleSelectCatalogItem = (id: number, catalogItem: CatalogItem) => {
+    const fornecedorBase = catalogItem.lastSupplier?.tradeName || catalogItem.lastSupplier?.corporateName;
+    const lastPrice = catalogItem.lastUnitPrice ? Number(catalogItem.lastUnitPrice) : 0;
+
+    setItens((prev) =>
+      prev.map((it) =>
+        it.id === id
+          ? {
+              ...it,
+              descricao: catalogItem.description,
+              unidade: catalogItem.unit || it.unidade,
+              valorEstimado: lastPrice > 0 ? lastPrice : it.valorEstimado,
+              catalogItemId: catalogItem.id,
+              fornecedorBase,
+            }
+          : it
+      )
+    );
+
+    setActiveSearchItemId(null);
+    setSuggestedItems([]);
+    setLoadingSearchItemId(null);
   };
 
   const selectedBranch = COMPANY_BRANCHES.find((b) => b.code === empresaCode) || COMPANY_BRANCHES[0];
@@ -152,6 +315,7 @@ export default function SolicitacaoExternaPage() {
           quantity: Number(it.quantidade) || 1,
           unit: it.unidade || "UN",
           estimatedUnitPrice: Number(it.valorEstimado) || 0,
+          catalogItemId: it.catalogItemId || undefined,
           costCenterName: setorNomeFormatado,
           costCenterCode: setor,
           requiredDate: dataDesejada ? new Date(dataDesejada).toISOString() : undefined,
@@ -297,6 +461,10 @@ export default function SolicitacaoExternaPage() {
           <span className={styles.portalBadge}>Solicitação Externa</span>
         </div>
         <div className={styles.headerRight}>
+          <button type="button" className={styles.accountAction} onClick={handleIdentityAction} disabled={authLoading}>
+            <Icon name={user ? "user-check-01" : "login-01"} size={14} />
+            {user ? "Usar meus dados" : "Possui conta?"}
+          </button>
           <span className={styles.securityTag}>
             <Icon name="shield-tick" size={14} /> Portal Seguro
           </span>
@@ -482,14 +650,52 @@ export default function SolicitacaoExternaPage() {
                       <label>
                         Descrição do Material ou Serviço <span className={styles.requiredAsterisk}>*</span>
                       </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Ex: Cadeira giratória ergonômica ou Parafusadeira 20V"
-                        className={styles.inputField}
-                        value={item.descricao}
-                        onChange={(e) => handleUpdateItem(item.id, "descricao", e.target.value)}
-                      />
+                      <div className={styles.catalogAutocompleteWrapper}>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Digite para buscar itens já cadastrados..."
+                          className={styles.inputField}
+                          value={item.descricao}
+                          onChange={(e) => handleDescriptionChange(item.id, e.target.value)}
+                          onFocus={() => handleCatalogInputFocus(item.id, item.descricao)}
+                        />
+                        {loadingSearchItemId === item.id && (
+                          <span className={styles.catalogInputSpinner} aria-label="Buscando itens cadastrados" />
+                        )}
+                        {activeSearchItemId === item.id && !loadingSearchItemId && (
+                          <div className={styles.catalogSuggestions}>
+                            {suggestedItems.length > 0 ? (
+                              suggestedItems.map((suggestion) => (
+                                <button
+                                  key={suggestion.id}
+                                  type="button"
+                                  className={styles.catalogSuggestionItem}
+                                  onClick={() => handleSelectCatalogItem(item.id, suggestion)}
+                                >
+                                  <span className={styles.catalogSuggestionMain}>
+                                    <strong>{suggestion.description}</strong>
+                                    <small>
+                                      {[suggestion.code, suggestion.category || "Geral", suggestion.unit].filter(Boolean).join(" • ")}
+                                    </small>
+                                  </span>
+                                  {suggestion.lastUnitPrice && (
+                                    <span className={styles.catalogSuggestionPrice}>{formatCurrency(Number(suggestion.lastUnitPrice))}</span>
+                                  )}
+                                </button>
+                              ))
+                            ) : (
+                              <div className={styles.catalogEmptySuggestion}>Nenhum item encontrado.</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {item.catalogItemId && (
+                        <div className={styles.catalogSelectedNotice}>
+                          <Icon name="check-circle" size={14} />
+                          <span>Item selecionado do catálogo{item.fornecedorBase ? ` com base em ${item.fornecedorBase}` : ""}.</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className={styles.formGroup}>
