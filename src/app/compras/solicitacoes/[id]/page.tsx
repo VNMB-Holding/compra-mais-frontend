@@ -59,7 +59,7 @@ export default function SolicitacaoDetailPage() {
           }
         } catch (err) {
           logError("solicitacoes/[id]/load", err);
-          if (!cancelled) toast({ variant: "error", title: "Erro ao carregar solicitação", message: getErrorMessage(err) });
+          if (!cancelled) toast({ variant: "error", title: "Erro ao carregar Solicitação", message: getErrorMessage(err) });
         } finally {
           if (!cancelled) setCodeLoading(false);
         }
@@ -73,7 +73,7 @@ export default function SolicitacaoDetailPage() {
   useEffect(() => {
     if (queryError && !querySol) {
       logError("solicitacoes/[id]/load", queryError);
-      toast({ variant: "error", title: "Erro ao carregar solicitação", message: getErrorMessage(queryError) });
+      toast({ variant: "error", title: "Erro ao carregar Solicitação", message: getErrorMessage(queryError) });
     }
   }, [queryError, querySol, toast]);
 
@@ -107,7 +107,7 @@ export default function SolicitacaoDetailPage() {
           toast({
             variant: "success",
             title: "Alçada aprovada!",
-            message: `Sua aprovação foi registrada na alçada atual. A solicitação avançou para o próximo nível.`,
+            message: `Sua Aprovação foi registrada na Alçada atual. A Solicitação avançou para o próximo nível.`,
           });
         }
       } catch (e) {
@@ -147,7 +147,7 @@ export default function SolicitacaoDetailPage() {
       toast({
         variant: "warning",
         title: "Cancelamento bloqueado",
-        message: "N�o � poss�vel cancelar uma solicita��o que j� est� em processo de cota��o.",
+        message: "N�o � possível cancelar uma Solicitação que j� est� em processo de Cotação.",
       });
       setDialog(null);
       return;
@@ -171,7 +171,7 @@ export default function SolicitacaoDetailPage() {
       toast({
         variant: "warning",
         title: "Solicitação cancelada",
-        message: `A solicitação ${fresh.code || solId} foi cancelada com sucesso.`,
+        message: `A Solicitação ${fresh.code || solId} foi cancelada com sucesso.`,
       });
     } catch (e) {
       logError("solicitacoes/[id]/cancel", e);
@@ -227,7 +227,7 @@ export default function SolicitacaoDetailPage() {
         }
       })
       .catch((err) => {
-        console.warn("Falha ao carregar cadeia dinâmica de aprovação:", err);
+        console.warn("Falha ao carregar cadeia dinâmica de Aprovação:", err);
       })
       .finally(() => {
         if (!cancelled) setIsChainLoading(false);
@@ -248,7 +248,7 @@ export default function SolicitacaoDetailPage() {
       toast({
         variant: "success",
         title: "Solicitação Enviada",
-        message: `Solicitação ${fresh.code || solId} enviada para aprovação com sucesso!`,
+        message: `Solicitação ${fresh.code || solId} enviada para Aprovação com sucesso!`,
       });
     } catch (err) {
       logError("solicitacoes/[id]/sendToApproval", err);
@@ -290,14 +290,16 @@ export default function SolicitacaoDetailPage() {
     toast({
       variant: "success",
       title: "Link Copiado!",
-      message: "Link de aprovação copiado para a área de transferência.",
+      message: "Link de Aprovação copiado para a área de transferência.",
     });
   };
 
   
   const currentAssignedApproverId = pendingHistories[0]?.approverId;
+  const isRequester = Boolean(user && sol?.requesterId && (user.id === sol.requesterId || user.email === sol.requesterName));
   const canUserApproveCurrentLevel =
     !isChainLoading &&
+    !isRequester &&
     isUserEligibleToApprove(user, currentApproverIdentifier, currentAssignedApproverId);
 
   return (
@@ -307,10 +309,10 @@ export default function SolicitacaoDetailPage() {
         open={dialog === "approve"}
         variant="success"
         icon="check-circle"
-        title="Aprovar esta solicitação?"
+        title="Aprovar esta Solicitação?"
         message={
           <>
-            A solicitação <strong>{sol?.code || solId}</strong> será aprovada como <strong>{currentApproverName}</strong> na alçada de governança.
+            A Solicitação <strong>{sol?.code || solId}</strong> será aprovada como <strong>{currentApproverName}</strong> na Alçada de governança.
           </>
         }
         confirmLabel="Sim, aprovar"
@@ -322,10 +324,10 @@ export default function SolicitacaoDetailPage() {
         open={dialog === "reject"}
         variant="danger"
         icon="x-circle"
-        title="Rejeitar esta solicitação?"
+        title="Rejeitar esta Solicitação?"
         message={
           <>
-            A solicitação <strong>{sol?.code || solId}</strong> será rejeitada na alçada de <strong>{currentApproverName}</strong>.
+            A Solicitação <strong>{sol?.code || solId}</strong> será rejeitada na Alçada de <strong>{currentApproverName}</strong>.
           </>
         }
         confirmLabel="Sim, rejeitar"
@@ -343,10 +345,10 @@ export default function SolicitacaoDetailPage() {
         confirmDisabled={!cancelReason.trim()}
         message={
           <>
-            Tem certeza de que deseja cancelar a solicitação <strong>{sol?.code || solId}</strong>? Esta ação interromperá o fluxo de compras e arquivará a demanda.
+            Tem certeza de que deseja cancelar a Solicitação <strong>{sol?.code || solId}</strong>? Esta ação interromperá o fluxo de compras e arquivará a demanda.
           </>
         }
-        confirmLabel="Sim, cancelar solicitação"
+        confirmLabel="Sim, cancelar Solicitação"
         onConfirm={handleCancel}
         onCancel={() => {
           setDialog(null);
@@ -461,7 +463,7 @@ export default function SolicitacaoDetailPage() {
           <div className={styles.headerActions}>
             {canUserApproveCurrentLevel ? (
               <>
-                <Button variant="secondary" onClick={() => handleCopyApprovalLink()} title="Copiar link desta aprovação">
+                <Button variant="secondary" onClick={() => handleCopyApprovalLink()} title="Copiar link desta Aprovação">
                   <Icon name="copy-01" /> Copiar Link
                 </Button>
                 <Button variant="secondary" onClick={() => setDialog("reject")}>
@@ -474,12 +476,12 @@ export default function SolicitacaoDetailPage() {
             ) : (
               <div className={styles.waitingApproverInfo}>
                 <span className={styles.waitingBadge}>
-                  <Icon name="clock" size={14} /> Aguardando aprovação de <strong>{currentApproverName}</strong>
+                  <Icon name="clock" size={14} /> Aguardando Aprovação de <strong>{currentApproverName}</strong>
                 </span>
                 <Button
                   variant="secondary"
                   onClick={() => handleCopyApprovalLink()}
-                  title="Copiar link de aprovação para enviar ao gestor"
+                  title="Copiar link de Aprovação para enviar ao gestor"
                 >
                   <Icon name="copy-01" /> Copiar Link
                 </Button>
@@ -493,7 +495,7 @@ export default function SolicitacaoDetailPage() {
             <Button
               variant="danger"
               onClick={() => setDialog("cancel")}
-              title="Cancelar esta solicitação de compra"
+              title="Cancelar esta Solicitação de compra"
             >
               <Icon name="x-close" /> Cancelar Solicitação
             </Button>
@@ -505,7 +507,7 @@ export default function SolicitacaoDetailPage() {
         <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, color: "#475569", fontSize: 13 }}>
           <Icon name="info-circle" size={18} style={{ color: "#0284c7", flexShrink: 0 }} />
           <span>
-            Esta solicitação está salva como <strong>rascunho</strong> e ainda não entrou na esteira de governança. Você pode continuar editando os itens e prazos ou clicar em <strong>Enviar para Aprovação</strong> para iniciar a análise dos gestores.
+            Esta Solicitação está salva como <strong>rascunho</strong> e ainda não entrou na esteira de governança. Você pode continuar editando os itens e prazos ou clicar em <strong>Enviar para Aprovação</strong> para iniciar a análise dos gestores.
           </span>
         </div>
       )}
@@ -516,7 +518,7 @@ export default function SolicitacaoDetailPage() {
 
           <Card className={styles.flowCard}>
             <div className={styles.flowCardHeader}>
-              <h4>Fluxo de Alçadas de Aprovação ({chain.length} alçada{chain.length !== 1 ? "s" : ""})</h4>
+              <h4>Fluxo de Alçadas de Aprovação ({chain.length} Alçada{chain.length !== 1 ? "s" : ""})</h4>
             </div>
             <div className={styles.stepperContainer}>
 
@@ -619,8 +621,8 @@ export default function SolicitacaoDetailPage() {
                       : isFinished
                       ? "Demanda finalizada"
                       : isEligibleForRfq
-                      ? "Pronta para cotação"
-                      : "Aguardando aprovação"}
+                      ? "Pronta para Cotação"
+                      : "Aguardando Aprovação"}
                   </span>
                 </div>
               </div>

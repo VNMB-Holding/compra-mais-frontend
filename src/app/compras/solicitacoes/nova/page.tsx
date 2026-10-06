@@ -26,7 +26,6 @@ interface RequestItem {
   quantity: number;
   unit: string;
   unitPrice: number;
-  costCenter: string;
   requiredDate: string;
   baseSupplierName?: string;
   baseSupplierCnpj?: string;
@@ -102,7 +101,6 @@ export default function NovaSolicitacaoPage() {
               quantity: Number(item.quantity) || 1,
               unit: item.unit || "UN",
               unitPrice: Number(item.estimatedUnitPrice) || 0,
-              costCenter: "",
               requiredDate: item.requiredDate ? new Date(item.requiredDate).toISOString().split("T")[0] : "",
             }))
           );
@@ -162,7 +160,6 @@ export default function NovaSolicitacaoPage() {
       quantity: 1,
       unit: "UN",
       unitPrice: 0,
-      costCenter: "",
       requiredDate: "",
     },
   ]);
@@ -238,7 +235,6 @@ export default function NovaSolicitacaoPage() {
         quantity: 1,
         unit: "UN",
         unitPrice: 0,
-        costCenter: "",
         requiredDate: "",
       },
     ]);
@@ -304,7 +300,6 @@ export default function NovaSolicitacaoPage() {
             unit: i.unit || "UN",
             estimatedUnitPrice: Number(i.unitPrice) || 0,
             category: i.category || "Geral",
-            costCenter: i.costCenter || undefined,
             requiredDate: i.requiredDate || undefined,
           })),
       };
@@ -500,7 +495,7 @@ export default function NovaSolicitacaoPage() {
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
                   <div>
-                    <h2>2. Itens, categorias e centros de custo</h2>
+                    <h2>2. Itens da Demanda</h2>
                     <p>Inclua todos os itens que devem seguir no mesmo pacote de aprovação.</p>
                   </div>
                 </div>
@@ -524,7 +519,7 @@ export default function NovaSolicitacaoPage() {
                                 {item.description || "Novo item sem descrição"}
                               </span>
                               <span className={styles.itemSummaryMeta}>
-                                {item.quantity} {item.unit} {item.unitPrice > 0 ? `× ${formatCurrency(item.unitPrice)}` : ""} • CC: {item.costCenter || "Não informado"}
+                                {item.quantity} {item.unit} {item.unitPrice > 0 ? `× ${formatCurrency(item.unitPrice)}` : ""}
                               </span>
                             </div>
                           </div>
@@ -812,8 +807,8 @@ export default function NovaSolicitacaoPage() {
                         return;
                       }
                       for (const item of items) {
-                        if (!item.description.trim() || !item.category || item.quantity <= 0 || !item.unit || !item.costCenter.trim() || !item.requiredDate) {
-                          toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha todos os campos obrigatórios de todos os itens." });
+                        if (!item.description.trim() || item.quantity <= 0 || !item.unit || !item.requiredDate) {
+                          toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a descrição, quantidade, unidade e data de todos os itens." });
                           return;
                         }
                       }

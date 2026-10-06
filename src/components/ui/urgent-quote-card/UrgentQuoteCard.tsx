@@ -9,7 +9,6 @@ interface QuoteData {
   comprador?: string;
   quantity?: string;
   category?: string;
-  costCenter?: string;
   type?: string;
   timeRemaining: string;
   imageUrl?: string;
@@ -21,7 +20,7 @@ interface UrgentQuoteCardProps {
 }
 
 export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProps) {
-  const localOuCentro = quote.costCenter || quote.category || "Almoxarifado Geral";
+  const localOuCentro = quote.category || "Almoxarifado Geral";
   const estrategia = quote.type || "Menor Preço Equalizado";
 
   return (

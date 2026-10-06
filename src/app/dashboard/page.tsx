@@ -75,14 +75,12 @@ export default function DashboardPage() {
       const mapped: RFQRow[] = rfqsData.map((rfq) => {
         const codigo = rfq.code || "";
         const descricao = rfq.title || rfq.purchaseRequest?.description || "";
-        const centroCustoOuAlmoxarifado = (rfq.purchaseRequest as any)?.costCenterName ||
-          (rfq.purchaseRequest as any)?.corporateStockLocation ||
-          (rfq.purchaseRequest as any)?.costCenterCode ||
+        const localEstoqueOuCategoria = (rfq.purchaseRequest as any)?.corporateStockLocation ||
           (rfq.purchaseRequest as any)?.category?.name ||
           "Almoxarifado Geral";
         const dataAbertura = formatDate(rfq.createdAt);
         const dataEncerramento = formatDate(rfq.closesAt);
-        const tipoSegmento = (rfq.purchaseRequest as any)?.category?.name || (rfq.purchaseRequest as any)?.costCenterName || "Geral";
+        const tipoSegmento = (rfq.purchaseRequest as any)?.category?.name || "Geral";
         const status = mapRfqStatus(rfq);
         const empresa = getTenantDisplayName(rfq.purchaseRequest?.companyCode || rfq.tenantId || rfq.purchaseRequest?.tenantId, user);
 
@@ -92,8 +90,8 @@ export default function DashboardPage() {
           codigo,
           description: descricao,
           descricao,
-          categoryName: centroCustoOuAlmoxarifado,
-          categoria: centroCustoOuAlmoxarifado,
+          categoryName: localEstoqueOuCategoria,
+          categoria: localEstoqueOuCategoria,
           openedAt: dataAbertura,
           dataAbertura,
           closesAt: dataEncerramento,
@@ -254,7 +252,7 @@ export default function DashboardPage() {
                 code: rfqMaisUrgente.codigo,
                 comprador: firstName,
                 quantity: "",
-                costCenter: rfqMaisUrgente.categoria,
+                category: rfqMaisUrgente.categoria,
                 type: rfqMaisUrgente.tipoSegmento,
                 timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
               }}
