@@ -21,6 +21,10 @@ export default function LoginPage() {
     }
   }, []);
 
+  const handleFaceLogin = () => {
+    setError("Reconhecimento facial ainda não está configurado para esta conta.");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -119,14 +123,9 @@ export default function LoginPage() {
               <span>ou continue com</span>
             </div>
 
-            <button type="button" className={styles.microsoft}>
-              <svg width="18" height="18" viewBox="0 0 21 21">
-                <path fill="#f25022" d="M1 1h9v9H1z" />
-                <path fill="#00a4ef" d="M1 11h9v9H1z" />
-                <path fill="#7fba00" d="M11 1h9v9h-9z" />
-                <path fill="#ffb900" d="M11 11h9v9h-9z" />
-              </svg>
-              Entrar com Microsoft
+            <button type="button" className={styles.faceLogin} onClick={handleFaceLogin}>
+              <Icon name="face-id" size={18} />
+              Entrar com reconhecimento facial
             </button>
           </form>
         </div>

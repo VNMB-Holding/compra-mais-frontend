@@ -183,7 +183,7 @@
 .divider span {
   padding: 0 16px;
 }
-.microsoft {
+.faceLogin {
   width: 100%;
   background: white;
   border: 1px solid #e2e8f0;
@@ -200,7 +200,7 @@
   gap: 10px;
   transition: background 0.2s;
 }
-.microsoft:hover {
+.faceLogin:hover {
   background: #f8fafc;
 }
 .register {
@@ -230,3 +230,4 @@
     padding: 32px 24px;
   }
 }
+
