@@ -5,7 +5,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  outline: none;
 }
+.chartContainer :global(.recharts-wrapper),
+.chartContainer :global(.recharts-surface),
+.chartContainer :global(svg) {
+  outline: none !important;
+}
+
 .tooltip {
   background: #ffffff;
   border-radius: 8px;

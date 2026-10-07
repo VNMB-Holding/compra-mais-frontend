@@ -1,6 +1,12 @@
 .chartContainer {
   width: 100%;
   height: 100%;
+  outline: none;
+}
+.chartContainer :global(.recharts-wrapper),
+.chartContainer :global(.recharts-surface),
+.chartContainer :global(svg) {
+  outline: none !important;
 }
 
 .tooltip {
