@@ -84,50 +84,22 @@ export default function ReconhecimentoFacialPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.shell}>
-        <aside className={styles.infoPanel}>
+      <div className={styles.left} />
+
+      <main className={styles.right}>
+        <div className={styles.logoWrapper}>
+          <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logoImg} />
+        </div>
+
+        <section className={styles.card}>
           <button type="button" className={styles.backButton} onClick={() => router.push("/login")}>
-            <Icon name="chevron-left" size={16} /> Voltar para login
+            <Icon name="chevron-left" size={16} /> Voltar
           </button>
 
-          <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logo} />
-
-          <div className={styles.titleGroup}>
-            <div className={styles.iconBadge}>
-              <Icon name="face-id" size={30} />
-            </div>
+          <div className={styles.header}>
             <div>
-              <span className={styles.eyebrow}>Identidade VNMB</span>
               <h1>Reconhecimento facial</h1>
-            </div>
-          </div>
-
-          <p className={styles.description}>
-            Use a câmera do computador para validar sua identidade e acessar o Compra+ com
-            segurança.
-          </p>
-
-          <div className={styles.guidelines} aria-label="Orientações para reconhecimento facial">
-            <div className={styles.guideline}>
-              <Icon name="sun" size={18} />
-              <span>Ambiente bem iluminado</span>
-            </div>
-            <div className={styles.guideline}>
-              <Icon name="scan-face" size={18} />
-              <span>Rosto centralizado no enquadramento</span>
-            </div>
-            <div className={styles.guideline}>
-              <Icon name="shield-check" size={18} />
-              <span>Validação enviada para a API VNMB Identity</span>
-            </div>
-          </div>
-        </aside>
-
-        <main className={styles.cameraPanel}>
-          <div className={styles.cameraHeader}>
-            <div>
-              <span className={styles.sectionLabel}>Acesso seguro</span>
-              <h2>Confirme seu rosto</h2>
+              <p>Posicione seu rosto no centro da câmera para entrar com sua identidade VNMB.</p>
             </div>
             <span className={cameraReady ? styles.statusReady : styles.statusWaiting}>
               <Icon name={cameraReady ? "check-circle" : "loader"} size={16} />
@@ -138,7 +110,7 @@ export default function ReconhecimentoFacialPage() {
           <div className={styles.cameraBox}>
             {cameraError ? (
               <div className={styles.cameraFallback}>
-                <Icon name="camera-off" size={36} />
+                <Icon name="camera-off" size={34} />
                 <span>{cameraError}</span>
               </div>
             ) : (
@@ -149,10 +121,12 @@ export default function ReconhecimentoFacialPage() {
             )}
           </div>
 
-          <div className={styles.actionRow}>
-            <div className={styles.helperText}>
-              Mantenha o rosto visível e clique para iniciar a validação.
+          <div className={styles.footer}>
+            <div className={styles.hint}>
+              <Icon name="shield-check" size={18} />
+              <span>A validação será enviada para a API VNMB Identity.</span>
             </div>
+
             <Button
               type="button"
               variant="primary"
@@ -162,15 +136,15 @@ export default function ReconhecimentoFacialPage() {
               loadingText="Validando rosto..."
               disabled={!cameraReady || Boolean(cameraError)}
             >
-              <Icon name="scan" size={18} /> Entrar com reconhecimento facial
+              <Icon name="scan" size={18} /> Entrar
             </Button>
           </div>
 
           {authError && <div className={styles.errorMessage}>{authError}</div>}
 
           <canvas ref={canvasRef} className={styles.canvas} />
-        </main>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
