@@ -3,3 +3,4 @@ export * from "@/lib/utils/error";
 export * from "@/lib/utils/tenant";
 export * from "@/lib/utils/category-icon";
 export * from "@/lib/utils/approval-limits";
+export * from "@/lib/utils/masks";

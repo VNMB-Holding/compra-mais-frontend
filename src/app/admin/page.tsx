@@ -18,6 +18,7 @@ import {
   ApproverType,
   ApproverOption,
 } from "@/lib/api/admin";
+import { maskCnpj } from "@/lib/utils/masks";
 import styles from "./admin.module.css";
 
 const ADMIN_TABS = [
@@ -1484,7 +1485,9 @@ export default function AdminPage() {
                     <input
                       className={styles.input}
                       value={companyForm.cnpj}
-                      onChange={(e) => setCompanyForm({ ...companyForm, cnpj: e.target.value })}
+                      onChange={(e) =>
+                        setCompanyForm({ ...companyForm, cnpj: maskCnpj(e.target.value) })
+                      }
                       placeholder="00.000.000/0000-00"
                     />
                   </div>

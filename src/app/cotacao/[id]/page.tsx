@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/contexts/ToastContext";
 import { rfqsApi, PublicRfq, PublicProposalPayload } from "@/lib/api/rfqs";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { maskCnpj, maskPhone } from "@/lib/utils/masks";
 
 export default function CotacaoFornecedorPage() {
   const params = useParams();
@@ -453,7 +454,7 @@ export default function CotacaoFornecedorPage() {
                         placeholder="(00) 00000-0000"
                         className={styles.inputField}
                         value={contactPhone}
-                        onChange={(e) => setContactPhone(e.target.value)}
+                        onChange={(e) => setContactPhone(maskPhone(e.target.value))}
                       />
                     </div>
                   </div>
@@ -469,7 +470,7 @@ export default function CotacaoFornecedorPage() {
                     placeholder="00.000.000/0000-00"
                     className={styles.inputField}
                     value={supplierCnpj}
-                    onChange={(e) => setSupplierCnpj(e.target.value)}
+                    onChange={(e) => setSupplierCnpj(maskCnpj(e.target.value))}
                   />
                 </div>
                 <div className={styles.formGroup}>
@@ -510,7 +511,7 @@ export default function CotacaoFornecedorPage() {
                     placeholder="(00) 00000-0000"
                     className={styles.inputField}
                     value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value)}
+                    onChange={(e) => setContactPhone(maskPhone(e.target.value))}
                   />
                 </div>
               </div>

@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { CatalogItem } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { maskPhone } from "@/lib/utils/masks";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
 
 interface ItemDemanda {
@@ -146,7 +147,7 @@ export default function SolicitacaoExternaPage() {
   const [solicitanteWhats, setSolicitanteWhats] = useState("");
   const [solicitanteEmail, setSolicitanteEmail] = useState("");
   const [setor, setSetor] = useState("Administracao");
-  const [empresaCode, setEmpresaCode] = useState(COMPANY_BRANCHES[0]?.code || "AGRO");
+  const [empresaCode, setEmpresaCode] = useState("");
 
   const [titulo, setTitulo] = useState("");
   const [justificativa, setJustificativa] = useState("");
@@ -179,16 +180,13 @@ export default function SolicitacaoExternaPage() {
 
       const branchFromIdentity =
         findCompanyBranch(user.tenantId) || findCompanyBranch(user.tenantName);
-      if (
-        branchFromIdentity &&
-        (overwrite || empresaCode === (COMPANY_BRANCHES[0]?.code || "AGRO"))
-      ) {
+      if (branchFromIdentity && overwrite) {
         setEmpresaCode(branchFromIdentity.code);
       }
 
       setIdentityApplied(true);
     },
-    [empresaCode, setor, solicitanteEmail, solicitanteNome, user],
+    [setor, solicitanteEmail, solicitanteNome, user],
   );
 
   useEffect(() => {
@@ -326,8 +324,7 @@ export default function SolicitacaoExternaPage() {
     setLoadingSearchItemId(null);
   };
 
-  const selectedBranch =
-    COMPANY_BRANCHES.find((b) => b.code === empresaCode) || COMPANY_BRANCHES[0];
+  const selectedBranch = COMPANY_BRANCHES.find((b) => b.code === empresaCode);
   const branchName = selectedBranch?.name || "Empresa";
 
   const setorObj = SETOR_OPTIONS.find((s) => s.value === setor);
@@ -360,6 +357,15 @@ export default function SolicitacaoExternaPage() {
       });
       return;
     }
+    if (!empresaCode) {
+      toast({
+        variant: "warning",
+        title: "Empresa obrigatória",
+        message: "Selecione a empresa/unidade para onde a solicitação deve ser enviada.",
+      });
+      return;
+    }
+
     if (!titulo.trim()) {
       toast({
         variant: "warning",
@@ -485,6 +491,7 @@ export default function SolicitacaoExternaPage() {
     setTitulo("");
     setJustificativa("");
     setDataDesejada("");
+    setEmpresaCode("");
     setItens([
       { id: 1, descricao: "", quantidade: 1, unidade: "UN", valorEstimado: 0, linkReferencia: "" },
     ]);
@@ -662,7 +669,7 @@ export default function SolicitacaoExternaPage() {
                   placeholder="(67) 99999-9999"
                   className={styles.inputField}
                   value={solicitanteWhats}
-                  onChange={(e) => setSolicitanteWhats(e.target.value)}
+                  onChange={(e) => setSolicitanteWhats(maskPhone(e.target.value))}
                 />
               </div>
 
@@ -695,11 +702,14 @@ export default function SolicitacaoExternaPage() {
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Empresa / Unidade</label>
+                <label>
+                  Empresa / Unidade <span className={styles.requiredAsterisk}>*</span>
+                </label>
                 <Select
                   options={branchOptions}
                   value={empresaCode}
                   onChange={setEmpresaCode}
+                  placeholder="Selecione a empresa/unidade"
                   triggerClassName={styles.selectTrigger}
                 />
               </div>

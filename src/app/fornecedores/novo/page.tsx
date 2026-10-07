@@ -7,6 +7,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
 import { suppliersApi } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { maskCnpj, maskPhone, maskCep } from "@/lib/utils/masks";
 import styles from "./novo.module.css";
 
 const CATEGORIA_OPTIONS = [
@@ -88,48 +89,15 @@ export default function NovoFornecedorPage() {
   });
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 14) value = value.slice(0, 14);
-
-    if (value.length > 12) {
-      value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5");
-    } else if (value.length > 8) {
-      value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, "$1.$2.$3/$4");
-    } else if (value.length > 5) {
-      value = value.replace(/^(\d{2})(\d{3})(\d{0,3})/, "$1.$2.$3");
-    } else if (value.length > 2) {
-      value = value.replace(/^(\d{2})(\d{0,3})/, "$1.$2");
-    }
-
-    setFormData((prev) => ({ ...prev, cnpj: value }));
+    setFormData((prev) => ({ ...prev, cnpj: maskCnpj(e.target.value) }));
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 11) value = value.slice(0, 11);
-
-    if (value.length > 10) {
-      value = value.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-    } else if (value.length > 6) {
-      value = value.replace(/^(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-    } else if (value.length > 2) {
-      value = value.replace(/^(\d{2})(\d{0,4})/, "($1) $2");
-    } else if (value.length > 0) {
-      value = value.replace(/^(\d*)/, "($1");
-    }
-
-    setFormData((prev) => ({ ...prev, contatoTelefone: value }));
+    setFormData((prev) => ({ ...prev, contatoTelefone: maskPhone(e.target.value) }));
   };
 
   const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 8) value = value.slice(0, 8);
-
-    if (value.length > 5) {
-      value = value.replace(/^(\d{5})(\d{3})/, "$1-$2");
-    }
-
-    setFormData((prev) => ({ ...prev, cep: value }));
+    setFormData((prev) => ({ ...prev, cep: maskCep(e.target.value) }));
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -6,6 +6,7 @@ import { Button, Icon } from "@/components/ui";
 import { rfqsApi } from "@/lib/api/rfqs";
 import { suppliersApi } from "@/lib/api/suppliers";
 import { useToast } from "@/contexts/ToastContext";
+import { maskCnpj, maskPhone } from "@/lib/utils/masks";
 import styles from "./InviteSupplierModal.module.css";
 
 export interface InviteSupplierModalProps {
@@ -38,16 +39,7 @@ export default function InviteSupplierModal({
   if (!open || !mounted) return null;
 
   const handleCnpjChange = (val: string) => {
-    const raw = val.replace(/\D/g, "").slice(0, 14);
-    if (raw.length <= 2) setCnpj(raw);
-    else if (raw.length <= 5) setCnpj(`${raw.slice(0, 2)}.${raw.slice(2)}`);
-    else if (raw.length <= 8) setCnpj(`${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5)}`);
-    else if (raw.length <= 12)
-      setCnpj(`${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5, 8)}/${raw.slice(8)}`);
-    else
-      setCnpj(
-        `${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5, 8)}/${raw.slice(8, 12)}-${raw.slice(12)}`,
-      );
+    setCnpj(maskCnpj(val));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -201,7 +193,7 @@ export default function InviteSupplierModal({
                   type="text"
                   placeholder="(00) 00000-0000"
                   value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
+                  onChange={(e) => setContactPhone(maskPhone(e.target.value))}
                   className={styles.inputField}
                 />
               </div>

@@ -8,6 +8,7 @@ import styles from "./pedido-detail.module.css";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { formatCorporateBranch } from "@/lib/utils/tenant";
 import { getApprovalChainForOrder } from "@/lib/utils/approval-limits";
+import { maskNfeAccessKey } from "@/lib/utils/masks";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import {
@@ -443,7 +444,7 @@ export default function PedidoDetailPage() {
                 type="text"
                 placeholder="Ex: 3524 0912 3456 7800 0199..."
                 value={inputChaveNfe}
-                onChange={(e) => setInputChaveNfe(e.target.value)}
+                onChange={(e) => setInputChaveNfe(maskNfeAccessKey(e.target.value))}
                 style={{
                   padding: "8px 12px",
                   borderRadius: 6,
