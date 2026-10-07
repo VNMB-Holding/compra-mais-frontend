@@ -68,6 +68,21 @@ function resolveSetorFromIdentity(department?: string) {
   })?.value;
 }
 
+async function requestCatalogItems(
+  endpoint: string,
+  init?: RequestInit,
+): Promise<CatalogItem[] | CatalogItem | null> {
+  const response = await fetch(`${BIZ_API_URL}${endpoint}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
 async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
   const trimmed = query.trim();
   const endpoint =
@@ -75,10 +90,42 @@ async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
       ? `/api/items/public/search?q=${encodeURIComponent(trimmed)}`
       : "/api/items/public";
 
-  const response = await fetch(`${BIZ_API_URL}${endpoint}`);
-  if (!response.ok) return [];
-  const data = await response.json();
+  const data = await requestCatalogItems(endpoint);
   return Array.isArray(data) ? data.slice(0, 20) : [];
+}
+
+function normalizeCatalogDescription(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+async function createPublicCatalogItem(item: ItemDemanda, category: string): Promise<CatalogItem> {
+  const description = item.descricao.trim();
+  const matches = await loadCatalogItems(description);
+  const exactMatch = matches.find(
+    (catalogItem) =>
+      normalizeCatalogDescription(catalogItem.description) ===
+      normalizeCatalogDescription(description),
+  );
+  if (exactMatch) return exactMatch;
+
+  const created = await requestCatalogItems("/api/items/public", {
+    method: "POST",
+    body: JSON.stringify({
+      description,
+      category,
+      unit: item.unidade || "UN",
+      lastUnitPrice: Number(item.valorEstimado) || undefined,
+      notes: item.linkReferencia?.trim()
+        ? `Cadastrado via solicitação externa. Referência: ${item.linkReferencia.trim()}`
+        : "Cadastrado via solicitação externa.",
+    }),
+  });
+
+  if (!created || Array.isArray(created)) {
+    throw new Error(`Não foi possível cadastrar o item "${description}" no catálogo.`);
+  }
+
+  return created;
 }
 const UNIDADE_MEDIDA_OPTIONS = [
   { label: "Unidade (UN)", value: "UN" },
@@ -196,6 +243,13 @@ export default function SolicitacaoExternaPage() {
 
   const handleDescriptionChange = async (id: number, value: string) => {
     handleUpdateItem(id, "descricao", value);
+    setItens((prev) =>
+      prev.map((it) =>
+        it.id === id && it.catalogItemId
+          ? { ...it, catalogItemId: undefined, fornecedorBase: undefined }
+          : it,
+      ),
+    );
     const requestId = searchRequestRef.current + 1;
     searchRequestRef.current = requestId;
 
@@ -327,6 +381,27 @@ export default function SolicitacaoExternaPage() {
 
     setSubmitting(true);
     try {
+      const catalogItemsByDemandId = new Map<number, CatalogItem>();
+      for (const item of itens) {
+        if (item.catalogItemId) continue;
+        const catalogItem = await createPublicCatalogItem(item, setorNomeFormatado);
+        catalogItemsByDemandId.set(item.id, catalogItem);
+      }
+
+      const itensComCatalogo: ItemDemanda[] = itens.map((item) => {
+        const catalogItem = catalogItemsByDemandId.get(item.id);
+        return catalogItem
+          ? {
+              ...item,
+              catalogItemId: catalogItem.id,
+              unidade: catalogItem.unit || item.unidade,
+              valorEstimado: catalogItem.lastUnitPrice
+                ? Number(catalogItem.lastUnitPrice)
+                : item.valorEstimado,
+            }
+          : item;
+      });
+
       const payload: any = {
         description: titulo.trim(),
         corporateRequester: `${solicitanteNome.trim()} (${solicitanteWhats.trim()}${solicitanteEmail ? ` - ${solicitanteEmail.trim()}` : ""})`,
@@ -350,7 +425,7 @@ export default function SolicitacaoExternaPage() {
               : prioridade === "Baixa"
                 ? "Low"
                 : "Medium",
-        items: itens.map((it) => ({
+        items: itensComCatalogo.map((it) => ({
           description: it.linkReferencia?.trim()
             ? `${it.descricao.trim()} (Ref: ${it.linkReferencia.trim()})`
             : it.descricao.trim(),
@@ -369,6 +444,7 @@ export default function SolicitacaoExternaPage() {
       if (!code) {
         throw new Error("O servidor não retornou o código da solicitação criada.");
       }
+      setItens(itensComCatalogo);
       setProtocoloGerado(code);
       toast({
         variant: "success",
