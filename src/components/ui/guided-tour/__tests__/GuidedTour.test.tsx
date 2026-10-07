@@ -201,7 +201,6 @@ describe("GuidedTour Component & TourContext", () => {
 
     const caretEl = document.querySelector('[class*="caret"]');
     expect(caretEl).not.toBeNull();
-    // Ao posicionar à esquerda do elemento, o caret fica na borda direita do tooltip apontando para o elemento (caretLeft)
     expect(caretEl?.className).toMatch(/caretLeft/);
 
     const nextBtn = await screen.findByRole("button", { name: /próximo/i });
@@ -212,7 +211,6 @@ describe("GuidedTour Component & TourContext", () => {
     await screen.findByText("Passo Direita");
 
     const secondCaret = document.querySelector('[class*="caret"]');
-    // Ao posicionar à direita do elemento, o caret fica na borda esquerda do tooltip apontando para o elemento (caretRight)
     expect(secondCaret?.className).toMatch(/caretRight/);
   });
 });

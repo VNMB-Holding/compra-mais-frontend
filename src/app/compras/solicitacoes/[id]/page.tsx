@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Card,
@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
+import { rfqsApi } from "@/lib/api/rfqs";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
 import {
@@ -78,11 +79,26 @@ export default function SolicitacaoDetailPage() {
       setCodeLoading(true);
       (async () => {
         try {
-          const list = await purchaseRequestsApi.list({ companyCode: "TODAS" });
-          const found = list.find((item) => item.code === solId || item.id === solId);
+          let full: PurchaseRequest | null = null;
+          try {
+            full = await purchaseRequestsApi.getById(solId);
+          } catch {}
+
+          if (!full) {
+            const list = await purchaseRequestsApi.list({ companyCode: "TODAS" });
+            const found = list.find((item) => item.code === solId || item.id === solId);
+            if (found) {
+              try {
+                full = await purchaseRequestsApi.getById(found.id);
+              } catch {
+                full = found;
+              }
+            }
+          }
+
           if (cancelled) return;
-          setSolOverride(found || null);
-          if (!found) {
+          setSolOverride(full || null);
+          if (!full) {
             toast({
               variant: "error",
               title: "Solicitação não encontrada",
@@ -225,9 +241,52 @@ export default function SolicitacaoDetailPage() {
     }
   };
 
+  const [linkedRfqs, setLinkedRfqs] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!sol) {
+      setLinkedRfqs([]);
+      return;
+    }
+
+    const fromSol = (sol.rfqs ?? []).filter((r: any) => r.status !== "Cancelled");
+    if (fromSol.length > 0) {
+      setLinkedRfqs(fromSol);
+      return;
+    }
+
+    // Busca ativa das RFQs vinculadas a esta solicitação caso a relação não tenha vindo populada
+    let cancelled = false;
+    rfqsApi
+      .list({ search: sol.code || sol.id })
+      .then((rfqList) => {
+        if (cancelled || !Array.isArray(rfqList)) return;
+        const matching = rfqList.filter(
+          (r: any) =>
+            r.status !== "Cancelled" &&
+            (r.requestId === sol.id ||
+              r.purchaseRequest?.id === sol.id ||
+              r.purchaseRequest?.code === sol.code ||
+              (sol.code && r.code?.includes(sol.code)) ||
+              (sol.code && r.title?.includes(sol.code))),
+        );
+        if (matching.length > 0) {
+          setLinkedRfqs(matching);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sol?.id, sol?.code, sol?.status, sol?.rfqs]);
+
   const isDraft = sol?.status === "Draft";
   const isApproved = approved === true || sol?.status === "Approved";
-  const activeRfqs = (sol?.rfqs ?? []).filter((r: any) => r.status !== "Cancelled");
+  const activeRfqs = useMemo(() => {
+    if (linkedRfqs.length > 0) return linkedRfqs;
+    return (sol?.rfqs ?? []).filter((r: any) => r.status !== "Cancelled");
+  }, [linkedRfqs, sol?.rfqs]);
   const hasActiveRfq = activeRfqs.length > 0;
   const isInQuote = sol?.status === "InQuote" || hasActiveRfq;
   const isFinished = sol?.status === "Finished";
@@ -556,8 +615,13 @@ export default function SolicitacaoDetailPage() {
                     <Icon name="arrow-right" /> Ver Cotação ({activeRfqs[0]?.code || "RFQ"})
                   </Button>
                 ) : (
-                  <Button variant="secondary" onClick={() => router.push(`/compras/rfqs`)}>
-                    <Icon name="arrow-right" /> Ver Cotações em Aberto
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      router.push(`/compras/rfqs?search=${encodeURIComponent(sol?.code || solId)}`)
+                    }
+                  >
+                    <Icon name="arrow-right" /> Ver Cotação no Painel
                   </Button>
                 )}
               </div>
@@ -579,6 +643,16 @@ export default function SolicitacaoDetailPage() {
                 >
                   <Icon name="check-circle" size={16} /> Demanda Atendida
                 </span>
+                {activeRfqs.length > 0 && (
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      router.push(`/compras/rfqs/${activeRfqs[0]?.id || activeRfqs[0]?.code}`)
+                    }
+                  >
+                    <Icon name="arrow-right" /> Ver Cotação ({activeRfqs[0]?.code || "RFQ"})
+                  </Button>
+                )}
               </div>
             ) : (
               !isRejected && (
@@ -782,13 +856,37 @@ export default function SolicitacaoDetailPage() {
                       <strong>Liberação para RFQ</strong>
                       <span>
                         {isInQuote
-                          ? "Cotação em andamento"
+                          ? activeRfqs[0]?.code
+                            ? `Cotação ${activeRfqs[0].code}`
+                            : "Cotação em andamento"
                           : isFinished
                             ? "Demanda finalizada"
                             : isEligibleForRfq
                               ? "Pronta para Cotação"
                               : "Aguardando Aprovação"}
                       </span>
+                      {activeRfqs.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(`/compras/rfqs/${activeRfqs[0]?.id || activeRfqs[0]?.code}`)
+                          }
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#0f766e",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: 0,
+                            cursor: "pointer",
+                            textAlign: "left",
+                            textDecoration: "underline",
+                            marginTop: 2,
+                          }}
+                        >
+                          Ver RFQ ({activeRfqs[0]?.code || "Acessar"})
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
