@@ -636,9 +636,8 @@ export default function EconomiaPage() {
             <button
               type="button"
               className={styles.linkButton}
-              onClick={() => setShowAllSuppliers((current) => !current)}
-            >
-              {showAllSuppliers ? "Recolher" : "Ver todos"}
+              onClick={() => setShowAllDetails((current) => !current)}>
+              {showAllDetails ? "Recolher" : "Ver todos"}
             </button>
           </div>
           <div className={styles.customTableWrapper}>
@@ -688,3 +687,5 @@ export default function EconomiaPage() {
     </div>
   );
 }
+
+
