@@ -393,14 +393,21 @@ export default function SpendPage() {
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
                 Evolu√ß√£o do spend
-                <span className={styles.infoIcon} title="Mostra a evoluÁ„o mensal do spend conforme os filtros ativos."><Icon name="help-circle" size={14} /></span>
+                <span
+                  className={styles.infoIcon}
+                  title="Mostra a evolu√ß√£o mensal do spend conforme os filtros ativos."
+                >
+                  <Icon name="help-circle" size={14} />
+                </span>
               </div>
             </div>
             <div className={styles.chartWrapper}>
               {monthlySpendData.length > 0 ? (
                 <AreaChart data={monthlySpendData} color="#007d79" label1="Spend" height={260} />
               ) : (
-                <div className={styles.emptyState}>Nenhum dado de spend encontrado para os filtros selecionados.</div>
+                <div className={styles.emptyState}>
+                  Nenhum dado de spend encontrado para os filtros selecionados.
+                </div>
               )}
             </div>
           </div>
@@ -413,7 +420,12 @@ export default function SpendPage() {
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
                 Spend por categoria
-                <span className={styles.infoIcon} title="DistribuiÁ„o percentual do spend entre categorias no perÌodo filtrado."><Icon name="help-circle" size={14} /></span>
+                <span
+                  className={styles.infoIcon}
+                  title="Distribui√ß√£o percentual do spend entre categorias no per√≠odo filtrado."
+                >
+                  <Icon name="help-circle" size={14} />
+                </span>
               </div>
             </div>
             <div className={styles.donutRow}>
@@ -429,16 +441,18 @@ export default function SpendPage() {
               <div className={styles.legendList}>
                 {categoriesData.length === 0 ? (
                   <div className={styles.emptyState}>Nenhuma categoria encontrada.</div>
-                ) : categoriesData.map((item, index) => (
-                  <div key={index} className={styles.legendItem}>
-                    <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
-                    <span className={styles.legendName} title={item.categoria}>
-                      {item.categoria}
-                    </span>
-                    <span className={styles.legendValue}>{formatCurrency(item.spendTotal)}</span>
-                    <span className={styles.legendPct}>{item.pctTotal.toFixed(1)}%</span>
-                  </div>
-                ))}
+                ) : (
+                  categoriesData.map((item, index) => (
+                    <div key={index} className={styles.legendItem}>
+                      <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
+                      <span className={styles.legendName} title={item.categoria}>
+                        {item.categoria}
+                      </span>
+                      <span className={styles.legendValue}>{formatCurrency(item.spendTotal)}</span>
+                      <span className={styles.legendPct}>{item.pctTotal.toFixed(1)}%</span>
+                    </div>
+                  ))
+                )}
                 <div className={styles.legendDivider} />
                 <div className={styles.legendTotalRow}>
                   <span />
@@ -457,24 +471,31 @@ export default function SpendPage() {
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               Spend por fornecedor
-              <span className={styles.infoIcon} title="Mostra a evoluÁ„o mensal do spend conforme os filtros ativos."><Icon name="help-circle" size={14} /></span>
+              <span
+                className={styles.infoIcon}
+                title="Mostra a evolu√ß√£o mensal do spend conforme os filtros ativos."
+              >
+                <Icon name="help-circle" size={14} />
+              </span>
             </div>
           </div>
           <div className={styles.supplierList}>
             {suppliersData.length === 0 ? (
               <div className={styles.emptyState}>Nenhum fornecedor encontrado.</div>
-            ) : visibleSuppliers.map((supplier, idx) => (
-              <div key={idx} className={styles.supplierRow}>
-                <span className={styles.supplierName} title={supplier.nome}>
-                  {supplier.nome}
-                </span>
-                <div className={styles.progressBarBg}>
-                  <div className={styles.progressBarFill} style={{ width: `${supplier.pct}%` }} />
+            ) : (
+              visibleSuppliers.map((supplier, idx) => (
+                <div key={idx} className={styles.supplierRow}>
+                  <span className={styles.supplierName} title={supplier.nome}>
+                    {supplier.nome}
+                  </span>
+                  <div className={styles.progressBarBg}>
+                    <div className={styles.progressBarFill} style={{ width: `${supplier.pct}%` }} />
+                  </div>
+                  <span className={styles.supplierValue}>{formatCurrency(supplier.valor)}</span>
+                  <span className={styles.supplierPct}>{supplier.pct.toFixed(1)}%</span>
                 </div>
-                <span className={styles.supplierValue}>{formatCurrency(supplier.valor)}</span>
-                <span className={styles.supplierPct}>{supplier.pct.toFixed(1)}%</span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -482,10 +503,19 @@ export default function SpendPage() {
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               Detalhamento do spend
-              <span className={styles.infoIcon} title="Mostra a evoluÁ„o mensal do spend conforme os filtros ativos."><Icon name="help-circle" size={14} /></span>
+              <span
+                className={styles.infoIcon}
+                title="Mostra a evolu√ß√£o mensal do spend conforme os filtros ativos."
+              >
+                <Icon name="help-circle" size={14} />
+              </span>
             </div>
             {categoriesData.length > 5 && (
-              <button type="button" className={styles.linkButton} onClick={() => setShowAllCategories((current) => !current)}>
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => setShowAllCategories((current) => !current)}
+              >
                 {showAllCategories ? "Recolher" : "Ver todos"}
               </button>
             )}
@@ -537,8 +567,3 @@ export default function SpendPage() {
     </div>
   );
 }
-
-
-
-
-
