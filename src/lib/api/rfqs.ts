@@ -156,11 +156,58 @@ export const rfqsApi = {
     try {
       return await apiClient.get<Rfq>(`/api/rfqs/${id}`);
     } catch (err) {
+      // 1. Tenta encontrar na listagem geral por id, código ou solicitação
       try {
         const list = await rfqsApi.list({ companyCode: "TODAS" });
-        const found = list.find((item) => item.id === id || item.code === id);
+        const found = list.find(
+          (item) =>
+            item.id === id ||
+            item.code === id ||
+            item.requestId === id ||
+            item.purchaseRequest?.id === id ||
+            item.purchaseRequest?.code === id,
+        );
         if (found) return found;
       } catch {}
+
+      // 2. Tenta recuperar dados via endpoint público caso o escopo autenticado bloqueie por tenant
+      try {
+        const pub = await rfqsApi.getPublicRfq(id);
+        if (pub && pub.id) {
+          const rfqAdapted: Rfq = {
+            id: pub.id,
+            tenantId: pub.companyCode || "",
+            code: pub.code,
+            requestId: "",
+            title: pub.title,
+            closesAt: pub.closesAt,
+            status: (pub.status as any) || "Open",
+            createdAt: pub.createdAt,
+            updatedAt: pub.createdAt,
+            purchaseRequest: {
+              id: "",
+              code: pub.code,
+              description: pub.description || pub.title,
+              category: pub.costCenterName || "",
+              companyCode: pub.companyCode,
+              items: pub.items || [],
+            },
+            rfqSuppliers: (pub.invitedSuppliers ?? []).map((s) => ({
+              id: s.id,
+              supplierId: s.id,
+              supplier: {
+                id: s.id,
+                corporateName: s.corporateName || s.name,
+                tradeName: s.name,
+                cnpj: s.cnpj || "",
+              },
+            })),
+            proposals: [],
+          };
+          return rfqAdapted;
+        }
+      } catch {}
+
       throw err;
     }
   },

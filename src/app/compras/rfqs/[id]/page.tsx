@@ -756,15 +756,7 @@ export default function RfqDetailPage() {
     async function load() {
       try {
         setLoading(true);
-        let data: Rfq;
-        try {
-          data = await rfqsApi.getById(rfqId);
-        } catch (err) {
-          const list = await rfqsApi.list({ companyCode: "TODAS" });
-          const found = list.find((item) => item.code === rfqId || item.id === rfqId);
-          if (!found) throw err;
-          data = found;
-        }
+        const data = await rfqsApi.getById(rfqId);
         let pr = data.purchaseRequest as any;
         const targetReqId = data.requestId || pr?.id;
         if (targetReqId && (!pr || (!pr.corporateFilial && !pr.filialCode && !pr.companyCode))) {
