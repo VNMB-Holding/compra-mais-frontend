@@ -36,6 +36,17 @@ export async function loginApi(email: string, password: string): Promise<Identit
   );
 }
 
+
+export async function faceLoginApi(faceImage: string): Promise<IdentityLoginResponse> {
+  return apiClient.post<IdentityLoginResponse>(
+    "/api/auth/face-login",
+    {
+      face_image: faceImage,
+      client_id: "compra-mais",
+    },
+    { auth: true },
+  );
+}
 export interface IdentityUserResponse {
   id: string;
   tenant_id: string;
@@ -80,3 +91,4 @@ export async function refreshTokenApi(
     { auth: true },
   );
 }
+

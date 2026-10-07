@@ -5,6 +5,7 @@ import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
 import {
   loginApi,
+  faceLoginApi,
   getTenantsApi,
   getUserByIdApi,
   logoutApi,
@@ -220,88 +221,102 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     restore();
   }, []);
 
+  const completeLogin = useCallback(async (loginData: Awaited<ReturnType<typeof loginApi>>) => {
+    const backendUser = loginData.user || {};
+
+    const token = loginData.access_token;
+    setTokenProvider(() => token);
+
+    let meRoles: string[] = backendUser.roles || [];
+    let meScopes: string[] = backendUser.scopes || [];
+    let tenantId: string | undefined = backendUser.tenant_id;
+    const userId = backendUser.id;
+
+    if (userId) {
+      try {
+        const userData = await getUserByIdApi(userId);
+        if (userData && userData.tenant_id) {
+          tenantId = userData.tenant_id;
+        }
+      } catch (err) {
+        logError("AuthContext/getUserByIdApi", err);
+      }
+    }
+
+    if (!meRoles || meRoles.length === 0) meRoles = ["Admin"];
+    if (!meScopes || meScopes.length === 0) meScopes = ["read", "write", "admin"];
+
+    let tenantName: string | undefined = backendUser.tenant_name;
+    let availableTenants =
+      (
+        backendUser as {
+          availableTenants?: { id: string; name: string; type?: "Matriz" | "Filial" }[];
+        }
+      ).availableTenants || [];
+
+    if (!availableTenants || availableTenants.length === 0) {
+      try {
+        const tenantsData = await getTenantsApi();
+        if (tenantsData && tenantsData.length > 0) {
+          availableTenants = tenantsData.map((t) => ({
+            id: t.id,
+            name: t.name,
+            type: t.type,
+          }));
+        }
+      } catch {}
+    }
+
+    const currentTenantObj = availableTenants.find((t) => t.id === tenantId);
+
+    if (!tenantName && currentTenantObj) {
+      tenantName = currentTenantObj.name;
+    }
+
+    const role = mapApiRole(meRoles);
+
+    const loggedInUser: User = {
+      id: backendUser.id || loginData.user?.id,
+      name: backendUser.name || loginData.user?.name,
+      email: backendUser.email || loginData.user?.email,
+      role,
+      roles: meRoles,
+      scopes: meScopes,
+      tenantId,
+      tenantName,
+      availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
+      accessToken: token,
+      refreshToken: loginData.refresh_token,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(backendUser.name || "User")}`,
+    };
+
+    setAccessToken(loginData.access_token);
+    setRefreshToken(loginData.refresh_token);
+    setUser(loggedInUser);
+
+    saveSession(loginData.access_token, loginData.refresh_token, loggedInUser);
+    return loggedInUser;
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const loginData = await loginApi(email, password);
-      const backendUser = loginData.user || {};
-
-      const token = loginData.access_token;
-      setTokenProvider(() => token);
-
-      let meRoles: string[] = backendUser.roles || [];
-      let meScopes: string[] = backendUser.scopes || [];
-      let tenantId: string | undefined = backendUser.tenant_id;
-      const userId = backendUser.id;
-
-      if (userId) {
-        try {
-          const userData = await getUserByIdApi(userId);
-          if (userData && userData.tenant_id) {
-            tenantId = userData.tenant_id;
-          }
-        } catch (err) {
-          logError("AuthContext/getUserByIdApi", err);
-        }
-      }
-
-      if (!meRoles || meRoles.length === 0) meRoles = ["Admin"];
-      if (!meScopes || meScopes.length === 0) meScopes = ["read", "write", "admin"];
-
-      let tenantName: string | undefined = backendUser.tenant_name;
-      let availableTenants =
-        (
-          backendUser as {
-            availableTenants?: { id: string; name: string; type?: "Matriz" | "Filial" }[];
-          }
-        ).availableTenants || [];
-
-      if (!availableTenants || availableTenants.length === 0) {
-        try {
-          const tenantsData = await getTenantsApi();
-          if (tenantsData && tenantsData.length > 0) {
-            availableTenants = tenantsData.map((t) => ({
-              id: t.id,
-              name: t.name,
-              type: t.type,
-            }));
-          }
-        } catch {}
-      }
-
-      const currentTenantObj = availableTenants.find((t) => t.id === tenantId);
-
-      if (!tenantName && currentTenantObj) {
-        tenantName = currentTenantObj.name;
-      }
-
-      const role = mapApiRole(meRoles);
-
-      const loggedInUser: User = {
-        id: backendUser.id || loginData.user?.id,
-        name: backendUser.name || loginData.user?.name,
-        email: backendUser.email || loginData.user?.email,
-        role,
-        roles: meRoles,
-        scopes: meScopes,
-        tenantId,
-        tenantName,
-        availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
-        accessToken: token,
-        refreshToken: loginData.refresh_token,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(backendUser.name || "User")}`,
-      };
-
-      setAccessToken(loginData.access_token);
-      setRefreshToken(loginData.refresh_token);
-      setUser(loggedInUser);
-
-      saveSession(loginData.access_token, loginData.refresh_token, loggedInUser);
-      return loggedInUser;
+      return await completeLogin(loginData);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [completeLogin]);
+
+  const faceLogin = useCallback(async (faceImage: string) => {
+    setIsLoading(true);
+    try {
+      const loginData = await faceLoginApi(faceImage);
+      return await completeLogin(loginData);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [completeLogin]);
 
   const logout = useCallback(() => {
     if (refreshToken) {
@@ -322,8 +337,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     isLoading,
     login,
+    faceLogin,
     logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+

@@ -22,7 +22,11 @@ export default function LoginPage() {
   }, []);
 
   const handleFaceLogin = () => {
-    setError("Reconhecimento facial ainda não está configurado para esta conta.");
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+    window.location.href = redirect
+      ? `/login/reconhecimento-facial?redirect=${encodeURIComponent(redirect)}`
+      : "/login/reconhecimento-facial";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,3 +137,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
