@@ -152,7 +152,18 @@ export const rfqsApi = {
     return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ""}`);
   },
 
-  getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
+  getById: async (id: string): Promise<Rfq> => {
+    try {
+      return await apiClient.get<Rfq>(`/api/rfqs/${id}`);
+    } catch (err) {
+      try {
+        const list = await rfqsApi.list({ companyCode: "TODAS" });
+        const found = list.find((item) => item.id === id || item.code === id);
+        if (found) return found;
+      } catch {}
+      throw err;
+    }
+  },
 
   getPublicRfq: (id: string): Promise<PublicRfq> => {
     return apiClient.get<PublicRfq>(`/api/rfqs/public/${id}`);
