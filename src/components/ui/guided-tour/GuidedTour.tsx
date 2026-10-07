@@ -251,8 +251,8 @@ export default function GuidedTour() {
       : tooltipPos?.placement === "top"
         ? styles.caretTop
         : tooltipPos?.placement === "left"
-          ? styles.caretRight
-          : styles.caretLeft;
+          ? styles.caretLeft
+          : styles.caretRight;
 
   const caretStyle: React.CSSProperties = {};
   if (tooltipPos?.caretLeft !== null && tooltipPos?.caretLeft !== undefined) {

@@ -125,4 +125,94 @@ describe("GuidedTour Component & TourContext", () => {
     expect(screen.getByTestId("status").textContent).toBe("Inativo");
     expect(localStorage.getItem("compra-tour-done-test-tour")).toBe("1");
   });
+
+  it("deve aplicar as classes corretas de caret para placements left e right", async () => {
+    const sideTour: TourDefinition = {
+      id: "side-tour",
+      steps: [
+        {
+          target: "#step-1",
+          title: "Passo Esquerda",
+          description: "Posicionado à esquerda",
+          placement: "left",
+        },
+        {
+          target: "#step-2",
+          title: "Passo Direita",
+          description: "Posicionado à direita",
+          placement: "right",
+        },
+      ],
+    };
+
+    function SideConsumer() {
+      const { startTour } = useTourContext();
+      return (
+        <div>
+          <div id="step-1" style={{ width: "100px", height: "40px" }}>
+            El 1
+          </div>
+          <div id="step-2" style={{ width: "100px", height: "40px" }}>
+            El 2
+          </div>
+          <button onClick={() => startTour(sideTour)}>Iniciar Side Tour</button>
+        </div>
+      );
+    }
+
+    render(
+      <TourProvider>
+        <SideConsumer />
+        <GuidedTour />
+      </TourProvider>,
+    );
+
+    const step1El = document.querySelector("#step-1")!;
+    vi.spyOn(step1El, "getBoundingClientRect").mockReturnValue({
+      top: 100,
+      left: 600,
+      width: 100,
+      height: 40,
+      bottom: 140,
+      right: 700,
+      x: 600,
+      y: 100,
+      toJSON: () => {},
+    });
+
+    const step2El = document.querySelector("#step-2")!;
+    vi.spyOn(step2El, "getBoundingClientRect").mockReturnValue({
+      top: 100,
+      left: 100,
+      width: 100,
+      height: 40,
+      bottom: 140,
+      right: 200,
+      x: 100,
+      y: 100,
+      toJSON: () => {},
+    });
+
+    act(() => {
+      fireEvent.click(screen.getByText("Iniciar Side Tour"));
+    });
+
+    await screen.findByText("Passo Esquerda");
+
+    const caretEl = document.querySelector('[class*="caret"]');
+    expect(caretEl).not.toBeNull();
+    // Ao posicionar à esquerda do elemento, o caret fica na borda direita do tooltip apontando para o elemento (caretLeft)
+    expect(caretEl?.className).toMatch(/caretLeft/);
+
+    const nextBtn = await screen.findByRole("button", { name: /próximo/i });
+    act(() => {
+      fireEvent.click(nextBtn);
+    });
+
+    await screen.findByText("Passo Direita");
+
+    const secondCaret = document.querySelector('[class*="caret"]');
+    // Ao posicionar à direita do elemento, o caret fica na borda esquerda do tooltip apontando para o elemento (caretRight)
+    expect(secondCaret?.className).toMatch(/caretRight/);
+  });
 });

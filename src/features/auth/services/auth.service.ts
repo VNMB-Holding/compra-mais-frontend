@@ -40,7 +40,6 @@ export const authService = {
   logout: (refreshToken: string) => logoutApi(refreshToken),
   refreshToken: (refreshToken: string) => refreshTokenApi(refreshToken),
 
-  // Biometric / Facial Authentication
   facialAuthenticate: (image: string, email?: string) => facialAuthenticateApi(image, email),
   faceLogin: (image: string, email?: string) => faceLoginApi(image, email),
   getFacialStatus: () => getFacialStatusApi(),
@@ -54,7 +53,6 @@ export const authService = {
   compareFacial: (image: string, tenantId?: string, topK?: number) =>
     compareFacialApi(image, tenantId, topK),
 
-  // Admin user biometrics
   getUserFacialStatus: (userId: string) => getUserFacialStatusApi(userId),
   enrollUserFacial: (userId: string, image: string) => enrollUserFacialApi(userId, image),
   deleteUserFacial: (userId: string) => deleteUserFacialApi(userId),

@@ -36,10 +36,6 @@ export async function loginApi(email: string, password: string): Promise<Identit
   );
 }
 
-// ==========================================
-// Facial Authentication Types & APIs
-// ==========================================
-
 export interface FacialStatusResponse {
   enrolled: boolean;
   provider?: string;
@@ -115,10 +111,6 @@ export interface FacialCompareResponse {
   matches: FacialCompareMatch[];
 }
 
-/**
- * Biometric authentication via face recognition.
- * Route: POST /api/auth/facial/authenticate
- */
 export async function facialAuthenticateApi(
   image: string,
   email?: string,
@@ -134,39 +126,20 @@ export async function facialAuthenticateApi(
   );
 }
 
-/**
- * Backward-compatible alias for facialAuthenticateApi.
- */
 export const faceLoginApi = facialAuthenticateApi;
 
-/**
- * Enrolls face biometrics for the current authenticated user.
- * Route: POST /api/auth/facial/enroll
- */
 export async function enrollFacialApi(image: string): Promise<FacialEnrollResponse> {
   return apiClient.post<FacialEnrollResponse>("/api/auth/facial/enroll", { image }, { auth: true });
 }
 
-/**
- * Deletes face biometrics for the current authenticated user.
- * Route: DELETE /api/auth/facial/enroll
- */
 export async function deleteFacialApi(): Promise<void> {
   return apiClient.delete<void>("/api/auth/facial/enroll", { auth: true });
 }
 
-/**
- * Checks biometric enrollment status for the current authenticated user.
- * Route: GET /api/auth/facial/status
- */
 export async function getFacialStatusApi(): Promise<FacialStatusResponse> {
   return apiClient.get<FacialStatusResponse>("/api/auth/facial/status", { auth: true });
 }
 
-/**
- * Performs 1:1 face verification for the current authenticated user (step-up auth).
- * Route: POST /api/auth/facial/verify
- */
 export async function verifyFacialApi(
   image: string,
   similarityThreshold?: number,
@@ -181,10 +154,6 @@ export async function verifyFacialApi(
   );
 }
 
-/**
- * Generates an enrollment link for registering facial biometrics.
- * Route: POST /api/auth/facial/enroll-link/generate
- */
 export async function generateFacialEnrollLinkApi(
   params: FacialGenerateEnrollLinkParams = {},
 ): Promise<FacialGenerateEnrollLinkResponse> {
@@ -200,10 +169,6 @@ export async function generateFacialEnrollLinkApi(
   );
 }
 
-/**
- * Verifies if an enrollment link token is valid.
- * Route: GET /api/auth/facial/enroll-link/verify
- */
 export async function verifyFacialEnrollLinkApi(
   token: string,
 ): Promise<FacialVerifyEnrollLinkResponse> {
@@ -213,10 +178,6 @@ export async function verifyFacialEnrollLinkApi(
   );
 }
 
-/**
- * Submits biometric facial image using an enrollment token.
- * Route: POST /api/auth/facial/enroll-link
- */
 export async function submitFacialEnrollLinkApi(
   token: string,
   image: string,
@@ -228,10 +189,6 @@ export async function submitFacialEnrollLinkApi(
   );
 }
 
-/**
- * Compares a face image against users in tenant.
- * Route: POST /api/auth/facial/compare
- */
 export async function compareFacialApi(
   image: string,
   tenantId?: string,
@@ -248,10 +205,6 @@ export async function compareFacialApi(
   );
 }
 
-/**
- * Admin: Enrolls face biometrics for a specified user ID.
- * Route: POST /api/users/{id}/facial-enroll
- */
 export async function enrollUserFacialApi(
   userId: string,
   image: string,
@@ -263,18 +216,10 @@ export async function enrollUserFacialApi(
   );
 }
 
-/**
- * Admin: Deletes facial enrollment for a specified user ID.
- * Route: DELETE /api/users/{id}/facial-enroll
- */
 export async function deleteUserFacialApi(userId: string): Promise<void> {
   return apiClient.delete<void>(`/api/users/${userId}/facial-enroll`, { auth: true });
 }
 
-/**
- * Admin: Gets facial enrollment status for a specified user ID.
- * Route: GET /api/users/{id}/facial-status
- */
 export async function getUserFacialStatusApi(userId: string): Promise<FacialStatusResponse> {
   return apiClient.get<FacialStatusResponse>(`/api/users/${userId}/facial-status`, { auth: true });
 }
