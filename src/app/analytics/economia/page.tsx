@@ -64,6 +64,9 @@ export default function EconomiaPage() {
   const [loading, setLoading] = useState(true);
   const [apiData, setApiData] = useState<EconomyAnalyticsResponse | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [showAllInitiatives, setShowAllInitiatives] = useState(false);
+  const [showAllSuppliers, setShowAllSuppliers] = useState(false);
+  const [showAllDetails, setShowAllDetails] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState<{ categories: string[]; suppliers: string[] }>(
     {
@@ -230,6 +233,10 @@ export default function EconomiaPage() {
   const detailsData = useMemo<DetailEconomy[]>(() => {
     return apiData?.details || [];
   }, [apiData]);
+
+  const visibleInitiatives = showAllInitiatives ? initiativesData : initiativesData.slice(0, 5);
+  const visibleSuppliers = showAllSuppliers ? suppliersData : suppliersData.slice(0, 5);
+  const visibleDetails = showAllDetails ? detailsData : detailsData.slice(0, 5);
 
   const totals = useMemo(() => {
     const catSum = categoriesData.reduce((s, c) => s + c.valor, 0);
@@ -465,7 +472,12 @@ export default function EconomiaPage() {
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
                 Evolução da economia gerada
-                <Icon name="help-circle" size={14} className={styles.infoIcon} />
+                <span
+                  className={styles.infoIcon}
+                  title="Indicador calculado conforme os filtros ativos."
+                >
+                  <Icon name="help-circle" size={14} />
+                </span>
               </div>
             </div>
             <div className={styles.chartWrapper}>
@@ -481,7 +493,12 @@ export default function EconomiaPage() {
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
                 Economia por categoria
-                <Icon name="help-circle" size={14} className={styles.infoIcon} />
+                <span
+                  className={styles.infoIcon}
+                  title="Indicador calculado conforme os filtros ativos."
+                >
+                  <Icon name="help-circle" size={14} />
+                </span>
               </div>
             </div>
             <div className={styles.donutRow}>
@@ -517,11 +534,16 @@ export default function EconomiaPage() {
           </div>
         )}
 
-        <div className={`${styles.chartCard} styles.initiativeCard`}>
+        <div className={`${styles.chartCard} ${styles.initiativeCard}`}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               Economia por tipo de iniciativa
-              <Icon name="help-circle" size={14} className={styles.infoIcon} />
+              <span
+                className={styles.infoIcon}
+                title="Indicador calculado conforme os filtros ativos."
+              >
+                <Icon name="help-circle" size={14} />
+              </span>
             </div>
           </div>
           <div className={styles.initiativeList}>
@@ -553,9 +575,20 @@ export default function EconomiaPage() {
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               Top fornecedores por economia gerada
-              <Icon name="help-circle" size={14} className={styles.infoIcon} />
+              <span
+                className={styles.infoIcon}
+                title="Indicador calculado conforme os filtros ativos."
+              >
+                <Icon name="help-circle" size={14} />
+              </span>
             </div>
-            <span className={styles.linkText}>Ver todos</span>
+            <button
+              type="button"
+              className={styles.linkButton}
+              onClick={() => setShowAllSuppliers((current) => !current)}
+            >
+              {showAllSuppliers ? "Recolher" : "Ver todos"}
+            </button>
           </div>
           <div className={styles.customTableWrapper}>
             <table className={styles.economyTable}>
@@ -568,7 +601,7 @@ export default function EconomiaPage() {
                 </tr>
               </thead>
               <tbody>
-                {suppliersData.map((supplier, idx) => (
+                {visibleSuppliers.map((supplier, idx) => (
                   <tr key={idx}>
                     <td>{supplier.fornecedor}</td>
                     <td style={{ textAlign: "right" }}>{formatCurrency(supplier.valor)}</td>
@@ -593,9 +626,20 @@ export default function EconomiaPage() {
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               Detalhamento das economias
-              <Icon name="help-circle" size={14} className={styles.infoIcon} />
+              <span
+                className={styles.infoIcon}
+                title="Indicador calculado conforme os filtros ativos."
+              >
+                <Icon name="help-circle" size={14} />
+              </span>
             </div>
-            <span className={styles.linkText}>Ver todos</span>
+            <button
+              type="button"
+              className={styles.linkButton}
+              onClick={() => setShowAllSuppliers((current) => !current)}
+            >
+              {showAllSuppliers ? "Recolher" : "Ver todos"}
+            </button>
           </div>
           <div className={styles.customTableWrapper}>
             <table className={styles.economyTable}>
@@ -609,7 +653,7 @@ export default function EconomiaPage() {
                 </tr>
               </thead>
               <tbody>
-                {detailsData.map((item, idx) => (
+                {visibleDetails.map((item, idx) => (
                   <tr key={idx}>
                     <td>{item.iniciativa}</td>
                     <td>{item.categoria}</td>
