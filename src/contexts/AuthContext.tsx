@@ -298,25 +298,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return loggedInUser;
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const loginData = await loginApi(email, password);
-      return await completeLogin(loginData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [completeLogin]);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setIsLoading(true);
+      try {
+        const loginData = await loginApi(email, password);
+        return await completeLogin(loginData);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [completeLogin],
+  );
 
-  const faceLogin = useCallback(async (faceImage: string) => {
-    setIsLoading(true);
-    try {
-      const loginData = await faceLoginApi(faceImage);
-      return await completeLogin(loginData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [completeLogin]);
+  const faceLogin = useCallback(
+    async (faceImage: string, email?: string) => {
+      setIsLoading(true);
+      try {
+        const loginData = await faceLoginApi(faceImage, email);
+        return await completeLogin(loginData);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [completeLogin],
+  );
 
   const logout = useCallback(() => {
     if (refreshToken) {
@@ -343,4 +349,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-

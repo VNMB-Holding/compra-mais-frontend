@@ -24,8 +24,13 @@ export default function LoginPage() {
   const handleFaceLogin = () => {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect");
-    window.location.href = redirect
-      ? `/login/reconhecimento-facial?redirect=${encodeURIComponent(redirect)}`
+    const nextParams = new URLSearchParams();
+    if (redirect) nextParams.set("redirect", redirect);
+    if (email && email.trim()) nextParams.set("email", email.trim());
+
+    const qs = nextParams.toString();
+    window.location.href = qs
+      ? `/login/reconhecimento-facial?${qs}`
       : "/login/reconhecimento-facial";
   };
 
@@ -137,4 +142,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

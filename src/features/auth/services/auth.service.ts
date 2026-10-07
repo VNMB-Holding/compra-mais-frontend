@@ -5,9 +5,31 @@ import {
   getTenantsApi,
   logoutApi,
   refreshTokenApi,
+  facialAuthenticateApi,
+  faceLoginApi,
+  enrollFacialApi,
+  deleteFacialApi,
+  getFacialStatusApi,
+  verifyFacialApi,
+  generateFacialEnrollLinkApi,
+  verifyFacialEnrollLinkApi,
+  submitFacialEnrollLinkApi,
+  compareFacialApi,
+  enrollUserFacialApi,
+  deleteUserFacialApi,
+  getUserFacialStatusApi,
   type IdentityLoginResponse,
   type IdentityUserResponse,
   type IdentityTenant,
+  type FacialStatusResponse,
+  type FacialEnrollResponse,
+  type FacialVerifyResponse,
+  type FacialGenerateEnrollLinkParams,
+  type FacialGenerateEnrollLinkResponse,
+  type FacialVerifyEnrollLinkResponse,
+  type FacialSubmitEnrollLinkResponse,
+  type FacialCompareResponse,
+  type FacialCompareMatch,
 } from "@/lib/auth/api";
 
 export const authService = {
@@ -17,6 +39,38 @@ export const authService = {
   getTenants: () => getTenantsApi(),
   logout: (refreshToken: string) => logoutApi(refreshToken),
   refreshToken: (refreshToken: string) => refreshTokenApi(refreshToken),
+
+  // Biometric / Facial Authentication
+  facialAuthenticate: (image: string, email?: string) => facialAuthenticateApi(image, email),
+  faceLogin: (image: string, email?: string) => faceLoginApi(image, email),
+  getFacialStatus: () => getFacialStatusApi(),
+  enrollFacial: (image: string) => enrollFacialApi(image),
+  deleteFacial: () => deleteFacialApi(),
+  verifyFacial: (image: string, threshold?: number) => verifyFacialApi(image, threshold),
+  generateFacialEnrollLink: (params?: FacialGenerateEnrollLinkParams) =>
+    generateFacialEnrollLinkApi(params),
+  verifyFacialEnrollLink: (token: string) => verifyFacialEnrollLinkApi(token),
+  submitFacialEnrollLink: (token: string, image: string) => submitFacialEnrollLinkApi(token, image),
+  compareFacial: (image: string, tenantId?: string, topK?: number) =>
+    compareFacialApi(image, tenantId, topK),
+
+  // Admin user biometrics
+  getUserFacialStatus: (userId: string) => getUserFacialStatusApi(userId),
+  enrollUserFacial: (userId: string, image: string) => enrollUserFacialApi(userId, image),
+  deleteUserFacial: (userId: string) => deleteUserFacialApi(userId),
 };
 
-export type { IdentityLoginResponse, IdentityUserResponse, IdentityTenant };
+export type {
+  IdentityLoginResponse,
+  IdentityUserResponse,
+  IdentityTenant,
+  FacialStatusResponse,
+  FacialEnrollResponse,
+  FacialVerifyResponse,
+  FacialGenerateEnrollLinkParams,
+  FacialGenerateEnrollLinkResponse,
+  FacialVerifyEnrollLinkResponse,
+  FacialSubmitEnrollLinkResponse,
+  FacialCompareResponse,
+  FacialCompareMatch,
+};

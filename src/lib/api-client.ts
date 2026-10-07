@@ -117,7 +117,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   clearTimeout(timeoutId);
 
   const isAuthEndpoint =
-    cleanEndpoint.includes("/auth/refresh") || cleanEndpoint.includes("/auth/login");
+    cleanEndpoint.includes("/auth/refresh") ||
+    cleanEndpoint.includes("/auth/login") ||
+    cleanEndpoint.includes("/auth/facial/authenticate");
   if (response.status === 401 && !isAuthEndpoint) {
     if (refreshHandler) {
       if (isRefreshing) {

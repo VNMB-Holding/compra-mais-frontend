@@ -28,7 +28,7 @@ export default function ReconhecimentoFacialPage() {
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { facingMode: "user", width: { ideal: 960 }, height: { ideal: 720 } },
           audio: false,
         });
 
@@ -72,7 +72,8 @@ export default function ReconhecimentoFacialPage() {
     const image = canvas.toDataURL("image/jpeg", 0.86);
 
     try {
-      await faceLogin(image);
+      const email = searchParams.get("email") || undefined;
+      await faceLogin(image, email);
       const requested = searchParams.get("redirect");
       window.location.href = requested || "/dashboard";
     } catch (err) {
@@ -97,20 +98,17 @@ export default function ReconhecimentoFacialPage() {
           </button>
 
           <div className={styles.header}>
-            <div>
-              <h1>Reconhecimento facial</h1>
-              <p>Posicione seu rosto no centro da câmera para entrar com sua identidade VNMB.</p>
+            <div className={styles.iconBadge}>
+              <Icon name="face-id" size={22} />
             </div>
-            <span className={cameraReady ? styles.statusReady : styles.statusWaiting}>
-              <Icon name={cameraReady ? "check-circle" : "loader"} size={16} />
-              {cameraReady ? "Câmera ativa" : "Aguardando câmera"}
-            </span>
+            <h1>Reconhecimento facial</h1>
+            <p>Centralize seu rosto na câmera para acessar sua conta.</p>
           </div>
 
           <div className={styles.cameraBox}>
             {cameraError ? (
               <div className={styles.cameraFallback}>
-                <Icon name="camera-off" size={34} />
+                <Icon name="camera-off" size={32} />
                 <span>{cameraError}</span>
               </div>
             ) : (
@@ -121,26 +119,26 @@ export default function ReconhecimentoFacialPage() {
             )}
           </div>
 
-          <div className={styles.footer}>
-            <div className={styles.hint}>
-              <Icon name="shield-check" size={18} />
-              <span>A validação será enviada para a API VNMB Identity.</span>
-            </div>
-
-            <Button
-              type="button"
-              variant="primary"
-              className={styles.captureButton}
-              onClick={handleCapture}
-              loading={isLoading}
-              loadingText="Validando rosto..."
-              disabled={!cameraReady || Boolean(cameraError)}
-            >
-              <Icon name="scan" size={18} /> Entrar
-            </Button>
+          <div className={cameraReady ? styles.cameraStatusReady : styles.cameraStatusWaiting}>
+            <Icon name={cameraReady ? "check-circle" : "loader"} size={16} />
+            {cameraReady ? "Câmera pronta" : "Aguardando permissão da câmera"}
           </div>
 
           {authError && <div className={styles.errorMessage}>{authError}</div>}
+
+          <Button
+            type="button"
+            variant="primary"
+            className={styles.captureButton}
+            onClick={handleCapture}
+            loading={isLoading}
+            loadingText="Validando rosto..."
+            disabled={!cameraReady || Boolean(cameraError)}
+          >
+            Entrar com reconhecimento facial
+          </Button>
+
+          <p className={styles.securityNote}>Validação realizada pela API VNMB Identity.</p>
 
           <canvas ref={canvasRef} className={styles.canvas} />
         </section>
