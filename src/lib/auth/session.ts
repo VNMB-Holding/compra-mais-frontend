@@ -12,7 +12,11 @@ export function saveSession(accessToken: string, refreshToken: string, user: Use
   document.cookie = `compra_logged_in=1; path=/; max-age=86400; SameSite=Lax`;
 }
 
-export function loadStoredSession(): { accessToken: string; refreshToken: string; user: User } | null {
+export function loadStoredSession(): {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+} | null {
   if (typeof window === "undefined") return null;
   const accessToken = localStorage.getItem(TOKEN_KEY);
   const refreshToken = localStorage.getItem(REFRESH_KEY);

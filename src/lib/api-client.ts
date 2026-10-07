@@ -1,5 +1,7 @@
 const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://identity.vnmbholding.com";
-const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com").replace(/\/+$/, "");
+const BIZ_API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com"
+).replace(/\/+$/, "");
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -65,7 +67,13 @@ function getStoredToken(): string | null {
 }
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers: customHeaders, auth = false, timeoutMs = DEFAULT_TIMEOUT_MS, ...rest } = options;
+  const {
+    body,
+    headers: customHeaders,
+    auth = false,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    ...rest
+  } = options;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -100,13 +108,16 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   } catch (err) {
     clearTimeout(timeoutId);
     if (err instanceof Error && err.name === "AbortError") {
-      throw new TypeError(`Tempo limite da requisição excedido (${timeoutMs / 1000}s): ${cleanEndpoint}`);
+      throw new TypeError(
+        `Tempo limite da requisição excedido (${timeoutMs / 1000}s): ${cleanEndpoint}`,
+      );
     }
     throw err;
   }
   clearTimeout(timeoutId);
 
-  const isAuthEndpoint = cleanEndpoint.includes("/auth/refresh") || cleanEndpoint.includes("/auth/login");
+  const isAuthEndpoint =
+    cleanEndpoint.includes("/auth/refresh") || cleanEndpoint.includes("/auth/login");
   if (response.status === 401 && !isAuthEndpoint) {
     if (refreshHandler) {
       if (isRefreshing) {
@@ -140,7 +151,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
             body: body !== undefined ? JSON.stringify(body) : undefined,
           });
           if (retryResponse.ok) {
-            return retryResponse.status === 204 ? (undefined as T) : (retryResponse.json() as Promise<T>);
+            return retryResponse.status === 204
+              ? (undefined as T)
+              : (retryResponse.json() as Promise<T>);
           }
         } else {
           processQueue(new Error("Falha na renovação da sessão"), null);
@@ -163,8 +176,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     let errorData: unknown = {};
     try {
       errorData = await response.json();
-    } catch {
-    }
+    } catch {}
     const message =
       (errorData as { message?: string; error?: string })?.message ||
       (errorData as { error?: string })?.error ||
@@ -201,8 +213,13 @@ export const apiClient = {
   },
 
   async getRaw(endpoint: string, options?: RequestOptions): Promise<Response> {
-
-    const { headers: customHeaders, auth = false, body: _body, timeoutMs = DEFAULT_TIMEOUT_MS, ...rest } = options || {};
+    const {
+      headers: customHeaders,
+      auth = false,
+      body: _body,
+      timeoutMs = DEFAULT_TIMEOUT_MS,
+      ...rest
+    } = options || {};
 
     const headers: Record<string, string> = {
       ...(customHeaders as Record<string, string>),
@@ -231,7 +248,9 @@ export const apiClient = {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err instanceof Error && err.name === "AbortError") {
-        throw new TypeError(`Tempo limite da requisição excedido (${timeoutMs / 1000}s): ${cleanEndpoint}`);
+        throw new TypeError(
+          `Tempo limite da requisição excedido (${timeoutMs / 1000}s): ${cleanEndpoint}`,
+        );
       }
       throw err;
     }
@@ -241,7 +260,12 @@ export const apiClient = {
 export { ApiError };
 
 export function cleanCompanyParam(companyCode?: string): string | undefined {
-  if (!companyCode || companyCode === "undefined" || companyCode === "null" || companyCode === "TODAS") {
+  if (
+    !companyCode ||
+    companyCode === "undefined" ||
+    companyCode === "null" ||
+    companyCode === "TODAS"
+  ) {
     return undefined;
   }
   return companyCode;
@@ -265,4 +289,3 @@ export function cleanFilterParam(val?: string): string | undefined {
   }
   return trimmed;
 }
-

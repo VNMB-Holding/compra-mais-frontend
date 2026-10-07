@@ -13,7 +13,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const [helpOpen, setHelpOpen] = useState(false);
   const pathname = usePathname();
 
-  const isStandalone = 
+  const isStandalone =
     pathname.startsWith("/login") ||
     pathname.startsWith("/unauthorized") ||
     pathname.startsWith("/solicitar") ||
@@ -45,9 +45,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         <div className={styles.topbarWrapper}>
           <Topbar isSidebarCollapsed={sidebarCollapsed} onToggleSidebar={handleToggleSidebar} />
         </div>
-        <main className={styles.contentArea}>
-          {children}
-        </main>
+        <main className={styles.contentArea}>{children}</main>
       </div>
       <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>

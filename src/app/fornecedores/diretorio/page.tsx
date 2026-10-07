@@ -13,7 +13,7 @@ import {
   Badge,
   DataTable,
   ColumnDef,
-  KpiCard
+  KpiCard,
 } from "@/components/ui";
 import styles from "./fornecedores.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
@@ -48,9 +48,13 @@ interface FornecedorRow {
 function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRow {
   const isHomologado = s.status === "Active" && s.isActive !== false;
 
-  const rawScore = s.performanceScore !== undefined && s.performanceScore !== null ? Number(s.performanceScore) : null;
+  const rawScore =
+    s.performanceScore !== undefined && s.performanceScore !== null
+      ? Number(s.performanceScore)
+      : null;
   const nota = rawScore !== null && rawScore > 0 ? rawScore.toFixed(1).replace(".", ",") : "—";
-  const estrelas = rawScore !== null && rawScore > 0 ? Math.min(5, Math.max(1, Math.round(rawScore / 2))) : 0;
+  const estrelas =
+    rawScore !== null && rawScore > 0 ? Math.min(5, Math.max(1, Math.round(rawScore / 2))) : 0;
 
   const cidade = s.city || "—";
   const estado = s.state || "";
@@ -104,8 +108,10 @@ export default function FornecedoresListPage() {
         if (!isMounted || !data) return;
         const segs = data.map((s) => s.segment || "").filter(Boolean);
         const cities = data.map((s) => s.city || "").filter((c) => c && c !== "—");
-        if (segs.length > 0) setAllSegments((prev) => Array.from(new Set([...prev, ...segs])).sort());
-        if (cities.length > 0) setAllCities((prev) => Array.from(new Set([...prev, ...cities])).sort());
+        if (segs.length > 0)
+          setAllSegments((prev) => Array.from(new Set([...prev, ...segs])).sort());
+        if (cities.length > 0)
+          setAllCities((prev) => Array.from(new Set([...prev, ...cities])).sort());
       })
       .catch(() => {});
     return () => {
@@ -121,13 +127,13 @@ export default function FornecedoresListPage() {
       setError(null);
       setLoading(true);
       const statusMap: Record<string, string> = {
-        "Homologado": "Active",
+        Homologado: "Active",
         "Em homologação": "UnderCertification",
-        "Inativo": "Inactive",
+        Inativo: "Inactive",
       };
       const [suppliers, kpisData] = await Promise.all([
         suppliersApi.list({
-          status: status !== "Todos" ? (statusMap[status] || status) : undefined,
+          status: status !== "Todos" ? statusMap[status] || status : undefined,
           city: selectedCity !== "Todas" ? selectedCity : undefined,
           segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
@@ -140,8 +146,10 @@ export default function FornecedoresListPage() {
 
       const currentSegs = rows.map((f) => f.categoria).filter(Boolean);
       const currentCities = rows.map((f) => f.cidade).filter((c) => c && c !== "—");
-      if (currentSegs.length > 0) setAllSegments((prev) => Array.from(new Set([...prev, ...currentSegs])).sort());
-      if (currentCities.length > 0) setAllCities((prev) => Array.from(new Set([...prev, ...currentCities])).sort());
+      if (currentSegs.length > 0)
+        setAllSegments((prev) => Array.from(new Set([...prev, ...currentSegs])).sort());
+      if (currentCities.length > 0)
+        setAllCities((prev) => Array.from(new Set([...prev, ...currentCities])).sort());
     } catch (err) {
       logError("fornecedores/fetchData", err);
       setError(getErrorMessage(err));
@@ -165,21 +173,27 @@ export default function FornecedoresListPage() {
     }
   }, [loading, error, isTourCompleted, startTour]);
 
-  const segmentOptions = React.useMemo(() => [
-    { label: "Segmento: Todos", value: "Todos" },
-    ...Array.from(new Set([...allSegments, ...fornecedores.map((f) => f.categoria)]))
-      .filter(Boolean)
-      .sort()
-      .map((seg) => ({ label: seg, value: seg })),
-  ], [allSegments, fornecedores]);
+  const segmentOptions = React.useMemo(
+    () => [
+      { label: "Segmento: Todos", value: "Todos" },
+      ...Array.from(new Set([...allSegments, ...fornecedores.map((f) => f.categoria)]))
+        .filter(Boolean)
+        .sort()
+        .map((seg) => ({ label: seg, value: seg })),
+    ],
+    [allSegments, fornecedores],
+  );
 
-  const cityOptions = React.useMemo(() => [
-    { label: "Cidade: Todas", value: "Todas" },
-    ...Array.from(new Set([...allCities, ...fornecedores.map((f) => f.cidade)]))
-      .filter((c) => c && c !== "—")
-      .sort()
-      .map((c) => ({ label: `Cidade: ${c}`, value: c })),
-  ], [allCities, fornecedores]);
+  const cityOptions = React.useMemo(
+    () => [
+      { label: "Cidade: Todas", value: "Todas" },
+      ...Array.from(new Set([...allCities, ...fornecedores.map((f) => f.cidade)]))
+        .filter((c) => c && c !== "—")
+        .sort()
+        .map((c) => ({ label: `Cidade: ${c}`, value: c })),
+    ],
+    [allCities, fornecedores],
+  );
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
@@ -191,14 +205,21 @@ export default function FornecedoresListPage() {
   const filtered = [...fornecedores].sort((a, b) => a.nome.localeCompare(b.nome));
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   const renderStars = (count: number) => {
     if (count === 0) return null;
     return (
       <div className={styles.starRow}>
         {[...Array(5)].map((_, i) => (
-          <Icon key={i} name="star-01" className={i < count ? styles.starFilled : styles.starEmpty} />
+          <Icon
+            key={i}
+            name="star-01"
+            className={i < count ? styles.starFilled : styles.starEmpty}
+          />
         ))}
       </div>
     );
@@ -209,12 +230,17 @@ export default function FornecedoresListPage() {
       header: "Fornecedor",
       cell: (row) => (
         <div className={styles.fornecedorCell}>
-          <div className={`${styles.avatar} ${row.cor === "green" ? styles.avatarGreen : styles.avatarOrange}`}>
+          <div
+            className={`${styles.avatar} ${row.cor === "green" ? styles.avatarGreen : styles.avatarOrange}`}
+          >
             {row.iniciais}
           </div>
           <div className={styles.doubleText}>
             <strong>{row.nome}</strong>
-            <span>CNPJ {row.cnpj} {row.integrationCode !== "—" ? `• Cód. ERP: ${row.integrationCode}` : ""}</span>
+            <span>
+              CNPJ {row.cnpj}{" "}
+              {row.integrationCode !== "—" ? `• Cód. ERP: ${row.integrationCode}` : ""}
+            </span>
           </div>
         </div>
       ),
@@ -227,7 +253,9 @@ export default function FornecedoresListPage() {
             <Icon name="marker-pin-01" size={14} style={{ color: "#0284c7" }} />
             {row.localizacao}
           </strong>
-          {row.localizacaoSub && <span style={{ fontSize: 11, color: "#64748b" }}>{row.localizacaoSub}</span>}
+          {row.localizacaoSub && (
+            <span style={{ fontSize: 11, color: "#64748b" }}>{row.localizacaoSub}</span>
+          )}
         </div>
       ),
     },
@@ -250,9 +278,7 @@ export default function FornecedoresListPage() {
     {
       header: "Status",
       cell: (row) => (
-        <Badge variant={row.status === "Homologado" ? "success" : "warning"}>
-          {row.status}
-        </Badge>
+        <Badge variant={row.status === "Homologado" ? "success" : "warning"}>{row.status}</Badge>
       ),
     },
     {
@@ -277,7 +303,6 @@ export default function FornecedoresListPage() {
 
   return (
     <div className={styles.pageContainer}>
-
       <div className={styles.pageHeader}>
         <div>
           <h1>Base de Fornecedores</h1>
@@ -288,14 +313,19 @@ export default function FornecedoresListPage() {
       <div className={styles.kpiGrid} data-tour="fornecedores-kpis">
         <KpiCard
           title="Fornecedores homologados"
-          value={String(kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length)}
+          value={String(
+            kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length,
+          )}
           icon="check-circle"
           description="Ativos no ERP"
           loading={loading}
         />
         <KpiCard
           title="Em homologação"
-          value={String(kpis?.underCertification || fornecedores.filter((f) => f.status === "Em homologação").length)}
+          value={String(
+            kpis?.underCertification ||
+              fornecedores.filter((f) => f.status === "Em homologação").length,
+          )}
           icon="clock"
           description="Pendente"
           loading={loading}
@@ -304,10 +334,25 @@ export default function FornecedoresListPage() {
           const validScores = fornecedores
             .map((f) => (f.nota !== "-" ? parseFloat(f.nota.replace(",", ".")) : null))
             .filter((n): n is number => n !== null && !isNaN(n));
-          const listAvg = validScores.length > 0 ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1) : "—";
-          const displayScore = kpis?.avgPerformanceScore ? Number(kpis.avgPerformanceScore).toFixed(1).replace(".", ",") : (listAvg !== "—" ? listAvg.replace(".", ",") : "—");
+          const listAvg =
+            validScores.length > 0
+              ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1)
+              : "—";
+          const displayScore = kpis?.avgPerformanceScore
+            ? Number(kpis.avgPerformanceScore).toFixed(1).replace(".", ",")
+            : listAvg !== "—"
+              ? listAvg.replace(".", ",")
+              : "—";
           const numScore = parseFloat(displayScore.replace(",", "."));
-          const scoreDesc = isNaN(numScore) ? "Sem avaliações" : numScore >= 9 ? "Excelente" : numScore >= 7 ? "Bom" : numScore >= 5 ? "Regular" : "Abaixo da média";
+          const scoreDesc = isNaN(numScore)
+            ? "Sem avaliações"
+            : numScore >= 9
+              ? "Excelente"
+              : numScore >= 7
+                ? "Bom"
+                : numScore >= 5
+                  ? "Regular"
+                  : "Abaixo da média";
 
           return (
             <KpiCard
@@ -384,25 +429,45 @@ export default function FornecedoresListPage() {
           <ErrorState message={error} onRetry={fetchData} />
         ) : filtered.length === 0 ? (
           <EmptyState
-            illustration={searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos" ? "no-search" : "no-suppliers"}
-            title={searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos" ? "Nenhum fornecedor encontrado" : "Nenhum fornecedor cadastrado"}
+            illustration={
+              searchQuery ||
+              selectedSegment !== "Todos" ||
+              selectedCity !== "Todas" ||
+              status !== "Todos"
+                ? "no-search"
+                : "no-suppliers"
+            }
+            title={
+              searchQuery ||
+              selectedSegment !== "Todos" ||
+              selectedCity !== "Todas" ||
+              status !== "Todos"
+                ? "Nenhum fornecedor encontrado"
+                : "Nenhum fornecedor cadastrado"
+            }
             description={
-              searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos"
+              searchQuery ||
+              selectedSegment !== "Todos" ||
+              selectedCity !== "Todas" ||
+              status !== "Todos"
                 ? "Não encontramos fornecedores com os filtros aplicados. Tente alterar os critérios de busca."
                 : "A base de parceiros e fornecedores é sincronizada e integrada automaticamente a partir do ERP Corporate."
             }
             action={
-              searchQuery || selectedSegment !== "Todos" || selectedCity !== "Todas" || status !== "Todos"
+              searchQuery ||
+              selectedSegment !== "Todos" ||
+              selectedCity !== "Todas" ||
+              status !== "Todos"
                 ? {
-                  label: "Limpar Filtros",
-                  variant: "secondary",
-                  onClick: () => {
-                    setSearchQuery("");
-                    setSelectedSegment("Todos");
-                    setSelectedCity("Todas");
-                    setStatus("Todos");
-                  },
-                }
+                    label: "Limpar Filtros",
+                    variant: "secondary",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setSelectedSegment("Todos");
+                      setSelectedCity("Todas");
+                      setStatus("Todos");
+                    },
+                  }
                 : undefined
             }
           />
@@ -426,7 +491,9 @@ export default function FornecedoresListPage() {
                 >
                   <Icon name="chevron-left" size={16} />
                 </button>
-                <span style={{ fontSize: 13, color: "#475569", alignSelf: "center", margin: "0 8px" }}>
+                <span
+                  style={{ fontSize: 13, color: "#475569", alignSelf: "center", margin: "0 8px" }}
+                >
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
@@ -440,7 +507,6 @@ export default function FornecedoresListPage() {
             </div>
           </>
         )}
-
       </Card>
     </div>
   );

@@ -84,7 +84,7 @@ export interface SupplierListParams {
 export const suppliersApi = {
   list: (paramsOrTenant?: string | SupplierListParams) => {
     const params = new URLSearchParams();
-    if (typeof paramsOrTenant === 'string') {
+    if (typeof paramsOrTenant === "string") {
       const validTenant = cleanTenantParam(paramsOrTenant);
       if (validTenant) params.append("companyCode", validTenant);
     } else if (paramsOrTenant) {
@@ -107,7 +107,7 @@ export const suppliersApi = {
       if (search) params.append("search", search);
     }
     const qs = params.toString();
-    return apiClient.get<Supplier[]>(`/api/suppliers${qs ? `?${qs}` : ''}`);
+    return apiClient.get<Supplier[]>(`/api/suppliers${qs ? `?${qs}` : ""}`);
   },
 
   getById: (id: string) => apiClient.get<Supplier>(`/api/suppliers/${id}`),
@@ -117,12 +117,13 @@ export const suppliersApi = {
     const params = new URLSearchParams();
     if (validTenant) params.append("companyCode", validTenant);
     const qs = params.toString();
-    return apiClient.get<SupplierKpis>(`/api/suppliers/kpis${qs ? `?${qs}` : ''}`);
+    return apiClient.get<SupplierKpis>(`/api/suppliers/kpis${qs ? `?${qs}` : ""}`);
   },
 
   create: (data: Partial<Supplier>) => apiClient.post<Supplier>("/api/suppliers", data),
 
-  update: (id: string, data: Partial<Supplier>) => apiClient.patch<Supplier>(`/api/suppliers/${id}`, data),
+  update: (id: string, data: Partial<Supplier>) =>
+    apiClient.patch<Supplier>(`/api/suppliers/${id}`, data),
 
   remove: (id: string) => apiClient.delete(`/api/suppliers/${id}`),
 };
@@ -143,12 +144,19 @@ export interface SupplierScreeningResult {
 
 export const homologacaoApi = {
   screen: (companyName: string, cnpj: string) =>
-    apiClient.post<SupplierScreeningResult>("/api/homologacao-scraper/screen", { companyName, cnpj }),
+    apiClient.post<SupplierScreeningResult>("/api/homologacao-scraper/screen", {
+      companyName,
+      cnpj,
+    }),
 
-  getStatus: (jobId: string) =>
-    apiClient.get<any>(`/api/homologacao-scraper/status/${jobId}`),
+  getStatus: (jobId: string) => apiClient.get<any>(`/api/homologacao-scraper/status/${jobId}`),
 
-  updateStatus: (supplierId: string, status: Supplier["status"], performanceScore?: number, rawPayload?: any) =>
+  updateStatus: (
+    supplierId: string,
+    status: Supplier["status"],
+    performanceScore?: number,
+    rawPayload?: any,
+  ) =>
     apiClient.patch<Supplier>(`/api/suppliers/${supplierId}`, {
       status,
       isActive: status === "Active",

@@ -1,9 +1,16 @@
 "use client";
 
-import React from 'react';
-import { ResponsiveContainer, AreaChart as RechartsArea, Area, XAxis, YAxis, Tooltip } from 'recharts';
-import { formatMonthLabel } from '@/lib/utils/format-display';
-import styles from './AreaChart.module.css';
+import React from "react";
+import {
+  ResponsiveContainer,
+  AreaChart as RechartsArea,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+import { formatMonthLabel } from "@/lib/utils/format-display";
+import styles from "./AreaChart.module.css";
 
 interface DataItem {
   name: string;
@@ -28,15 +35,15 @@ export default function AreaChart({
   valueFormatter,
   height = 240,
   label1 = "Valor 1",
-  label2 = "Valor 2"
+  label2 = "Valor 2",
 }: AreaChartProps) {
-  const hasMultipleLines = data.some(d => d.value2 !== undefined);
+  const hasMultipleLines = data.some((d) => d.value2 !== undefined);
 
   const defaultFormatter = (v: number) => {
     if (valueFormatter) return valueFormatter(v);
     if (v >= 1000000) return `R$ ${(v / 1000000).toFixed(1)}M`;
     if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}k`;
-    return `R$ ${v.toLocaleString('pt-BR')}`;
+    return `R$ ${v.toLocaleString("pt-BR")}`;
   };
 
   return (
@@ -45,46 +52,53 @@ export default function AreaChart({
         <RechartsArea data={data} margin={{ top: 10, right: 16, left: 10, bottom: 5 }}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.2}/>
-              <stop offset="95%" stopColor={color} stopOpacity={0}/>
+              <stop offset="5%" stopColor={color} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
             {hasMultipleLines && (
               <linearGradient id="colorValue2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color2} stopOpacity={0.2}/>
-                <stop offset="95%" stopColor={color2} stopOpacity={0}/>
+                <stop offset="5%" stopColor={color2} stopOpacity={0.2} />
+                <stop offset="95%" stopColor={color2} stopOpacity={0} />
               </linearGradient>
             )}
           </defs>
-          <XAxis 
-            dataKey="name" 
-            stroke="#94a3b8" 
-            fontSize={12} 
-            tickLine={false} 
-            axisLine={false} 
+          <XAxis
+            dataKey="name"
+            stroke="#94a3b8"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
             tickFormatter={formatMonthLabel}
           />
-          <YAxis 
-            stroke="#94a3b8" 
-            fontSize={11} 
-            tickLine={false} 
-            axisLine={false} 
+          <YAxis
+            stroke="#94a3b8"
+            fontSize={11}
+            tickLine={false}
+            axisLine={false}
             width={65}
             tickFormatter={defaultFormatter}
           />
-          <Tooltip 
+          <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const monthName = formatMonthLabel(payload[0].payload.name);
                 return (
                   <div className={styles.tooltip}>
-                    <p style={{ margin: 0, fontSize: 12, color: '#64748b', marginBottom: '4px' }}>
+                    <p style={{ margin: 0, fontSize: 12, color: "#64748b", marginBottom: "4px" }}>
                       {monthName}
                     </p>
                     <p style={{ margin: 0, fontWeight: 600, color: color, fontSize: 13 }}>
                       {label1}: {defaultFormatter(payload[0].value as number)}
                     </p>
                     {hasMultipleLines && payload[1] && (
-                      <p style={{ margin: '4px 0 0 0', fontWeight: 600, color: color2, fontSize: 13 }}>
+                      <p
+                        style={{
+                          margin: "4px 0 0 0",
+                          fontWeight: 600,
+                          color: color2,
+                          fontSize: 13,
+                        }}
+                      >
                         {label2}: {defaultFormatter(payload[1].value as number)}
                       </p>
                     )}
@@ -94,24 +108,24 @@ export default function AreaChart({
               return null;
             }}
           />
-          <Area 
-            type="monotone" 
-            dataKey="value" 
-            stroke={color} 
-            strokeWidth={3} 
-            fillOpacity={1} 
-            fill="url(#colorValue)" 
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={3}
+            fillOpacity={1}
+            fill="url(#colorValue)"
             dot={{ r: 4, fill: color, strokeWidth: 2 }}
             activeDot={{ r: 6 }}
           />
           {hasMultipleLines && (
-            <Area 
-              type="monotone" 
-              dataKey="value2" 
-              stroke={color2} 
-              strokeWidth={3} 
-              fillOpacity={1} 
-              fill="url(#colorValue2)" 
+            <Area
+              type="monotone"
+              dataKey="value2"
+              stroke={color2}
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorValue2)"
               dot={{ r: 4, fill: color2, strokeWidth: 2 }}
               activeDot={{ r: 6 }}
             />

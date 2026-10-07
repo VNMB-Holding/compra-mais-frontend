@@ -35,7 +35,9 @@ export default function FornecedorDetailPage() {
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório
         </button>
-        <div style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+        <div
+          style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}
+        >
           <Skeleton variant="title" width="35%" height={28} />
           <Skeleton variant="text" width="25%" style={{ marginBottom: 14 }} />
           <div style={{ display: "flex", gap: 12 }}>
@@ -62,25 +64,35 @@ export default function FornecedorDetailPage() {
         </button>
         <Card style={{ padding: 40, textAlign: "center", marginTop: 24 }}>
           <h2>Fornecedor não localizado</h2>
-          <p style={{ color: "#64748b", marginTop: 8 }}>Não foi possível encontrar os dados para o código informado.</p>
+          <p style={{ color: "#64748b", marginTop: 8 }}>
+            Não foi possível encontrar os dados para o código informado.
+          </p>
         </Card>
       </div>
     );
   }
 
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || "FR";
-  const hasScore = supplier.performanceScore !== undefined && supplier.performanceScore !== null && Number(supplier.performanceScore) > 0;
+  const hasScore =
+    supplier.performanceScore !== undefined &&
+    supplier.performanceScore !== null &&
+    Number(supplier.performanceScore) > 0;
   const score = hasScore ? Number(supplier.performanceScore) : null;
   const scoreFormatted = score !== null ? score.toFixed(1).replace(".", ",") : "—";
   const isActive = supplier.status === "Active" && supplier.isActive !== false;
   const isSuspended = supplier.status === "Suspended";
   const isInactive = supplier.status === "Inactive" || supplier.isActive === false;
-  const statusLabel = isActive ? "Homologado" : isSuspended ? "Suspenso" : isInactive ? "Inativo" : "Em homologação";
+  const statusLabel = isActive
+    ? "Homologado"
+    : isSuspended
+      ? "Suspenso"
+      : isInactive
+        ? "Inativo"
+        : "Em homologação";
   const statusVariant = isActive ? "success" : isSuspended ? "danger" : "gray";
 
   return (
     <div className={styles.pageContainer}>
-
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório
@@ -92,11 +104,14 @@ export default function FornecedorDetailPage() {
               <h1>{supplier.corporateName}</h1>
             </div>
             <p className={styles.subtitleLarge}>
-              {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? supplier.tradeName : "Parceiro Comercial Homologado"}
+              {supplier.tradeName && supplier.tradeName !== supplier.corporateName
+                ? supplier.tradeName
+                : "Parceiro Comercial Homologado"}
             </p>
             <div className={styles.metadataTags}>
               <span className={styles.infoTag}>
-                <Icon name="marker-pin-01" /> {supplier.city ? `${supplier.city} / ${supplier.state || ""}` : "Brasil"}
+                <Icon name="marker-pin-01" />{" "}
+                {supplier.city ? `${supplier.city} / ${supplier.state || ""}` : "Brasil"}
               </span>
               <span className={styles.infoTag}>
                 <Icon name="briefcase-01" /> {supplier.segment || "Geral"}
@@ -111,9 +126,10 @@ export default function FornecedorDetailPage() {
 
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
-
           <div className={styles.summaryColBase}>
-            <div className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}>
+            <div
+              className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}
+            >
               {getInitials(supplier.corporateName)}
             </div>
             <div className={styles.baseInfo}>
@@ -121,7 +137,10 @@ export default function FornecedorDetailPage() {
                 <h2>{supplier.corporateName}</h2>
               </div>
               <p className={styles.docInfo}>
-                CNPJ: <strong>{supplier.cnpj}</strong> {supplier.tradeName && supplier.tradeName !== supplier.corporateName ? `• ${supplier.tradeName}` : ""}
+                CNPJ: <strong>{supplier.cnpj}</strong>{" "}
+                {supplier.tradeName && supplier.tradeName !== supplier.corporateName
+                  ? `• ${supplier.tradeName}`
+                  : ""}
               </p>
             </div>
           </div>
@@ -136,7 +155,11 @@ export default function FornecedorDetailPage() {
               {score !== null && <small>/10</small>}
             </div>
             <div className={styles.titleRow}>
-              {score !== null ? renderStars(score) : <span style={{ fontSize: 12, color: "#64748b" }}>Sem avaliações</span>}
+              {score !== null ? (
+                renderStars(score)
+              ) : (
+                <span style={{ fontSize: 12, color: "#64748b" }}>Sem avaliações</span>
+              )}
             </div>
           </div>
 
@@ -144,12 +167,16 @@ export default function FornecedorDetailPage() {
             <div className={styles.statusRow}>
               <span>Situação Cadastral</span>
             </div>
-            <p className={styles.etapaText}>Cód. ERP: <strong>{supplier.integrationCode || "—"}</strong></p>
+            <p className={styles.etapaText}>
+              Cód. ERP: <strong>{supplier.integrationCode || "—"}</strong>
+            </p>
             <p className={styles.subStatusText}>
-              Cadastrado desde {supplier.registrationDate ? new Date(supplier.registrationDate).toLocaleDateString("pt-BR") : new Date(supplier.createdAt).toLocaleDateString("pt-BR")}
+              Cadastrado desde{" "}
+              {supplier.registrationDate
+                ? new Date(supplier.registrationDate).toLocaleDateString("pt-BR")
+                : new Date(supplier.createdAt).toLocaleDateString("pt-BR")}
             </p>
           </div>
-
         </div>
       </Card>
 
@@ -169,9 +196,17 @@ export default function FornecedorDetailPage() {
           />
           <KpiCard
             title="Dados de Pagamento"
-            value={supplier.pixKey ? "PIX Cadastrado" : supplier.bankCode ? `Banco ${supplier.bankCode}` : "Padrão"}
+            value={
+              supplier.pixKey
+                ? "PIX Cadastrado"
+                : supplier.bankCode
+                  ? `Banco ${supplier.bankCode}`
+                  : "Padrão"
+            }
             icon="bank"
-            description={supplier.bankNumber ? `Conta: ${supplier.bankNumber}` : "Transferência / Boleto"}
+            description={
+              supplier.bankNumber ? `Conta: ${supplier.bankNumber}` : "Transferência / Boleto"
+            }
           />
           <KpiCard
             title="Situação Cadastral"
@@ -219,7 +254,9 @@ export default function FornecedorDetailPage() {
                   <span className={styles.fieldLabel}>
                     <Icon name="file-02" size={14} /> Inscrição Estadual
                   </span>
-                  <span className={styles.fieldValue}>{supplier.stateRegistration || "Isento / Não informado"}</span>
+                  <span className={styles.fieldValue}>
+                    {supplier.stateRegistration || "Isento / Não informado"}
+                  </span>
                 </div>
 
                 <div className={styles.fieldRow}>
@@ -257,7 +294,9 @@ export default function FornecedorDetailPage() {
                   </span>
                   <div className={styles.fieldValueSub}>
                     <span className={styles.fieldValue}>
-                      {supplier.deliveryLeadTime ? `⚡ ${supplier.deliveryLeadTime} dias úteis` : "Prazo sob consulta"}
+                      {supplier.deliveryLeadTime
+                        ? `⚡ ${supplier.deliveryLeadTime} dias úteis`
+                        : "Prazo sob consulta"}
                     </span>
                     <small>Tempo médio de expedição e transporte</small>
                   </div>
@@ -268,16 +307,16 @@ export default function FornecedorDetailPage() {
                     <Icon name="globe-01" size={14} /> Praça Principal
                   </span>
                   <span className={styles.fieldValue}>
-                    {supplier.city ? `${supplier.city} / ${supplier.state}` : "Atendimento Nacional"}
+                    {supplier.city
+                      ? `${supplier.city} / ${supplier.state}`
+                      : "Atendimento Nacional"}
                   </span>
                 </div>
               </div>
             </Card>
-
           </div>
 
           <div className={styles.cadastraisCol}>
-
             <Card className={styles.cadastraisCard}>
               <div className={styles.cadastraisCardHeader}>
                 <div className={`${styles.headerIconCircle} ${styles.iconPurple}`}>
@@ -291,7 +330,9 @@ export default function FornecedorDetailPage() {
                   <span className={styles.fieldLabel}>
                     <Icon name="users-01" size={14} /> Contato Comercial
                   </span>
-                  <span className={styles.fieldValue}>{supplier.contactName || "Equipe de Atendimento"}</span>
+                  <span className={styles.fieldValue}>
+                    {supplier.contactName || "Equipe de Atendimento"}
+                  </span>
                 </div>
 
                 <div className={styles.fieldRow}>
@@ -300,7 +341,10 @@ export default function FornecedorDetailPage() {
                   </span>
                   <span className={styles.fieldValue}>
                     {supplier.contactPhone ? (
-                      <a href={`tel:${supplier.contactPhone.replace(/\D/g, "")}`} style={{ color: "#007d79", textDecoration: "none" }}>
+                      <a
+                        href={`tel:${supplier.contactPhone.replace(/\D/g, "")}`}
+                        style={{ color: "#007d79", textDecoration: "none" }}
+                      >
                         {supplier.contactPhone}
                       </a>
                     ) : (
@@ -315,7 +359,10 @@ export default function FornecedorDetailPage() {
                   </span>
                   <span className={styles.fieldValue}>
                     {supplier.contactEmail ? (
-                      <a href={`mailto:${supplier.contactEmail}`} style={{ color: "#007d79", textDecoration: "none" }}>
+                      <a
+                        href={`mailto:${supplier.contactEmail}`}
+                        style={{ color: "#007d79", textDecoration: "none" }}
+                      >
                         {supplier.contactEmail}
                       </a>
                     ) : (
@@ -333,7 +380,10 @@ export default function FornecedorDetailPage() {
                       {supplier.address || "Endereço comercial cadastrado"}
                     </span>
                     {supplier.neighborhood && (
-                      <small>{supplier.neighborhood} • {supplier.city}/{supplier.state} • CEP {supplier.zipCode || "—"}</small>
+                      <small>
+                        {supplier.neighborhood} • {supplier.city}/{supplier.state} • CEP{" "}
+                        {supplier.zipCode || "—"}
+                      </small>
                     )}
                   </div>
                 </div>
@@ -354,7 +404,9 @@ export default function FornecedorDetailPage() {
                     <Icon name="credit-card-01" size={14} /> Banco / Código
                   </span>
                   <span className={styles.fieldValue}>
-                    {supplier.bankCode ? `Banco Febraban [${supplier.bankCode}]` : "Banco Centralizado"}
+                    {supplier.bankCode
+                      ? `Banco Febraban [${supplier.bankCode}]`
+                      : "Banco Centralizado"}
                   </span>
                 </div>
 
@@ -378,13 +430,14 @@ export default function FornecedorDetailPage() {
                         <span className={styles.badgeCadastral}>PIX Ativo</span>
                       </div>
                     ) : (
-                      <span className={styles.fieldValue} style={{ color: "#94a3b8" }}>Não cadastrada</span>
+                      <span className={styles.fieldValue} style={{ color: "#94a3b8" }}>
+                        Não cadastrada
+                      </span>
                     )}
                   </div>
                 </div>
               </div>
             </Card>
-
           </div>
         </div>
       </div>

@@ -6,31 +6,30 @@ import Icon from "../icon/Icon";
 import styles from "./ConfirmDialog.module.css";
 
 export interface ConfirmDialogProps {
-  
   open: boolean;
-  
+
   variant?: "danger" | "warning" | "success" | "info";
-  
+
   title: string;
-  
+
   message?: React.ReactNode;
-  
+
   children?: React.ReactNode;
-  
+
   confirmLabel?: string;
-  
+
   cancelLabel?: string;
-  
+
   icon?: string;
-  
+
   loading?: boolean;
-  
+
   loadingConfirmLabel?: string;
-  
+
   confirmDisabled?: boolean;
-  
+
   onConfirm: () => void;
-  
+
   onCancel: () => void;
 }
 
@@ -86,22 +85,30 @@ export default function ConfirmDialog({
 
   const cfg = VARIANT_CONFIG[variant];
   const iconName = icon ?? cfg.defaultIcon;
-  const btnLabel = loading && loadingConfirmLabel ? loadingConfirmLabel : (confirmLabel ?? cfg.defaultLabel);
+  const btnLabel =
+    loading && loadingConfirmLabel ? loadingConfirmLabel : (confirmLabel ?? cfg.defaultLabel);
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!loading && e.target === e.currentTarget) onCancel();
   };
 
   return createPortal(
-    <div className={styles.overlay} onClick={handleOverlayClick} role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div
+      className={styles.overlay}
+      onClick={handleOverlayClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+    >
       <div className={styles.dialog}>
-
         <div className={`${styles.iconWrap} ${cfg.iconBg}`}>
           <Icon name={iconName} />
         </div>
 
         <div className={styles.body}>
-          <h2 id="confirm-title" className={styles.title}>{title}</h2>
+          <h2 id="confirm-title" className={styles.title}>
+            {title}
+          </h2>
           {message && <div className={styles.message}>{message}</div>}
           {children && <div className={styles.children}>{children}</div>}
         </div>
@@ -111,10 +118,10 @@ export default function ConfirmDialog({
             {cancelLabel}
           </button>
           <button
-            className={`${styles.confirmBtn} ${cfg.confirmBtn} ${loading ? styles.loadingBtn : ''}`}
+            className={`${styles.confirmBtn} ${cfg.confirmBtn} ${loading ? styles.loadingBtn : ""}`}
             onClick={onConfirm}
             disabled={loading || confirmDisabled}
-            aria-busy={loading ? 'true' : undefined}
+            aria-busy={loading ? "true" : undefined}
           >
             {loading && (
               <svg
@@ -143,7 +150,6 @@ export default function ConfirmDialog({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
-

@@ -60,7 +60,10 @@ const PRIORITY_CLASS: Record<string, string> = {
   Baixa: styles.priorityBaixa,
 };
 
-const PRIORITY_BADGE_CONFIG: Record<string, { variant: "gray" | "warning" | "danger" | "dark"; icon: string }> = {
+const PRIORITY_BADGE_CONFIG: Record<
+  string,
+  { variant: "gray" | "warning" | "danger" | "dark"; icon: string }
+> = {
   Critica: { variant: "dark", icon: "zap" },
   Crítica: { variant: "dark", icon: "zap" },
   Critical: { variant: "dark", icon: "zap" },
@@ -79,7 +82,11 @@ export default function NewRfqPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const paramSol = searchParams.get("solicitationId") ?? searchParams.get("sol") ?? searchParams.get("solicitacao") ?? "";
+  const paramSol =
+    searchParams.get("solicitationId") ??
+    searchParams.get("sol") ??
+    searchParams.get("solicitacao") ??
+    "";
   const paramTitulo = searchParams.get("titulo") ?? "";
   const paramValor = searchParams.get("valor") ?? "";
   const paramPrioridade = searchParams.get("prioridade") ?? "";
@@ -133,10 +140,7 @@ export default function NewRfqPage() {
   const loadApiData = React.useCallback(async () => {
     setLoadingData(true);
     try {
-      const [reqs, sups] = await Promise.all([
-        purchaseRequestsApi.list(),
-        suppliersApi.list(),
-      ]);
+      const [reqs, sups] = await Promise.all([purchaseRequestsApi.list(), suppliersApi.list()]);
 
       if (reqs && reqs.length > 0) {
         const isApprovedStatus = (s?: string) => {
@@ -150,7 +154,9 @@ export default function NewRfqPage() {
           if (r.rfqs && r.rfqs.length > 0) {
             const hasActive = r.rfqs.some((q: any) => {
               const qs = (q.status || "").toLowerCase().trim();
-              return qs !== "cancelled" && qs !== "cancelada" && qs !== "draft" && qs !== "rascunho";
+              return (
+                qs !== "cancelled" && qs !== "cancelada" && qs !== "draft" && qs !== "rascunho"
+              );
             });
             if (hasActive) return false;
           }
@@ -162,7 +168,8 @@ export default function NewRfqPage() {
           codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
           titulo: r.description || r.notes || "Demanda de Compra",
           area: (r as any).department || "Operações",
-          solicitante: r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
+          solicitante:
+            r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
           prioridade: formatPriority((r as any).priority || (r as any).prioridade),
           valorEstimado: Number(r.estimatedBudget) || 0,
           itens: (r.items || []).map((it, idx) => ({
@@ -201,7 +208,9 @@ export default function NewRfqPage() {
       toast({
         variant: "error",
         title: "Erro ao Carregar Dados",
-        message: getErrorMessage(e) || "Não foi possível carregar as solicitações e fornecedores para abertura de cotação.",
+        message:
+          getErrorMessage(e) ||
+          "Não foi possível carregar as solicitações e fornecedores para abertura de cotação.",
       });
     } finally {
       setLoadingData(false);
@@ -245,7 +254,6 @@ export default function NewRfqPage() {
         }
 
         if (customEvent.detail.ensureDemandLinked && !solicitacaoConfirmada) {
-          
           const sol = requestsApi[0] || {
             id: "sol-tour-mock",
             codigo: "SOL-2026-DEMO",
@@ -256,7 +264,7 @@ export default function NewRfqPage() {
             valorEstimado: 25000,
             itens: [
               { id: 1, descricao: "Válvulas Reguladoras Industriais DN50", qtd: 10, unidade: "UN" },
-              { id: 2, descricao: "Tubulação de Alta Pressão em Inox 316L", qtd: 50, unidade: "M" }
+              { id: 2, descricao: "Tubulação de Alta Pressão em Inox 316L", qtd: 50, unidade: "M" },
             ],
             incoterm: "CIF",
             condicaoPagamento: "30 dias DDL",
@@ -278,7 +286,6 @@ export default function NewRfqPage() {
     };
 
     const handleTourReset = () => {
-      
       if (initialTourStateRef.current) {
         if (!initialTourStateRef.current.solicitacaoConfirmada) {
           handleDesvincular();
@@ -303,7 +310,9 @@ export default function NewRfqPage() {
   useEffect(() => {
     if (!paramSol || loadingData) return;
 
-    const solExistente = requestsApi.find((s) => s.id === paramSol || s.codigo === paramSol || (s as any).code === paramSol);
+    const solExistente = requestsApi.find(
+      (s) => s.id === paramSol || s.codigo === paramSol || (s as any).code === paramSol,
+    );
 
     if (solExistente) {
       setSolicitacaoConfirmada(solExistente);
@@ -317,47 +326,53 @@ export default function NewRfqPage() {
         setExpandedItemId(solExistente.itens[0].id);
       }
     } else if (paramSol) {
-      purchaseRequestsApi.getById(paramSol).then((r) => {
-        if (r) {
-          const mapped: Solicitacao = {
-            id: r.id,
-            codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
-            titulo: r.description || r.notes || "Demanda de Compra",
-            area: (r as any).department || "Operações",
-            solicitante: r.corporateRequester || r.requesterName || "Solicitante",
-            prioridade: formatPriority((r as any).priority || (r as any).prioridade),
-            valorEstimado: Number(r.estimatedBudget) || 0,
-            itens: (r.items || []).map((it, idx) => ({
-              id: idx + 1,
-              descricao: it.description,
-              qtd: Number(it.quantity) || 1,
-              unidade: it.unit || "UN",
-            })),
-            incoterm: "CIF",
-            condicaoPagamento: "30 dias DDL",
-            observacoes: r.notes || "",
-            empresa: resolvePurchaseRequestBranch(r, user),
-            companyCode: r.companyCode,
-          };
-          setRequestsApi((prev) => (prev.some((x) => x.id === mapped.id) ? prev : [mapped, ...prev]));
-          setSolicitacaoConfirmada(mapped);
-          setSolicitacaoSelecionada(mapped.id);
-          setTituloRfq(`RFQ — ${mapped.titulo}`);
-          setIncoterm(mapped.incoterm);
-          setCondicaoPagamento(mapped.condicaoPagamento);
-          setObservacoes(mapped.observacoes);
-          setItens(mapped.itens.map((i) => ({ ...i })));
-          if (mapped.itens.length > 0) {
-            setExpandedItemId(mapped.itens[0].id);
+      purchaseRequestsApi
+        .getById(paramSol)
+        .then((r) => {
+          if (r) {
+            const mapped: Solicitacao = {
+              id: r.id,
+              codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
+              titulo: r.description || r.notes || "Demanda de Compra",
+              area: (r as any).department || "Operações",
+              solicitante: r.corporateRequester || r.requesterName || "Solicitante",
+              prioridade: formatPriority((r as any).priority || (r as any).prioridade),
+              valorEstimado: Number(r.estimatedBudget) || 0,
+              itens: (r.items || []).map((it, idx) => ({
+                id: idx + 1,
+                descricao: it.description,
+                qtd: Number(it.quantity) || 1,
+                unidade: it.unit || "UN",
+              })),
+              incoterm: "CIF",
+              condicaoPagamento: "30 dias DDL",
+              observacoes: r.notes || "",
+              empresa: resolvePurchaseRequestBranch(r, user),
+              companyCode: r.companyCode,
+            };
+            setRequestsApi((prev) =>
+              prev.some((x) => x.id === mapped.id) ? prev : [mapped, ...prev],
+            );
+            setSolicitacaoConfirmada(mapped);
+            setSolicitacaoSelecionada(mapped.id);
+            setTituloRfq(`RFQ — ${mapped.titulo}`);
+            setIncoterm(mapped.incoterm);
+            setCondicaoPagamento(mapped.condicaoPagamento);
+            setObservacoes(mapped.observacoes);
+            setItens(mapped.itens.map((i) => ({ ...i })));
+            if (mapped.itens.length > 0) {
+              setExpandedItemId(mapped.itens[0].id);
+            }
           }
-        }
-      }).catch(() => {
-        toast({
-          variant: "warning",
-          title: "Solicitação não elegível",
-          message: "A solicitação informada ainda não foi aprovada ou já possui uma cotação aberta.",
+        })
+        .catch(() => {
+          toast({
+            variant: "warning",
+            title: "Solicitação não elegível",
+            message:
+              "A solicitação informada ainda não foi aprovada ou já possui uma cotação aberta.",
+          });
         });
-      });
     }
     setCurrentStep(1);
   }, [paramSol, requestsApi, loadingData, user, toast]);
@@ -382,7 +397,7 @@ export default function NewRfqPage() {
         const baseSupplierIds = new Set<string>();
         sol.itens.forEach((solItem) => {
           const match = catalogItems.find(
-            (ci) => ci.description.trim().toLowerCase() === solItem.descricao.trim().toLowerCase()
+            (ci) => ci.description.trim().toLowerCase() === solItem.descricao.trim().toLowerCase(),
           );
           if (match?.lastSupplierId) {
             baseSupplierIds.add(match.lastSupplierId);
@@ -391,16 +406,16 @@ export default function NewRfqPage() {
 
         if (baseSupplierIds.size > 0) {
           setFornecedores((cur) =>
-            cur.map((f) => (baseSupplierIds.has(f.id) ? { ...f, selecionado: true } : f))
+            cur.map((f) => (baseSupplierIds.has(f.id) ? { ...f, selecionado: true } : f)),
           );
           toast({
             variant: "info",
             title: "Fornecedor de Base Identificado!",
-            message: "Fornecedor prévio encontrado para itens desta demanda e pré-selecionado na cotação.",
+            message:
+              "Fornecedor prévio encontrado para itens desta demanda e pré-selecionado na cotação.",
           });
         }
-      } catch {
-      }
+      } catch {}
     })();
   };
 
@@ -416,7 +431,7 @@ export default function NewRfqPage() {
 
   const toggleFornecedor = (id: string) => {
     setFornecedores((cur) =>
-      cur.map((f) => (f.id === id ? { ...f, selecionado: !f.selecionado } : f))
+      cur.map((f) => (f.id === id ? { ...f, selecionado: !f.selecionado } : f)),
     );
   };
 
@@ -436,19 +451,15 @@ export default function NewRfqPage() {
 
   const fornecedoresSelecionados = useMemo(
     () => fornecedores.filter((f) => f.selecionado),
-    [fornecedores]
+    [fornecedores],
   );
 
   const removeSupplier = (id: string) => {
-    setFornecedores((cur) =>
-      cur.map((f) => (f.id === id ? { ...f, selecionado: false } : f))
-    );
+    setFornecedores((cur) => cur.map((f) => (f.id === id ? { ...f, selecionado: false } : f)));
   };
 
   const clearAllSuppliers = () => {
-    setFornecedores((cur) =>
-      cur.map((f) => ({ ...f, selecionado: false }))
-    );
+    setFornecedores((cur) => cur.map((f) => ({ ...f, selecionado: false })));
   };
 
   const filteredFornecedores = useMemo(() => {
@@ -459,16 +470,20 @@ export default function NewRfqPage() {
 
     if (supplierSearch.trim()) {
       const q = supplierSearch.toLowerCase().trim();
-      list = list.filter((f) =>
-        f.nome.toLowerCase().includes(q) ||
-        f.cnpj.toLowerCase().includes(q) ||
-        (f.segmento && f.segmento.toLowerCase().includes(q))
+      list = list.filter(
+        (f) =>
+          f.nome.toLowerCase().includes(q) ||
+          f.cnpj.toLowerCase().includes(q) ||
+          (f.segmento && f.segmento.toLowerCase().includes(q)),
       );
     }
     return list;
   }, [fornecedores, supplierFilterTab, supplierSearch]);
 
-  const totalSupplierPages = Math.max(1, Math.ceil(filteredFornecedores.length / SUPPLIERS_PER_PAGE));
+  const totalSupplierPages = Math.max(
+    1,
+    Math.ceil(filteredFornecedores.length / SUPPLIERS_PER_PAGE),
+  );
   const paginatedFornecedores = useMemo(() => {
     const start = (supplierPage - 1) * SUPPLIERS_PER_PAGE;
     return filteredFornecedores.slice(start, start + SUPPLIERS_PER_PAGE);
@@ -507,7 +522,8 @@ export default function NewRfqPage() {
                 <div>
                   <h2 className={styles.gateTitle}>Vincular solicitação aprovada</h2>
                   <p className={styles.gateSubtitle}>
-                    Os itens, quantidades e condições técnicas da demanda serão importados automaticamente.
+                    Os itens, quantidades e condições técnicas da demanda serão importados
+                    automaticamente.
                   </p>
                 </div>
               </div>
@@ -541,7 +557,14 @@ export default function NewRfqPage() {
             ) : (
               <>
                 <div className={styles.gateBody}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, alignItems: "flex-end" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                      gap: 16,
+                      alignItems: "flex-end",
+                    }}
+                  >
                     <div className={styles.gateSelectGroup}>
                       <label className={styles.gateLabel}>Filtrar por Empresa / Unidade</label>
                       <Select
@@ -550,7 +573,11 @@ export default function NewRfqPage() {
                         onChange={(v) => {
                           setSelectedCompanyId(v);
                           if (solicitacaoSelecionada) {
-                            const stillPresent = requestsApi.find((x) => x.id === solicitacaoSelecionada && (v === "TODAS" || x.companyCode === v));
+                            const stillPresent = requestsApi.find(
+                              (x) =>
+                                x.id === solicitacaoSelecionada &&
+                                (v === "TODAS" || x.companyCode === v),
+                            );
                             if (!stillPresent) setSolicitacaoSelecionada("");
                           }
                         }}
@@ -568,14 +595,31 @@ export default function NewRfqPage() {
                         }))}
                         value={solicitacaoSelecionada}
                         onChange={setSolicitacaoSelecionada}
-                        placeholder={displayRequests.length === 0 ? "Nenhuma solicitação encontrada..." : "Selecione uma solicitação aprovada..."}
+                        placeholder={
+                          displayRequests.length === 0
+                            ? "Nenhuma solicitação encontrada..."
+                            : "Selecione uma solicitação aprovada..."
+                        }
                         disabled={displayRequests.length === 0}
                       />
                     </div>
                   </div>
 
                   {displayRequests.length === 0 && selectedCompanyId !== "TODAS" && (
-                    <div style={{ padding: "14px 18px", background: "#f8fafc", borderRadius: 8, border: "1px dashed #cbd5e1", color: "#64748b", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                    <div
+                      style={{
+                        padding: "14px 18px",
+                        background: "#f8fafc",
+                        borderRadius: 8,
+                        border: "1px dashed #cbd5e1",
+                        color: "#64748b",
+                        fontSize: 13,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                      }}
+                    >
                       <span>Nenhuma demanda aprovada encontrada para esta unidade.</span>
                       <Button variant="secondary" onClick={() => setSelectedCompanyId("TODAS")}>
                         Ver Todas as Empresas ({requestsApi.length})
@@ -599,7 +643,9 @@ export default function NewRfqPage() {
                             tabIndex={0}
                           >
                             <div className={styles.quickCardHeader}>
-                              <span className={styles.quickCardId}>{s.codigo || `Demanda #${idx + 1}`}</span>
+                              <span className={styles.quickCardId}>
+                                {s.codigo || `Demanda #${idx + 1}`}
+                              </span>
                               <Badge
                                 variant={PRIORITY_BADGE_CONFIG[s.prioridade]?.variant ?? "gray"}
                                 icon={PRIORITY_BADGE_CONFIG[s.prioridade]?.icon ?? "info-circle"}
@@ -609,8 +655,13 @@ export default function NewRfqPage() {
                             </div>
                             <p className={styles.quickCardTitle}>{s.titulo}</p>
                             <div className={styles.quickCardMeta}>
-                              <span>{s.empresa || s.area || "Geral"} • {s.itens.length} {s.itens.length === 1 ? "item" : "itens"}</span>
-                              <span className={styles.quickCardValue}>{formatCurrency(s.valorEstimado)}</span>
+                              <span>
+                                {s.empresa || s.area || "Geral"} • {s.itens.length}{" "}
+                                {s.itens.length === 1 ? "item" : "itens"}
+                              </span>
+                              <span className={styles.quickCardValue}>
+                                {formatCurrency(s.valorEstimado)}
+                              </span>
                             </div>
                           </div>
                         ))}
@@ -622,7 +673,15 @@ export default function NewRfqPage() {
                     <div className={styles.gateSelectedCard}>
                       <div className={styles.gateSelectedHeader}>
                         <div className={styles.gateSelectedDemandInfo}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              flexWrap: "wrap",
+                              marginBottom: 4,
+                            }}
+                          >
                             <span className={styles.gateSelectedLabel}>Demanda selecionada</span>
                             {solicitacaoPreview.empresa && (
                               <Badge variant="gray" icon="building-07">
@@ -630,10 +689,14 @@ export default function NewRfqPage() {
                               </Badge>
                             )}
                           </div>
-                          <strong className={styles.gateSelectedTitle}>{solicitacaoPreview.titulo}</strong>
+                          <strong className={styles.gateSelectedTitle}>
+                            {solicitacaoPreview.titulo}
+                          </strong>
                         </div>
                         <Badge
-                          variant={PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"}
+                          variant={
+                            PRIORITY_BADGE_CONFIG[solicitacaoPreview.prioridade]?.variant ?? "gray"
+                          }
                         >
                           Prioridade {formatPriority(solicitacaoPreview.prioridade)}
                         </Badge>
@@ -642,21 +705,30 @@ export default function NewRfqPage() {
                       <div className={styles.gateSelectedGrid}>
                         <div className={styles.gateSelectedCol}>
                           <span className={styles.gateSelectedColLabel}>Empresa / Unidade</span>
-                          <span className={styles.gateSelectedColValue} title={solicitacaoPreview.empresa || "Matriz"}>
+                          <span
+                            className={styles.gateSelectedColValue}
+                            title={solicitacaoPreview.empresa || "Matriz"}
+                          >
                             {solicitacaoPreview.empresa || "VB AGRO LTDA"}
                           </span>
                         </div>
 
                         <div className={styles.gateSelectedCol}>
                           <span className={styles.gateSelectedColLabel}>Área Requisitante</span>
-                          <span className={styles.gateSelectedColValue} title={solicitacaoPreview.area || "Geral"}>
+                          <span
+                            className={styles.gateSelectedColValue}
+                            title={solicitacaoPreview.area || "Geral"}
+                          >
                             {solicitacaoPreview.area || "Geral"}
                           </span>
                         </div>
 
                         <div className={styles.gateSelectedCol}>
                           <span className={styles.gateSelectedColLabel}>Solicitante</span>
-                          <span className={styles.gateSelectedColValue} title={solicitacaoPreview.solicitante}>
+                          <span
+                            className={styles.gateSelectedColValue}
+                            title={solicitacaoPreview.solicitante}
+                          >
                             {solicitacaoPreview.solicitante}
                           </span>
                         </div>
@@ -664,7 +736,8 @@ export default function NewRfqPage() {
                         <div className={styles.gateSelectedCol}>
                           <span className={styles.gateSelectedColLabel}>Total de Itens</span>
                           <span className={styles.gateSelectedColValue}>
-                            {solicitacaoPreview.itens.length} {solicitacaoPreview.itens.length === 1 ? "item" : "itens"}
+                            {solicitacaoPreview.itens.length}{" "}
+                            {solicitacaoPreview.itens.length === 1 ? "item" : "itens"}
                           </span>
                         </div>
 
@@ -680,10 +753,7 @@ export default function NewRfqPage() {
                 </div>
 
                 <div className={styles.gateActions}>
-                  <button
-                    className={styles.btnCancel}
-                    onClick={() => router.push("/compras/rfqs")}
-                  >
+                  <button className={styles.btnCancel} onClick={() => router.push("/compras/rfqs")}>
                     Cancelar
                   </button>
                   <Button
@@ -756,7 +826,7 @@ export default function NewRfqPage() {
       </div>
 
       <div className={styles.stepperNav} data-tour="rfq-stepper">
-        <div 
+        <div
           className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
           onClick={() => setCurrentStep(1)}
           data-tour="rfq-step-indicator-1"
@@ -767,9 +837,9 @@ export default function NewRfqPage() {
           <span className={styles.stepLabel}>Parâmetros</span>
         </div>
         <div className={styles.stepConnectorLine} />
-        <div 
+        <div
           className={`${styles.stepIndicator} ${currentStep === 2 ? styles.stepActive : currentStep > 2 ? styles.stepCompleted : ""} ${currentStep < 2 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 2 ? setCurrentStep(2) : undefined}
+          onClick={() => (currentStep >= 2 ? setCurrentStep(2) : undefined)}
           data-tour="rfq-step-indicator-2"
         >
           <div className={styles.stepNumber}>
@@ -778,9 +848,9 @@ export default function NewRfqPage() {
           <span className={styles.stepLabel}>Itens</span>
         </div>
         <div className={styles.stepConnectorLine} />
-        <div 
+        <div
           className={`${styles.stepIndicator} ${currentStep === 3 ? styles.stepActive : currentStep > 3 ? styles.stepCompleted : ""} ${currentStep < 3 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 3 ? setCurrentStep(3) : undefined}
+          onClick={() => (currentStep >= 3 ? setCurrentStep(3) : undefined)}
           data-tour="rfq-step-indicator-3"
         >
           <div className={styles.stepNumber}>
@@ -789,9 +859,9 @@ export default function NewRfqPage() {
           <span className={styles.stepLabel}>Fornecedores</span>
         </div>
         <div className={styles.stepConnectorLine} />
-        <div 
+        <div
           className={`${styles.stepIndicator} ${currentStep === 4 ? styles.stepActive : ""} ${currentStep < 4 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 4 ? setCurrentStep(4) : undefined}
+          onClick={() => (currentStep >= 4 ? setCurrentStep(4) : undefined)}
           data-tour="rfq-step-indicator-4"
         >
           <div className={styles.stepNumber}>4</div>
@@ -802,12 +872,13 @@ export default function NewRfqPage() {
       <div className={styles.workspaceGrid}>
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
-
             {currentStep === 1 && (
               <>
                 <section className={styles.formSection} data-tour="rfq-form-parameters">
                   <div className={styles.sectionHeader}>
-                    <div className={styles.sectionIcon}><Icon name="settings-01" /></div>
+                    <div className={styles.sectionIcon}>
+                      <Icon name="settings-01" />
+                    </div>
                     <div>
                       <h2>1. Parâmetros gerais da cotação</h2>
                       <p>Título, estratégia de compra e prazo de encerramento do processo.</p>
@@ -815,7 +886,9 @@ export default function NewRfqPage() {
                   </div>
 
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <label>Título da RFQ <span className="required-asterisk">*</span></label>
+                    <label>
+                      Título da RFQ <span className="required-asterisk">*</span>
+                    </label>
                     <input
                       className={styles.formControl}
                       value={tituloRfq}
@@ -826,19 +899,24 @@ export default function NewRfqPage() {
 
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
-                      <label>Estratégia de compra <span className="required-asterisk">*</span></label>
+                      <label>
+                        Estratégia de compra <span className="required-asterisk">*</span>
+                      </label>
                       <Select
                         options={[
                           { label: "Menor Preço Equalizado", value: "Menor Preço Equalizado" },
                           { label: "Técnica e Preço", value: "Técnica e Preço" },
-                          { label: "Melhor Valor Total", value: "Melhor Valor Total" }
+                          { label: "Melhor Valor Total", value: "Melhor Valor Total" },
                         ]}
                         value={estrategia}
                         onChange={setEstrategia}
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>Data/Hora Limite de Encerramento <span className="required-asterisk">*</span></label>
+                      <label>
+                        Data/Hora Limite de Encerramento{" "}
+                        <span className="required-asterisk">*</span>
+                      </label>
                       <input
                         type="datetime-local"
                         className={styles.formControl}
@@ -854,12 +932,15 @@ export default function NewRfqPage() {
             {currentStep === 2 && (
               <section className={styles.formSection} data-tour="rfq-form-items">
                 <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
+                  <div className={styles.sectionIcon}>
+                    <Icon name="shopping-cart-01" />
+                  </div>
                   <div>
                     <h2>2. Itens e quantidades solicitadas</h2>
                     <p>
-                      Importados da solicitação <strong>{solicitacaoConfirmada.codigo || solicitacaoConfirmada.id}</strong>. Você pode
-                      adicionar itens complementares ao escopo.
+                      Importados da solicitação{" "}
+                      <strong>{solicitacaoConfirmada.codigo || solicitacaoConfirmada.id}</strong>.
+                      Você pode adicionar itens complementares ao escopo.
                     </p>
                   </div>
                 </div>
@@ -871,9 +952,8 @@ export default function NewRfqPage() {
 
                     return (
                       <div className={styles.itemPanel} key={item.id}>
-                        
-                        <div 
-                          className={styles.itemSummaryRow} 
+                        <div
+                          className={styles.itemSummaryRow}
                           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
                         >
                           <div className={styles.itemSummaryLeft}>
@@ -883,7 +963,8 @@ export default function NewRfqPage() {
                                 {item.descricao || "Novo item complementar sem descrição"}
                               </span>
                               <span className={styles.itemSummaryMeta}>
-                                Qtd: {item.qtd.toLocaleString("pt-BR")} {item.unidade} {isFromSol && "• Origem: Solicitação"}
+                                Qtd: {item.qtd.toLocaleString("pt-BR")} {item.unidade}{" "}
+                                {isFromSol && "• Origem: Solicitação"}
                               </span>
                             </div>
                           </div>
@@ -903,10 +984,10 @@ export default function NewRfqPage() {
                               }}
                               title={isExpanded ? "Recolher detalhes" : "Editar detalhes"}
                             >
-                              <Icon 
-                                name="chevron-down" 
-                                size={18} 
-                                className={`${styles.chevronRotate} ${isExpanded ? styles.chevronRotateActive : ""}`} 
+                              <Icon
+                                name="chevron-down"
+                                size={18}
+                                className={`${styles.chevronRotate} ${isExpanded ? styles.chevronRotateActive : ""}`}
                               />
                             </button>
                             <button
@@ -917,7 +998,11 @@ export default function NewRfqPage() {
                                 removeItem(item.id);
                               }}
                               disabled={isFromSol}
-                              title={isFromSol ? "Item importado da solicitação não pode ser removido" : "Remover item"}
+                              title={
+                                isFromSol
+                                  ? "Item importado da solicitação não pode ser removido"
+                                  : "Remover item"
+                              }
                             >
                               <Icon name="x-close" size={18} />
                             </button>
@@ -928,7 +1013,10 @@ export default function NewRfqPage() {
                           <div className={styles.accordionExpandable}>
                             <div className={styles.gridCol12}>
                               <div className={`${styles.formGroup} ${styles.col6}`}>
-                                <label>Descrição do item / serviço <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Descrição do item / serviço{" "}
+                                  <span className="required-asterisk">*</span>
+                                </label>
                                 <input
                                   className={styles.formControl}
                                   value={item.descricao}
@@ -938,18 +1026,24 @@ export default function NewRfqPage() {
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Quantidade <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Quantidade <span className="required-asterisk">*</span>
+                                </label>
                                 <input
                                   type="number"
                                   min="0"
                                   className={styles.formControl}
                                   value={item.qtd}
-                                  onChange={(e) => updateItem(item.id, "qtd", Number(e.target.value))}
+                                  onChange={(e) =>
+                                    updateItem(item.id, "qtd", Number(e.target.value))
+                                  }
                                   readOnly={isFromSol}
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Unidade <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Unidade <span className="required-asterisk">*</span>
+                                </label>
                                 <Select
                                   options={[
                                     { label: "L", value: "L" },
@@ -957,7 +1051,7 @@ export default function NewRfqPage() {
                                     { label: "KG", value: "KG" },
                                     { label: "M", value: "M" },
                                     { label: "H", value: "H" },
-                                    { label: "Pacote", value: "Pacote" }
+                                    { label: "Pacote", value: "Pacote" },
                                   ]}
                                   value={item.unidade}
                                   onChange={(value) => updateItem(item.id, "unidade", value)}
@@ -981,10 +1075,16 @@ export default function NewRfqPage() {
             {currentStep === 3 && (
               <section className={styles.formSection} data-tour="rfq-form-suppliers">
                 <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="building-07" /></div>
+                  <div className={styles.sectionIcon}>
+                    <Icon name="building-07" />
+                  </div>
                   <div>
-                    <h2>3. Fornecedores convidados <span className="required-asterisk">*</span></h2>
-                    <p>Selecione os fornecedores homologados que receberão o convite para cotação.</p>
+                    <h2>
+                      3. Fornecedores convidados <span className="required-asterisk">*</span>
+                    </h2>
+                    <p>
+                      Selecione os fornecedores homologados que receberão o convite para cotação.
+                    </p>
                   </div>
                 </div>
 
@@ -1044,7 +1144,9 @@ export default function NewRfqPage() {
                             <strong>{f.nome}</strong>
                             {f.segmento && <span className={styles.segmentTag}>{f.segmento}</span>}
                           </div>
-                          <span>CNPJ: {f.cnpj} {f.isHomologado ? "• Homologado" : ""}</span>
+                          <span>
+                            CNPJ: {f.cnpj} {f.isHomologado ? "• Homologado" : ""}
+                          </span>
                         </div>
                         {f.selecionado && (
                           <span className={styles.fornecedorBadge}>
@@ -1055,17 +1157,36 @@ export default function NewRfqPage() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ padding: "30px 20px", textAlign: "center", background: "#f8fafc", borderRadius: 8, border: "1px dashed #cbd5e1", color: "#64748b" }}>
-                    <Icon name="search-sm" size={24} style={{ margin: "0 auto 6px", display: "block", color: "#94a3b8" }} />
-                    <strong style={{ display: "block", color: "#0f172a" }}>Nenhum fornecedor encontrado</strong>
-                    <span style={{ fontSize: 13 }}>Tente buscar por outro termo ou limpe os filtros.</span>
+                  <div
+                    style={{
+                      padding: "30px 20px",
+                      textAlign: "center",
+                      background: "#f8fafc",
+                      borderRadius: 8,
+                      border: "1px dashed #cbd5e1",
+                      color: "#64748b",
+                    }}
+                  >
+                    <Icon
+                      name="search-sm"
+                      size={24}
+                      style={{ margin: "0 auto 6px", display: "block", color: "#94a3b8" }}
+                    />
+                    <strong style={{ display: "block", color: "#0f172a" }}>
+                      Nenhum fornecedor encontrado
+                    </strong>
+                    <span style={{ fontSize: 13 }}>
+                      Tente buscar por outro termo ou limpe os filtros.
+                    </span>
                   </div>
                 )}
 
                 {filteredFornecedores.length > SUPPLIERS_PER_PAGE && (
                   <div className={styles.supplierPaginationBar}>
                     <span>
-                      Exibindo {(supplierPage - 1) * SUPPLIERS_PER_PAGE + 1} - {Math.min(supplierPage * SUPPLIERS_PER_PAGE, filteredFornecedores.length)} de {filteredFornecedores.length.toLocaleString("pt-BR")} fornecedores
+                      Exibindo {(supplierPage - 1) * SUPPLIERS_PER_PAGE + 1} -{" "}
+                      {Math.min(supplierPage * SUPPLIERS_PER_PAGE, filteredFornecedores.length)} de{" "}
+                      {filteredFornecedores.length.toLocaleString("pt-BR")} fornecedores
                     </span>
                     <div className={styles.paginationControls}>
                       <button
@@ -1096,7 +1217,9 @@ export default function NewRfqPage() {
             {currentStep === 4 && (
               <section className={styles.formSection} data-tour="rfq-form-compliance">
                 <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="truck-01" /></div>
+                  <div className={styles.sectionIcon}>
+                    <Icon name="truck-01" />
+                  </div>
                   <div>
                     <h2>4. Compliance e logística</h2>
                     <p>Parâmetros comerciais que equalizam as propostas recebidas.</p>
@@ -1105,19 +1228,23 @@ export default function NewRfqPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Incoterm (Frete) <span className="required-asterisk">*</span></label>
+                    <label>
+                      Incoterm (Frete) <span className="required-asterisk">*</span>
+                    </label>
                     <Select
                       options={[
                         { label: "CIF — Frete incluso pelo Fornecedor", value: "CIF" },
                         { label: "FOB — Frete por conta do Comprador", value: "FOB" },
-                        { label: "EXW — Retirada na planta do fornecedor", value: "EXW" }
+                        { label: "EXW — Retirada na planta do fornecedor", value: "EXW" },
                       ]}
                       value={incoterm}
                       onChange={setIncoterm}
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Condição de pagamento <span className="required-asterisk">*</span></label>
+                    <label>
+                      Condição de pagamento <span className="required-asterisk">*</span>
+                    </label>
                     <input
                       className={styles.formControl}
                       value={condicaoPagamento}
@@ -1129,12 +1256,14 @@ export default function NewRfqPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Moeda base <span className="required-asterisk">*</span></label>
+                    <label>
+                      Moeda base <span className="required-asterisk">*</span>
+                    </label>
                     <Select
                       options={[
                         { label: "BRL — Real Brasileiro", value: "BRL" },
                         { label: "USD — Dólar Americano", value: "USD" },
-                        { label: "EUR — Euro", value: "EUR" }
+                        { label: "EUR — Euro", value: "EUR" },
                       ]}
                       value={moeda}
                       onChange={setMoeda}
@@ -1158,20 +1287,32 @@ export default function NewRfqPage() {
             <div className={styles.formActions}>
               {currentStep === 1 && (
                 <>
-                  <button type="button" className={styles.btnCancel} onClick={() => router.push("/compras/rfqs")}>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => router.push("/compras/rfqs")}
+                  >
                     Cancelar
                   </button>
-                  <Button 
-                    variant="primary" 
-                    type="button" 
-                    className={styles.btnSubmit} 
+                  <Button
+                    variant="primary"
+                    type="button"
+                    className={styles.btnSubmit}
                     onClick={() => {
                       if (!tituloRfq.trim()) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha o título da RFQ" });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, preencha o título da RFQ",
+                        });
                         return;
                       }
                       if (!dataEncerramento) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a data de encerramento" });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, preencha a data de encerramento",
+                        });
                         return;
                       }
                       setCurrentStep(2);
@@ -1184,16 +1325,24 @@ export default function NewRfqPage() {
 
               {currentStep === 2 && (
                 <>
-                  <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(1)}>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => setCurrentStep(1)}
+                  >
                     <Icon name="chevron-left" /> Voltar
                   </button>
-                  <Button 
-                    variant="primary" 
-                    type="button" 
-                    className={styles.btnSubmit} 
+                  <Button
+                    variant="primary"
+                    type="button"
+                    className={styles.btnSubmit}
                     onClick={() => {
                       if (itens.some((i) => !i.descricao.trim() || i.qtd <= 0)) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a descrição e quantidade de todos os itens" });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, preencha a descrição e quantidade de todos os itens",
+                        });
                         return;
                       }
                       setCurrentStep(3);
@@ -1206,13 +1355,17 @@ export default function NewRfqPage() {
 
               {currentStep === 3 && (
                 <>
-                  <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(2)}>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => setCurrentStep(2)}
+                  >
                     <Icon name="chevron-left" /> Voltar
                   </button>
-                  <Button 
-                    variant="primary" 
-                    type="button" 
-                    className={styles.btnSubmit} 
+                  <Button
+                    variant="primary"
+                    type="button"
+                    className={styles.btnSubmit}
                     onClick={() => {
                       const valor = solicitacaoConfirmada?.valorEstimado || 0;
                       let minSuppliers = 1;
@@ -1220,7 +1373,11 @@ export default function NewRfqPage() {
                       else if (valor > 1000) minSuppliers = 2;
 
                       if (fornecedoresSelecionados.length < minSuppliers) {
-                        toast({ variant: "warning", title: "Política de Compras", message: `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedor(es).` });
+                        toast({
+                          variant: "warning",
+                          title: "Política de Compras",
+                          message: `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedor(es).`,
+                        });
                         return;
                       }
                       setCurrentStep(4);
@@ -1251,7 +1408,11 @@ export default function NewRfqPage() {
                     onClick={async () => {
                       const targetRequestId = solicitacaoConfirmada?.id || paramSol;
                       if (!targetRequestId) {
-                        toast({ variant: "warning", title: "Atenção", message: "Selecione uma solicitação para salvar o rascunho da cotação." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Selecione uma solicitação para salvar o rascunho da cotação.",
+                        });
                         return;
                       }
 
@@ -1303,10 +1464,15 @@ export default function NewRfqPage() {
                     loadingText="Publicando..."
                     onClick={async () => {
                       if (!incoterm || !condicaoPagamento.trim() || !moeda) {
-                        toast({ variant: "warning", title: "Atenção", message: "Preencha os dados de compliance obrigatórios (Incoterm, Condição e Moeda)" });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message:
+                            "Preencha os dados de compliance obrigatórios (Incoterm, Condição e Moeda)",
+                        });
                         return;
                       }
-                      
+
                       setIsSubmitting(true);
                       try {
                         const selectedSupplierIds = fornecedoresSelecionados.map((f) => f.id);
@@ -1343,7 +1509,6 @@ export default function NewRfqPage() {
                   </Button>
                 </>
               )}
-
             </div>
           </Card>
         </div>

@@ -37,18 +37,22 @@ export function ProtectedLayout({ children, allowedRoles, requiredScopes }: Prot
 
     let isAuthorized = true;
 
-    if ((allowedRoles && allowedRoles.length > 0) || (requiredScopes && requiredScopes.length > 0)) {
+    if (
+      (allowedRoles && allowedRoles.length > 0) ||
+      (requiredScopes && requiredScopes.length > 0)
+    ) {
       let hasRole = false;
       let hasScope = false;
 
       if (allowedRoles && allowedRoles.length > 0) {
-        const lowerAllowed = allowedRoles.map(r => r.toLowerCase().trim());
-        hasRole = lowerAllowed.includes(user.role.toLowerCase()) || 
-                  (!!user.roles && user.roles.some(r => lowerAllowed.includes(r.toLowerCase().trim())));
+        const lowerAllowed = allowedRoles.map((r) => r.toLowerCase().trim());
+        hasRole =
+          lowerAllowed.includes(user.role.toLowerCase()) ||
+          (!!user.roles && user.roles.some((r) => lowerAllowed.includes(r.toLowerCase().trim())));
       }
 
       if (requiredScopes && requiredScopes.length > 0) {
-        hasScope = !!user.scopes && user.scopes.some(s => requiredScopes.includes(s));
+        hasScope = !!user.scopes && user.scopes.some((s) => requiredScopes.includes(s));
       }
 
       isAuthorized = hasRole || hasScope;

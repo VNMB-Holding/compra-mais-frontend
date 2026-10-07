@@ -33,7 +33,10 @@ export default function Sidebar({
     <>
       <div className={styles.navSection}>
         <div className={styles.sectionTitle}>MINHAS SOLICITAÇÕES</div>
-        <Link href="/compras/solicitacoes" className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}>
+        <Link
+          href="/compras/solicitacoes"
+          className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}
+        >
           <Icon name="clipboard" />
           <span className={styles.navText}>Solicitações</span>
         </Link>
@@ -45,19 +48,31 @@ export default function Sidebar({
     <>
       <div className={styles.navSection}>
         <div className={styles.sectionTitle}>COMPRAS</div>
-        <Link href="/compras/solicitacoes" className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}>
+        <Link
+          href="/compras/solicitacoes"
+          className={`${styles.navItem} ${isActive("/compras/solicitacoes") ? styles.active : ""}`}
+        >
           <Icon name="clipboard" />
           <span className={styles.navText}>Solicitações</span>
         </Link>
-        <Link href="/compras/rfqs" className={`${styles.navItem} ${isActive("/compras/rfqs") ? styles.active : ""}`}>
+        <Link
+          href="/compras/rfqs"
+          className={`${styles.navItem} ${isActive("/compras/rfqs") ? styles.active : ""}`}
+        >
           <Icon name="receipt-check" />
           <span className={styles.navText}>RFQs / Cotações</span>
         </Link>
-        <Link href="/compras/pedidos" className={`${styles.navItem} ${isActive("/compras/pedidos") ? styles.active : ""}`}>
+        <Link
+          href="/compras/pedidos"
+          className={`${styles.navItem} ${isActive("/compras/pedidos") ? styles.active : ""}`}
+        >
           <Icon name="shopping-cart-01" />
           <span className={styles.navText}>Pedidos de Compra</span>
         </Link>
-        <Link href="/compras/itens" className={`${styles.navItem} ${isActive("/compras/itens") ? styles.active : ""}`}>
+        <Link
+          href="/compras/itens"
+          className={`${styles.navItem} ${isActive("/compras/itens") ? styles.active : ""}`}
+        >
           <Icon name="package" />
           <span className={styles.navText}>Itens & Catálogo</span>
         </Link>
@@ -65,7 +80,10 @@ export default function Sidebar({
 
       <div className={styles.navSection}>
         <div className={styles.sectionTitle}>FORNECEDORES</div>
-        <Link href="/fornecedores/diretorio" className={`${styles.navItem} ${isActive("/fornecedores/diretorio") ? styles.active : ""}`}>
+        <Link
+          href="/fornecedores/diretorio"
+          className={`${styles.navItem} ${isActive("/fornecedores/diretorio") ? styles.active : ""}`}
+        >
           <Icon name="users-01" />
           <span className={styles.navText}>Diretório</span>
         </Link>
@@ -73,11 +91,17 @@ export default function Sidebar({
 
       <div className={styles.navSection}>
         <div className={styles.sectionTitle}>ANALYTICS</div>
-        <Link href="/analytics/spend" className={`${styles.navItem} ${isActive("/analytics/spend") ? styles.active : ""}`}>
+        <Link
+          href="/analytics/spend"
+          className={`${styles.navItem} ${isActive("/analytics/spend") ? styles.active : ""}`}
+        >
           <Icon name="coins-02" />
           <span className={styles.navText}>Análise de Spend</span>
         </Link>
-        <Link href="/analytics/economia" className={`${styles.navItem} ${isActive("/analytics/economia") ? styles.active : ""}`}>
+        <Link
+          href="/analytics/economia"
+          className={`${styles.navItem} ${isActive("/analytics/economia") ? styles.active : ""}`}
+        >
           <Icon name="piggy-bank-01" />
           <span className={styles.navText}>Análise de Savings</span>
         </Link>
@@ -86,7 +110,10 @@ export default function Sidebar({
       {(user?.role === "admin" || user?.role === "gerente") && (
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>SISTEMA</div>
-          <Link href="/admin" className={`${styles.navItem} ${isActive("/admin") ? styles.active : ""}`}>
+          <Link
+            href="/admin"
+            className={`${styles.navItem} ${isActive("/admin") ? styles.active : ""}`}
+          >
             <Icon name="settings-01" />
             <span className={styles.navText}>Administração</span>
           </Link>
@@ -98,7 +125,9 @@ export default function Sidebar({
   return (
     <>
       {mobileOpen && <div className={styles.mobileBackdrop} onClick={onCloseMobile} />}
-      <aside className={`${styles.mainNav} ${isCollapsed ? styles.collapsed : ""} ${mobileOpen ? styles.mobileOpen : ""}`}>
+      <aside
+        className={`${styles.mainNav} ${isCollapsed ? styles.collapsed : ""} ${mobileOpen ? styles.mobileOpen : ""}`}
+      >
         <div className={styles.logoArea}>
           <img
             src="/images/logo-compra-mais.svg"
@@ -133,16 +162,16 @@ export default function Sidebar({
           {user?.role === "solicitante" ? solicitanteMenu : procuristMenu}
         </div>
 
-      <div className={styles.sidebarFooter}>
-        <div className={styles.helpCard} onClick={onHelpClick}>
-          <Icon name="help-circle" className={styles.helpIcon} />
-          <div className={styles.helpText}>
-            <strong>Precisa de ajuda?</strong>
-            <span>Central de Ajuda</span>
+        <div className={styles.sidebarFooter}>
+          <div className={styles.helpCard} onClick={onHelpClick}>
+            <Icon name="help-circle" className={styles.helpIcon} />
+            <div className={styles.helpText}>
+              <strong>Precisa de ajuda?</strong>
+              <span>Central de Ajuda</span>
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
-  </>
+      </aside>
+    </>
   );
 }

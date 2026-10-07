@@ -50,7 +50,7 @@ describe("GuidedTour Component & TourContext", () => {
       <TourProvider>
         <TestConsumer />
         <GuidedTour />
-      </TourProvider>
+      </TourProvider>,
     );
 
     expect(screen.getByTestId("status").textContent).toBe("Inativo");
@@ -62,7 +62,7 @@ describe("GuidedTour Component & TourContext", () => {
       <TourProvider>
         <TestConsumer />
         <GuidedTour />
-      </TourProvider>
+      </TourProvider>,
     );
 
     act(() => {
@@ -80,7 +80,7 @@ describe("GuidedTour Component & TourContext", () => {
       <TourProvider>
         <TestConsumer />
         <GuidedTour />
-      </TourProvider>
+      </TourProvider>,
     );
 
     act(() => {
@@ -110,7 +110,7 @@ describe("GuidedTour Component & TourContext", () => {
       <TourProvider>
         <TestConsumer />
         <GuidedTour />
-      </TourProvider>
+      </TourProvider>,
     );
 
     act(() => {

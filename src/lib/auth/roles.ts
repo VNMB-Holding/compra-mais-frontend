@@ -34,7 +34,7 @@ export function mapApiRole(roles: string[]): UserRole {
         r === "buyer" ||
         r === "procurement" ||
         r.includes("comprador") ||
-        r.includes("compradora")
+        r.includes("compradora"),
     )
   ) {
     return "procurist";

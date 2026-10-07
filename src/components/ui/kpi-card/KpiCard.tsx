@@ -1,9 +1,9 @@
-import React from 'react';
-import Card from '../card/Card';
-import Icon from '../icon/Icon';
-import Skeleton, { KpiCardSkeleton } from '../skeleton/Skeleton';
+import React from "react";
+import Card from "../card/Card";
+import Icon from "../icon/Icon";
+import Skeleton, { KpiCardSkeleton } from "../skeleton/Skeleton";
 
-import styles from './KpiCard.module.css';
+import styles from "./KpiCard.module.css";
 
 interface KpiCardProps {
   title: string;
@@ -29,7 +29,7 @@ export default function KpiCard({
   onLinkClick,
   onClick,
   description,
-  trend
+  trend,
 }: KpiCardProps) {
   const handleClick = onLinkClick || onClick;
 
@@ -56,7 +56,10 @@ export default function KpiCard({
   }
 
   return (
-    <Card className={`${styles.kpiCard} ${handleClick ? styles.clickableCard : ""}`} onClick={handleClick}>
+    <Card
+      className={`${styles.kpiCard} ${handleClick ? styles.clickableCard : ""}`}
+      onClick={handleClick}
+    >
       <div className={styles.iconWrapper}>
         <Icon name={icon} />
       </div>
@@ -65,9 +68,7 @@ export default function KpiCard({
         <span className={styles.title}>{title}</span>
         <h3 className={styles.value}>{value}</h3>
 
-        {description && (
-          <span className={styles.description}>{description}</span>
-        )}
+        {description && <span className={styles.description}>{description}</span>}
 
         {trend && (
           <div className={styles.trend}>
@@ -78,8 +79,8 @@ export default function KpiCard({
       </div>
 
       {linkLabel && (
-        <button 
-          className={styles.linkButton} 
+        <button
+          className={styles.linkButton}
           onClick={(e) => {
             e.stopPropagation();
             if (handleClick) handleClick();

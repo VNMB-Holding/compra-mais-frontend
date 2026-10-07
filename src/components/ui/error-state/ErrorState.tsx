@@ -7,17 +7,16 @@ import Button from "@/components/ui/button/Button";
 import styles from "./ErrorState.module.css";
 
 interface ErrorStateProps {
-  
   message?: string;
-  
+
   title?: string;
-  
+
   onRetry?: () => void;
-  
+
   retryLabel?: string;
-  
+
   illustration?: "disconnected" | "server-error" | "not-found" | "connection-lost" | "none";
-  
+
   className?: string;
 }
 

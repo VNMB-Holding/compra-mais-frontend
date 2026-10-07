@@ -10,7 +10,14 @@ export interface PurchaseOrder {
   paymentTerms: string;
   estimatedDeliveryDate: string;
   shippingType?: "CIF" | "FOB" | "EXW" | "DDP";
-  status: "AwaitingSignature" | "Signed" | "InTransit" | "Delivered" | "Cancelled" | "Sent" | "Processing";
+  status:
+    | "AwaitingSignature"
+    | "Signed"
+    | "InTransit"
+    | "Delivered"
+    | "Cancelled"
+    | "Sent"
+    | "Processing";
   companyCode?: string;
   filialCode?: string;
   corporateCode?: string;
@@ -48,7 +55,7 @@ export interface PurchaseOrderListParams {
 export const purchaseOrdersApi = {
   list: (paramsOrTenant?: string | PurchaseOrderListParams) => {
     const params = new URLSearchParams();
-    if (typeof paramsOrTenant === 'string') {
+    if (typeof paramsOrTenant === "string") {
       const validTenant = cleanTenantParam(paramsOrTenant);
       if (validTenant) params.append("companyCode", validTenant);
     } else if (paramsOrTenant) {
@@ -66,7 +73,7 @@ export const purchaseOrdersApi = {
       if (search) params.append("search", search);
     }
     const qs = params.toString();
-    return apiClient.get<PurchaseOrder[]>(`/api/purchase-orders${qs ? `?${qs}` : ''}`);
+    return apiClient.get<PurchaseOrder[]>(`/api/purchase-orders${qs ? `?${qs}` : ""}`);
   },
 
   getById: (id: string) => apiClient.get<PurchaseOrder>(`/api/purchase-orders/${id}`),

@@ -16,11 +16,7 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/images/carrinho-logo.png" }],
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>

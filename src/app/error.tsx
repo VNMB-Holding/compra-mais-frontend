@@ -25,7 +25,7 @@ export default function ErrorBoundary({
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.accentBar} />
-        
+
         <div className={styles.cardBody}>
           <div className={styles.iconWrapper}>
             <div className={styles.iconPulse} />
@@ -40,7 +40,8 @@ export default function ErrorBoundary({
 
           <h2 className={styles.title}>Ops! Algo deu errado</h2>
           <p className={styles.description}>
-            Ocorreu uma instabilidade inesperada ao processar esta página. Nossa equipe técnica já foi notificada.
+            Ocorreu uma instabilidade inesperada ao processar esta página. Nossa equipe técnica já
+            foi notificada.
           </p>
 
           <div className={styles.diagnosticsBox}>

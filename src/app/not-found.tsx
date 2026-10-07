@@ -11,22 +11,32 @@ export default function NotFoundPage() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <div className={styles.accentBar} style={{ background: "linear-gradient(90deg, #007d79 0%, #0d9488 100%)" }} />
-        
+        <div
+          className={styles.accentBar}
+          style={{ background: "linear-gradient(90deg, #007d79 0%, #0d9488 100%)" }}
+        />
+
         <div className={styles.cardBody}>
-          <div className={styles.iconWrapper} style={{ background: "#f0fdf9", borderColor: "#ccfbf1", color: "#007d79" }}>
+          <div
+            className={styles.iconWrapper}
+            style={{ background: "#f0fdf9", borderColor: "#ccfbf1", color: "#007d79" }}
+          >
             <Icon name="search-refraction" className={styles.icon} />
           </div>
 
           <div className={styles.badgeWrapper}>
-            <span className={styles.errorBadge} style={{ background: "#f0fdf9", color: "#007d79", borderColor: "#ccfbf1" }}>
+            <span
+              className={styles.errorBadge}
+              style={{ background: "#f0fdf9", color: "#007d79", borderColor: "#ccfbf1" }}
+            >
               <Icon name="file-x-02" size={13} /> Página Não Encontrada · 404
             </span>
           </div>
 
           <h2 className={styles.title}>Página não localizada</h2>
           <p className={styles.description}>
-            O endereço que você tentou acessar não existe, foi alterado ou está temporariamente indisponível.
+            O endereço que você tentou acessar não existe, foi alterado ou está temporariamente
+            indisponível.
           </p>
 
           <div className={styles.actions}>

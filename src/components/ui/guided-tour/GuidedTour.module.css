@@ -1,13 +1,9 @@
-
-
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
 }
-
-
 
 .spotlight {
   position: fixed;
@@ -22,15 +18,12 @@
   pointer-events: none;
 }
 
-
 .backdropClick {
   position: fixed;
   inset: 0;
   z-index: 9000;
   cursor: default;
 }
-
-
 
 .tooltip {
   position: fixed;
@@ -45,7 +38,8 @@
     0 20px 50px -8px rgba(15, 23, 42, 0.18);
   padding: 20px;
   pointer-events: auto;
-  animation: tooltipEnter var(--duration-enter, 260ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  animation: tooltipEnter var(--duration-enter, 260ms)
+    var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 @keyframes tooltipEnter {
@@ -58,8 +52,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-
 
 .caret {
   position: absolute;
@@ -94,8 +86,6 @@
   border-right: none;
 }
 
-
-
 .tooltipHeader {
   display: flex;
   align-items: flex-start;
@@ -123,7 +113,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color var(--duration-fast, 120ms) ease, background var(--duration-fast, 120ms) ease;
+  transition:
+    color var(--duration-fast, 120ms) ease,
+    background var(--duration-fast, 120ms) ease;
 }
 
 .closeBtn:hover {
@@ -137,8 +129,6 @@
   line-height: 1.55;
   margin: 0 0 16px 0;
 }
-
-
 
 .tooltipFooter {
   display: flex;
@@ -178,8 +168,6 @@
   align-items: center;
 }
 
-
-
 .progressBar {
   width: 100%;
   height: 3px;
@@ -195,8 +183,6 @@
   border-radius: 2px;
   transition: width var(--duration-enter, 260ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
-
-
 
 @media (max-width: 480px) {
   .tooltip {
@@ -216,8 +202,6 @@
     padding-top: 8px;
   }
 }
-
-
 
 @media (prefers-reduced-motion: reduce) {
   .spotlight {

@@ -1,4 +1,3 @@
-
 export enum CategoryType {
   IT_SOFTWARE = "IT_SOFTWARE",
   FUEL_LUBRICANTS = "FUEL_LUBRICANTS",
@@ -41,29 +40,74 @@ export function getCategoryIcon(category?: CategoryType | string): string {
 
   const cat = String(category).toLowerCase().trim();
 
-  if (cat.includes("mista") || cat.includes("múltipla") || cat.includes("multipla") || cat.includes("diversa")) {
+  if (
+    cat.includes("mista") ||
+    cat.includes("múltipla") ||
+    cat.includes("multipla") ||
+    cat.includes("diversa")
+  ) {
     return "layers-three-01";
   }
 
-  if (cat.includes("ti") || cat.includes("tecnologia") || cat.includes("hardware") || cat.includes("software") || cat.includes("cloud") || cat.includes("sistema")) {
+  if (
+    cat.includes("ti") ||
+    cat.includes("tecnologia") ||
+    cat.includes("hardware") ||
+    cat.includes("software") ||
+    cat.includes("cloud") ||
+    cat.includes("sistema")
+  ) {
     return CATEGORY_ICON_MAP[CategoryType.IT_SOFTWARE];
   }
-  if (cat.includes("combust") || cat.includes("diesel") || cat.includes("óleo") || cat.includes("lubrificant") || cat.includes("gasolina")) {
+  if (
+    cat.includes("combust") ||
+    cat.includes("diesel") ||
+    cat.includes("óleo") ||
+    cat.includes("lubrificant") ||
+    cat.includes("gasolina")
+  ) {
     return CATEGORY_ICON_MAP[CategoryType.FUEL_LUBRICANTS];
   }
-  if (cat.includes("serviço") || cat.includes("consultoria") || cat.includes("mão de obra") || cat.includes("terceiriza")) {
+  if (
+    cat.includes("serviço") ||
+    cat.includes("consultoria") ||
+    cat.includes("mão de obra") ||
+    cat.includes("terceiriza")
+  ) {
     return CATEGORY_ICON_MAP[CategoryType.SERVICES];
   }
-  if (cat.includes("mro") || cat.includes("ferramenta") || cat.includes("manutenção") || cat.includes("peça") || cat.includes("equipamento")) {
+  if (
+    cat.includes("mro") ||
+    cat.includes("ferramenta") ||
+    cat.includes("manutenção") ||
+    cat.includes("peça") ||
+    cat.includes("equipamento")
+  ) {
     return CATEGORY_ICON_MAP[CategoryType.MRO_MAINTENANCE];
   }
-  if (cat.includes("matéria") || cat.includes("prima") || cat.includes("insumo") || cat.includes("químico") || cat.includes("material")) {
+  if (
+    cat.includes("matéria") ||
+    cat.includes("prima") ||
+    cat.includes("insumo") ||
+    cat.includes("químico") ||
+    cat.includes("material")
+  ) {
     return CATEGORY_ICON_MAP[CategoryType.RAW_MATERIALS];
   }
-  if (cat.includes("logística") || cat.includes("transporte") || cat.includes("frete") || cat.includes("frotas")) {
+  if (
+    cat.includes("logística") ||
+    cat.includes("transporte") ||
+    cat.includes("frete") ||
+    cat.includes("frotas")
+  ) {
     return CATEGORY_ICON_MAP[CategoryType.LOGISTICS];
   }
-  if (cat.includes("infra") || cat.includes("obras") || cat.includes("construção") || cat.includes("instalaç")) {
+  if (
+    cat.includes("infra") ||
+    cat.includes("obras") ||
+    cat.includes("construção") ||
+    cat.includes("instalaç")
+  ) {
     return CATEGORY_ICON_MAP[CategoryType.INFRASTRUCTURE];
   }
 

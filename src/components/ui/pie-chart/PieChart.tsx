@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
-import { ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Tooltip } from 'recharts';
-import styles from './PieChart.module.css';
+import React from "react";
+import { ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Tooltip } from "recharts";
+import styles from "./PieChart.module.css";
 
 interface PieItem {
   name: string;
@@ -32,7 +32,7 @@ export default function PieChart({ data }: PieChartProps) {
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip 
+          <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 return (

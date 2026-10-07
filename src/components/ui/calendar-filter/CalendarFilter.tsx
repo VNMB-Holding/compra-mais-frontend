@@ -6,8 +6,8 @@ import Icon from "../icon/Icon";
 
 export interface DateFilterValue {
   mode: "range" | "single" | "all";
-  startDate?: string; 
-  endDate?: string;   
+  startDate?: string;
+  endDate?: string;
   preset?: string;
 }
 
@@ -52,7 +52,7 @@ export default function CalendarFilter({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [activeMode, setActiveMode] = useState<"range" | "single">(
-    value.mode === "single" ? "single" : "range"
+    value.mode === "single" ? "single" : "range",
   );
   const [tempStart, setTempStart] = useState<string | undefined>(value.startDate);
   const [tempEnd, setTempEnd] = useState<string | undefined>(value.endDate);
@@ -136,7 +136,6 @@ export default function CalendarFilter({
       setTempStart(iso);
       setTempEnd(undefined);
     } else {
-      
       if (iso < tempStart) {
         setTempEnd(tempStart);
         setTempStart(iso);
@@ -280,11 +279,7 @@ export default function CalendarFilter({
 
         <div className={styles.triggerRight}>
           {value.startDate && (
-            <span
-              className={styles.clearIcon}
-              onClick={handleClear}
-              title="Limpar filtro de data"
-            >
+            <span className={styles.clearIcon} onClick={handleClear} title="Limpar filtro de data">
               <Icon name="x" size={14} />
             </span>
           )}
@@ -296,7 +291,6 @@ export default function CalendarFilter({
 
       {isOpen && (
         <div className={styles.popover}>
-          
           <div className={styles.modeSwitcher}>
             <button
               type="button"
@@ -362,7 +356,9 @@ export default function CalendarFilter({
             ))}
             {calendarDays.map((item, idx) => {
               if (!item.iso || !item.dayNumber) {
-                return <div key={`empty-${idx}`} className={`${styles.dayCell} ${styles.dayEmpty}`} />;
+                return (
+                  <div key={`empty-${idx}`} className={`${styles.dayCell} ${styles.dayEmpty}`} />
+                );
               }
 
               const iso = item.iso;
@@ -370,11 +366,7 @@ export default function CalendarFilter({
               const isStart = iso === tempStart;
               const isEnd = iso === tempEnd;
               const isInRange =
-                activeMode === "range" &&
-                tempStart &&
-                tempEnd &&
-                iso > tempStart &&
-                iso < tempEnd;
+                activeMode === "range" && tempStart && tempEnd && iso > tempStart && iso < tempEnd;
 
               let cellClass = styles.dayCell;
               if (isToday) cellClass += ` ${styles.dayToday}`;
@@ -411,8 +403,8 @@ export default function CalendarFilter({
               {tempStart && tempEnd && tempStart !== tempEnd
                 ? `${formatIsoToBr(tempStart)} - ${formatIsoToBr(tempEnd)}`
                 : tempStart
-                ? formatIsoToBr(tempStart)
-                : "Nenhuma data selecionada"}
+                  ? formatIsoToBr(tempStart)
+                  : "Nenhuma data selecionada"}
             </div>
             <div className={styles.footerActions}>
               <button type="button" className={styles.btnClean} onClick={() => handleClear()}>

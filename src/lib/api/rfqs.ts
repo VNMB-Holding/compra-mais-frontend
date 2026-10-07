@@ -7,7 +7,15 @@ export interface Rfq {
   requestId: string;
   title: string;
   closesAt: string;
-  status: "Draft" | "Open" | "UnderAnalysis" | "Finished" | "Closed" | "Cancelled" | "Pending" | "InQuote";
+  status:
+    | "Draft"
+    | "Open"
+    | "UnderAnalysis"
+    | "Finished"
+    | "Closed"
+    | "Cancelled"
+    | "Pending"
+    | "InQuote";
   createdAt: string;
   updatedAt: string;
   purchaseRequest?: {
@@ -123,7 +131,7 @@ export interface PublicProposalPayload {
 export const rfqsApi = {
   list: (paramsOrTenant?: string | RfqListParams) => {
     const params = new URLSearchParams();
-    if (typeof paramsOrTenant === 'string') {
+    if (typeof paramsOrTenant === "string") {
       const validTenant = cleanTenantParam(paramsOrTenant);
       if (validTenant) params.append("companyCode", validTenant);
     } else if (paramsOrTenant) {
@@ -141,7 +149,7 @@ export const rfqsApi = {
       if (search) params.append("search", search);
     }
     const qs = params.toString();
-    return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ''}`);
+    return apiClient.get<Rfq[]>(`/api/rfqs${qs ? `?${qs}` : ""}`);
   },
 
   getById: (id: string) => apiClient.get<Rfq>(`/api/rfqs/${id}`),
@@ -151,10 +159,12 @@ export const rfqsApi = {
   },
 
   submitPublicProposal: (id: string, data: PublicProposalPayload) => {
-    return apiClient.post<{ success: boolean; protocol: string; supplierName: string; message: string }>(
-      `/api/rfqs/public/${id}/proposal`,
-      data
-    );
+    return apiClient.post<{
+      success: boolean;
+      protocol: string;
+      supplierName: string;
+      message: string;
+    }>(`/api/rfqs/public/${id}/proposal`, data);
   },
 
   getKpis: (companyCode?: string) => {
@@ -162,7 +172,7 @@ export const rfqsApi = {
     const params = new URLSearchParams();
     if (validTenant) params.append("companyCode", validTenant);
     const qs = params.toString();
-    return apiClient.get<RfqKpis>(`/api/rfqs/kpis${qs ? `?${qs}` : ''}`);
+    return apiClient.get<RfqKpis>(`/api/rfqs/kpis${qs ? `?${qs}` : ""}`);
   },
 
   create: (data: {
@@ -170,13 +180,12 @@ export const rfqsApi = {
     title: string;
     closesAt: string;
     supplierIds?: string[];
-    status?: 'Draft' | 'Open';
+    status?: "Draft" | "Open";
     incoterm?: string;
     paymentTerms?: string;
     currency?: string;
     notes?: string;
-  }) =>
-    apiClient.post<Rfq>("/api/rfqs", data),
+  }) => apiClient.post<Rfq>("/api/rfqs", data),
 
   createProposal: (
     rfqId: string,
@@ -195,15 +204,20 @@ export const rfqsApi = {
       contactPhone?: string;
       notes?: string;
       items?: { requestItemId: string; unitPrice: number; notes?: string }[];
-    }
+    },
   ) =>
-    apiClient.post<{ id: string; rfqId: string; supplierId: string; status: string; isWinner: boolean }>(`/api/rfqs/${rfqId}/proposals`, data),
+    apiClient.post<{
+      id: string;
+      rfqId: string;
+      supplierId: string;
+      status: string;
+      isWinner: boolean;
+    }>(`/api/rfqs/${rfqId}/proposals`, data),
 
   selectWinner: (rfqId: string, proposalId: string) =>
     apiClient.patch(`/api/rfqs/${rfqId}/winner`, { proposalId }),
 
-  createPo: (rfqId: string) =>
-    apiClient.post(`/api/rfqs/${rfqId}/create-po`, {}),
+  createPo: (rfqId: string) => apiClient.post(`/api/rfqs/${rfqId}/create-po`, {}),
 
   updateStatus: (id: string, status: Rfq["status"], reason?: string) =>
     apiClient.patch<Rfq>(`/api/rfqs/${id}/status`, { status, reason }),

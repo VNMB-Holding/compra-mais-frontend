@@ -279,7 +279,7 @@
   color: #007d79 !important;
 }
 .tabActive::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -320,7 +320,7 @@
   align-items: flex-start;
   gap: 12px;
 }
-.infoItem>span {
+.infoItem > span {
   color: #94a3b8;
   font-size: 22px;
   margin-top: 2px;

@@ -71,7 +71,10 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
 }
 .secondaryAction,
 .btnCancel {
@@ -246,7 +249,10 @@
   font-family: inherit;
   font-size: 13px;
   line-height: 1.35;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 textarea.formControl {
   resize: vertical;
@@ -542,10 +548,22 @@ textarea.formControl {
   font-weight: 900;
   white-space: nowrap;
 }
-.priorityBaixa { background: #f1f5f9; color: #475569; }
-.priorityMedia { background: #fef9c3; color: #92400e; }
-.priorityAlta  { background: #fee2e2; color: #b91c1c; }
-.priorityCritica { background: #0f172a; color: #fff; }
+.priorityBaixa {
+  background: #f1f5f9;
+  color: #475569;
+}
+.priorityMedia {
+  background: #fef9c3;
+  color: #92400e;
+}
+.priorityAlta {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.priorityCritica {
+  background: #0f172a;
+  color: #fff;
+}
 .summaryBox {
   display: flex;
   gap: 12px;
@@ -772,7 +790,9 @@ textarea.formControl {
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 .fornecedorRow:hover {
   border-color: #007d79;
@@ -1129,18 +1149,42 @@ textarea.formControl {
   gap: 16px;
   width: 100%;
 }
-.col12 { grid-column: span 12; }
-.col11 { grid-column: span 11; }
-.col10 { grid-column: span 10; }
-.col9 { grid-column: span 9; }
-.col8 { grid-column: span 8; }
-.col7 { grid-column: span 7; }
-.col6 { grid-column: span 6; }
-.col5 { grid-column: span 5; }
-.col4 { grid-column: span 4; }
-.col3 { grid-column: span 3; }
-.col2 { grid-column: span 2; }
-.col1 { grid-column: span 1; }
+.col12 {
+  grid-column: span 12;
+}
+.col11 {
+  grid-column: span 11;
+}
+.col10 {
+  grid-column: span 10;
+}
+.col9 {
+  grid-column: span 9;
+}
+.col8 {
+  grid-column: span 8;
+}
+.col7 {
+  grid-column: span 7;
+}
+.col6 {
+  grid-column: span 6;
+}
+.col5 {
+  grid-column: span 5;
+}
+.col4 {
+  grid-column: span 4;
+}
+.col3 {
+  grid-column: span 3;
+}
+.col2 {
+  grid-column: span 2;
+}
+.col1 {
+  grid-column: span 1;
+}
 .itemSummaryRow {
   display: flex;
   align-items: center;

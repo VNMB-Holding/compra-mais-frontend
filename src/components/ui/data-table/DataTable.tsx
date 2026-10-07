@@ -40,7 +40,7 @@ export function DataTable<T>({ columns, data, onRowClick, density = "normal" }: 
             >
               {columns.map((col, colIndex) => (
                 <td key={colIndex}>
-                  {col.cell ? col.cell(row) : (col.accessorKey ? String(row[col.accessorKey]) : null)}
+                  {col.cell ? col.cell(row) : col.accessorKey ? String(row[col.accessorKey]) : null}
                 </td>
               ))}
             </tr>

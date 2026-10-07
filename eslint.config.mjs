@@ -16,7 +16,12 @@ const eslintConfig = defineConfig([
     "*.tsbuildinfo",
   ]),
   {
-    files: ["tests/**/*.ts", "tests/**/*.tsx", "src/**/__tests__/**/*.ts", "src/**/__tests__/**/*.tsx"],
+    files: [
+      "tests/**/*.ts",
+      "tests/**/*.tsx",
+      "src/**/__tests__/**/*.ts",
+      "src/**/__tests__/**/*.tsx",
+    ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
     },

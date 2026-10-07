@@ -15,7 +15,7 @@ import {
   DateFilterValue,
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
-import { formatCurrency } from "@/lib/utils/format-display";
+import { formatCurrency, formatDateTimePtBr } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, SpendAnalyticsResponse } from "@/lib/api/dashboard";
 import { getCompanyFilterOptions } from "@/lib/utils/tenant";
@@ -50,19 +50,27 @@ export default function SpendPage() {
 
   const [loading, setLoading] = useState(true);
   const [apiData, setApiData] = useState<SpendAnalyticsResponse | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [showAllSuppliers, setShowAllSuppliers] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
-  const [filterOptions, setFilterOptions] = useState<{ categories: string[]; suppliers: string[] }>({
-    categories: [],
-    suppliers: [],
-  });
+  const [filterOptions, setFilterOptions] = useState<{ categories: string[]; suppliers: string[] }>(
+    {
+      categories: [],
+      suppliers: [],
+    },
+  );
 
   const companyOptions = getCompanyFilterOptions();
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   useEffect(() => {
-    dashboardApi.getFilterOptions(queryCompanyCode).then(setFilterOptions).catch((err) => {
-      logError("analytics/spend/filterOptions", err);
-    });
+    dashboardApi
+      .getFilterOptions(queryCompanyCode)
+      .then(setFilterOptions)
+      .catch((err) => {
+        logError("analytics/spend/filterOptions", err);
+      });
   }, [queryCompanyCode]);
 
   const fetchData = useCallback(async () => {
@@ -74,9 +82,10 @@ export default function SpendPage() {
         selectedSupplier,
         dateFilter.preset,
         dateFilter.startDate,
-        dateFilter.endDate
+        dateFilter.endDate,
       );
       setApiData(data);
+      setLastUpdatedAt(new Date());
     } catch (err) {
       logError("analytics/spend/fetchData", err);
     } finally {
@@ -92,11 +101,18 @@ export default function SpendPage() {
     setExportingType(type);
     try {
       const format = type === "XLS" ? "excel" : "pdf";
-      await dashboardApi.downloadReportFile("spend", format, queryCompanyCode, dateFilter.startDate, dateFilter.endDate, dateFilter.preset);
+      await dashboardApi.downloadReportFile(
+        "spend",
+        format,
+        queryCompanyCode,
+        dateFilter.startDate,
+        dateFilter.endDate,
+        dateFilter.preset,
+      );
       toast({
         variant: "success",
         title: "Download Concluído",
-        message: `O relatório analítico de Spend foi exportado em ${type === "XLS" ? "Excel (.xlsx)" : "PDF (.pdf)"} com sucesso.`
+        message: `O relatório analítico de Spend foi exportado em ${type === "XLS" ? "Excel (.xlsx)" : "PDF (.pdf)"} com sucesso.`,
       });
     } catch (err) {
       logError("analytics/spend/export", err);
@@ -112,18 +128,19 @@ export default function SpendPage() {
           ]),
           [],
           ["Fornecedor", "Valor Gasto (R$)", "% do Total"],
-          ...suppliersData.map((s) => [
-            s.nome,
-            s.valor.toFixed(2),
-            `${s.pct}%`,
-          ]),
+          ...suppliersData.map((s) => [s.nome, s.valor.toFixed(2), `${s.pct}%`]),
         ];
 
-        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
+        const csvContent =
+          "data:text/csv;charset=utf-8,\uFEFF" +
+          rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `relatorio_spend_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute(
+          "download",
+          `relatorio_spend_${new Date().toISOString().slice(0, 10)}.csv`,
+        );
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -131,13 +148,13 @@ export default function SpendPage() {
         toast({
           variant: "success",
           title: "Download Concluído",
-          message: "O relatório analítico de Spend foi exportado em formato CSV."
+          message: "O relatório analítico de Spend foi exportado em formato CSV.",
         });
       } catch {
         toast({
           variant: "error",
           title: "Erro na exportação",
-          message: "Não foi possível gerar o arquivo de exportação."
+          message: "Não foi possível gerar o arquivo de exportação.",
         });
       }
     } finally {
@@ -156,8 +173,9 @@ export default function SpendPage() {
       spendTotal: c.spendTotal,
       pctTotal: Number(c.pctTotal.toFixed(1)),
       pedidos: c.pedidos,
-      economiaPotencial: typeof c.economiaPotencial === "number" ? Math.round(c.economiaPotencial) : 0,
-      color: c.color || ['#007d79', '#00a39e', '#004144', '#1192e8', '#0f62fe', '#7c3aed'][i % 6],
+      economiaPotencial:
+        typeof c.economiaPotencial === "number" ? Math.round(c.economiaPotencial) : 0,
+      color: c.color || ["#007d79", "#00a39e", "#004144", "#1192e8", "#0f62fe", "#7c3aed"][i % 6],
     }));
   }, [apiData]);
 
@@ -165,20 +183,29 @@ export default function SpendPage() {
     return apiData?.suppliers || [];
   }, [apiData]);
 
+  const visibleSuppliers = showAllSuppliers ? suppliersData : suppliersData.slice(0, 5);
+  const visibleCategories = showAllCategories ? categoriesData : categoriesData.slice(0, 5);
+
   const totals = useMemo(() => {
     const spendSum = categoriesData.reduce((s, c) => s + c.spendTotal, 0);
     const econSum = categoriesData.reduce((s, c) => s + c.economiaPotencial, 0);
-    const pedidosSum = categoriesData.reduce((s, c) => s + (typeof c.pedidos === "number" ? c.pedidos : 0), 0);
+    const pedidosSum = categoriesData.reduce(
+      (s, c) => s + (typeof c.pedidos === "number" ? c.pedidos : 0),
+      0,
+    );
 
     return {
       spendTotal: spendSum,
       economiaPotencial: econSum,
-      pedidos: pedidosSum
+      pedidos: pedidosSum,
     };
   }, [categoriesData]);
 
   const kpis = useMemo(() => {
-    const totalEcon = (apiData?.categories || []).reduce((acc, c) => acc + (c.economiaPotencial || 0), 0);
+    const totalEcon = (apiData?.categories || []).reduce(
+      (acc, c) => acc + (c.economiaPotencial || 0),
+      0,
+    );
     return {
       spendTotal: apiData?.kpis?.spendTotal || "R$ 0,00",
       economiaPotencial: formatCurrency(totalEcon),
@@ -187,25 +214,31 @@ export default function SpendPage() {
       trendSpend: "Filtro ativo no servidor",
       trendEconomia: "Oportunidade de saving sobre o spend atual",
       trendPedidos: "Emitidos no período",
-      trendFornecedores: "Ativos na base"
+      trendFornecedores: "Ativos na base",
     };
   }, [apiData]);
 
-  const categoryOptions = useMemo(() => [
-    { value: "all", label: "Todas as Categorias" },
-    ...filterOptions.categories.map((cat) => ({
-      value: cat,
-      label: cat,
-    })),
-  ], [filterOptions.categories]);
+  const categoryOptions = useMemo(
+    () => [
+      { value: "all", label: "Todas as Categorias" },
+      ...filterOptions.categories.map((cat) => ({
+        value: cat,
+        label: cat,
+      })),
+    ],
+    [filterOptions.categories],
+  );
 
-  const supplierOptions = useMemo(() => [
-    { value: "all", label: "Todos os Fornecedores" },
-    ...filterOptions.suppliers.map((sup) => ({
-      value: sup,
-      label: sup,
-    })),
-  ], [filterOptions.suppliers]);
+  const supplierOptions = useMemo(
+    () => [
+      { value: "all", label: "Todos os Fornecedores" },
+      ...filterOptions.suppliers.map((sup) => ({
+        value: sup,
+        label: sup,
+      })),
+    ],
+    [filterOptions.suppliers],
+  );
 
   const handleClearFilters = () => {
     setDateFilter({ mode: "all", preset: "all" });
@@ -215,14 +248,17 @@ export default function SpendPage() {
     toast({
       variant: "info",
       title: "Filtros Limpos",
-      message: "Todas as seleções foram reiniciadas para os valores padrão."
+      message: "Todas as seleções foram reiniciadas para os valores padrão.",
     });
   };
 
   return (
     <div className={styles.container}>
       {exportingType && (
-        <Loading variant="fullscreen" message={`Gerando relatório de Spend (${exportingType})...`} />
+        <Loading
+          variant="fullscreen"
+          message={`Gerando relatório de Spend (${exportingType})...`}
+        />
       )}
 
       <div className={styles.header}>
@@ -239,10 +275,7 @@ export default function SpendPage() {
 
       <div className={styles.filterRow}>
         <div className={styles.filterInput}>
-          <CalendarFilter
-            value={dateFilter}
-            onChange={setDateFilter}
-          />
+          <CalendarFilter value={dateFilter} onChange={setDateFilter} />
         </div>
 
         <div className={styles.filterInput}>
@@ -270,10 +303,7 @@ export default function SpendPage() {
           />
         </div>
 
-        <button 
-          className={styles.clearButton} 
-          onClick={handleClearFilters}
-        >
+        <button className={styles.clearButton} onClick={handleClearFilters}>
           <Icon name="refresh-ccw-01" size={16} /> Limpar filtros
         </button>
       </div>
@@ -282,7 +312,10 @@ export default function SpendPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Spend total</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#e6f7ed", color: "#16a34a" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#e6f7ed", color: "#16a34a" }}
+            >
               <span style={{ fontWeight: "bold" }}>$</span>
             </div>
           </div>
@@ -298,7 +331,10 @@ export default function SpendPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Economia potencial estimada</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#e0f2fe", color: "#0284c7" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#e0f2fe", color: "#0284c7" }}
+            >
               <Icon name="line-chart-up-01" size={16} />
             </div>
           </div>
@@ -313,7 +349,10 @@ export default function SpendPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Pedidos emitidos</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#f0fdf4", color: "#15803d" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#f0fdf4", color: "#15803d" }}
+            >
               <Icon name="clipboard-check" size={16} />
             </div>
           </div>
@@ -329,7 +368,10 @@ export default function SpendPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Fornecedores ativos</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#f8fafc", color: "#475569" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#f8fafc", color: "#475569" }}
+            >
               <Icon name="users-01" size={16} />
             </div>
           </div>
@@ -351,16 +393,15 @@ export default function SpendPage() {
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
                 Evolução do spend
-                <Icon name="help-circle" size={14} className={styles.infoIcon} />
+                <span className={styles.infoIcon} title="Mostra a evolu��o mensal do spend conforme os filtros ativos."><Icon name="help-circle" size={14} /></span>
               </div>
             </div>
             <div className={styles.chartWrapper}>
-              <AreaChart
-                data={monthlySpendData}
-                color="#007d79"
-                label1="Spend"
-                height={260}
-              />
+              {monthlySpendData.length > 0 ? (
+                <AreaChart data={monthlySpendData} color="#007d79" label1="Spend" height={260} />
+              ) : (
+                <div className={styles.emptyState}>Nenhum dado de spend encontrado para os filtros selecionados.</div>
+              )}
             </div>
           </div>
         )}
@@ -372,24 +413,28 @@ export default function SpendPage() {
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
                 Spend por categoria
-                <Icon name="help-circle" size={14} className={styles.infoIcon} />
+                <span className={styles.infoIcon} title="Distribui��o percentual do spend entre categorias no per�odo filtrado."><Icon name="help-circle" size={14} /></span>
               </div>
             </div>
             <div className={styles.donutRow}>
               <div className={styles.donutBox}>
                 <PieChart
-                  data={categoriesData.map(c => ({
+                  data={categoriesData.map((c) => ({
                     name: c.categoria,
                     value: c.pctTotal,
-                    color: c.color
+                    color: c.color,
                   }))}
                 />
               </div>
               <div className={styles.legendList}>
-                {categoriesData.map((item, index) => (
+                {categoriesData.length === 0 ? (
+                  <div className={styles.emptyState}>Nenhuma categoria encontrada.</div>
+                ) : categoriesData.map((item, index) => (
                   <div key={index} className={styles.legendItem}>
                     <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
-                    <span className={styles.legendName} title={item.categoria}>{item.categoria}</span>
+                    <span className={styles.legendName} title={item.categoria}>
+                      {item.categoria}
+                    </span>
                     <span className={styles.legendValue}>{formatCurrency(item.spendTotal)}</span>
                     <span className={styles.legendPct}>{item.pctTotal.toFixed(1)}%</span>
                   </div>
@@ -412,13 +457,17 @@ export default function SpendPage() {
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               Spend por fornecedor
-              <Icon name="help-circle" size={14} className={styles.infoIcon} />
+              <span className={styles.infoIcon} title="Mostra a evolu��o mensal do spend conforme os filtros ativos."><Icon name="help-circle" size={14} /></span>
             </div>
           </div>
           <div className={styles.supplierList}>
-            {suppliersData.map((supplier, idx) => (
+            {suppliersData.length === 0 ? (
+              <div className={styles.emptyState}>Nenhum fornecedor encontrado.</div>
+            ) : visibleSuppliers.map((supplier, idx) => (
               <div key={idx} className={styles.supplierRow}>
-                <span className={styles.supplierName} title={supplier.nome}>{supplier.nome}</span>
+                <span className={styles.supplierName} title={supplier.nome}>
+                  {supplier.nome}
+                </span>
                 <div className={styles.progressBarBg}>
                   <div className={styles.progressBarFill} style={{ width: `${supplier.pct}%` }} />
                 </div>
@@ -433,9 +482,13 @@ export default function SpendPage() {
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               Detalhamento do spend
-              <Icon name="help-circle" size={14} className={styles.infoIcon} />
+              <span className={styles.infoIcon} title="Mostra a evolu��o mensal do spend conforme os filtros ativos."><Icon name="help-circle" size={14} /></span>
             </div>
-            <span className={styles.linkText}>Ver todos</span>
+            {categoriesData.length > 5 && (
+              <button type="button" className={styles.linkButton} onClick={() => setShowAllCategories((current) => !current)}>
+                {showAllCategories ? "Recolher" : "Ver todos"}
+              </button>
+            )}
           </div>
           <div className={styles.customTableWrapper}>
             <table className={styles.spendDetailTable}>
@@ -449,7 +502,7 @@ export default function SpendPage() {
                 </tr>
               </thead>
               <tbody>
-                {categoriesData.map((item, idx) => (
+                {visibleCategories.map((item, idx) => (
                   <tr key={idx}>
                     <td>{item.categoria}</td>
                     <td style={{ textAlign: "right" }}>{formatCurrency(item.spendTotal)}</td>
@@ -475,8 +528,16 @@ export default function SpendPage() {
 
       <div className={styles.footerRow}>
         <Icon name="refresh-ccw-01" size={14} />
-        <span>Dados atualizados em 02/06/2025 às 08:30</span>
+        <span>
+          {lastUpdatedAt
+            ? `Dados atualizados em ${formatDateTimePtBr(lastUpdatedAt)}`
+            : "Aguardando atualiza��o dos dados"}
+        </span>
       </div>
     </div>
   );
 }
+
+
+
+

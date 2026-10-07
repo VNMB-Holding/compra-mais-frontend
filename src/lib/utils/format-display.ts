@@ -1,4 +1,3 @@
-
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 export function isUuid(val: string | undefined | null): boolean {
@@ -8,7 +7,7 @@ export function isUuid(val: string | undefined | null): boolean {
 
 export function formatUserDisplayName(
   rawNameOrId: string | undefined | null,
-  fallbackUser?: { name?: string; email?: string } | null
+  fallbackUser?: { name?: string; email?: string } | null,
 ): string {
   if (fallbackUser?.name) {
     return fallbackUser.name;
@@ -27,7 +26,7 @@ export function formatUserDisplayName(
 
 export function formatSupplierDisplayName(
   rawNameOrId: string | undefined | null,
-  fallbackName?: string
+  fallbackName?: string,
 ): string {
   if (!rawNameOrId || rawNameOrId.trim() === "") {
     return fallbackName || "—";
@@ -48,6 +47,16 @@ export function formatCurrency(value: number | undefined | null): string {
     style: "currency",
     currency: "BRL",
   }).format(value);
+}
+
+export function formatDateTimePtBr(date: Date): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 const MONTH_MAP_PT: Record<string, string> = {
@@ -76,7 +85,7 @@ export function formatMonthLabel(label: string | undefined | null): string {
   if (!label) return "";
   const trimmed = label.trim();
   const lower = trimmed.toLowerCase();
-  
+
   if (MONTH_MAP_PT[lower]) {
     return MONTH_MAP_PT[lower];
   }

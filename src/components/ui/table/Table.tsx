@@ -1,5 +1,5 @@
-import React from 'react';
-import styles from './Table.module.css';
+import React from "react";
+import styles from "./Table.module.css";
 
 interface TableProps {
   headers: string[];
@@ -17,9 +17,7 @@ export default function Table({ headers, children }: TableProps) {
             ))}
           </tr>
         </thead>
-        <tbody>
-          {children}
-        </tbody>
+        <tbody>{children}</tbody>
       </table>
     </div>
   );

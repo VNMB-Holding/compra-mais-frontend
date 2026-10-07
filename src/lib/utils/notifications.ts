@@ -1,67 +1,80 @@
-import { NotificationItem } from '../api/notifications';
-
+import { NotificationItem } from "../api/notifications";
 
 export function resolveNotificationUrl(notif: Partial<NotificationItem>): string {
-  let url = notif.actionUrl?.trim() || '';
+  let url = notif.actionUrl?.trim() || "";
 
   if (!url) {
     switch (notif.type) {
-      case 'rfq':
-        return '/compras/rfqs';
-      case 'order':
-        return '/compras/pedidos';
-      case 'approval':
-        return '/compras/solicitacoes';
-      case 'info':
+      case "rfq":
+        return "/compras/rfqs";
+      case "order":
+        return "/compras/pedidos";
+      case "approval":
+        return "/compras/solicitacoes";
+      case "info":
       default:
-        return '/dashboard';
+        return "/dashboard";
     }
   }
 
-  
   if (/^https?:\/\//i.test(url)) {
     try {
       const parsed = new URL(url);
       url = parsed.pathname + parsed.search + parsed.hash;
-    } catch {
-      
-    }
+    } catch {}
   }
 
-  
   const match = url.match(/^([^?#]*)(.*)$/);
   let pathname = match ? match[1] : url;
-  const rest = match ? match[2] : '';
+  const rest = match ? match[2] : "";
 
-  if (!pathname.startsWith('/')) {
+  if (!pathname.startsWith("/")) {
     switch (notif.type) {
-      case 'rfq':
+      case "rfq":
         return `/compras/rfqs/${pathname}${rest}`;
-      case 'order':
+      case "order":
         return `/compras/pedidos/${pathname}${rest}`;
-      case 'approval':
+      case "approval":
         return `/compras/solicitacoes/${pathname}${rest}`;
       default:
         pathname = `/${pathname}`;
     }
   }
 
-  
   pathname = pathname
-    .replace(/^\/compras\/rfq(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/rfqs/' : '/compras/rfqs')
-    .replace(/^\/compras\/pedido(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/pedidos/' : '/compras/pedidos')
-    .replace(/^\/compras\/order(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/pedidos/' : '/compras/pedidos')
-    .replace(/^\/compras\/quote(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/rfqs/' : '/compras/rfqs')
-    .replace(/^\/compras\/solicitac(?:ao|ão)(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/solicitacoes/' : '/compras/solicitacoes');
+    .replace(/^\/compras\/rfq(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/rfqs/" : "/compras/rfqs",
+    )
+    .replace(/^\/compras\/pedido(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/pedidos/" : "/compras/pedidos",
+    )
+    .replace(/^\/compras\/order(?:s)?(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/pedidos/" : "/compras/pedidos",
+    )
+    .replace(/^\/compras\/quote(?:s)?(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/rfqs/" : "/compras/rfqs",
+    )
+    .replace(/^\/compras\/solicitac(?:ao|ão)(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/solicitacoes/" : "/compras/solicitacoes",
+    );
 
-  
   pathname = pathname
-    .replace(/^\/rfq(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/rfqs/' : '/compras/rfqs')
-    .replace(/^\/pedido(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/pedidos/' : '/compras/pedidos')
-    .replace(/^\/order(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/pedidos/' : '/compras/pedidos')
-    .replace(/^\/quote(?:s)?(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/rfqs/' : '/compras/rfqs')
-    .replace(/^\/solicitac(?:ao|oes|ão|ões)(?:\/|$)/, (m) => m.endsWith('/') ? '/compras/solicitacoes/' : '/compras/solicitacoes')
-    .replace(/^\/fornecedor(?:\/|$)/, (m) => m.endsWith('/') ? '/fornecedores/' : '/fornecedores');
+    .replace(/^\/rfq(?:s)?(?:\/|$)/, (m) => (m.endsWith("/") ? "/compras/rfqs/" : "/compras/rfqs"))
+    .replace(/^\/pedido(?:s)?(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/pedidos/" : "/compras/pedidos",
+    )
+    .replace(/^\/order(?:s)?(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/pedidos/" : "/compras/pedidos",
+    )
+    .replace(/^\/quote(?:s)?(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/rfqs/" : "/compras/rfqs",
+    )
+    .replace(/^\/solicitac(?:ao|oes|ão|ões)(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/compras/solicitacoes/" : "/compras/solicitacoes",
+    )
+    .replace(/^\/fornecedor(?:\/|$)/, (m) =>
+      m.endsWith("/") ? "/fornecedores/" : "/fornecedores",
+    );
 
   return `${pathname}${rest}`;
 }

@@ -12,28 +12,44 @@ export const solicitacaoItemSchema = z.object({
 });
 
 export const createSolicitacaoSchema = z.object({
-  description: z.string().min(5, "O título/descrição da solicitação deve ter pelo menos 5 caracteres"),
+  description: z
+    .string()
+    .min(5, "O título/descrição da solicitação deve ter pelo menos 5 caracteres"),
   categoryId: z.string().optional(),
   justification: z.string().min(10, "A justificativa deve ter pelo menos 10 caracteres"),
   estimatedBudget: z.number().min(0, "O orçamento estimado não pode ser negativo"),
   deliveryLocation: z.string().min(5, "O local de entrega é obrigatório"),
   deadline: z.string().min(1, "O prazo desejado é obrigatório"),
-  priority: z.enum(["Low", "Medium", "High", "Urgent", "Critical", "Baixa", "Media", "Média", "Alta", "Critica", "Crítica"]).transform((val) => {
-    const map: Record<string, "Low" | "Medium" | "High" | "Urgent" | "Critical"> = {
-      Baixa: "Low",
-      Media: "Medium",
-      Média: "Medium",
-      Alta: "High",
-      Critica: "Critical",
-      Crítica: "Critical",
-      Low: "Low",
-      Medium: "Medium",
-      High: "High",
-      Urgent: "Urgent",
-      Critical: "Critical",
-    };
-    return map[val] || "Medium";
-  }),
+  priority: z
+    .enum([
+      "Low",
+      "Medium",
+      "High",
+      "Urgent",
+      "Critical",
+      "Baixa",
+      "Media",
+      "Média",
+      "Alta",
+      "Critica",
+      "Crítica",
+    ])
+    .transform((val) => {
+      const map: Record<string, "Low" | "Medium" | "High" | "Urgent" | "Critical"> = {
+        Baixa: "Low",
+        Media: "Medium",
+        Média: "Medium",
+        Alta: "High",
+        Critica: "Critical",
+        Crítica: "Critical",
+        Low: "Low",
+        Medium: "Medium",
+        High: "High",
+        Urgent: "Urgent",
+        Critical: "Critical",
+      };
+      return map[val] || "Medium";
+    }),
   department: z.string().default("Operações"),
   purchaseType: z.string().default("Material recorrente"),
   paymentTerms: z.string().optional(),

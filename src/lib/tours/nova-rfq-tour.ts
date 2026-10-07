@@ -5,7 +5,7 @@ function goToRfqStep(step: number, ensureDemandLinked = true) {
     window.dispatchEvent(
       new CustomEvent("rfq-tour-set-step", {
         detail: { step, ensureDemandLinked },
-      })
+      }),
     );
   }
 }

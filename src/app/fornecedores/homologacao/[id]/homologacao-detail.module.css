@@ -22,7 +22,6 @@
   text-decoration: underline;
 }
 
-
 .pageHeader {
   display: flex;
   justify-content: space-between;
@@ -98,7 +97,6 @@
   cursor: not-allowed;
 }
 
-
 .kpiStrip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -141,10 +139,15 @@
   color: #64748b;
 }
 
-.textGreen { color: #16a34a; }
-.textYellow { color: #ca8a04; }
-.textRed { color: #dc2626; }
-
+.textGreen {
+  color: #16a34a;
+}
+.textYellow {
+  color: #ca8a04;
+}
+.textRed {
+  color: #dc2626;
+}
 
 .badgeSuccess {
   display: inline-flex;
@@ -180,7 +183,6 @@
   border-radius: 4px;
 }
 
-
 .tabsBar {
   display: flex;
   gap: 24px;
@@ -206,7 +208,7 @@
   color: #007d79 !important;
 }
 .tabActive::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -214,7 +216,6 @@
   height: 2px;
   background-color: #007d79;
 }
-
 
 .contentCard {
   background: white;
@@ -236,7 +237,6 @@
   align-items: center;
   gap: 8px;
 }
-
 
 .checklistGrid {
   display: grid;
@@ -275,7 +275,6 @@
   color: #64748b;
 }
 
-
 .alertSuccess {
   display: flex;
   align-items: center;
@@ -303,7 +302,6 @@
   margin-bottom: 6px;
 }
 
-
 .sourcesWrap {
   display: flex;
   align-items: center;
@@ -323,7 +321,6 @@
   border-radius: 6px;
   border: 1px solid #e2e8f0;
 }
-
 
 .infoGrid {
   display: grid;
@@ -351,7 +348,6 @@
   color: #0f172a;
 }
 
-
 .qsaGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -377,7 +373,6 @@
   font-size: 12px;
   color: #64748b;
 }
-
 
 .newsList {
   display: flex;

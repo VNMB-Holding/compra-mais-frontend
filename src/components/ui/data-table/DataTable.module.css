@@ -27,7 +27,7 @@
   font-size: 12.5px;
   transition:
     background-color var(--duration-fast) var(--ease-in-out),
-    color            var(--duration-fast) var(--ease-in-out);
+    color var(--duration-fast) var(--ease-in-out);
 }
 .dataTable tbody tr:last-child td {
   border-bottom: none;

@@ -65,12 +65,18 @@ export interface ItemKpis {
 }
 
 export const itemsApi = {
-  list: async (params?: { search?: string; category?: string; supplierId?: string }): Promise<CatalogItem[]> => {
+  list: async (params?: {
+    search?: string;
+    category?: string;
+    supplierId?: string;
+  }): Promise<CatalogItem[]> => {
     try {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set("search", params.search);
-      if (params?.category && params.category !== "Todas") searchParams.set("category", params.category);
-      if (params?.supplierId && params.supplierId !== "Todos") searchParams.set("supplierId", params.supplierId);
+      if (params?.category && params.category !== "Todas")
+        searchParams.set("category", params.category);
+      if (params?.supplierId && params.supplierId !== "Todos")
+        searchParams.set("supplierId", params.supplierId);
 
       const qs = searchParams.toString();
       const res = await apiClient.get<CatalogItem[]>(`/api/items${qs ? `?${qs}` : ""}`);
@@ -83,7 +89,9 @@ export const itemsApi = {
   search: async (query: string): Promise<CatalogItem[]> => {
     try {
       if (!query || query.trim().length === 0) return [];
-      const res = await apiClient.get<CatalogItem[]>(`/api/items/search?q=${encodeURIComponent(query.trim())}`);
+      const res = await apiClient.get<CatalogItem[]>(
+        `/api/items/search?q=${encodeURIComponent(query.trim())}`,
+      );
       return res || [];
     } catch {
       return [];
@@ -143,6 +151,9 @@ export const itemsApi = {
     companyCode?: string;
     notes?: string;
   }): Promise<{ item: CatalogItem; audit: ItemPurchaseAudit }> => {
-    return apiClient.post<{ item: CatalogItem; audit: ItemPurchaseAudit }>("/api/items/audit", data);
+    return apiClient.post<{ item: CatalogItem; audit: ItemPurchaseAudit }>(
+      "/api/items/audit",
+      data,
+    );
   },
 };

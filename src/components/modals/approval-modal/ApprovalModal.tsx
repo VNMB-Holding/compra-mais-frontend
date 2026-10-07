@@ -74,6 +74,6 @@ export default function ApprovalModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

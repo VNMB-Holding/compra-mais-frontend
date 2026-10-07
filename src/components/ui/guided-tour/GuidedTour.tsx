@@ -23,8 +23,14 @@ function computePlacement(
   elRect: Rect,
   tooltipWidth: number,
   tooltipHeight: number,
-  preferred?: "top" | "bottom" | "left" | "right" | "auto"
-): { placement: Placement; top: number; left: number; caretLeft: number | null; caretTop: number | null } {
+  preferred?: "top" | "bottom" | "left" | "right" | "auto",
+): {
+  placement: Placement;
+  top: number;
+  left: number;
+  caretLeft: number | null;
+  caretTop: number | null;
+} {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
@@ -47,7 +53,6 @@ function computePlacement(
   } else if (preferred === "left" && spaceLeft >= neededW) {
     placement = "left";
   } else {
-    
     const spaces = [
       { side: "bottom" as Placement, space: spaceBottom },
       { side: "top" as Placement, space: spaceTop },
@@ -96,15 +101,8 @@ function computePlacement(
 }
 
 export default function GuidedTour() {
-  const {
-    isActive,
-    currentTour,
-    currentStep,
-    totalSteps,
-    nextStep,
-    prevStep,
-    endTour,
-  } = useTourContext();
+  const { isActive, currentTour, currentStep, totalSteps, nextStep, prevStep, endTour } =
+    useTourContext();
 
   const [mounted, setMounted] = useState(false);
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
@@ -131,7 +129,6 @@ export default function GuidedTour() {
 
     const el = document.querySelector(step.target);
     if (!el) {
-      
       const retryTimer = setTimeout(() => {
         const retryEl = document.querySelector(step.target);
         if (!retryEl) return;
@@ -170,12 +167,11 @@ export default function GuidedTour() {
 
     computeTooltip(
       { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
-      step.placement
+      step.placement,
     );
   }, [currentTour, currentStep, isActive]);
 
   const computeTooltip = (rect: Rect, preferred?: "top" | "bottom" | "left" | "right" | "auto") => {
-    
     const tooltipW = tooltipRef.current?.offsetWidth || 340;
     const tooltipH = tooltipRef.current?.offsetHeight || 200;
 
@@ -216,7 +212,6 @@ export default function GuidedTour() {
 
     const pos = computePlacement(targetRect, tooltipW, tooltipH, step?.placement);
     setTooltipPos((prev) => {
-      
       if (prev && Math.abs(prev.top - pos.top) < 2 && Math.abs(prev.left - pos.left) < 2) {
         return prev;
       }
@@ -254,10 +249,10 @@ export default function GuidedTour() {
     tooltipPos?.placement === "bottom"
       ? styles.caretBottom
       : tooltipPos?.placement === "top"
-      ? styles.caretTop
-      : tooltipPos?.placement === "left"
-      ? styles.caretRight
-      : styles.caretLeft;
+        ? styles.caretTop
+        : tooltipPos?.placement === "left"
+          ? styles.caretRight
+          : styles.caretLeft;
 
   const caretStyle: React.CSSProperties = {};
   if (tooltipPos?.caretLeft !== null && tooltipPos?.caretLeft !== undefined) {
@@ -293,16 +288,10 @@ export default function GuidedTour() {
             left: tooltipPos.left,
           }}
         >
-          <div
-            className={`${styles.caret} ${caretClass}`}
-            style={caretStyle}
-          />
+          <div className={`${styles.caret} ${caretClass}`} style={caretStyle} />
 
           <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
+            <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
           </div>
 
           <div className={styles.tooltipHeader}>
@@ -333,14 +322,13 @@ export default function GuidedTour() {
                 </Button>
               )}
               <Button variant="primary" onClick={nextStep}>
-                {isLast ? "Concluir" : "Próximo"}{" "}
-                {!isLast && <Icon name="arrow-right" size={14} />}
+                {isLast ? "Concluir" : "Próximo"} {!isLast && <Icon name="arrow-right" size={14} />}
               </Button>
             </div>
           </div>
         </div>
       )}
     </>,
-    document.body
+    document.body,
   );
 }

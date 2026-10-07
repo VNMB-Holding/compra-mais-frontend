@@ -5,6 +5,7 @@
 ---
 
 ## Sumário
+
 - [Stack Tecnológica](#stack-tecnol%C3%B3gica)
 - [Arquitetura e Estrutura de Diretórios](#arquitetura-e-estrutura-de-diret%C3%B3rios)
 - [Convenções de Nomenclatura](#conven%C3%A7%C3%B5es-de-nomenclatura)
@@ -62,36 +63,41 @@ compra-mais-frontend/
 
 ## Convenções de Nomenclatura
 
-| Escopo | Padrão | Exemplo |
-| :--- | :--- | :--- |
-| **Diretórios** | `kebab-case` | `nova-solicitacao/`, `quick-detail-drawer/` |
-| **Pastas de Coleção** | Plural | `components/`, `features/`, `hooks/`, `types/` |
-| **Componentes React** | `PascalCase.tsx` | `Button.tsx`, `ConfirmDialog.tsx` |
-| **Estilos Scoped** | `PascalCase.module.css` | `Button.module.css` |
-| **Hooks Utilitários** | `use-kebab-case.ts` | `use-auth.ts`, `use-debounce.ts` |
-| **Schemas de Validação**| `kebab-case.schema.ts` | `solicitacao.schema.ts` |
-| **App Router** | Minúsculas reservadas | `page.tsx`, `layout.tsx`, `loading.tsx` |
+| Escopo                   | Padrão                  | Exemplo                                        |
+| :----------------------- | :---------------------- | :--------------------------------------------- |
+| **Diretórios**           | `kebab-case`            | `nova-solicitacao/`, `quick-detail-drawer/`    |
+| **Pastas de Coleção**    | Plural                  | `components/`, `features/`, `hooks/`, `types/` |
+| **Componentes React**    | `PascalCase.tsx`        | `Button.tsx`, `ConfirmDialog.tsx`              |
+| **Estilos Scoped**       | `PascalCase.module.css` | `Button.module.css`                            |
+| **Hooks Utilitários**    | `use-kebab-case.ts`     | `use-auth.ts`, `use-debounce.ts`               |
+| **Schemas de Validação** | `kebab-case.schema.ts`  | `solicitacao.schema.ts`                        |
+| **App Router**           | Minúsculas reservadas   | `page.tsx`, `layout.tsx`, `loading.tsx`        |
 
 ---
 
 ## Como Executar
 
 ### Pré-requisitos
+
 - Node.js >= 20.x
 - npm >= 10.x
 
 ### Instalação
+
 ```bash
 npm install
 ```
 
 ### Ambiente de Desenvolvimento
+
 ```bash
 npm run dev
 ```
+
 Acesse [http://localhost:3000](http://localhost:3000).
 
 ### Build de Produção
+
 ```bash
 npm run build
 npm run start

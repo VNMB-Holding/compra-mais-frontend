@@ -1,5 +1,5 @@
-import React from 'react';
-import styles from './Tabs.module.css';
+import React from "react";
+import styles from "./Tabs.module.css";
 
 interface TabItem {
   id: string;
@@ -19,7 +19,7 @@ export default function Tabs({ tabs, activeTab, onChange }: TabsProps) {
       {tabs.map((tab) => (
         <span
           key={tab.id}
-          className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''}`}
+          className={`${styles.tab} ${activeTab === tab.id ? styles.active : ""}`}
           onClick={() => onChange(tab.id)}
         >
           {tab.label}

@@ -33,23 +33,23 @@
   transform: scale(1.08);
 }
 .searchBar {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   background-color: var(--bg-color, #f8fafc);
-  border-radius: 6px; 
-  padding: 6px 12px; 
+  border-radius: 6px;
+  padding: 6px 12px;
   width: 320px;
-  border: 1px solid #e2e8f0; 
+  border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
   cursor: pointer;
 }
-.searchBar:hover { 
-  border-color: var(--primary, #007d79); 
-  background: white; 
+.searchBar:hover {
+  border-color: var(--primary, #007d79);
+  background: white;
 }
-.searchBar span { 
-  color: var(--text-muted, #64748b); 
-  font-size: 18px; 
+.searchBar span {
+  color: var(--text-muted, #64748b);
+  font-size: 18px;
 }
 .searchPlaceholder {
   font-size: 12px !important;
@@ -71,62 +71,62 @@
   border-radius: 4px;
 }
 .searchBar input {
-  border: none; 
-  background: transparent; 
+  border: none;
+  background: transparent;
   outline: none;
-  padding: 0 10px; 
-  flex: 1; 
-  font-size: 13px; 
+  padding: 0 10px;
+  flex: 1;
+  font-size: 13px;
   color: var(--text-main, #0f172a);
 }
 .shortcut {
-  background: white; 
-  border: 1px solid var(--border, #e2e8f0); 
+  background: white;
+  border: 1px solid var(--border, #e2e8f0);
   padding: 1px 5px;
-  border-radius: 4px; 
-  font-size: 10px; 
+  border-radius: 4px;
+  font-size: 10px;
   color: var(--text-muted, #64748b);
 }
-.topbarRight { 
-  display: flex; 
-  align-items: center; 
-  gap: 14px; 
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .popupWrapper {
   position: relative;
 }
-.iconBtn { 
-  position: relative; 
-  cursor: pointer; 
-  color: var(--text-muted, #64748b); 
+.iconBtn {
+  position: relative;
+  cursor: pointer;
+  color: var(--text-muted, #64748b);
   padding: 6px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.iconBtn:hover { 
-  color: var(--primary, #007d79); 
+.iconBtn:hover {
+  color: var(--primary, #007d79);
   background-color: var(--primary-light, #e6f2f2);
   transform: scale(1.08);
 }
 .activeIcon {
-  color: var(--primary, #007d79); 
+  color: var(--primary, #007d79);
   background-color: var(--primary-light, #e6f2f2);
 }
 .iconBtn .badge {
-  position: absolute; 
-  top: 2px; 
-  right: 2px; 
+  position: absolute;
+  top: 2px;
+  right: 2px;
   background: var(--primary, #007d79);
-  color: white; 
-  font-size: 10px; 
-  font-weight: bold; 
-  width: 16px; 
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  width: 16px;
   height: 16px;
-  border-radius: 50%; 
-  display: flex; 
-  align-items: center; 
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
   justify-content: center;
   border: 2px solid white;
 }
@@ -160,15 +160,15 @@
   text-overflow: ellipsis;
 }
 .userAvatarSmall {
-  width: 28px; 
-  height: 28px; 
-  background: var(--primary, #007d79); 
+  width: 28px;
+  height: 28px;
+  background: var(--primary, #007d79);
   color: white;
-  border-radius: 50%; 
-  display: flex; 
-  align-items: center; 
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  font-weight: bold; 
+  font-weight: bold;
   font-size: 12px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -184,7 +184,9 @@
   background: white;
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 10px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 16px 40px -4px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.07),
+    0 16px 40px -4px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   animation: dropdownEnter 0.2s var(--ease-out) both;
   transform-origin: top right;
@@ -441,4 +443,4 @@
     width: auto;
     max-width: none;
   }
-}
+}

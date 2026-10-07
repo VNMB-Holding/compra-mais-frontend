@@ -4,8 +4,11 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
-import { GeoapifyGeocoderAutocomplete, GeoapifyContext } from '@geoapify/react-geocoder-autocomplete';
-import '@geoapify/geocoder-autocomplete/styles/minimal.css';
+import {
+  GeoapifyGeocoderAutocomplete,
+  GeoapifyContext,
+} from "@geoapify/react-geocoder-autocomplete";
+import "@geoapify/geocoder-autocomplete/styles/minimal.css";
 import { Card, Button, Icon, Select, Badge } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
@@ -40,7 +43,10 @@ const priorityLabels: Record<Priority, string> = {
   Critica: "Crítica",
 };
 
-const PRIORITY_BADGE_CONFIG: Record<Priority, { variant: "gray" | "warning" | "danger" | "dark"; icon: string }> = {
+const PRIORITY_BADGE_CONFIG: Record<
+  Priority,
+  { variant: "gray" | "warning" | "danger" | "dark"; icon: string }
+> = {
   Critica: { variant: "dark", icon: "zap" },
   Alta: { variant: "danger", icon: "alert-triangle" },
   Media: { variant: "warning", icon: "clock" },
@@ -101,8 +107,10 @@ export default function NovaSolicitacaoPage() {
               quantity: Number(item.quantity) || 1,
               unit: item.unit || "UN",
               unitPrice: Number(item.estimatedUnitPrice) || 0,
-              requiredDate: item.requiredDate ? new Date(item.requiredDate).toISOString().split("T")[0] : "",
-            }))
+              requiredDate: item.requiredDate
+                ? new Date(item.requiredDate).toISOString().split("T")[0]
+                : "",
+            })),
           );
         }
       } catch (err) {
@@ -129,7 +137,9 @@ export default function NovaSolicitacaoPage() {
     }
   }, [user, editId]);
 
-  const [targetTenantId, setTargetTenantId] = useState<string>(() => user?.tenantId || COMPANY_BRANCHES[0]?.code || "");
+  const [targetTenantId, setTargetTenantId] = useState<string>(
+    () => user?.tenantId || COMPANY_BRANCHES[0]?.code || "",
+  );
 
   const tenantOptions = useMemo(() => {
     return COMPANY_BRANCHES.map((b) => ({
@@ -166,12 +176,12 @@ export default function NovaSolicitacaoPage() {
 
   const totalEstimated = useMemo(
     () => items.reduce((total, item) => total + item.quantity * item.unitPrice, 0),
-    [items]
+    [items],
   );
 
   const updateItem = <K extends keyof RequestItem>(id: number, field: K, value: RequestItem[K]) => {
     setItems((current) =>
-      current.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      current.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
   };
 
@@ -213,7 +223,7 @@ export default function NovaSolicitacaoPage() {
           lastPurchasePrice: lastPrice,
           lastPurchaseDate: catalogItem.lastPurchaseDate,
         };
-      })
+      }),
     );
 
     if (supName && !preferredSupplier) {
@@ -256,16 +266,16 @@ export default function NovaSolicitacaoPage() {
       setIsSubmitting(true);
     }
     try {
-
       const validDates = items
-        .map(i => (i.requiredDate ? new Date(i.requiredDate).getTime() : 0))
-        .filter(t => t > 0 && !isNaN(t));
-      
-      const derivedDeadline = validDates.length > 0
-        ? new Date(Math.min(...validDates)).toISOString()
-        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        .map((i) => (i.requiredDate ? new Date(i.requiredDate).getTime() : 0))
+        .filter((t) => t > 0 && !isNaN(t));
 
-      const selectedCompanyCode = targetTenantId || user?.tenantId || (COMPANY_BRANCHES[0]?.code);
+      const derivedDeadline =
+        validDates.length > 0
+          ? new Date(Math.min(...validDates)).toISOString()
+          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const selectedCompanyCode = targetTenantId || user?.tenantId || COMPANY_BRANCHES[0]?.code;
       if (!selectedCompanyCode) {
         toast({
           variant: "error",
@@ -285,12 +295,21 @@ export default function NovaSolicitacaoPage() {
         purchaseType: purchaseType,
         paymentTerms: paymentTerms || undefined,
         preferredSupplier: preferredSupplier || undefined,
-        notes: (justification || notes || "") + (deliveryWindow ? `\nJanela de recebimento: ${deliveryWindow}` : ""),
+        notes:
+          (justification || notes || "") +
+          (deliveryWindow ? `\nJanela de recebimento: ${deliveryWindow}` : ""),
         justification: justification,
         estimatedBudget: totalEstimated,
         deliveryLocation: deliveryLocation,
         deadline: derivedDeadline,
-        priority: priority === "Critica" ? "Critical" : priority === "Alta" ? "High" : priority === "Media" ? "Medium" : "Low",
+        priority:
+          priority === "Critica"
+            ? "Critical"
+            : priority === "Alta"
+              ? "High"
+              : priority === "Media"
+                ? "Medium"
+                : "Low",
         status: asDraft ? "Draft" : "AwaitingApproval",
         items: items
           .filter((i) => i.description.trim())
@@ -355,14 +374,20 @@ export default function NovaSolicitacaoPage() {
 
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>{editId ? "Edição de rascunho" : "Compras internas"}</span>
+          <span className={styles.eyebrow}>
+            {editId ? "Edição de rascunho" : "Compras internas"}
+          </span>
           <h1>{editId ? "Editar Rascunho da Solicitação" : "Nova Solicitação de Compra"}</h1>
-          <p>{editId ? "Revise os itens, valores e prazos antes de enviar para aprovação." : "Monte uma demanda completa, com escopo, orçamento, recebimento e requisitos para cotação."}</p>
+          <p>
+            {editId
+              ? "Revise os itens, valores e prazos antes de enviar para aprovação."
+              : "Monte uma demanda completa, com escopo, orçamento, recebimento e requisitos para cotação."}
+          </p>
         </div>
       </div>
 
       <div className={styles.stepperNav}>
-        <div 
+        <div
           className={`${styles.stepIndicator} ${currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepCompleted : ""}`}
           onClick={() => setCurrentStep(1)}
         >
@@ -372,9 +397,9 @@ export default function NovaSolicitacaoPage() {
           <span className={styles.stepLabel}>Identificação</span>
         </div>
         <div className={styles.stepConnectorLine} />
-        <div 
+        <div
           className={`${styles.stepIndicator} ${currentStep === 2 ? styles.stepActive : currentStep > 2 ? styles.stepCompleted : ""} ${currentStep < 2 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 2 ? setCurrentStep(2) : undefined}
+          onClick={() => (currentStep >= 2 ? setCurrentStep(2) : undefined)}
         >
           <div className={styles.stepNumber}>
             {currentStep > 2 ? <Icon name="check" size={16} /> : "2"}
@@ -382,9 +407,9 @@ export default function NovaSolicitacaoPage() {
           <span className={styles.stepLabel}>Itens da Demanda</span>
         </div>
         <div className={styles.stepConnectorLine} />
-        <div 
+        <div
           className={`${styles.stepIndicator} ${currentStep === 3 ? styles.stepActive : ""} ${currentStep < 3 ? styles.stepDisabled : ""}`}
-          onClick={() => currentStep >= 3 ? setCurrentStep(3) : undefined}
+          onClick={() => (currentStep >= 3 ? setCurrentStep(3) : undefined)}
         >
           <div className={styles.stepNumber}>3</div>
           <span className={styles.stepLabel}>Entrega e Condições</span>
@@ -394,11 +419,12 @@ export default function NovaSolicitacaoPage() {
       <div className={styles.workspaceGrid}>
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
-            
             {currentStep === 1 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="edit-01" /></div>
+                  <div className={styles.sectionIcon}>
+                    <Icon name="edit-01" />
+                  </div>
                   <div>
                     <h2>1. Identificação da demanda</h2>
                     <p>Contexto executivo para aprovar rápido e cotar sem retrabalho.</p>
@@ -406,13 +432,21 @@ export default function NovaSolicitacaoPage() {
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Título da solicitação <span className="required-asterisk">*</span></label>
-                  <input className={styles.formControl} value={title} onChange={(event) => setTitle(event.target.value)} />
+                  <label>
+                    Título da solicitação <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    className={styles.formControl}
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                  />
                 </div>
 
                 {tenantOptions.length > 0 && (
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <label>Empresa / Unidade Destino <span className="required-asterisk">*</span></label>
+                    <label>
+                      Empresa / Unidade Destino <span className="required-asterisk">*</span>
+                    </label>
                     <Select
                       options={tenantOptions}
                       value={targetTenantId}
@@ -426,17 +460,23 @@ export default function NovaSolicitacaoPage() {
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label>Solicitante</label>
-                    <input className={styles.formControl} value={requester} onChange={(event) => setRequester(event.target.value)} />
+                    <input
+                      className={styles.formControl}
+                      value={requester}
+                      onChange={(event) => setRequester(event.target.value)}
+                    />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Área requisitante <span className="required-asterisk">*</span></label>
+                    <label>
+                      Área requisitante <span className="required-asterisk">*</span>
+                    </label>
                     <Select
                       options={[
                         { label: "Operações", value: "Operacoes" },
                         { label: "Manutenção", value: "Manutencao" },
                         { label: "Administrativo", value: "Administrativo" },
                         { label: "Facilities", value: "Facilities" },
-                        { label: "TI", value: "TI" }
+                        { label: "TI", value: "TI" },
                       ]}
                       value={department}
                       onChange={setDepartment}
@@ -448,7 +488,11 @@ export default function NovaSolicitacaoPage() {
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label>Prioridade</label>
-                    <div className={styles.segmentedControl} role="group" aria-label="Prioridade da solicitação">
+                    <div
+                      className={styles.segmentedControl}
+                      role="group"
+                      aria-label="Prioridade da solicitação"
+                    >
                       {(["Baixa", "Media", "Alta", "Critica"] as Priority[]).map((option) => (
                         <button
                           key={option}
@@ -462,14 +506,16 @@ export default function NovaSolicitacaoPage() {
                     </div>
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Tipo de compra <span className="required-asterisk">*</span></label>
+                    <label>
+                      Tipo de compra <span className="required-asterisk">*</span>
+                    </label>
                     <Select
                       options={[
                         { label: "Material recorrente", value: "Material recorrente" },
                         { label: "Compra spot", value: "Compra spot" },
                         { label: "Serviço técnico", value: "Serviço técnico" },
                         { label: "Contrato recorrente", value: "Contrato recorrente" },
-                        { label: "Projeto especial", value: "Projeto especial" }
+                        { label: "Projeto especial", value: "Projeto especial" },
                       ]}
                       value={purchaseType}
                       onChange={setPurchaseType}
@@ -478,7 +524,9 @@ export default function NovaSolicitacaoPage() {
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Justificativa de negócio <span className="required-asterisk">*</span></label>
+                  <label>
+                    Justificativa de negócio <span className="required-asterisk">*</span>
+                  </label>
                   <textarea
                     className={styles.formControl}
                     rows={4}
@@ -493,7 +541,9 @@ export default function NovaSolicitacaoPage() {
             {currentStep === 2 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="shopping-cart-01" /></div>
+                  <div className={styles.sectionIcon}>
+                    <Icon name="shopping-cart-01" />
+                  </div>
                   <div>
                     <h2>2. Itens da Demanda</h2>
                     <p>Inclua todos os itens que devem seguir no mesmo pacote de aprovação.</p>
@@ -507,9 +557,8 @@ export default function NovaSolicitacaoPage() {
 
                     return (
                       <div className={styles.itemPanel} key={item.id}>
-                        
-                        <div 
-                          className={styles.itemSummaryRow} 
+                        <div
+                          className={styles.itemSummaryRow}
                           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
                         >
                           <div className={styles.itemSummaryLeft}>
@@ -519,13 +568,17 @@ export default function NovaSolicitacaoPage() {
                                 {item.description || "Novo item sem descrição"}
                               </span>
                               <span className={styles.itemSummaryMeta}>
-                                {item.quantity} {item.unit} {item.unitPrice > 0 ? `× ${formatCurrency(item.unitPrice)}` : ""}
+                                {item.quantity} {item.unit}{" "}
+                                {item.unitPrice > 0 ? `× ${formatCurrency(item.unitPrice)}` : ""}
                               </span>
                             </div>
                           </div>
 
                           <div className={styles.itemSummaryRight}>
-                            <strong className={styles.modalValueHighlight} style={{ marginRight: "8px" }}>
+                            <strong
+                              className={styles.modalValueHighlight}
+                              style={{ marginRight: "8px" }}
+                            >
                               {formatCurrency(itemTotalValue)}
                             </strong>
                             <button
@@ -537,10 +590,10 @@ export default function NovaSolicitacaoPage() {
                               }}
                               title={isExpanded ? "Recolher detalhes" : "Editar detalhes"}
                             >
-                              <Icon 
-                                name="chevron-down" 
-                                size={18} 
-                                className={`${styles.chevronRotate} ${isExpanded ? styles.chevronRotateActive : ""}`} 
+                              <Icon
+                                name="chevron-down"
+                                size={18}
+                                className={`${styles.chevronRotate} ${isExpanded ? styles.chevronRotateActive : ""}`}
                               />
                             </button>
                             <button
@@ -562,12 +615,17 @@ export default function NovaSolicitacaoPage() {
                           <div className={styles.accordionExpandable}>
                             <div className={styles.gridCol12}>
                               <div className={`${styles.formGroup} ${styles.col8}`}>
-                                <label>Descrição do item/serviço <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Descrição do item/serviço{" "}
+                                  <span className="required-asterisk">*</span>
+                                </label>
                                 <div className={styles.itemAutocompleteWrapper}>
                                   <input
                                     className={styles.formControl}
                                     value={item.description}
-                                    onChange={(event) => handleDescriptionChange(item.id, event.target.value)}
+                                    onChange={(event) =>
+                                      handleDescriptionChange(item.id, event.target.value)
+                                    }
                                     placeholder="Ex: Filtro de ar motor X1 (digite para sugestões do catálogo...)"
                                   />
                                   {activeSearchItemId === item.id && suggestedItems.length > 0 && (
@@ -579,11 +637,15 @@ export default function NovaSolicitacaoPage() {
                                           onClick={() => handleSelectCatalogItem(item.id, sug)}
                                         >
                                           <div className={styles.autocompleteItemMain}>
-                                            <span className={styles.autocompleteItemTitle}>{sug.description}</span>
+                                            <span className={styles.autocompleteItemTitle}>
+                                              {sug.description}
+                                            </span>
                                             <span className={styles.autocompleteItemSub}>
                                               {sug.lastSupplier ? (
                                                 <span className={styles.autocompleteItemSupplier}>
-                                                  ⭐ Base: {sug.lastSupplier.tradeName || sug.lastSupplier.corporateName}
+                                                  ⭐ Base:{" "}
+                                                  {sug.lastSupplier.tradeName ||
+                                                    sug.lastSupplier.corporateName}
                                                 </span>
                                               ) : (
                                                 <span>Sem fornecedor base</span>
@@ -606,20 +668,31 @@ export default function NovaSolicitacaoPage() {
                                   <div className={styles.baseSupplierNotice}>
                                     <div className={styles.baseSupplierNoticeLeft}>
                                       <Icon name="check-circle" size={14} />
-                                      <span>Fornecedor de Base Auditado: <strong>{item.baseSupplierName}</strong></span>
-                                      {item.baseSupplierCnpj && <small>({item.baseSupplierCnpj})</small>}
+                                      <span>
+                                        Fornecedor de Base Auditado:{" "}
+                                        <strong>{item.baseSupplierName}</strong>
+                                      </span>
+                                      {item.baseSupplierCnpj && (
+                                        <small>({item.baseSupplierCnpj})</small>
+                                      )}
                                     </div>
                                     {Boolean(item.lastPurchasePrice) && (
                                       <span>
-                                        Última compra: <strong>{formatCurrency(Number(item.lastPurchasePrice))}</strong>
-                                        {item.lastPurchaseDate && ` em ${new Date(item.lastPurchaseDate).toLocaleDateString("pt-BR")}`}
+                                        Última compra:{" "}
+                                        <strong>
+                                          {formatCurrency(Number(item.lastPurchasePrice))}
+                                        </strong>
+                                        {item.lastPurchaseDate &&
+                                          ` em ${new Date(item.lastPurchaseDate).toLocaleDateString("pt-BR")}`}
                                       </span>
                                     )}
                                   </div>
                                 )}
                               </div>
                               <div className={`${styles.formGroup} ${styles.col4}`}>
-                                <label>Categoria <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Categoria <span className="required-asterisk">*</span>
+                                </label>
                                 <Select
                                   options={uniqueCategoryOptions}
                                   value={item.category}
@@ -628,17 +701,23 @@ export default function NovaSolicitacaoPage() {
                               </div>
 
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Quantidade <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Quantidade <span className="required-asterisk">*</span>
+                                </label>
                                 <input
                                   type="number"
                                   min="0"
                                   className={styles.formControl}
                                   value={item.quantity}
-                                  onChange={(event) => updateItem(item.id, "quantity", Number(event.target.value))}
+                                  onChange={(event) =>
+                                    updateItem(item.id, "quantity", Number(event.target.value))
+                                  }
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col3}`}>
-                                <label>Unidade <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Unidade <span className="required-asterisk">*</span>
+                                </label>
                                 <Select
                                   options={[
                                     { label: "L", value: "L" },
@@ -646,7 +725,7 @@ export default function NovaSolicitacaoPage() {
                                     { label: "KG", value: "KG" },
                                     { label: "M", value: "M" },
                                     { label: "H", value: "H" },
-                                    { label: "Pacote", value: "Pacote" }
+                                    { label: "Pacote", value: "Pacote" },
                                   ]}
                                   value={item.unit}
                                   onChange={(value) => updateItem(item.id, "unit", value)}
@@ -660,21 +739,34 @@ export default function NovaSolicitacaoPage() {
                                   step="0.01"
                                   className={styles.formControl}
                                   value={item.unitPrice}
-                                  onChange={(event) => updateItem(item.id, "unitPrice", Number(event.target.value))}
+                                  onChange={(event) =>
+                                    updateItem(item.id, "unitPrice", Number(event.target.value))
+                                  }
                                 />
                               </div>
-                              <div className={`${styles.itemTotal} ${styles.col3}`} style={{ minHeight: "auto", height: "44px", marginTop: "22px" }}>
-                                <span style={{ fontSize: "10px", fontWeight: "800" }}>Total do item</span>
-                                <strong style={{ fontSize: "14px" }}>{formatCurrency(itemTotalValue)}</strong>
+                              <div
+                                className={`${styles.itemTotal} ${styles.col3}`}
+                                style={{ minHeight: "auto", height: "44px", marginTop: "22px" }}
+                              >
+                                <span style={{ fontSize: "10px", fontWeight: "800" }}>
+                                  Total do item
+                                </span>
+                                <strong style={{ fontSize: "14px" }}>
+                                  {formatCurrency(itemTotalValue)}
+                                </strong>
                               </div>
 
                               <div className={`${styles.formGroup} ${styles.col12}`}>
-                                <label>Necessário até <span className="required-asterisk">*</span></label>
+                                <label>
+                                  Necessário até <span className="required-asterisk">*</span>
+                                </label>
                                 <input
                                   type="date"
                                   className={styles.formControl}
                                   value={item.requiredDate}
-                                  onChange={(event) => updateItem(item.id, "requiredDate", event.target.value)}
+                                  onChange={(event) =>
+                                    updateItem(item.id, "requiredDate", event.target.value)
+                                  }
                                 />
                               </div>
                             </div>
@@ -694,7 +786,9 @@ export default function NovaSolicitacaoPage() {
             {currentStep === 3 && (
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
-                  <div className={styles.sectionIcon}><Icon name="truck-01" /></div>
+                  <div className={styles.sectionIcon}>
+                    <Icon name="truck-01" />
+                  </div>
                   <div>
                     <h2>3. Entrega, condições e fornecedores</h2>
                     <p>Informações que Compras precisa para equalizar propostas corretamente.</p>
@@ -703,25 +797,35 @@ export default function NovaSolicitacaoPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup} style={{ flex: 2 }}>
-                    <label>Local de entrega / Planta <span className="required-asterisk">*</span></label>
-                    <div className="geoapify-autocomplete-wrapper" style={{ position: "relative", zIndex: 10 }}>
-                      <GeoapifyContext apiKey={process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || "2259d519a04e42bcbf5003b9366404a0"}>
+                    <label>
+                      Local de entrega / Planta <span className="required-asterisk">*</span>
+                    </label>
+                    <div
+                      className="geoapify-autocomplete-wrapper"
+                      style={{ position: "relative", zIndex: 10 }}
+                    >
+                      <GeoapifyContext
+                        apiKey={
+                          process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ||
+                          "2259d519a04e42bcbf5003b9366404a0"
+                        }
+                      >
                         <GeoapifyGeocoderAutocomplete
                           placeholder="Digite o local de entrega..."
                           lang="pt"
-                          filterByCountryCode={['br']}
+                          filterByCountryCode={["br"]}
                           value={deliveryLocation}
                           onUserInput={(input) => setDeliveryLocation(input)}
                           placeSelect={(place) => {
                             if (place && place.properties) {
-                              const rua = place.properties.street || '';
-                              const numero = place.properties.housenumber || '';
-                              const bairro = place.properties.suburb || '';
-                              const cidade = place.properties.city || '';
-                              const estado = place.properties.state || '';
-                              const cep = place.properties.postcode || '';
-                              
-                              const end = `${rua}${numero ? `, ${numero}` : ''}${bairro ? ` - ${bairro}` : ''}, ${cidade} / ${estado} ${cep ? `- ${cep}` : ''}`;
+                              const rua = place.properties.street || "";
+                              const numero = place.properties.housenumber || "";
+                              const bairro = place.properties.suburb || "";
+                              const cidade = place.properties.city || "";
+                              const estado = place.properties.state || "";
+                              const cep = place.properties.postcode || "";
+
+                              const end = `${rua}${numero ? `, ${numero}` : ""}${bairro ? ` - ${bairro}` : ""}, ${cidade} / ${estado} ${cep ? `- ${cep}` : ""}`;
                               setDeliveryLocation(end.trim());
                             }
                           }}
@@ -731,24 +835,41 @@ export default function NovaSolicitacaoPage() {
                   </div>
                   <div className={styles.formGroup}>
                     <label>Janela de recebimento</label>
-                    <input className={styles.formControl} value={deliveryWindow} onChange={(event) => setDeliveryWindow(event.target.value)} />
+                    <input
+                      className={styles.formControl}
+                      value={deliveryWindow}
+                      onChange={(event) => setDeliveryWindow(event.target.value)}
+                    />
                   </div>
                 </div>
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label>Condição de pagamento esperada</label>
-                    <input className={styles.formControl} value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
+                    <input
+                      className={styles.formControl}
+                      value={paymentTerms}
+                      onChange={(event) => setPaymentTerms(event.target.value)}
+                    />
                   </div>
                   <div className={styles.formGroup}>
                     <label>Fornecedor preferencial</label>
-                    <input className={styles.formControl} value={preferredSupplier} onChange={(event) => setPreferredSupplier(event.target.value)} />
+                    <input
+                      className={styles.formControl}
+                      value={preferredSupplier}
+                      onChange={(event) => setPreferredSupplier(event.target.value)}
+                    />
                   </div>
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Observações para Compras</label>
-                  <textarea className={styles.formControl} rows={4} value={notes} onChange={(event) => setNotes(event.target.value)} />
+                  <textarea
+                    className={styles.formControl}
+                    rows={4}
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                  />
                 </div>
               </section>
             )}
@@ -756,7 +877,11 @@ export default function NovaSolicitacaoPage() {
             <div className={styles.formActions}>
               {currentStep === 1 && (
                 <>
-                  <button type="button" className={styles.btnCancel} onClick={() => router.push("/compras/solicitacoes")}>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => router.push("/compras/solicitacoes")}
+                  >
                     Cancelar
                   </button>
                   <Button
@@ -765,23 +890,43 @@ export default function NovaSolicitacaoPage() {
                     className={styles.btnSubmit}
                     onClick={() => {
                       if (!title.trim()) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha o título da solicitação." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, preencha o título da solicitação.",
+                        });
                         return;
                       }
                       if (tenantOptions.length > 0 && !targetTenantId) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione a empresa destino." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, selecione a empresa destino.",
+                        });
                         return;
                       }
                       if (!department.trim()) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione a área requisitante." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, selecione a área requisitante.",
+                        });
                         return;
                       }
                       if (!purchaseType.trim()) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione o tipo de compra." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, selecione o tipo de compra.",
+                        });
                         return;
                       }
                       if (!justification.trim()) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, informe a justificativa de negócio." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, informe a justificativa de negócio.",
+                        });
                         return;
                       }
                       setCurrentStep(2);
@@ -794,21 +939,39 @@ export default function NovaSolicitacaoPage() {
 
               {currentStep === 2 && (
                 <>
-                  <button type="button" className={styles.btnCancel} onClick={() => setCurrentStep(1)}>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => setCurrentStep(1)}
+                  >
                     <Icon name="chevron-left" /> Voltar
                   </button>
-                  <Button 
-                    variant="primary" 
-                    type="button" 
-                    className={styles.btnSubmit} 
+                  <Button
+                    variant="primary"
+                    type="button"
+                    className={styles.btnSubmit}
                     onClick={() => {
                       if (items.length === 0) {
-                        toast({ variant: "warning", title: "Atenção", message: "A solicitação precisa de pelo menos 1 item." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "A solicitação precisa de pelo menos 1 item.",
+                        });
                         return;
                       }
                       for (const item of items) {
-                        if (!item.description.trim() || item.quantity <= 0 || !item.unit || !item.requiredDate) {
-                          toast({ variant: "warning", title: "Atenção", message: "Por favor, preencha a descrição, quantidade, unidade e data de todos os itens." });
+                        if (
+                          !item.description.trim() ||
+                          item.quantity <= 0 ||
+                          !item.unit ||
+                          !item.requiredDate
+                        ) {
+                          toast({
+                            variant: "warning",
+                            title: "Atenção",
+                            message:
+                              "Por favor, preencha a descrição, quantidade, unidade e data de todos os itens.",
+                          });
                           return;
                         }
                       }
@@ -846,7 +1009,11 @@ export default function NovaSolicitacaoPage() {
                     className={styles.btnSubmit}
                     onClick={() => {
                       if (!deliveryLocation) {
-                        toast({ variant: "warning", title: "Atenção", message: "Por favor, selecione o local de entrega." });
+                        toast({
+                          variant: "warning",
+                          title: "Atenção",
+                          message: "Por favor, selecione o local de entrega.",
+                        });
                         return;
                       }
                       handleSubmit(false);
@@ -859,7 +1026,6 @@ export default function NovaSolicitacaoPage() {
                   </Button>
                 </>
               )}
-
             </div>
           </Card>
         </div>
@@ -881,15 +1047,34 @@ export default function NovaSolicitacaoPage() {
               <strong>{formatCurrency(totalEstimated)}</strong>
             </div>
             <dl className={styles.summaryList}>
-              <div><dt>Empresa</dt><dd><strong>{selectedTenantName}</strong></dd></div>
-              <div><dt>Área</dt><dd>{department}</dd></div>
-              <div><dt>Solicitante</dt><dd>{requester}</dd></div>
-              <div><dt>Tipo</dt><dd>{purchaseType}</dd></div>
-              <div><dt>Entrega</dt><dd>{deliveryLocation}</dd></div>
-              <div><dt>Condição</dt><dd>{paymentTerms}</dd></div>
+              <div>
+                <dt>Empresa</dt>
+                <dd>
+                  <strong>{selectedTenantName}</strong>
+                </dd>
+              </div>
+              <div>
+                <dt>Área</dt>
+                <dd>{department}</dd>
+              </div>
+              <div>
+                <dt>Solicitante</dt>
+                <dd>{requester}</dd>
+              </div>
+              <div>
+                <dt>Tipo</dt>
+                <dd>{purchaseType}</dd>
+              </div>
+              <div>
+                <dt>Entrega</dt>
+                <dd>{deliveryLocation}</dd>
+              </div>
+              <div>
+                <dt>Condição</dt>
+                <dd>{paymentTerms}</dd>
+              </div>
             </dl>
           </Card>
-
         </aside>
       </div>
     </div>

@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import styles from "./relatorios.module.css";
-import { Card, Button, Badge, Icon, Select, SearchInput, CalendarFilter, DateFilterValue } from "@/components/ui";
+import {
+  Card,
+  Button,
+  Badge,
+  Icon,
+  Select,
+  SearchInput,
+  CalendarFilter,
+  DateFilterValue,
+} from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { getCompanyFilterOptions } from "@/lib/utils/tenant";
 import { dashboardApi } from "@/lib/api/dashboard";
@@ -29,7 +38,8 @@ const TEMPLATES: ReportTemplate[] = [
   {
     id: "rep-savings",
     title: "Economia Real vs. Orçado (Savings)",
-    description: "Comparativo entre valor orçado inicial da solicitação e valor final contratado na RFQ.",
+    description:
+      "Comparativo entre valor orçado inicial da solicitação e valor final contratado na RFQ.",
     icon: "trend-up-01",
     category: "Economia",
     type: "savings",
@@ -37,7 +47,8 @@ const TEMPLATES: ReportTemplate[] = [
   {
     id: "rep-orders",
     title: "Histórico Completo de Pedidos de Compra",
-    description: "Listagem de todos os pedidos emitidos, datas de entrega, transportadoras e status.",
+    description:
+      "Listagem de todos os pedidos emitidos, datas de entrega, transportadoras e status.",
     icon: "receipt-check",
     category: "Operações",
     type: "orders",
@@ -45,7 +56,8 @@ const TEMPLATES: ReportTemplate[] = [
   {
     id: "rep-rfqs",
     title: "Mapa de Cotações & Concorrência (RFQs)",
-    description: "Desempenho de participação de fornecedores, tempo de resposta e dispersão de lances.",
+    description:
+      "Desempenho de participação de fornecedores, tempo de resposta e dispersão de lances.",
     icon: "tag-01",
     category: "Suprimentos",
     type: "rfqs",
@@ -87,16 +99,14 @@ export default function RelatoriosPage() {
       if (stored) {
         setHistory(JSON.parse(stored));
       }
-    } catch {
-    }
+    } catch {}
   }, []);
 
   const saveHistory = (updated: GeneratedReport[]) => {
     setHistory(updated);
     try {
       localStorage.setItem("compra_mais_reports_history", JSON.stringify(updated));
-    } catch {
-    }
+    } catch {}
   };
 
   const downloadCSV = (filename: string, rows: string[][]) => {
@@ -108,7 +118,9 @@ export default function RelatoriosPage() {
       });
       return;
     }
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(";")).join("\n");
+    const csvContent =
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(";")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -134,7 +146,7 @@ export default function RelatoriosPage() {
           companyCode,
           startDate,
           endDate,
-          period
+          period,
         );
         const newReport: GeneratedReport = {
           id: `REL-${String(Date.now()).slice(-6)}`,
@@ -159,7 +171,13 @@ export default function RelatoriosPage() {
       let reportName = `${template.title} (${selectedCompany === "TODAS" ? "Geral" : selectedCompany})`;
 
       try {
-        const res = await dashboardApi.generateReport(template.type, companyCode, startDate, endDate, period);
+        const res = await dashboardApi.generateReport(
+          template.type,
+          companyCode,
+          startDate,
+          endDate,
+          period,
+        );
         if (res && res.rows && res.rows.length > 0) {
           rows = res.rows;
           filename = res.filename || filename;
@@ -179,7 +197,16 @@ export default function RelatoriosPage() {
           filename = "Relatorio_Pedidos_Compra";
           const filteredOrders = orders.filter((po) => matchesDate(po.createdAt));
           rows = [
-            ["Código", "Fornecedor", "CNPJ", "Valor Total (R$)", "Condição Pagamento", "Frete", "Status", "Data Emissão"],
+            [
+              "Código",
+              "Fornecedor",
+              "CNPJ",
+              "Valor Total (R$)",
+              "Condição Pagamento",
+              "Frete",
+              "Status",
+              "Data Emissão",
+            ],
             ...filteredOrders.map((po) => [
               po.code || po.id,
               po.supplier?.tradeName || po.supplier?.corporateName || "—",
@@ -220,9 +247,7 @@ export default function RelatoriosPage() {
           ];
         } else {
           filename = "Relatorio_Economia_Savings";
-          rows = [
-            ["Iniciativa", "Categoria", "Fornecedor", "Valor Economizado (R$)", "Data"],
-          ];
+          rows = [["Iniciativa", "Categoria", "Fornecedor", "Valor Economizado (R$)", "Data"]];
         }
       }
 
@@ -256,9 +281,10 @@ export default function RelatoriosPage() {
     }
   };
 
-  const filteredHistory = history.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase()) ||
-    item.id.toLowerCase().includes(search.toLowerCase())
+  const filteredHistory = history.filter(
+    (item) =>
+      item.name.toLowerCase().includes(search.toLowerCase()) ||
+      item.id.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -266,7 +292,10 @@ export default function RelatoriosPage() {
       <div className={styles.header}>
         <div>
           <h1>Central de Relatórios & Exportações</h1>
-          <p>Exporte dados detalhados para planilhas, auditorias e relatórios executivos de suprimentos.</p>
+          <p>
+            Exporte dados detalhados para planilhas, auditorias e relatórios executivos de
+            suprimentos.
+          </p>
         </div>
       </div>
 
@@ -284,10 +313,7 @@ export default function RelatoriosPage() {
 
           <div className={styles.filterInput}>
             <label>Data / Período de Extração</label>
-            <CalendarFilter
-              value={dateFilter}
-              onChange={setDateFilter}
-            />
+            <CalendarFilter value={dateFilter} onChange={setDateFilter} />
           </div>
 
           <div className={styles.filterInput}>
@@ -360,19 +386,33 @@ export default function RelatoriosPage() {
             <tbody>
               {filteredHistory.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "40px 16px", color: "var(--text-tertiary)" }}>
-                    Nenhum relatório gerado recentemente neste dispositivo. Selecione um modelo acima e clique em &quot;Gerar e Baixar CSV&quot;.
+                  <td
+                    colSpan={7}
+                    style={{
+                      textAlign: "center",
+                      padding: "40px 16px",
+                      color: "var(--text-tertiary)",
+                    }}
+                  >
+                    Nenhum relatório gerado recentemente neste dispositivo. Selecione um modelo
+                    acima e clique em &quot;Gerar e Baixar CSV&quot;.
                   </td>
                 </tr>
               ) : (
                 filteredHistory.map((item) => (
                   <tr key={item.id}>
-                    <td><strong>{item.id}</strong></td>
+                    <td>
+                      <strong>{item.id}</strong>
+                    </td>
                     <td>{item.name}</td>
-                    <td><Badge variant="gray">{item.format}</Badge></td>
+                    <td>
+                      <Badge variant="gray">{item.format}</Badge>
+                    </td>
                     <td>{item.date}</td>
                     <td>{item.size}</td>
-                    <td><Badge variant="success">{item.status}</Badge></td>
+                    <td>
+                      <Badge variant="success">{item.status}</Badge>
+                    </td>
                     <td style={{ textAlign: "center" }}>
                       <button
                         className={styles.actionBtn}
@@ -389,7 +429,8 @@ export default function RelatoriosPage() {
                             toast({
                               variant: "warning",
                               title: "Dados indisponíveis",
-                              message: "Este relatório não possui linhas armazenadas para reexportação.",
+                              message:
+                                "Este relatório não possui linhas armazenadas para reexportação.",
                             });
                           }
                         }}

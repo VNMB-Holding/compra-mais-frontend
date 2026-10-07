@@ -90,7 +90,7 @@ export interface EconomyAnalyticsResponse {
 
 function buildQs(companyCode?: string): string {
   const valid = cleanCompanyParam(companyCode);
-  return valid ? `?companyCode=${encodeURIComponent(valid)}` : '';
+  return valid ? `?companyCode=${encodeURIComponent(valid)}` : "";
 }
 
 export interface DateFilterParams {
@@ -108,15 +108,26 @@ export interface FilterOptionsResponse {
 }
 
 export const dashboardApi = {
-  getKpis: (companyCode?: string) => apiClient.get<DashboardKpis>(`/api/dashboard/kpis${buildQs(companyCode)}`),
+  getKpis: (companyCode?: string) =>
+    apiClient.get<DashboardKpis>(`/api/dashboard/kpis${buildQs(companyCode)}`),
 
-  getRecentRfqs: (companyCode?: string) => apiClient.get<RecentRfqItem[]>(`/api/dashboard/recent-rfqs${buildQs(companyCode)}`),
+  getRecentRfqs: (companyCode?: string) =>
+    apiClient.get<RecentRfqItem[]>(`/api/dashboard/recent-rfqs${buildQs(companyCode)}`),
 
-  getCategories: (companyCode?: string) => apiClient.get<CategoryBreakdown[]>(`/api/dashboard/categories${buildQs(companyCode)}`),
+  getCategories: (companyCode?: string) =>
+    apiClient.get<CategoryBreakdown[]>(`/api/dashboard/categories${buildQs(companyCode)}`),
 
-  getFilterOptions: (companyCode?: string) => apiClient.get<FilterOptionsResponse>(`/api/dashboard/filter-options${buildQs(companyCode)}`),
+  getFilterOptions: (companyCode?: string) =>
+    apiClient.get<FilterOptionsResponse>(`/api/dashboard/filter-options${buildQs(companyCode)}`),
 
-  getMonthlyEconomy: (companyCode?: string, period?: string, startDate?: string, endDate?: string, category?: string, supplier?: string) => {
+  getMonthlyEconomy: (
+    companyCode?: string,
+    period?: string,
+    startDate?: string,
+    endDate?: string,
+    category?: string,
+    supplier?: string,
+  ) => {
     const params = new URLSearchParams();
     const valid = cleanCompanyParam(companyCode);
     if (valid) params.append("companyCode", valid);
@@ -124,14 +135,21 @@ export const dashboardApi = {
     if (cat) params.append("category", cat);
     const sup = cleanFilterParam(supplier);
     if (sup) params.append("supplier", sup);
-    if (period && period !== 'all') params.append("period", period);
+    if (period && period !== "all") params.append("period", period);
     if (startDate) params.append("startDate", startDate);
     if (endDate) params.append("endDate", endDate);
     const qs = params.toString();
-    return apiClient.get<MonthlyEconomy[]>(`/api/dashboard/monthly-economy${qs ? `?${qs}` : ''}`);
+    return apiClient.get<MonthlyEconomy[]>(`/api/dashboard/monthly-economy${qs ? `?${qs}` : ""}`);
   },
 
-  getSpendAnalytics: (companyCode?: string, category?: string, supplier?: string, period?: string, startDate?: string, endDate?: string) => {
+  getSpendAnalytics: (
+    companyCode?: string,
+    category?: string,
+    supplier?: string,
+    period?: string,
+    startDate?: string,
+    endDate?: string,
+  ) => {
     const params = new URLSearchParams();
     const valid = cleanCompanyParam(companyCode);
     if (valid) params.append("companyCode", valid);
@@ -144,10 +162,19 @@ export const dashboardApi = {
     if (startDate) params.append("startDate", startDate);
     if (endDate) params.append("endDate", endDate);
     const qs = params.toString();
-    return apiClient.get<SpendAnalyticsResponse>(`/api/dashboard/analytics/spend${qs ? `?${qs}` : ''}`);
+    return apiClient.get<SpendAnalyticsResponse>(
+      `/api/dashboard/analytics/spend${qs ? `?${qs}` : ""}`,
+    );
   },
 
-  getEconomyAnalytics: (companyCode?: string, category?: string, supplier?: string, period?: string, startDate?: string, endDate?: string) => {
+  getEconomyAnalytics: (
+    companyCode?: string,
+    category?: string,
+    supplier?: string,
+    period?: string,
+    startDate?: string,
+    endDate?: string,
+  ) => {
     const params = new URLSearchParams();
     const valid = cleanCompanyParam(companyCode);
     if (valid) params.append("companyCode", valid);
@@ -160,23 +187,25 @@ export const dashboardApi = {
     if (startDate) params.append("startDate", startDate);
     if (endDate) params.append("endDate", endDate);
     const qs = params.toString();
-    return apiClient.get<EconomyAnalyticsResponse>(`/api/dashboard/analytics/economia${qs ? `?${qs}` : ''}`);
+    return apiClient.get<EconomyAnalyticsResponse>(
+      `/api/dashboard/analytics/economia${qs ? `?${qs}` : ""}`,
+    );
   },
 
   generateReport: (
-    type: 'orders' | 'spend' | 'rfqs' | 'savings',
+    type: "orders" | "spend" | "rfqs" | "savings",
     companyCode?: string,
     startDate?: string,
     endDate?: string,
     period?: string,
   ) => {
     const params = new URLSearchParams();
-    params.append('type', type);
+    params.append("type", type);
     const valid = cleanCompanyParam(companyCode);
-    if (valid) params.append('companyCode', valid);
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    if (period && period !== 'all') params.append('period', period);
+    if (valid) params.append("companyCode", valid);
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    if (period && period !== "all") params.append("period", period);
     return apiClient.get<{
       filename: string;
       name: string;
@@ -187,28 +216,28 @@ export const dashboardApi = {
   },
 
   downloadReportFile: async (
-    type: 'orders' | 'spend' | 'rfqs' | 'savings',
-    format: 'excel' | 'pdf',
+    type: "orders" | "spend" | "rfqs" | "savings",
+    format: "excel" | "pdf",
     companyCode?: string,
     startDate?: string,
     endDate?: string,
     period?: string,
   ) => {
     const params = new URLSearchParams();
-    params.append('type', type);
+    params.append("type", type);
     const valid = cleanCompanyParam(companyCode);
-    if (valid) params.append('companyCode', valid);
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    if (period && period !== 'all') params.append('period', period);
+    if (valid) params.append("companyCode", valid);
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    if (period && period !== "all") params.append("period", period);
     const endpoint = `/api/dashboard/reports/download/${format}?${params.toString()}`;
     const res = await apiClient.getRaw(endpoint);
     if (!res.ok) {
       throw new Error(`Falha ao exportar relatório em ${format.toUpperCase()}`);
     }
     const blob = await res.blob();
-    const contentDisposition = res.headers.get('content-disposition');
-    let filename = `relatorio_${type}_${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+    const contentDisposition = res.headers.get("content-disposition");
+    let filename = `relatorio_${type}_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`;
     if (contentDisposition) {
       const match = contentDisposition.match(/filename="?([^";]+)"?/);
       if (match && match[1]) {
@@ -216,7 +245,7 @@ export const dashboardApi = {
       }
     }
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);

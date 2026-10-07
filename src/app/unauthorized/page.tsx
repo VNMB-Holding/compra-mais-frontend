@@ -23,7 +23,8 @@ export default function UnauthorizedPage() {
 
         <h1>Acesso restrito</h1>
         <p>
-          Seu usuário não possui as permissões necessárias para acessar este módulo. Se acredita que isto é um erro, contate o administrador da plataforma Compra+.
+          Seu usuário não possui as permissões necessárias para acessar este módulo. Se acredita que
+          isto é um erro, contate o administrador da plataforma Compra+.
         </p>
 
         <div className={styles.actions}>

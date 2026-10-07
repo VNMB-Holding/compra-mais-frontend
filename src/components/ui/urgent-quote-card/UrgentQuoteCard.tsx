@@ -1,7 +1,7 @@
-import React from 'react';
-import Card from '../card/Card';
-import Icon from '../icon/Icon';
-import styles from './UrgentQuoteCard.module.css';
+import React from "react";
+import Card from "../card/Card";
+import Icon from "../icon/Icon";
+import styles from "./UrgentQuoteCard.module.css";
 
 interface QuoteData {
   title: string;
@@ -25,7 +25,6 @@ export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProp
 
   return (
     <Card className={styles.urgentCard}>
-      
       <div className={styles.cardHeader}>
         <div className={styles.headerTitles}>
           <div className={styles.titleWithIndicator}>
@@ -51,7 +50,9 @@ export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProp
         <div className={styles.quoteMetaList}>
           <div className={styles.metaItem}>
             <Icon name="building-01" size={14} className={styles.metaIcon} />
-            <span className={styles.metaText} title={localOuCentro}>{localOuCentro}</span>
+            <span className={styles.metaText} title={localOuCentro}>
+              {localOuCentro}
+            </span>
           </div>
           <div className={styles.metaItem}>
             <Icon name="check-verified-01" size={14} className={styles.metaIcon} />

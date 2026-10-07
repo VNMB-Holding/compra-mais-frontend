@@ -132,7 +132,9 @@
   cursor: pointer;
   text-align: left;
   gap: 12px;
-  transition: background 0.1s ease, color 0.1s ease;
+  transition:
+    background 0.1s ease,
+    color 0.1s ease;
 }
 .itemButton:hover {
   background: #f8fafc;
@@ -157,7 +159,9 @@
   background: #f1f5f9;
   color: #64748b;
   flex-shrink: 0;
-  transition: background 0.1s ease, color 0.1s ease;
+  transition:
+    background 0.1s ease,
+    color 0.1s ease;
 }
 .selectedItem .itemIcon {
   background: #007d79;

@@ -17,7 +17,9 @@ interface TopbarProps {
 }
 
 export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarProps) {
-  const [activePopup, setActivePopup] = useState<"notifications" | "messages" | "company" | "user" | null>(null);
+  const [activePopup, setActivePopup] = useState<
+    "notifications" | "messages" | "company" | "user" | null
+  >(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
@@ -26,7 +28,9 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
-  const [messages, setMessages] = useState<Array<{ id: string; title: string; desc: string; time: string }>>([]);
+  const [messages, setMessages] = useState<
+    Array<{ id: string; title: string; desc: string; time: string }>
+  >([]);
 
   const loadNotifications = async () => {
     try {
@@ -70,9 +74,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
   const handleNotificationClick = async (notif: NotificationItem) => {
     if (!notif.read) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
       setUnreadNotifCount((prev) => Math.max(0, prev - 1));
       notificationsApi.markAsRead(notif.id).catch(() => {});
     }
@@ -143,27 +145,40 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
   const userEmail = user?.email || "";
   const rawSpecialistRole = user?.roles?.find((r) => {
     const lower = r.toLowerCase();
-    return lower.includes("comprador") || lower.includes("especialista") || lower.includes("procurist");
+    return (
+      lower.includes("comprador") || lower.includes("especialista") || lower.includes("procurist")
+    );
   });
-  const userRole = rawSpecialistRole || (user?.role === "admin" ? "Administrador" : user?.role === "gerente" ? "Gerente" : user?.role === "procurist" ? "Comprador(a)" : "Solicitante");
+  const userRole =
+    rawSpecialistRole ||
+    (user?.role === "admin"
+      ? "Administrador"
+      : user?.role === "gerente"
+        ? "Gerente"
+        : user?.role === "procurist"
+          ? "Comprador(a)"
+          : "Solicitante");
 
   return (
     <header className={styles.topbar} ref={topbarRef}>
-      
       <div className={styles.topbarLeft}>
-        <button 
-          className={styles.toggleSidebarBtn} 
+        <button
+          className={styles.toggleSidebarBtn}
           onClick={onToggleSidebar}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
         >
-          <Icon 
+          <Icon
             name={
-              isSidebarCollapsed 
-                ? (isHovered ? "leftbar-right" : "leftbar") 
-                : (isHovered ? "leftbar-left" : "leftbar")
-            } 
+              isSidebarCollapsed
+                ? isHovered
+                  ? "leftbar-right"
+                  : "leftbar"
+                : isHovered
+                  ? "leftbar-left"
+                  : "leftbar"
+            }
           />
         </button>
       </div>
@@ -176,17 +191,23 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
       </div>
 
       <div className={styles.topbarRight}>
-        
         <div className={styles.popupWrapper}>
-          <div className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`} onClick={() => togglePopup("notifications")}>
+          <div
+            className={`${styles.iconBtn} ${activePopup === "notifications" ? styles.activeIcon : ""}`}
+            onClick={() => togglePopup("notifications")}
+          >
             <Icon name="bell-01" />
-            {unreadNotifCount > 0 && <span className={styles.badge}>{unreadNotifCount > 9 ? "9+" : unreadNotifCount}</span>}
+            {unreadNotifCount > 0 && (
+              <span className={styles.badge}>{unreadNotifCount > 9 ? "9+" : unreadNotifCount}</span>
+            )}
           </div>
-          
+
           {activePopup === "notifications" && (
             <div className={styles.dropdownBox}>
               <div className={styles.dropdownHeader}>
-                <span>Notificações {unreadNotifCount > 0 ? `(${unreadNotifCount} novas)` : ""}</span>
+                <span>
+                  Notificações {unreadNotifCount > 0 ? `(${unreadNotifCount} novas)` : ""}
+                </span>
                 {unreadNotifCount > 0 && (
                   <button className={styles.markAllReadBtn} onClick={handleMarkAllRead}>
                     Marcar todas lidas
@@ -196,8 +217,8 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
               <div className={styles.dropdownContent}>
                 {notifications.length > 0 ? (
                   notifications.map((n) => (
-                    <div 
-                      key={n.id} 
+                    <div
+                      key={n.id}
                       className={`${styles.dropdownItem} ${!n.read ? styles.unreadItem : ""}`}
                       onClick={() => handleNotificationClick(n)}
                     >
@@ -206,7 +227,12 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
                         {!n.read && <span className={styles.unreadDot} title="Não lida" />}
                       </div>
                       <p>{n.desc}</p>
-                      <small>{new Date(n.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</small>
+                      <small>
+                        {new Date(n.createdAt).toLocaleString("pt-BR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </small>
                     </div>
                   ))
                 ) : (
@@ -220,19 +246,26 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         </div>
 
         <div className={styles.popupWrapper}>
-          <div className={`${styles.iconBtn} ${activePopup === "messages" ? styles.activeIcon : ""}`} onClick={() => togglePopup("messages")}>
+          <div
+            className={`${styles.iconBtn} ${activePopup === "messages" ? styles.activeIcon : ""}`}
+            onClick={() => togglePopup("messages")}
+          >
             <Icon name="mail-01" />
-            {hasUnreadMsgs && messages.length > 0 && <span className={styles.badge}>{messages.length}</span>}
+            {hasUnreadMsgs && messages.length > 0 && (
+              <span className={styles.badge}>{messages.length}</span>
+            )}
           </div>
 
           {activePopup === "messages" && (
             <div className={styles.dropdownBox}>
-              <div className={styles.dropdownHeader}>Pendências de Aprovação ({messages.length})</div>
+              <div className={styles.dropdownHeader}>
+                Pendências de Aprovação ({messages.length})
+              </div>
               <div className={styles.dropdownContent}>
                 {messages.length > 0 ? (
                   messages.map((m) => (
-                    <div 
-                      key={m.id} 
+                    <div
+                      key={m.id}
                       className={styles.dropdownItem}
                       onClick={() => {
                         setActivePopup(null);
@@ -262,7 +295,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
         </div>
 
         <div className={styles.popupWrapper}>
-          <div 
+          <div
             className={`${styles.userAvatarSmall} ${styles.avatarBtn}`}
             onClick={() => togglePopup("user")}
             title={userName}
@@ -273,23 +306,20 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
           {activePopup === "user" && (
             <div className={`${styles.dropdownBox} ${styles.userDropdown}`}>
               <div className={styles.dropdownUserHeader}>
-                <div className={styles.userAvatarLarge}>
-                  {getInitials(userName)}
-                </div>
+                <div className={styles.userAvatarLarge}>{getInitials(userName)}</div>
                 <div>
                   <strong>{userName}</strong>
                   <p>{userEmail}</p>
                   <small>{userRole}</small>
                 </div>
               </div>
-              
+
               <div className={`${styles.dropdownItem} ${styles.logoutItem}`} onClick={handleLogout}>
                 <Icon name="log-out-01" /> Sair
               </div>
             </div>
           )}
         </div>
-
       </div>
 
       <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />

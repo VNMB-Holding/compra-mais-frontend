@@ -82,7 +82,6 @@ export default function InviteSupplierModal({
 
         if (onSuccess) onSuccess(res.supplier);
       } else {
-        
         let createdSupplier = null;
         try {
           createdSupplier = await suppliersApi.create({
@@ -95,7 +94,6 @@ export default function InviteSupplierModal({
             status: "Pending",
           });
         } catch {
-          
           createdSupplier = {
             id: `temp-${Date.now()}`,
             corporateName,
@@ -223,11 +221,10 @@ export default function InviteSupplierModal({
             >
               <Icon name="mail-01" size={16} /> Convidar e Adicionar
             </Button>
-
           </div>
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

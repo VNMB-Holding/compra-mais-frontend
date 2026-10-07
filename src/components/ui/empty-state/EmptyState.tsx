@@ -7,30 +7,25 @@ import Icon from "@/components/ui/icon/Icon";
 import styles from "./EmptyState.module.css";
 
 export type EmptyStateIllustration =
-  
   | "disconnected"
   | "server-error"
   | "device-offline"
   | "not-found"
   | "connection-lost"
-  
   | "cart-empty"
   | "box-empty"
   | "orders-empty"
   | "zero-items"
   | "basket-empty"
-  
   | "mailbox-empty"
   | "envelope-empty"
   | "chat-empty"
   | "no-notifications"
-  
   | "no-suppliers"
   | "no-search"
   | "ghost"
   | "all-done"
   | "no-users"
-  
   | "wallet-empty"
   | "card-add"
   | "card-broken"
@@ -45,30 +40,28 @@ export interface EmptyStateAction {
 }
 
 export interface EmptyStateProps {
-  
   illustration?: EmptyStateIllustration | string;
-  
+
   title: string;
-  
+
   description?: string;
-  
+
   action?: EmptyStateAction | React.ReactNode;
-  
+
   secondaryAction?: EmptyStateAction | React.ReactNode;
-  
+
   size?: "sm" | "md" | "lg";
-  
+
   compact?: boolean;
-  
+
   className?: string;
-  
+
   children?: React.ReactNode;
 
   priority?: boolean;
 }
 
 const ILLUSTRATION_MAP: Record<string, string> = {
-  
   "box-empty": "/illustrations/box-empty.svg",
   "folder-empty": "/illustrations/folder-empty.svg",
   "document-empty": "/illustrations/document-empty.svg",
@@ -101,8 +94,8 @@ export default function EmptyState({
   children,
   priority = true,
 }: EmptyStateProps) {
-  
-  const src = (ILLUSTRATION_MAP as Record<string, string>)[illustration] ||
+  const src =
+    (ILLUSTRATION_MAP as Record<string, string>)[illustration] ||
     (illustration.startsWith("/") ? illustration : `/illustrations/${illustration}.svg`);
 
   const sizeClass = size === "sm" ? styles.sizeSm : size === "lg" ? styles.sizeLg : styles.sizeMd;
@@ -114,10 +107,7 @@ export default function EmptyState({
 
     const actionObj = btn as EmptyStateAction;
     return (
-      <Button
-        variant={actionObj.variant || "primary"}
-        onClick={actionObj.onClick}
-      >
+      <Button variant={actionObj.variant || "primary"} onClick={actionObj.onClick}>
         {actionObj.icon && <Icon name={actionObj.icon} size={16} />}
         {actionObj.label}
       </Button>
@@ -125,7 +115,9 @@ export default function EmptyState({
   };
 
   return (
-    <div className={`${styles.emptyState} ${sizeClass} ${compact ? styles.compact : ""} ${className}`}>
+    <div
+      className={`${styles.emptyState} ${sizeClass} ${compact ? styles.compact : ""} ${className}`}
+    >
       <div className={styles.imageWrap}>
         <Image
           src={src}

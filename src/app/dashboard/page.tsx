@@ -20,10 +20,15 @@ import {
   TableSkeleton,
   ChartSkeleton,
   DataTable,
-  ColumnDef
+  ColumnDef,
 } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
-import { dashboardApi, DashboardKpis, CategoryBreakdown, MonthlyEconomy } from "@/lib/api/dashboard";
+import {
+  dashboardApi,
+  DashboardKpis,
+  CategoryBreakdown,
+  MonthlyEconomy,
+} from "@/lib/api/dashboard";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getCompanyFilterOptions, getTenantDisplayName } from "@/lib/utils/tenant";
@@ -75,14 +80,18 @@ export default function DashboardPage() {
       const mapped: RFQRow[] = rfqsData.map((rfq) => {
         const codigo = rfq.code || "";
         const descricao = rfq.title || rfq.purchaseRequest?.description || "";
-        const localEstoqueOuCategoria = (rfq.purchaseRequest as any)?.corporateStockLocation ||
+        const localEstoqueOuCategoria =
+          (rfq.purchaseRequest as any)?.corporateStockLocation ||
           (rfq.purchaseRequest as any)?.category?.name ||
           "Almoxarifado Geral";
         const dataAbertura = formatDate(rfq.createdAt);
         const dataEncerramento = formatDate(rfq.closesAt);
         const tipoSegmento = (rfq.purchaseRequest as any)?.category?.name || "Geral";
         const status = mapRfqStatus(rfq);
-        const empresa = getTenantDisplayName(rfq.purchaseRequest?.companyCode || rfq.tenantId || rfq.purchaseRequest?.tenantId, user);
+        const empresa = getTenantDisplayName(
+          rfq.purchaseRequest?.companyCode || rfq.tenantId || rfq.purchaseRequest?.tenantId,
+          user,
+        );
 
         return {
           id: rfq.id,
@@ -130,29 +139,46 @@ export default function DashboardPage() {
 
   const aggregatedCategoriesMap = new Map<string, number>();
   for (const c of categories) {
-    aggregatedCategoriesMap.set(c.name, (aggregatedCategoriesMap.get(c.name) || 0) + (c.value || 0));
+    aggregatedCategoriesMap.set(
+      c.name,
+      (aggregatedCategoriesMap.get(c.name) || 0) + (c.value || 0),
+    );
   }
 
-  const aggregatedCategoriesList = Array.from(aggregatedCategoriesMap.entries()).map(([name, value]) => ({
-    name,
-    value,
-  }));
+  const aggregatedCategoriesList = Array.from(aggregatedCategoriesMap.entries()).map(
+    ([name, value]) => ({
+      name,
+      value,
+    }),
+  );
 
-  const topCategoriasData = aggregatedCategoriesList.length > 0
-    ? aggregatedCategoriesList.map((c, i) => ({
-        name: c.name,
-        value: c.value,
-        color: PIE_COLORS[i % PIE_COLORS.length],
-      }))
-    : [{ name: "Sem dados", value: 100, color: "#e2e8f0" }];
+  const topCategoriasData =
+    aggregatedCategoriesList.length > 0
+      ? aggregatedCategoriesList.map((c, i) => ({
+          name: c.name,
+          value: c.value,
+          color: PIE_COLORS[i % PIE_COLORS.length],
+        }))
+      : [{ name: "Sem dados", value: 100, color: "#e2e8f0" }];
 
-  const rfqMaisUrgente = rfqs.find((r) => r.status === "Encerrando hoje") || rfqs.find((r) => r.status === "Aberta") || null;
+  const rfqMaisUrgente =
+    rfqs.find((r) => r.status === "Encerrando hoje") ||
+    rfqs.find((r) => r.status === "Aberta") ||
+    null;
 
   const tabsConfig = [
     { id: "Todas", label: "Todas", count: rfqs.length },
     { id: "Aberta", label: "Abertas", count: rfqs.filter((r) => r.status === "Aberta").length },
-    { id: "Encerrando hoje", label: "Encerrando hoje", count: rfqs.filter((r) => r.status === "Encerrando hoje").length },
-    { id: "Encerrada", label: "Encerradas", count: rfqs.filter((r) => r.status === "Encerrada").length },
+    {
+      id: "Encerrando hoje",
+      label: "Encerrando hoje",
+      count: rfqs.filter((r) => r.status === "Encerrando hoje").length,
+    },
+    {
+      id: "Encerrada",
+      label: "Encerradas",
+      count: rfqs.filter((r) => r.status === "Encerrada").length,
+    },
   ];
 
   const columns: ColumnDef<RFQRow>[] = [
@@ -164,30 +190,28 @@ export default function DashboardPage() {
     { header: "Tipo", accessorKey: "tipoSegmento" },
     {
       header: "Status",
-      cell: (row) => (
-        <Badge variant={getStatusBadgeVariant(row.status)}>
-          {row.status}
-        </Badge>
-      )
+      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>,
     },
     {
       header: "",
-      cell: () => <Icon name="dots-horizontal" className={styles.rowActions} />
-    }
+      cell: () => <Icon name="dots-horizontal" className={styles.rowActions} />,
+    },
   ];
 
   const filteredRfqs = rfqs.filter((r) => activeTab === "Todas" || r.status === activeTab);
 
   const lastEconomy = economyData.length > 0 ? economyData[economyData.length - 1] : null;
   const totalEconomyFromChart = economyData.reduce((acc, curr) => acc + (curr.value || 0), 0);
-  const totalEconomyValue = (typeof kpis?.economy === "number" && kpis.economy > 0) ? kpis.economy : totalEconomyFromChart;
+  const totalEconomyValue =
+    typeof kpis?.economy === "number" && kpis.economy > 0 ? kpis.economy : totalEconomyFromChart;
 
   return (
     <div className={styles.viewDashboard}>
-
       <div className={styles.pageHeaderSimple}>
         <div>
-          <h1>Bom dia, {firstName}. <span className={styles.wave}>👋</span></h1>
+          <h1>
+            Bom dia, {firstName}. <span className={styles.wave}>👋</span>
+          </h1>
           <p>Aqui está o panorama das suas operações de suprimentos hoje.</p>
         </div>
         <div style={{ minWidth: 260 }} data-tour="company-filter">
@@ -202,8 +226,15 @@ export default function DashboardPage() {
 
       <div className={styles.heroBanner} data-tour="hero-banner">
         <div className={styles.heroContent}>
-          <h2>Conectamos negócios.<br />Potencializamos <strong>resultados.</strong></h2>
-          <p>Uma plataforma inteligente para compras estratégicas<br />e conexões que geram valor para o seu negócio.</p>
+          <h2>
+            Conectamos negócios.
+            <br />
+            Potencializamos <strong>resultados.</strong>
+          </h2>
+          <p>
+            Uma plataforma inteligente para compras estratégicas
+            <br />e conexões que geram valor para o seu negócio.
+          </p>
         </div>
       </div>
 
@@ -243,7 +274,6 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.middleGrid}>
-
         {rfqMaisUrgente && (
           <div data-tour="urgent-quote">
             <UrgentQuoteCard
@@ -254,7 +284,10 @@ export default function DashboardPage() {
                 quantity: "",
                 category: rfqMaisUrgente.categoria,
                 type: rfqMaisUrgente.tipoSegmento,
-                timeRemaining: rfqMaisUrgente.status === "Encerrando hoje" ? "Vence hoje!" : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
+                timeRemaining:
+                  rfqMaisUrgente.status === "Encerrando hoje"
+                    ? "Vence hoje!"
+                    : `Encerra em ${rfqMaisUrgente.dataEncerramento}`,
               }}
               onAction={() => router.push(`/compras/rfqs/${rfqMaisUrgente.id}`)}
             />
@@ -274,14 +307,21 @@ export default function DashboardPage() {
                 <h3>{formatCurrency(totalEconomyValue)}</h3>
                 {lastEconomy && (
                   <span className={styles.chartPeriodMeta}>
-                    Mês recente ({lastEconomy.name}): <strong>{formatCurrency(lastEconomy.value)}</strong>
+                    Mês recente ({lastEconomy.name}):{" "}
+                    <strong>{formatCurrency(lastEconomy.value)}</strong>
                   </span>
                 )}
               </div>
               <div className={styles.chartWrapperElement}>
-                <LineChart data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]} strokeColor="#007d79" />
+                <LineChart
+                  data={economyData.length > 0 ? economyData : [{ name: "-", value: 0 }]}
+                  strokeColor="#007d79"
+                />
               </div>
-              <button className={styles.cardLink} onClick={() => router.push("/analytics/economia")}>
+              <button
+                className={styles.cardLink}
+                onClick={() => router.push("/analytics/economia")}
+              >
                 Ver análise detalhada de savings <Icon name="arrow-right" size={16} />
               </button>
             </Card>
@@ -304,13 +344,18 @@ export default function DashboardPage() {
                 {topCategoriasData.map((item, index) => (
                   <div key={index} className={styles.legItem}>
                     <span className={styles.dot} style={{ backgroundColor: item.color }}></span>
-                    <span className={styles.legName} title={item.name}>{item.name}</span>
+                    <span className={styles.legName} title={item.name}>
+                      {item.name}
+                    </span>
                     <span className={styles.pct}>{item.value}%</span>
                   </div>
                 ))}
               </div>
             </div>
-            <button className={styles.cardLink} onClick={() => router.push("/compras/solicitacoes")}>
+            <button
+              className={styles.cardLink}
+              onClick={() => router.push("/compras/solicitacoes")}
+            >
               Ver solicitações de compra <Icon name="arrow-right" size={16} />
             </button>
           </Card>
@@ -319,42 +364,50 @@ export default function DashboardPage() {
 
       <div data-tour="rfq-table">
         <Card noPadding className={styles.tableCard}>
-        <div className={styles.tableHeaderActions}>
-          <Tabs tabs={tabsConfig} activeTab={activeTab} onChange={setActiveTab} />
-        </div>
+          <div className={styles.tableHeaderActions}>
+            <Tabs tabs={tabsConfig} activeTab={activeTab} onChange={setActiveTab} />
+          </div>
 
-        {loading ? (
-          <TableSkeleton rows={5} columns={5} />
-        ) : error ? (
-          <ErrorState message={error} onRetry={fetchData} />
-        ) : filteredRfqs.length === 0 ? (
-          <EmptyState
-            illustration={activeTab !== "Todas" ? "no-search" : "orders-empty"}
-            title={activeTab !== "Todas" ? "Nenhuma cotação nesta visualização" : "Nenhuma cotação recente"}
-            description={
-              activeTab !== "Todas"
-                ? `Não há processos de cotação com o status "${activeTab}".`
-                : "Quando as cotações forem abertas, elas serão listadas em tempo real aqui."
-            }
-            action={
-              activeTab !== "Todas"
-                ? {
-                    label: "Ver Todas as Cotações",
-                    variant: "secondary",
-                    onClick: () => setActiveTab("Todas"),
-                  }
-                : {
-                    label: "Nova Cotação",
-                    icon: "plus",
-                    onClick: () => router.push("/compras/rfqs/nova"),
-                  }
-            }
-            size="sm"
-            compact
-          />
-        ) : (
-          <DataTable data={filteredRfqs} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
-        )}
+          {loading ? (
+            <TableSkeleton rows={5} columns={5} />
+          ) : error ? (
+            <ErrorState message={error} onRetry={fetchData} />
+          ) : filteredRfqs.length === 0 ? (
+            <EmptyState
+              illustration={activeTab !== "Todas" ? "no-search" : "orders-empty"}
+              title={
+                activeTab !== "Todas"
+                  ? "Nenhuma cotação nesta visualização"
+                  : "Nenhuma cotação recente"
+              }
+              description={
+                activeTab !== "Todas"
+                  ? `Não há processos de cotação com o status "${activeTab}".`
+                  : "Quando as cotações forem abertas, elas serão listadas em tempo real aqui."
+              }
+              action={
+                activeTab !== "Todas"
+                  ? {
+                      label: "Ver Todas as Cotações",
+                      variant: "secondary",
+                      onClick: () => setActiveTab("Todas"),
+                    }
+                  : {
+                      label: "Nova Cotação",
+                      icon: "plus",
+                      onClick: () => router.push("/compras/rfqs/nova"),
+                    }
+              }
+              size="sm"
+              compact
+            />
+          ) : (
+            <DataTable
+              data={filteredRfqs}
+              columns={columns}
+              onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)}
+            />
+          )}
         </Card>
       </div>
     </div>

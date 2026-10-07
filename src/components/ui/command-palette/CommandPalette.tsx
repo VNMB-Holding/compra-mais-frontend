@@ -10,21 +10,120 @@ import { useAuth } from "@/hooks/useAuth";
 import { searchApi, SearchItem, formatSearchStatus } from "@/lib/api/search";
 
 const STATIC_ITEMS: SearchItem[] = [
-  { id: "action-new-rfq", title: "Criar Novo Processo de Cotação (RFQ)", category: "Ações", description: "Lançar cotação ao mercado para fornecedores", url: "/compras/rfqs/nova", icon: "send-01", shortcut: "↵" },
-  { id: "action-new-req", title: "Nova Solicitação de Compra", category: "Ações", description: "Abrir requisição interna para aquisição de itens", url: "/compras/solicitacoes", icon: "plus-circle" },
-  { id: "action-export-reports", title: "Exportar Relatórios de Compras", category: "Ações", description: "Exportar dados de saving e performance em Excel/PDF", url: "/analytics/relatorios", icon: "download-01" },
-  { id: "action-active-orders", title: "Ver Pedidos em Andamento", category: "Ações", description: "Acompanhar recebimento e entregas de insumos", url: "/compras/pedidos", icon: "truck-01" },
-  { id: "action-system-help", title: "Suporte & Central de Ajuda", category: "Ações", description: "Falar com nosso time de atendimento ou ler tutoriais", url: "/dashboard", icon: "help-circle" },
+  {
+    id: "action-new-rfq",
+    title: "Criar Novo Processo de Cotação (RFQ)",
+    category: "Ações",
+    description: "Lançar cotação ao mercado para fornecedores",
+    url: "/compras/rfqs/nova",
+    icon: "send-01",
+    shortcut: "↵",
+  },
+  {
+    id: "action-new-req",
+    title: "Nova Solicitação de Compra",
+    category: "Ações",
+    description: "Abrir requisição interna para aquisição de itens",
+    url: "/compras/solicitacoes",
+    icon: "plus-circle",
+  },
+  {
+    id: "action-export-reports",
+    title: "Exportar Relatórios de Compras",
+    category: "Ações",
+    description: "Exportar dados de saving e performance em Excel/PDF",
+    url: "/analytics/relatorios",
+    icon: "download-01",
+  },
+  {
+    id: "action-active-orders",
+    title: "Ver Pedidos em Andamento",
+    category: "Ações",
+    description: "Acompanhar recebimento e entregas de insumos",
+    url: "/compras/pedidos",
+    icon: "truck-01",
+  },
+  {
+    id: "action-system-help",
+    title: "Suporte & Central de Ajuda",
+    category: "Ações",
+    description: "Falar com nosso time de atendimento ou ler tutoriais",
+    url: "/dashboard",
+    icon: "help-circle",
+  },
 
-  { id: "page-dashboard", title: "Dashboard Principal", category: "Páginas", description: "Visão geral de cotações, solicitações e KPIs", url: "/dashboard", icon: "home-01" },
-  { id: "page-suppliers-list", title: "Base de Fornecedores", category: "Páginas", description: "Diretório de parceiros e notas de performance", url: "/fornecedores/diretorio", icon: "users-01" },
-  { id: "page-sols", title: "Solicitações de Compra", category: "Páginas", description: "Lista de demandas de compra internas", url: "/compras/solicitacoes", icon: "list" },
-  { id: "page-rfqs", title: "Processos de Cotação (RFQs)", category: "Páginas", description: "Listagem de RFQs ativas e propostas", url: "/compras/rfqs", icon: "send-03" },
-  { id: "page-orders", title: "Pedidos de Compra", category: "Páginas", description: "Ordens de compra enviadas para fornecedores", url: "/compras/pedidos", icon: "clipboard-check" },
-  { id: "page-items", title: "Itens & Catálogo Auditado", category: "Páginas", description: "Catálogo de materiais com histórico de compras e fornecedores de base", url: "/compras/itens", icon: "package" },
-  { id: "page-reports", title: "Relatórios Exportáveis", category: "Páginas", description: "Filtros customizados e relatórios consolidados", url: "/analytics/relatorios", icon: "bar-chart-01" },
-  { id: "page-savings", title: "Painel de Economia Gerada (Saving)", category: "Páginas", description: "Savings absoluto, percentual e histórico", url: "/analytics/economia", icon: "piggy-bank-01" },
-  { id: "page-admin", title: "Administração Geral", category: "Páginas", description: "Gestão de empresas, filiais e alçadas de aprovação", url: "/admin", icon: "settings-01" },
+  {
+    id: "page-dashboard",
+    title: "Dashboard Principal",
+    category: "Páginas",
+    description: "Visão geral de cotações, solicitações e KPIs",
+    url: "/dashboard",
+    icon: "home-01",
+  },
+  {
+    id: "page-suppliers-list",
+    title: "Base de Fornecedores",
+    category: "Páginas",
+    description: "Diretório de parceiros e notas de performance",
+    url: "/fornecedores/diretorio",
+    icon: "users-01",
+  },
+  {
+    id: "page-sols",
+    title: "Solicitações de Compra",
+    category: "Páginas",
+    description: "Lista de demandas de compra internas",
+    url: "/compras/solicitacoes",
+    icon: "list",
+  },
+  {
+    id: "page-rfqs",
+    title: "Processos de Cotação (RFQs)",
+    category: "Páginas",
+    description: "Listagem de RFQs ativas e propostas",
+    url: "/compras/rfqs",
+    icon: "send-03",
+  },
+  {
+    id: "page-orders",
+    title: "Pedidos de Compra",
+    category: "Páginas",
+    description: "Ordens de compra enviadas para fornecedores",
+    url: "/compras/pedidos",
+    icon: "clipboard-check",
+  },
+  {
+    id: "page-items",
+    title: "Itens & Catálogo Auditado",
+    category: "Páginas",
+    description: "Catálogo de materiais com histórico de compras e fornecedores de base",
+    url: "/compras/itens",
+    icon: "package",
+  },
+  {
+    id: "page-reports",
+    title: "Relatórios Exportáveis",
+    category: "Páginas",
+    description: "Filtros customizados e relatórios consolidados",
+    url: "/analytics/relatorios",
+    icon: "bar-chart-01",
+  },
+  {
+    id: "page-savings",
+    title: "Painel de Economia Gerada (Saving)",
+    category: "Páginas",
+    description: "Savings absoluto, percentual e histórico",
+    url: "/analytics/economia",
+    icon: "piggy-bank-01",
+  },
+  {
+    id: "page-admin",
+    title: "Administração Geral",
+    category: "Páginas",
+    description: "Gestão de empresas, filiais e alçadas de aprovação",
+    url: "/admin",
+    icon: "settings-01",
+  },
 ];
 
 const CATEGORY_ORDER: Array<SearchItem["category"]> = [
@@ -64,7 +163,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       router.push(item.url);
       onClose();
     },
-    [router, onClose]
+    [router, onClose],
   );
 
   const prevIsOpen = useRef(isOpen);
@@ -251,7 +350,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   useEffect(() => {
     if (itemsContainerRef.current) {
       const activeElement = itemsContainerRef.current.querySelector(
-        `.${styles.selectedItem}`
+        `.${styles.selectedItem}`,
       ) as HTMLElement;
 
       if (activeElement) {
@@ -273,12 +372,14 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-label="Busca Global">
-      <div
-        className={styles.modal}
-        ref={containerRef}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div
+      className={styles.overlay}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Busca Global"
+    >
+      <div className={styles.modal} ref={containerRef} onClick={(e) => e.stopPropagation()}>
         <div className={styles.searchHeader}>
           <Icon name="search-md" className={styles.searchIcon} />
           <input
@@ -332,14 +433,14 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
 function renderGroupedItems(
   grouped: Partial<Record<SearchItem["category"], SearchItem[]>>,
   selectedIndex: number,
-  onSelect: (item: SearchItem) => void
+  onSelect: (item: SearchItem) => void,
 ) {
   let linearIndex = 0;
   return Object.entries(grouped).map(([category, items]) => {
@@ -378,9 +479,7 @@ function renderGroupedItems(
                     {item.status}
                   </Badge>
                 )}
-                {item.shortcut && (
-                  <span className={styles.itemShortcut}>{item.shortcut}</span>
-                )}
+                {item.shortcut && <span className={styles.itemShortcut}>{item.shortcut}</span>}
               </div>
             </button>
           );

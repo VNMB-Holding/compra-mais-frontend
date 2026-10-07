@@ -153,9 +153,12 @@ export default function NovoFornecedorPage() {
 
   const isBasicInfoDone = formData.corporateName.trim() !== "" && formData.cnpj.length === 18;
   const isCategoryDone = formData.categoria !== "";
-  const isContactDone = formData.contatoEmail.includes("@") && formData.contatoTelefone.length >= 14;
+  const isContactDone =
+    formData.contatoEmail.includes("@") && formData.contatoTelefone.length >= 14;
   const isAddressDone = formData.cidade.trim() !== "" && formData.estado.trim() !== "";
-  const isFinancialDone = formData.chavePix.trim() !== "" || (formData.banco.trim() !== "" && formData.contaCorrente.trim() !== "");
+  const isFinancialDone =
+    formData.chavePix.trim() !== "" ||
+    (formData.banco.trim() !== "" && formData.contaCorrente.trim() !== "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,13 +184,16 @@ export default function NovoFornecedorPage() {
     setLoading(true);
 
     try {
-      const fullAddress = [
-        formData.logradouro.trim(),
-        formData.numero.trim() ? `nº ${formData.numero.trim()}` : "",
-        formData.complemento.trim() ? `(${formData.complemento.trim()})` : "",
-        formData.bairro.trim(),
-        formData.cidade.trim() ? `${formData.cidade.trim()} - ${formData.estado}` : "",
-      ].filter(Boolean).join(", ") || undefined;
+      const fullAddress =
+        [
+          formData.logradouro.trim(),
+          formData.numero.trim() ? `nº ${formData.numero.trim()}` : "",
+          formData.complemento.trim() ? `(${formData.complemento.trim()})` : "",
+          formData.bairro.trim(),
+          formData.cidade.trim() ? `${formData.cidade.trim()} - ${formData.estado}` : "",
+        ]
+          .filter(Boolean)
+          .join(", ") || undefined;
 
       await suppliersApi.create({
         tenantId: user?.tenantId,
@@ -202,10 +208,13 @@ export default function NovoFornecedorPage() {
         state: formData.estado.trim() || undefined,
         neighborhood: formData.bairro.trim() || undefined,
         bankCode: formData.banco.trim() || undefined,
-        bankNumber: [
-          formData.agencia ? `Ag. ${formData.agencia.trim()}` : "",
-          formData.contaCorrente ? `CC ${formData.contaCorrente.trim()}` : "",
-        ].filter(Boolean).join(" - ") || undefined,
+        bankNumber:
+          [
+            formData.agencia ? `Ag. ${formData.agencia.trim()}` : "",
+            formData.contaCorrente ? `CC ${formData.contaCorrente.trim()}` : "",
+          ]
+            .filter(Boolean)
+            .join(" - ") || undefined,
         pixKey: formData.chavePix.trim() || undefined,
         contactName: formData.contatoNome.trim() || undefined,
         contactEmail: formData.contatoEmail.trim() || undefined,
@@ -253,7 +262,10 @@ export default function NovoFornecedorPage() {
         <div>
           <span className={styles.eyebrow}>Gestão de Fornecedores</span>
           <h1>Novo Fornecedor</h1>
-          <p>Cadastre parceiros corporativos fornecendo dados básicos, contato, endereço e dados de homologação.</p>
+          <p>
+            Cadastre parceiros corporativos fornecendo dados básicos, contato, endereço e dados de
+            homologação.
+          </p>
         </div>
       </div>
 
@@ -261,7 +273,6 @@ export default function NovoFornecedorPage() {
         <div className={styles.mainColumn}>
           <Card className={styles.formCard}>
             <form onSubmit={handleSubmit}>
-              
               <section className={styles.formSection}>
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
@@ -275,7 +286,9 @@ export default function NovoFornecedorPage() {
 
                 <div className={styles.formRow}>
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <label>Razão Social <span className="required-asterisk">*</span></label>
+                    <label>
+                      Razão Social <span className="required-asterisk">*</span>
+                    </label>
                     <input
                       className={styles.formControl}
                       name="corporateName"
@@ -301,7 +314,9 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>CNPJ <span className="required-asterisk">*</span></label>
+                    <label>
+                      CNPJ <span className="required-asterisk">*</span>
+                    </label>
                     <input
                       className={styles.formControl}
                       name="cnpj"
@@ -362,7 +377,9 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>E-mail Corporativo <span className="required-asterisk">*</span></label>
+                    <label>
+                      E-mail Corporativo <span className="required-asterisk">*</span>
+                    </label>
                     <input
                       className={styles.formControl}
                       type="email"
@@ -378,7 +395,9 @@ export default function NovoFornecedorPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Telefone / WhatsApp <span className="required-asterisk">*</span></label>
+                    <label>
+                      Telefone / WhatsApp <span className="required-asterisk">*</span>
+                    </label>
                     <input
                       className={styles.formControl}
                       name="contatoTelefone"
@@ -427,7 +446,9 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Estado <span className="required-asterisk">*</span></label>
+                    <label>
+                      Estado <span className="required-asterisk">*</span>
+                    </label>
                     <Select
                       options={ESTADO_OPTIONS}
                       value={formData.estado}
@@ -489,7 +510,9 @@ export default function NovoFornecedorPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Cidade <span className="required-asterisk">*</span></label>
+                    <label>
+                      Cidade <span className="required-asterisk">*</span>
+                    </label>
                     <input
                       className={styles.formControl}
                       name="cidade"
@@ -596,31 +619,24 @@ export default function NovoFornecedorPage() {
                 >
                   <Icon name="save-01" /> Salvar e Iniciar Homologação
                 </Button>
-
               </div>
-
             </form>
           </Card>
         </div>
 
         <aside className={styles.sideColumn}>
-          
           <Card className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Pré-visualização</span>
               <span className={styles.statusPill}>Em análise</span>
             </div>
-            
+
             <div className={styles.previewContent}>
-              <div className={`${styles.previewAvatar} ${getAvatarStyle()}`}>
-                {getInitials()}
-              </div>
+              <div className={`${styles.previewAvatar} ${getAvatarStyle()}`}>{getInitials()}</div>
               <h3 className={styles.previewName}>
                 {formData.tradeName.trim() || formData.corporateName.trim() || "Novo Fornecedor"}
               </h3>
-              <p className={styles.previewCnpj}>
-                {formData.cnpj || "CNPJ pendente"}
-              </p>
+              <p className={styles.previewCnpj}>{formData.cnpj || "CNPJ pendente"}</p>
 
               <div className={styles.previewBadge}>
                 <Icon name="tag-01" size={14} />
@@ -657,12 +673,13 @@ export default function NovoFornecedorPage() {
                   <div className={styles.detailTexts}>
                     <small>Cidade/Estado</small>
                     <span>
-                      {formData.cidade.trim() ? `${formData.cidade} - ${formData.estado}` : "Não informada"}
+                      {formData.cidade.trim()
+                        ? `${formData.cidade} - ${formData.estado}`
+                        : "Não informada"}
                     </span>
                   </div>
                 </div>
               </div>
-
             </div>
           </Card>
 
@@ -675,21 +692,14 @@ export default function NovoFornecedorPage() {
               <li className={isBasicInfoDone ? styles.done : ""}>
                 Dados Básicos (Razão Social & CNPJ)
               </li>
-              <li className={isCategoryDone ? styles.done : ""}>
-                Categoria Selecionada
-              </li>
-              <li className={isContactDone ? styles.done : ""}>
-                Contatos (E-mail e Telefone)
-              </li>
-              <li className={isAddressDone ? styles.done : ""}>
-                Endereço Principal Definido
-              </li>
+              <li className={isCategoryDone ? styles.done : ""}>Categoria Selecionada</li>
+              <li className={isContactDone ? styles.done : ""}>Contatos (E-mail e Telefone)</li>
+              <li className={isAddressDone ? styles.done : ""}>Endereço Principal Definido</li>
               <li className={isFinancialDone ? styles.done : ""}>
                 Dados Financeiros (Banco ou PIX)
               </li>
             </ul>
           </Card>
-
         </aside>
       </div>
     </div>

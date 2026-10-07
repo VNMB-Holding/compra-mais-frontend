@@ -75,11 +75,7 @@ export default function QuickDetailDrawer({
             </div>
             {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
           </div>
-          <button
-            className={styles.closeBtn}
-            onClick={onClose}
-            aria-label="Fechar painel"
-          >
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar painel">
             <Icon name="x" size={18} />
           </button>
         </div>
@@ -99,6 +95,6 @@ export default function QuickDetailDrawer({
         </div>
       </aside>
     </>,
-    document.body
+    document.body,
   );
 }

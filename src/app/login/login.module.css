@@ -5,7 +5,7 @@
 }
 .left {
   flex: 1;
-  background-image: url('/images/side-img.png');
+  background-image: url("/images/side-img.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -33,7 +33,7 @@
   max-width: 440px;
   padding: 44px;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
 }
 .cardTitle {
   font-size: 22px;
@@ -86,11 +86,13 @@
   font-family: inherit;
   color: #333;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .inputWrapper input:focus {
   border-color: #008489;
-  box-shadow: 0 0 0 3px rgba(0,132,137,0.1);
+  box-shadow: 0 0 0 3px rgba(0, 132, 137, 0.1);
 }
 .inputWrapper input::placeholder {
   color: #a0aec0;
@@ -174,7 +176,7 @@
 }
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   border-bottom: 1px solid #e2e8f0;
 }

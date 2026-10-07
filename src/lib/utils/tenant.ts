@@ -15,11 +15,15 @@ export interface TenantOption {
   code?: string;
   acronym?: string;
 }
-function sortMatrixFirst<T extends { type?: "Matriz" | "Filial"; name?: string; code?: string }>(items: T[]): T[] {
+function sortMatrixFirst<T extends { type?: "Matriz" | "Filial"; name?: string; code?: string }>(
+  items: T[],
+): T[] {
   return [...items].sort((a, b) => {
     if (a.type !== b.type) return a.type === "Matriz" ? -1 : 1;
-    return (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" }) ||
-      (a.code || "").localeCompare(b.code || "");
+    return (
+      (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" }) ||
+      (a.code || "").localeCompare(b.code || "")
+    );
   });
 }
 
@@ -28,7 +32,9 @@ function sortCompanyBranchesMatrixFirst(branches: CompanyBranchMapping[]): Compa
     const aIsMatrix = a.unitName.toLowerCase().includes("matriz") || a.code === "2313";
     const bIsMatrix = b.unitName.toLowerCase().includes("matriz") || b.code === "2313";
     if (aIsMatrix !== bIsMatrix) return aIsMatrix ? -1 : 1;
-    return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) || a.code.localeCompare(b.code);
+    return (
+      a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) || a.code.localeCompare(b.code)
+    );
   });
 }
 
@@ -47,16 +53,21 @@ export function getCompanyFilterOptions(): { label: string; value: string }[] {
 }
 
 export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
-  return sortMatrixFirst(COMPANY_BRANCHES.map((b) => ({
-    id: b.code,
-    name: `${b.name} (${b.acronym})`,
-    type: b.code === "2313" ? "Matriz" : "Filial",
-    code: b.code,
-    acronym: b.acronym,
-  })));
+  return sortMatrixFirst(
+    COMPANY_BRANCHES.map((b) => ({
+      id: b.code,
+      name: `${b.name} (${b.acronym})`,
+      type: b.code === "2313" ? "Matriz" : "Filial",
+      code: b.code,
+      acronym: b.acronym,
+    })),
+  );
 }
 
-export function getBranchCompanyOptions(_user?: User | null, selectedCompanyId?: string): TenantOption[] {
+export function getBranchCompanyOptions(
+  _user?: User | null,
+  selectedCompanyId?: string,
+): TenantOption[] {
   if (selectedCompanyId && selectedCompanyId !== "TODAS" && selectedCompanyId !== "2313") {
     return COMPANY_BRANCHES.filter((b) => b.code === selectedCompanyId).map((b) => ({
       id: b.code,
@@ -104,7 +115,7 @@ export function formatCorporateBranch(
   coligada?: string | number,
   filial?: string | number,
   tenantId?: string,
-  user?: User | null
+  user?: User | null,
 ): string {
   const filialStr = filial !== undefined && filial !== null ? String(filial).trim() : "";
   if (filialStr) {
@@ -127,7 +138,12 @@ export function formatCorporateBranch(
     return `Coligada ${coligada} / Filial ${filialStr}`;
   }
 
-  if (filialStr && !isUuid(filialStr) && filialStr.length >= 3 && !filialStr.toUpperCase().includes("VNMB")) {
+  if (
+    filialStr &&
+    !isUuid(filialStr) &&
+    filialStr.length >= 3 &&
+    !filialStr.toUpperCase().includes("VNMB")
+  ) {
     return filialStr;
   }
 
@@ -144,7 +160,7 @@ export function resolvePurchaseRequestBranch(
     tenantId?: string;
     notes?: string;
   } | null,
-  user?: User | null
+  user?: User | null,
 ): string {
   if (!pr) return formatCorporateBranch(undefined, undefined, undefined, user);
 
@@ -193,8 +209,6 @@ export function resolvePurchaseRequestBranch(
     pr.corporateColigada,
     pr.corporateFilial || pr.filialCode || pr.companyCode,
     pr.tenantId,
-    user
+    user,
   );
 }
-
-

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   isVnmbUser,
   getCompanyFilterOptions,
@@ -6,26 +6,26 @@ import {
   getBranchCompanyOptions,
   getTenantDisplayName,
   formatCorporateBranch,
-} from '@/utils';
+} from "@/utils";
 
-describe('Tenant Utilities', () => {
-  describe('isVnmbUser', () => {
-    it('deve retornar true por padrão', () => {
+describe("Tenant Utilities", () => {
+  describe("isVnmbUser", () => {
+    it("deve retornar true por padrão", () => {
       expect(isVnmbUser(null)).toBe(true);
     });
   });
 
-  describe('getCompanyFilterOptions', () => {
-    it('deve incluir a opção TODAS no início', () => {
+  describe("getCompanyFilterOptions", () => {
+    it("deve incluir a opção TODAS no início", () => {
       const options = getCompanyFilterOptions();
       expect(options.length).toBeGreaterThan(1);
       expect(options[0]).toEqual({
-        label: 'Unidade: Todas as Unidades',
-        value: 'TODAS',
+        label: "Unidade: Todas as Unidades",
+        value: "TODAS",
       });
     });
 
-    it('todas as opções devem conter label e value válidos', () => {
+    it("todas as opções devem conter label e value válidos", () => {
       const options = getCompanyFilterOptions();
       options.forEach((opt) => {
         expect(opt.label).toBeDefined();
@@ -34,68 +34,70 @@ describe('Tenant Utilities', () => {
     });
   });
 
-  describe('getPrimaryCompanyOptions', () => {
-    it('deve identificar a matriz pelo código 2313', () => {
+  describe("getPrimaryCompanyOptions", () => {
+    it("deve identificar a matriz pelo código 2313", () => {
       const options = getPrimaryCompanyOptions();
-      const matriz = options.find((opt) => opt.code === '2313');
+      const matriz = options.find((opt) => opt.code === "2313");
       expect(matriz).toBeDefined();
-      expect(matriz?.type).toBe('Matriz');
+      expect(matriz?.type).toBe("Matriz");
     });
 
-    it('as demais unidades devem ser filiais', () => {
+    it("as demais unidades devem ser filiais", () => {
       const options = getPrimaryCompanyOptions();
-      const filiais = options.filter((opt) => opt.code !== '2313');
+      const filiais = options.filter((opt) => opt.code !== "2313");
       expect(filiais.length).toBeGreaterThan(0);
       filiais.forEach((f) => {
-        expect(f.type).toBe('Filial');
+        expect(f.type).toBe("Filial");
       });
     });
   });
 
-  describe('getBranchCompanyOptions', () => {
-    it('deve filtrar pela empresa selecionada quando informada', () => {
-      const options = getBranchCompanyOptions(null, '01');
-      expect(options.every((opt) => opt.code === '01')).toBe(true);
+  describe("getBranchCompanyOptions", () => {
+    it("deve filtrar pela empresa selecionada quando informada", () => {
+      const options = getBranchCompanyOptions(null, "01");
+      expect(options.every((opt) => opt.code === "01")).toBe(true);
     });
 
-    it('não deve incluir a matriz quando sem seleção específica', () => {
+    it("não deve incluir a matriz quando sem seleção específica", () => {
       const options = getBranchCompanyOptions();
-      expect(options.some((opt) => opt.code === '2313')).toBe(false);
+      expect(options.some((opt) => opt.code === "2313")).toBe(false);
     });
   });
 
-  describe('getTenantDisplayName', () => {
-    it('deve retornar Todas as Unidades para tenant vazio ou TODAS', () => {
-      expect(getTenantDisplayName()).toBe('Todas as Unidades');
-      expect(getTenantDisplayName('TODAS')).toBe('Todas as Unidades');
+  describe("getTenantDisplayName", () => {
+    it("deve retornar Todas as Unidades para tenant vazio ou TODAS", () => {
+      expect(getTenantDisplayName()).toBe("Todas as Unidades");
+      expect(getTenantDisplayName("TODAS")).toBe("Todas as Unidades");
     });
 
-    it('deve retornar VB AGRO LTDA quando o ID contiver VNMB', () => {
-      expect(getTenantDisplayName('VNMB-HOLDING')).toBe('VB AGRO LTDA');
+    it("deve retornar VB AGRO LTDA quando o ID contiver VNMB", () => {
+      expect(getTenantDisplayName("VNMB-HOLDING")).toBe("VB AGRO LTDA");
     });
   });
 
-  describe('formatCorporateBranch', () => {
-    it('deve retornar fallback padrão quando nenhum parâmetro é passado', () => {
-      expect(formatCorporateBranch()).toBe('VB AGRO LTDA');
+  describe("formatCorporateBranch", () => {
+    it("deve retornar fallback padrão quando nenhum parâmetro é passado", () => {
+      expect(formatCorporateBranch()).toBe("VB AGRO LTDA");
     });
 
-    it('deve formatar coligada e filial quando não encontrar branch mapeado', () => {
-      expect(formatCorporateBranch(999, 888)).toBe('Coligada 999 / Filial 888');
+    it("deve formatar coligada e filial quando não encontrar branch mapeado", () => {
+      expect(formatCorporateBranch(999, 888)).toBe("Coligada 999 / Filial 888");
     });
 
-    it('deve formatar corretamente por código da filial', () => {
-      expect(formatCorporateBranch(undefined, '2345')).toBe('VB AGRO LTDA - Vargem Grande (VBA)');
+    it("deve formatar corretamente por código da filial", () => {
+      expect(formatCorporateBranch(undefined, "2345")).toBe("VB AGRO LTDA - Vargem Grande (VBA)");
     });
 
-    it('deve formatar corretamente por nome da unidade/filial sem acento', () => {
-      expect(formatCorporateBranch(undefined, 'Vargem Grande')).toBe('VB AGRO LTDA - Vargem Grande (VBA)');
-      expect(formatCorporateBranch(undefined, 'Juina')).toBe('VB AGRO LTDA - JUINA (VBJ)');
-      expect(formatCorporateBranch(undefined, 'Terenos')).toBe('VB AGRO LTDA - TERENOS (VMS)');
+    it("deve formatar corretamente por nome da unidade/filial sem acento", () => {
+      expect(formatCorporateBranch(undefined, "Vargem Grande")).toBe(
+        "VB AGRO LTDA - Vargem Grande (VBA)",
+      );
+      expect(formatCorporateBranch(undefined, "Juina")).toBe("VB AGRO LTDA - JUINA (VBJ)");
+      expect(formatCorporateBranch(undefined, "Terenos")).toBe("VB AGRO LTDA - TERENOS (VMS)");
     });
 
-    it('deve formatar corretamente por sigla da filial', () => {
-      expect(formatCorporateBranch(undefined, 'VBT')).toBe('VB AGRO LTDA - CASTANHEIRA (VBT)');
+    it("deve formatar corretamente por sigla da filial", () => {
+      expect(formatCorporateBranch(undefined, "VBT")).toBe("VB AGRO LTDA - CASTANHEIRA (VBT)");
     });
   });
 });

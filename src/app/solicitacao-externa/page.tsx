@@ -41,7 +41,9 @@ const PRIORIDADE_OPTIONS = [
   { label: "Planejada (Baixa) - sem urgência", value: "Baixa" },
 ];
 
-const BIZ_API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com").replace(/\/+$/, "");
+const BIZ_API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com"
+).replace(/\/+$/, "");
 function normalizeIdentityText(value?: string) {
   return (value || "")
     .normalize("NFD")
@@ -66,12 +68,12 @@ function resolveSetorFromIdentity(department?: string) {
   })?.value;
 }
 
-
 async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
   const trimmed = query.trim();
-  const endpoint = trimmed.length >= 2
-    ? `/api/items/public/search?q=${encodeURIComponent(trimmed)}`
-    : "/api/items/public";
+  const endpoint =
+    trimmed.length >= 2
+      ? `/api/items/public/search?q=${encodeURIComponent(trimmed)}`
+      : "/api/items/public";
 
   const response = await fetch(`${BIZ_API_URL}${endpoint}`);
   if (!response.ok) return [];
@@ -116,25 +118,31 @@ export default function SolicitacaoExternaPage() {
   const [identityApplied, setIdentityApplied] = useState(false);
   const searchRequestRef = useRef(0);
 
+  const applyIdentityData = useCallback(
+    (overwrite = false) => {
+      if (!user) return;
 
-  const applyIdentityData = useCallback((overwrite = false) => {
-    if (!user) return;
+      if (overwrite || !solicitanteNome.trim()) setSolicitanteNome(user.name || "");
+      if (overwrite || !solicitanteEmail.trim()) setSolicitanteEmail(user.email || "");
 
-    if (overwrite || !solicitanteNome.trim()) setSolicitanteNome(user.name || "");
-    if (overwrite || !solicitanteEmail.trim()) setSolicitanteEmail(user.email || "");
+      const setorFromIdentity = resolveSetorFromIdentity(user.department);
+      if (setorFromIdentity && (overwrite || setor === "Administracao")) {
+        setSetor(setorFromIdentity);
+      }
 
-    const setorFromIdentity = resolveSetorFromIdentity(user.department);
-    if (setorFromIdentity && (overwrite || setor === "Administracao")) {
-      setSetor(setorFromIdentity);
-    }
+      const branchFromIdentity =
+        findCompanyBranch(user.tenantId) || findCompanyBranch(user.tenantName);
+      if (
+        branchFromIdentity &&
+        (overwrite || empresaCode === (COMPANY_BRANCHES[0]?.code || "AGRO"))
+      ) {
+        setEmpresaCode(branchFromIdentity.code);
+      }
 
-    const branchFromIdentity = findCompanyBranch(user.tenantId) || findCompanyBranch(user.tenantName);
-    if (branchFromIdentity && (overwrite || empresaCode === (COMPANY_BRANCHES[0]?.code || "AGRO"))) {
-      setEmpresaCode(branchFromIdentity.code);
-    }
-
-    setIdentityApplied(true);
-  }, [empresaCode, setor, solicitanteEmail, solicitanteNome, user]);
+      setIdentityApplied(true);
+    },
+    [empresaCode, setor, solicitanteEmail, solicitanteNome, user],
+  );
 
   useEffect(() => {
     if (!user || identityApplied) return;
@@ -166,7 +174,14 @@ export default function SolicitacaoExternaPage() {
   const handleAddItem = () => {
     setItens((prev) => [
       ...prev,
-      { id: Date.now(), descricao: "", quantidade: 1, unidade: "UN", valorEstimado: 0, linkReferencia: "" },
+      {
+        id: Date.now(),
+        descricao: "",
+        quantidade: 1,
+        unidade: "UN",
+        valorEstimado: 0,
+        linkReferencia: "",
+      },
     ]);
   };
 
@@ -176,9 +191,7 @@ export default function SolicitacaoExternaPage() {
   };
 
   const handleUpdateItem = (id: number, field: keyof ItemDemanda, value: any) => {
-    setItens((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, [field]: value } : it))
-    );
+    setItens((prev) => prev.map((it) => (it.id === id ? { ...it, [field]: value } : it)));
   };
 
   const handleDescriptionChange = async (id: number, value: string) => {
@@ -235,7 +248,8 @@ export default function SolicitacaoExternaPage() {
     }
   };
   const handleSelectCatalogItem = (id: number, catalogItem: CatalogItem) => {
-    const fornecedorBase = catalogItem.lastSupplier?.tradeName || catalogItem.lastSupplier?.corporateName;
+    const fornecedorBase =
+      catalogItem.lastSupplier?.tradeName || catalogItem.lastSupplier?.corporateName;
     const lastPrice = catalogItem.lastUnitPrice ? Number(catalogItem.lastUnitPrice) : 0;
 
     setItens((prev) =>
@@ -249,8 +263,8 @@ export default function SolicitacaoExternaPage() {
               catalogItemId: catalogItem.id,
               fornecedorBase,
             }
-          : it
-      )
+          : it,
+      ),
     );
 
     setActiveSearchItemId(null);
@@ -258,7 +272,8 @@ export default function SolicitacaoExternaPage() {
     setLoadingSearchItemId(null);
   };
 
-  const selectedBranch = COMPANY_BRANCHES.find((b) => b.code === empresaCode) || COMPANY_BRANCHES[0];
+  const selectedBranch =
+    COMPANY_BRANCHES.find((b) => b.code === empresaCode) || COMPANY_BRANCHES[0];
   const branchName = selectedBranch?.name || "Empresa";
 
   const setorObj = SETOR_OPTIONS.find((s) => s.value === setor);
@@ -268,25 +283,45 @@ export default function SolicitacaoExternaPage() {
     e.preventDefault();
 
     if (!solicitanteNome.trim()) {
-      toast({ variant: "warning", title: "Nome obrigatório", message: "Informe quem está solicitando a compra." });
+      toast({
+        variant: "warning",
+        title: "Nome obrigatório",
+        message: "Informe quem está solicitando a compra.",
+      });
       return;
     }
     if (!solicitanteWhats.trim()) {
-      toast({ variant: "warning", title: "WhatsApp obrigatório", message: "Informe seu WhatsApp para atualizações da compra." });
+      toast({
+        variant: "warning",
+        title: "WhatsApp obrigatório",
+        message: "Informe seu WhatsApp para atualizações da compra.",
+      });
       return;
     }
     if (!solicitanteEmail.trim() || !solicitanteEmail.includes("@")) {
-      toast({ variant: "warning", title: "E-mail obrigatório", message: "Informe um e-mail válido para receber o protocolo e atualizações da compra." });
+      toast({
+        variant: "warning",
+        title: "E-mail obrigatório",
+        message: "Informe um e-mail válido para receber o protocolo e atualizações da compra.",
+      });
       return;
     }
     if (!titulo.trim()) {
-      toast({ variant: "warning", title: "Título obrigatório", message: "Dê um título resumido para a compra." });
+      toast({
+        variant: "warning",
+        title: "Título obrigatório",
+        message: "Dê um título resumido para a compra.",
+      });
       return;
     }
 
     const itemVazio = itens.some((i) => !i.descricao.trim());
     if (itemVazio) {
-      toast({ variant: "warning", title: "Item sem descrição", message: "Preencha o que precisa ser comprado em todos os itens." });
+      toast({
+        variant: "warning",
+        title: "Item sem descrição",
+        message: "Preencha o que precisa ser comprado em todos os itens.",
+      });
       return;
     }
 
@@ -307,7 +342,14 @@ export default function SolicitacaoExternaPage() {
         department: setorNomeFormatado,
         branchName: branchName,
         justification: justificativa.trim() || "Não informada",
-        priority: prioridade === "Critica" ? "Critical" : prioridade === "Alta" ? "High" : prioridade === "Baixa" ? "Low" : "Medium",
+        priority:
+          prioridade === "Critica"
+            ? "Critical"
+            : prioridade === "Alta"
+              ? "High"
+              : prioridade === "Baixa"
+                ? "Low"
+                : "Medium",
         items: itens.map((it) => ({
           description: it.linkReferencia?.trim()
             ? `${it.descricao.trim()} (Ref: ${it.linkReferencia.trim()})`
@@ -357,7 +399,7 @@ export default function SolicitacaoExternaPage() {
   const handleSendWhatsApp = () => {
     if (!protocoloGerado) return;
     const text = encodeURIComponent(
-      `Olá! Registrei a solicitação de compra *${protocoloGerado} - ${titulo}* para a unidade *${branchName}* com ${itens.length} item(ns). Poderiam verificar a cotação com os fornecedores no Compra+?`
+      `Olá! Registrei a solicitação de compra *${protocoloGerado} - ${titulo}* para a unidade *${branchName}* com ${itens.length} item(ns). Poderiam verificar a cotação com os fornecedores no Compra+?`,
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
@@ -367,7 +409,9 @@ export default function SolicitacaoExternaPage() {
     setTitulo("");
     setJustificativa("");
     setDataDesejada("");
-    setItens([{ id: 1, descricao: "", quantidade: 1, unidade: "UN", valorEstimado: 0, linkReferencia: "" }]);
+    setItens([
+      { id: 1, descricao: "", quantidade: 1, unidade: "UN", valorEstimado: 0, linkReferencia: "" },
+    ]);
   };
 
   if (protocoloGerado) {
@@ -390,7 +434,11 @@ export default function SolicitacaoExternaPage() {
             <h1 className={styles.successTitle}>Solicitação Enviada!</h1>
             <p className={styles.successSubtitle}>
               <span>Sua solicitação de compra foi registrada com sucesso.</span>
-              <span className={styles.extraText}> Nossa equipe irá receber sua demanda, validar o pedido e cotar com os melhores fornecedores.</span>
+              <span className={styles.extraText}>
+                {" "}
+                Nossa equipe irá receber sua demanda, validar o pedido e cotar com os melhores
+                fornecedores.
+              </span>
             </p>
 
             <div className={styles.protocolBox}>
@@ -418,7 +466,9 @@ export default function SolicitacaoExternaPage() {
               {totalEstimado > 0 && (
                 <div className={styles.summaryRowTotal}>
                   <span style={{ color: "#64748b" }}>Valor Estimado:</span>
-                  <strong style={{ color: "#007d79", fontSize: 14 }}>{formatCurrency(totalEstimado)}</strong>
+                  <strong style={{ color: "#007d79", fontSize: 14 }}>
+                    {formatCurrency(totalEstimado)}
+                  </strong>
                 </div>
               )}
             </div>
@@ -426,15 +476,24 @@ export default function SolicitacaoExternaPage() {
             <div className={styles.emailNotice}>
               <Icon name="mail-01" size={16} />
               <span>
-                Notificação enviada por e-mail para a equipe de compras e com cópia para <strong>{solicitanteEmail}</strong>.
+                Notificação enviada por e-mail para a equipe de compras e com cópia para{" "}
+                <strong>{solicitanteEmail}</strong>.
               </span>
             </div>
 
             <div className={styles.successActions}>
-              <button type="button" className={styles.btnSecondaryAction} onClick={handleCopyProtocol}>
+              <button
+                type="button"
+                className={styles.btnSecondaryAction}
+                onClick={handleCopyProtocol}
+              >
                 <Icon name="copy-01" size={16} /> Copiar Protocolo
               </button>
-              <button type="button" className={styles.btnSecondaryAction} onClick={handleSendWhatsApp}>
+              <button
+                type="button"
+                className={styles.btnSecondaryAction}
+                onClick={handleSendWhatsApp}
+              >
                 <Icon name="message-square-02" size={16} /> Compartilhar no WhatsApp
               </button>
               <button type="button" className={styles.btnSecondaryAction} onClick={handleReset}>
@@ -461,7 +520,12 @@ export default function SolicitacaoExternaPage() {
           <span className={styles.portalBadge}>Solicitação Externa</span>
         </div>
         <div className={styles.headerRight}>
-          <button type="button" className={styles.accountAction} onClick={handleIdentityAction} disabled={authLoading}>
+          <button
+            type="button"
+            className={styles.accountAction}
+            onClick={handleIdentityAction}
+            disabled={authLoading}
+          >
             <Icon name={user ? "user-check-01" : "login-01"} size={14} />
             {user ? "Usar meus dados" : "Possui conta?"}
           </button>
@@ -473,15 +537,20 @@ export default function SolicitacaoExternaPage() {
 
       <main className={styles.main}>
         <div className={styles.pageTitleArea}>
-          <h1>Solicitação Externa de Compras <span className={styles.extraText}>& Suprimentos</span></h1>
+          <h1>
+            Solicitação Externa de Compras <span className={styles.extraText}>& Suprimentos</span>
+          </h1>
           <p>
             <span>Envie sua necessidade de compra para cotação e aprovação corporativa.</span>
-            <span className={styles.extraText}> O pedido será processado pela equipe central de suprimentos com transparência e equalização de propostas.</span>
+            <span className={styles.extraText}>
+              {" "}
+              O pedido será processado pela equipe central de suprimentos com transparência e
+              equalização de propostas.
+            </span>
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
@@ -493,7 +562,8 @@ export default function SolicitacaoExternaPage() {
             <div className={styles.formGrid}>
               <div className={styles.formGroup}>
                 <label>
-                  Nome do Solicitante <span className={styles.extraText}>/ Responsável</span> <span className={styles.requiredAsterisk}>*</span>
+                  Nome do Solicitante <span className={styles.extraText}>/ Responsável</span>{" "}
+                  <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <input
                   type="text"
@@ -507,7 +577,8 @@ export default function SolicitacaoExternaPage() {
 
               <div className={styles.formGroup}>
                 <label>
-                  WhatsApp <span className={styles.extraText}>para Contato</span> <span className={styles.requiredAsterisk}>*</span>
+                  WhatsApp <span className={styles.extraText}>para Contato</span>{" "}
+                  <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <input
                   type="text"
@@ -521,7 +592,8 @@ export default function SolicitacaoExternaPage() {
 
               <div className={styles.formGroup}>
                 <label>
-                  E-mail <span className={styles.extraText}>Corporativo</span> <span className={styles.requiredAsterisk}>*</span>
+                  E-mail <span className={styles.extraText}>Corporativo</span>{" "}
+                  <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <input
                   type="email"
@@ -535,7 +607,8 @@ export default function SolicitacaoExternaPage() {
 
               <div className={styles.formGroup}>
                 <label>
-                  Área / Setor <span className={styles.extraText}>de Destino</span> <span className={styles.requiredAsterisk}>*</span>
+                  Área / Setor <span className={styles.extraText}>de Destino</span>{" "}
+                  <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <Select
                   options={SETOR_OPTIONS}
@@ -582,7 +655,8 @@ export default function SolicitacaoExternaPage() {
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>
-                  Justificativa <span className={styles.extraText}>/ Finalidade</span> <span className={styles.requiredAsterisk}>*</span>
+                  Justificativa <span className={styles.extraText}>/ Finalidade</span>{" "}
+                  <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <textarea
                   required
@@ -621,7 +695,9 @@ export default function SolicitacaoExternaPage() {
                 <div className={styles.sectionIcon}>
                   <Icon name="package" size={18} />
                 </div>
-                <h2>3. Itens <span className={styles.extraText}>detalhados</span> ({itens.length})</h2>
+                <h2>
+                  3. Itens <span className={styles.extraText}>detalhados</span> ({itens.length})
+                </h2>
               </div>
               <button type="button" className={styles.btnAddItem} onClick={handleAddItem}>
                 <Icon name="plus" size={14} /> Adicionar Item
@@ -648,7 +724,8 @@ export default function SolicitacaoExternaPage() {
                   <div className={styles.formGrid}>
                     <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                       <label>
-                        Descrição do Material ou Serviço <span className={styles.requiredAsterisk}>*</span>
+                        Descrição do Material ou Serviço{" "}
+                        <span className={styles.requiredAsterisk}>*</span>
                       </label>
                       <div className={styles.catalogAutocompleteWrapper}>
                         <input
@@ -661,7 +738,10 @@ export default function SolicitacaoExternaPage() {
                           onFocus={() => handleCatalogInputFocus(item.id, item.descricao)}
                         />
                         {loadingSearchItemId === item.id && (
-                          <span className={styles.catalogInputSpinner} aria-label="Buscando itens cadastrados" />
+                          <span
+                            className={styles.catalogInputSpinner}
+                            aria-label="Buscando itens cadastrados"
+                          />
                         )}
                         {activeSearchItemId === item.id && !loadingSearchItemId && (
                           <div className={styles.catalogSuggestions}>
@@ -676,16 +756,26 @@ export default function SolicitacaoExternaPage() {
                                   <span className={styles.catalogSuggestionMain}>
                                     <strong>{suggestion.description}</strong>
                                     <small>
-                                      {[suggestion.code, suggestion.category || "Geral", suggestion.unit].filter(Boolean).join(" • ")}
+                                      {[
+                                        suggestion.code,
+                                        suggestion.category || "Geral",
+                                        suggestion.unit,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(" • ")}
                                     </small>
                                   </span>
                                   {suggestion.lastUnitPrice && (
-                                    <span className={styles.catalogSuggestionPrice}>{formatCurrency(Number(suggestion.lastUnitPrice))}</span>
+                                    <span className={styles.catalogSuggestionPrice}>
+                                      {formatCurrency(Number(suggestion.lastUnitPrice))}
+                                    </span>
                                   )}
                                 </button>
                               ))
                             ) : (
-                              <div className={styles.catalogEmptySuggestion}>Nenhum item encontrado.</div>
+                              <div className={styles.catalogEmptySuggestion}>
+                                Nenhum item encontrado.
+                              </div>
                             )}
                           </div>
                         )}
@@ -693,7 +783,10 @@ export default function SolicitacaoExternaPage() {
                       {item.catalogItemId && (
                         <div className={styles.catalogSelectedNotice}>
                           <Icon name="check-circle" size={14} />
-                          <span>Item selecionado do catálogo{item.fornecedorBase ? ` com base em ${item.fornecedorBase}` : ""}.</span>
+                          <span>
+                            Item selecionado do catálogo
+                            {item.fornecedorBase ? ` com base em ${item.fornecedorBase}` : ""}.
+                          </span>
                         </div>
                       )}
                     </div>
@@ -709,7 +802,13 @@ export default function SolicitacaoExternaPage() {
                         required
                         className={styles.inputField}
                         value={item.quantidade}
-                        onChange={(e) => handleUpdateItem(item.id, "quantidade", Math.max(1, Number(e.target.value)))}
+                        onChange={(e) =>
+                          handleUpdateItem(
+                            item.id,
+                            "quantidade",
+                            Math.max(1, Number(e.target.value)),
+                          )
+                        }
                       />
                     </div>
 
@@ -724,7 +823,10 @@ export default function SolicitacaoExternaPage() {
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label>Preço Unitário Estimado <span className={styles.extraText}>(R$ - opcional)</span></label>
+                      <label>
+                        Preço Unitário Estimado{" "}
+                        <span className={styles.extraText}>(R$ - opcional)</span>
+                      </label>
                       <input
                         type="number"
                         min="0"
@@ -732,18 +834,29 @@ export default function SolicitacaoExternaPage() {
                         placeholder="0,00"
                         className={styles.inputField}
                         value={item.valorEstimado || ""}
-                        onChange={(e) => handleUpdateItem(item.id, "valorEstimado", parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleUpdateItem(
+                            item.id,
+                            "valorEstimado",
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
                       />
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label>Link de Referência <span className={styles.extraText}>/ Modelo (opcional)</span></label>
+                      <label>
+                        Link de Referência{" "}
+                        <span className={styles.extraText}>/ Modelo (opcional)</span>
+                      </label>
                       <input
                         type="url"
                         placeholder="https://mercadolivre.com.br/item/..."
                         className={styles.inputField}
                         value={item.linkReferencia || ""}
-                        onChange={(e) => handleUpdateItem(item.id, "linkReferencia", e.target.value)}
+                        onChange={(e) =>
+                          handleUpdateItem(item.id, "linkReferencia", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -754,7 +867,11 @@ export default function SolicitacaoExternaPage() {
             {totalEstimado > 0 && (
               <div className={styles.totalBar}>
                 <span className={styles.totalLabel}>
-                  Total estimado <span className={styles.extraText}>da solicitação ({itens.length} {itens.length === 1 ? "item" : "itens"})</span>:
+                  Total estimado{" "}
+                  <span className={styles.extraText}>
+                    da solicitação ({itens.length} {itens.length === 1 ? "item" : "itens"})
+                  </span>
+                  :
                 </span>
                 <strong className={styles.totalValue}>{formatCurrency(totalEstimado)}</strong>
               </div>

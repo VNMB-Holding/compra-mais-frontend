@@ -3,7 +3,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import styles from "./cotacao.module.css";
-import { Icon, Button, Loading, ErrorState, Skeleton, CardSkeleton, Badge, ConfirmDialog } from "@/components/ui";
+import {
+  Icon,
+  Button,
+  Loading,
+  ErrorState,
+  Skeleton,
+  CardSkeleton,
+  Badge,
+  ConfirmDialog,
+} from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
 import { rfqsApi, PublicRfq, PublicProposalPayload } from "@/lib/api/rfqs";
@@ -35,8 +44,8 @@ export default function CotacaoFornecedorPage() {
     if (!cleanCurrentCnpj) return false;
     return Boolean(
       rfq?.invitedSuppliers?.some(
-        (s) => s.id === paramSupId || (s.cnpj && s.cnpj.replace(/\D/g, "") === cleanCurrentCnpj)
-      )
+        (s) => s.id === paramSupId || (s.cnpj && s.cnpj.replace(/\D/g, "") === cleanCurrentCnpj),
+      ),
     );
   }, [paramSupId, paramFornecedor, paramCnpj, supplierCnpj, rfq?.invitedSuppliers]);
 
@@ -52,9 +61,9 @@ export default function CotacaoFornecedorPage() {
       }
     }
   }, [paramFornecedor, paramCnpj, paramSupId, rfq?.invitedSuppliers, supplierName, supplierCnpj]);
-  
+
   const [itemPrices, setItemPrices] = useState<Record<string, number>>({});
-  
+
   const [freightType, setFreightType] = useState<"CIF" | "FOB">("CIF");
   const [freightCost, setFreightCost] = useState<number>(0);
   const [paymentTerms, setPaymentTerms] = useState("30 dias DDL");
@@ -71,7 +80,9 @@ export default function CotacaoFornecedorPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [submitting, setSubmitting] = useState(false);
-  const [successData, setSuccessData] = useState<{ protocol: string; supplierName: string } | null>(null);
+  const [successData, setSuccessData] = useState<{ protocol: string; supplierName: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -199,7 +210,9 @@ export default function CotacaoFornecedorPage() {
       toast({
         variant: "error",
         title: "Erro no envio",
-        message: err.message || "Erro ao registrar proposta comercial. Verifique os dados e tente novamente.",
+        message:
+          err.message ||
+          "Erro ao registrar proposta comercial. Verifique os dados e tente novamente.",
       });
     } finally {
       setSubmitting(false);
@@ -229,7 +242,9 @@ export default function CotacaoFornecedorPage() {
       return;
     }
 
-    const unquotedItems = (rfq.items || []).filter((item) => !itemPrices[item.id] || itemPrices[item.id] <= 0);
+    const unquotedItems = (rfq.items || []).filter(
+      (item) => !itemPrices[item.id] || itemPrices[item.id] <= 0,
+    );
     if (unquotedItems.length > 0) {
       setConfirmZeroPriceOpen(true);
       return;
@@ -239,7 +254,6 @@ export default function CotacaoFornecedorPage() {
   };
 
   if (loading) {
-
     return (
       <div className={styles.portalContainer}>
         <header className={styles.portalHeader}>
@@ -294,11 +308,10 @@ export default function CotacaoFornecedorPage() {
             <p>
               Agradecemos a sua participação na cotação <strong>{rfq.code}</strong> ({rfq.title}).
             </p>
-            <div className={styles.protocolBadge}>
-              Protocolo: {successData.protocol}
-            </div>
+            <div className={styles.protocolBadge}>Protocolo: {successData.protocol}</div>
             <p style={{ fontSize: "0.875rem", color: "#64748b" }}>
-              Nossa equipe de suprimentos analisará as condições comerciais e entrará em contato assim que o processo for concluído.
+              Nossa equipe de suprimentos analisará as condições comerciais e entrará em contato
+              assim que o processo for concluído.
             </p>
           </div>
         </main>
@@ -307,12 +320,11 @@ export default function CotacaoFornecedorPage() {
   }
 
   const isClosedOrExpired = Boolean(
-    rfq && (
-      rfq.status === "Closed" ||
+    rfq &&
+    (rfq.status === "Closed" ||
       rfq.status === "Finished" ||
       rfq.status === "Cancelled" ||
-      (rfq.closesAt && new Date(rfq.closesAt).getTime() < Date.now())
-    )
+      (rfq.closesAt && new Date(rfq.closesAt).getTime() < Date.now())),
   );
 
   const closesDate = new Date(rfq.closesAt).toLocaleDateString("pt-BR", {
@@ -325,7 +337,6 @@ export default function CotacaoFornecedorPage() {
 
   return (
     <div className={styles.portalContainer}>
-      
       <header className={styles.portalHeader}>
         <div className={styles.brandArea}>
           <img src="/images/logo-compra-mais.svg" alt="Compra+" className={styles.logo} />
@@ -336,7 +347,6 @@ export default function CotacaoFornecedorPage() {
       </header>
 
       <main className={styles.portalMain}>
-        
         <div className={styles.pageHeader}>
           <div>
             <div className={styles.titleRow}>
@@ -355,9 +365,17 @@ export default function CotacaoFornecedorPage() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          
           <div className={styles.sectionCard}>
-            <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            <div
+              className={styles.sectionHeader}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Icon name="building-07" size={18} className={styles.sectionIcon} />
                 <h2>1. Identificação da Empresa Fornecedora</h2>
@@ -378,15 +396,29 @@ export default function CotacaoFornecedorPage() {
                 <div className={styles.registeredSupplierDetails}>
                   <div>
                     <div className={styles.registeredDataLabel}>Razão Social / Nome Fantasia</div>
-                    <div className={styles.registeredDataValue}>{supplierName || paramFornecedor || "Empresa Cadastrada"}</div>
+                    <div className={styles.registeredDataValue}>
+                      {supplierName || paramFornecedor || "Empresa Cadastrada"}
+                    </div>
                   </div>
                   <div>
                     <div className={styles.registeredDataLabel}>CNPJ</div>
-                    <div className={styles.registeredDataValue}>{supplierCnpj || paramCnpj || "Homologado"}</div>
+                    <div className={styles.registeredDataValue}>
+                      {supplierCnpj || paramCnpj || "Homologado"}
+                    </div>
                   </div>
                 </div>
-                <div style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                  <Icon name="check-circle" size={14} /> Sua empresa já está cadastrada no ecossistema Compra+. Não é necessário preencher dados de cadastro.
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "#166534",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: 4,
+                  }}
+                >
+                  <Icon name="check-circle" size={14} /> Sua empresa já está cadastrada no
+                  ecossistema Compra+. Não é necessário preencher dados de cadastro.
                 </div>
 
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e2e8f0" }}>
@@ -509,7 +541,9 @@ export default function CotacaoFornecedorPage() {
                       <tr key={item.id}>
                         <td>
                           <div className={styles.itemDesc}>
-                            <strong>{idx + 1}. {item.description}</strong>
+                            <strong>
+                              {idx + 1}. {item.description}
+                            </strong>
                             {item.notes && <span>Obs: {item.notes}</span>}
                           </div>
                         </td>
@@ -547,7 +581,11 @@ export default function CotacaoFornecedorPage() {
               </div>
               <div className={styles.summaryRow}>
                 <span>Frete ({freightType}):</span>
-                <strong>{freightType === "CIF" ? "Incluso (R$ 0,00)" : formatCurrency(Number(freightCost) || 0)}</strong>
+                <strong>
+                  {freightType === "CIF"
+                    ? "Incluso (R$ 0,00)"
+                    : formatCurrency(Number(freightCost) || 0)}
+                </strong>
               </div>
               <div className={styles.totalRow}>
                 <span>Valor Total da Proposta:</span>
@@ -635,7 +673,16 @@ export default function CotacaoFornecedorPage() {
           </div>
 
           <div className={styles.sectionCard}>
-            <div className={styles.sectionHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            <div
+              className={styles.sectionHeader}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Icon name="bank" size={20} className={styles.sectionIcon} />
                 <h2>4. Dados Bancários & Homologação</h2>
@@ -653,7 +700,12 @@ export default function CotacaoFornecedorPage() {
                 <div>
                   <strong>Informações Cadastrais e Bancárias Validadas</strong>
                   <p>
-                    Sua empresa já possui cadastro ativo e homologado no Compra+. Os dados bancários e tributários para faturamento e pagamento serão utilizados diretamente a partir do seu cadastro ativo. <strong>Nenhum documento ou comprovante bancário adicional é necessário.</strong>
+                    Sua empresa já possui cadastro ativo e homologado no Compra+. Os dados bancários
+                    e tributários para faturamento e pagamento serão utilizados diretamente a partir
+                    do seu cadastro ativo.{" "}
+                    <strong>
+                      Nenhum documento ou comprovante bancário adicional é necessário.
+                    </strong>
                   </p>
                 </div>
               </div>
@@ -662,7 +714,9 @@ export default function CotacaoFornecedorPage() {
                 <div className={styles.requiredNotice}>
                   <Icon name="info-circle" size={18} />
                   <span>
-                    <strong>Opcional na fase de cotação:</strong> Caso sua empresa seja declarada vencedora, estes dados serão solicitados para validação fiscal e emissão do Pedido de Compra.
+                    <strong>Opcional na fase de cotação:</strong> Caso sua empresa seja declarada
+                    vencedora, estes dados serão solicitados para validação fiscal e emissão do
+                    Pedido de Compra.
                   </span>
                 </div>
 
@@ -712,9 +766,10 @@ export default function CotacaoFornecedorPage() {
 
                 <div className={styles.formGroup} style={{ marginTop: "20px" }}>
                   <label>
-                    Imagem do Comprovante Bancário / Cartão da Conta <span className={styles.required}>*</span>
+                    Imagem do Comprovante Bancário / Cartão da Conta{" "}
+                    <span className={styles.required}>*</span>
                   </label>
-                  
+
                   {!bankDocumentPreview ? (
                     <div
                       className={styles.uploadDropzone}
@@ -751,7 +806,9 @@ export default function CotacaoFornecedorPage() {
                         className={styles.previewThumb}
                       />
                       <div className={styles.previewDetails}>
-                        <span className={styles.previewFileName}>{bankDocumentFileName || "comprovante-bancario.jpg"}</span>
+                        <span className={styles.previewFileName}>
+                          {bankDocumentFileName || "comprovante-bancario.jpg"}
+                        </span>
                         <span className={styles.previewStatus}>
                           <Icon name="check-circle" size={14} /> Imagem anexada com sucesso
                         </span>
@@ -788,7 +845,6 @@ export default function CotacaoFornecedorPage() {
               <Icon name="send-01" size={18} /> Enviar Proposta Comercial
             </Button>
           </div>
-
         </form>
       </main>
 

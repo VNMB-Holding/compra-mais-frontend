@@ -101,9 +101,6 @@
   padding: 10px 16px !important;
 }
 
-
-
-
 .coletaHeader {
   display: flex;
   align-items: center;
@@ -146,7 +143,9 @@
   outline: none;
   background: #ffffff;
   color: #0f172a;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .proposalSearchInput input:focus {
@@ -313,7 +312,9 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   overflow: hidden;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .propostaRecebida {
@@ -414,7 +415,10 @@
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
   white-space: nowrap;
 }
 
@@ -464,7 +468,9 @@
   transition: opacity 0.15s;
 }
 
-.btnRegistrar:hover { opacity: 0.9; }
+.btnRegistrar:hover {
+  opacity: 0.9;
+}
 
 .btnEditar {
   display: inline-flex;
@@ -683,9 +689,6 @@
   font-weight: 600;
   cursor: pointer;
 }
-
-
-
 
 .rfqMetricsGrid {
   display: grid;
@@ -936,9 +939,6 @@
   width: 100%;
 }
 
-
-
-
 .aprovacaoContainer {
   display: flex;
   flex-direction: column;
@@ -1172,4 +1172,3 @@
     flex: 1;
   }
 }
-

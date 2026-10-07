@@ -1,12 +1,15 @@
 # ADR 0001: Estrutura de Pastas e Padronização Arquitetural
 
 ## Status
+
 Aprovado
 
 ## Contexto
+
 O projeto `compra-mais-frontend` é uma aplicação corporativa crítica construída sobre Next.js (App Router), React 19, TypeScript e ecossistema moderno. Com o crescimento das funcionalidades (solicitações, RFQs, aprovações, fornecedores), a organização por camadas genéricas gerou arquivos com responsabilidade excessiva nas rotas (`app/`), acoplamento entre regras de negócio e fragmentação de componentes.
 
 ## Decisão
+
 Adotar a **Feature-Driven Architecture (Vertical Slices)** combinada a um **Shared Kernel** e convenções estritas de nomenclatura:
 
 1. **Nomenclatura**:
@@ -26,6 +29,7 @@ Adotar a **Feature-Driven Architecture (Vertical Slices)** combinada a um **Shar
    - Design system e componentes atômicos agnósticos a regras de negócio, consumidos via alias `@/components/ui`.
 
 ## Consequências
+
 - **Positivas**:
   - Isolamento de regras de negócio por domínio.
   - Facilidade de navegação e onboarding para novos desenvolvedores.

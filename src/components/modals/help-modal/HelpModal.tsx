@@ -5,13 +5,13 @@ import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import { Icon, Button } from "@/components/ui";
 import { useTour } from "@/hooks/useTour";
-import { 
-  dashboardTour, 
-  solicitacoesTour, 
-  rfqsTour, 
-  pedidosTour, 
+import {
+  dashboardTour,
+  solicitacoesTour,
+  rfqsTour,
+  pedidosTour,
   fornecedoresTour,
-  novaRfqTour 
+  novaRfqTour,
 } from "@/lib/tours";
 import styles from "./HelpModal.module.css";
 
@@ -24,43 +24,51 @@ const FAQ_ITEMS = [
   {
     category: "Processos de Compras",
     question: "Como cadastrar uma nova RFQ?",
-    answer: "Acesse 'RFQs / Cotações' no menu lateral de Compras, clique no botão 'Nova RFQ', preencha as especificações do produto/serviço desejado, defina os prazos e submeta a requisição para publicação aos fornecedores cadastrados."
+    answer:
+      "Acesse 'RFQs / Cotações' no menu lateral de Compras, clique no botão 'Nova RFQ', preencha as especificações do produto/serviço desejado, defina os prazos e submeta a requisição para publicação aos fornecedores cadastrados.",
   },
   {
     category: "Fornecedores",
     question: "Como realizar a homologação de um fornecedor?",
-    answer: "Vá para a seção 'Fornecedores > Homologação'. Selecione o fornecedor na lista de cadastros pendentes, revise os documentos enviados (CNPJ, Certidões, Contrato Social) e clique em 'Aprovar Cadastro' caso todas as exigências de compliance sejam atendidas."
+    answer:
+      "Vá para a seção 'Fornecedores > Homologação'. Selecione o fornecedor na lista de cadastros pendentes, revise os documentos enviados (CNPJ, Certidões, Contrato Social) e clique em 'Aprovar Cadastro' caso todas as exigências de compliance sejam atendidas.",
   },
   {
     category: "Processos de Compras",
     question: "Como iniciar uma nova cotação (RFQ)?",
-    answer: "Acesse o menu 'Cotações (RFQs)', clique no botão 'Nova RFQ' no canto superior direito e selecione a solicitação aprovada que deseja cotar. Em seguida, adicione os fornecedores participantes e defina o prazo de resposta."
+    answer:
+      "Acesse o menu 'Cotações (RFQs)', clique no botão 'Nova RFQ' no canto superior direito e selecione a solicitação aprovada que deseja cotar. Em seguida, adicione os fornecedores participantes e defina o prazo de resposta.",
   },
   {
     category: "Processos de Compras",
     question: "O que acontece após a aprovação de uma solicitação?",
-    answer: "Assim que uma solicitação atinge todas as alçadas de aprovação necessárias, ela passa para o status 'Pronta para Cotação'. A equipe de compras poderá então agrupá-la ou vinculá-la diretamente a uma nova RFQ."
+    answer:
+      "Assim que uma solicitação atinge todas as alçadas de aprovação necessárias, ela passa para o status 'Pronta para Cotação'. A equipe de compras poderá então agrupá-la ou vinculá-la diretamente a uma nova RFQ.",
   },
   {
     category: "Fornecedores",
     question: "Como convidar um fornecedor que ainda não está cadastrado?",
-    answer: "Durante a criação ou edição de uma RFQ, na etapa de seleção de fornecedores, clique no botão 'Convidar Não Cadastrado'. Informe o CNPJ, Razão Social e o e-mail de contato para enviar o link seguro de participação."
+    answer:
+      "Durante a criação ou edição de uma RFQ, na etapa de seleção de fornecedores, clique no botão 'Convidar Não Cadastrado'. Informe o CNPJ, Razão Social e o e-mail de contato para enviar o link seguro de participação.",
   },
   {
     category: "Fornecedores",
     question: "O que significa o Score de Risco no Diretório de Fornecedores?",
-    answer: "O Score de Risco (0 a 100) é calculado com base em conformidade cadastral (Receita Federal, certidões negativas), histórico de entregas anteriores e saúde financeira. Notas acima de 70 indicam baixo risco operacional."
+    answer:
+      "O Score de Risco (0 a 100) é calculado com base em conformidade cadastral (Receita Federal, certidões negativas), histórico de entregas anteriores e saúde financeira. Notas acima de 70 indicam baixo risco operacional.",
   },
   {
     category: "Pedidos & Pagamentos",
     question: "Como visualizar os comprovantes ou notas fiscais de um pedido?",
-    answer: "Na tela de detalhes do Pedido de Compra, acesse a aba 'Documentos & Anexos'. Você poderá baixar os arquivos PDF ou XML anexados pelo fornecedor ou pela equipe fiscal."
+    answer:
+      "Na tela de detalhes do Pedido de Compra, acesse a aba 'Documentos & Anexos'. Você poderá baixar os arquivos PDF ou XML anexados pelo fornecedor ou pela equipe fiscal.",
   },
   {
     category: "Conta & Acesso",
     question: "Como recuperar ou alterar minha senha de acesso?",
-    answer: "Se você estiver conectado, acesse 'Meu Perfil' pelo menu do usuário no canto superior direito e use a aba de configurações de segurança. Se não conseguir efetuar login, clique em 'Esqueci minha senha' na página de login do sistema."
-  }
+    answer:
+      "Se você estiver conectado, acesse 'Meu Perfil' pelo menu do usuário no canto superior direito e use a aba de configurações de segurança. Se não conseguir efetuar login, clique em 'Esqueci minha senha' na página de login do sistema.",
+  },
 ];
 
 export default function HelpModal({ open, onClose }: HelpModalProps) {
@@ -89,7 +97,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
   const filteredFAQs = FAQ_ITEMS.filter(
     (item) =>
       item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.answer.toLowerCase().includes(searchQuery.toLowerCase())
+      item.answer.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const AVAILABLE_TOURS = [
@@ -143,7 +151,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
     },
   ];
 
-  const handleLaunchTour = (item: typeof AVAILABLE_TOURS[0]) => {
+  const handleLaunchTour = (item: (typeof AVAILABLE_TOURS)[0]) => {
     onClose();
     resetTour(item.id);
     if (pathname === item.path) {
@@ -161,7 +169,6 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
   return createPortal(
     <div className={styles.modalOverlay} onClick={handleOverlayClick}>
       <div className={styles.modalBox}>
-        
         <div className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalIconWrap}>
@@ -180,7 +187,6 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
         </div>
 
         <div className={styles.modalBody}>
-          
           <div className={styles.toursSection}>
             <div className={styles.toursHeader}>
               <h3 className={styles.toursTitle}>
@@ -212,9 +218,14 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
           </div>
 
           <hr className={styles.sectionDivider} />
-          
+
           <div className={styles.supportGrid}>
-            <a href="https://wa.me/5511986055544?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20Compra%2B" target="_blank" rel="noopener noreferrer" className={styles.supportCard}>
+            <a
+              href="https://wa.me/5511986055544?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20Compra%2B"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.supportCard}
+            >
               <div className={styles.supportCardHeader}>
                 <div className={`${styles.supportIconWrap} ${styles.whatsappBg}`}>
                   <Icon name="message-square-02" className={styles.supportIcon} />
@@ -222,7 +233,9 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
                 <strong>WhatsApp Suporte</strong>
               </div>
               <p>Atendimento em tempo real das 08h às 18h.</p>
-              <span className={styles.cardAction}>Iniciar conversa <Icon name="arrow-right" size={14} /></span>
+              <span className={styles.cardAction}>
+                Iniciar conversa <Icon name="arrow-right" size={14} />
+              </span>
             </a>
 
             <a href="mailto:breno@vnmb.com.br" className={styles.supportCard}>
@@ -233,7 +246,9 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
                 <strong>E-mail de Suporte</strong>
               </div>
               <p>Envie sua dúvida e responderemos em até 2 horas.</p>
-              <span className={styles.cardAction}>Enviar e-mail <Icon name="arrow-right" size={14} /></span>
+              <span className={styles.cardAction}>
+                Enviar e-mail <Icon name="arrow-right" size={14} />
+              </span>
             </a>
           </div>
 
@@ -281,7 +296,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
                         className={styles.accordionCollapse}
                         style={{
                           maxHeight: isExpanded ? "200px" : "0",
-                          opacity: isExpanded ? 1 : 0
+                          opacity: isExpanded ? 1 : 0,
                         }}
                       >
                         <div className={styles.accordionContent}>
@@ -309,6 +324,6 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

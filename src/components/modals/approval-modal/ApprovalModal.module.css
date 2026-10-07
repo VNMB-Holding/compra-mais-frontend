@@ -134,7 +134,9 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
   white-space: nowrap;
 }
 .modalBtnSecondary:hover {

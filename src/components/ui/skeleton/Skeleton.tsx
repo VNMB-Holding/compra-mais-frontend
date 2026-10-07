@@ -24,12 +24,7 @@ export function Skeleton({
 
   const variantClass = styles[variant] || styles.text;
 
-  return (
-    <span
-      className={`${styles.skeleton} ${variantClass} ${className}`}
-      style={customStyle}
-    />
-  );
+  return <span className={`${styles.skeleton} ${variantClass} ${className}`} style={customStyle} />;
 }
 
 export interface TableSkeletonProps {
@@ -102,7 +97,12 @@ export function KpiCardSkeleton({ hasLink = false }: { hasLink?: boolean }) {
         position: "relative",
       }}
     >
-      <Skeleton variant="rectangular" width={32} height={32} style={{ borderRadius: 7, marginBottom: 8 }} />
+      <Skeleton
+        variant="rectangular"
+        width={32}
+        height={32}
+        style={{ borderRadius: 7, marginBottom: 8 }}
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 5, flexGrow: 1 }}>
         <Skeleton variant="text" width="55%" height={13} />
@@ -141,10 +141,7 @@ export function ChartSkeleton({
   const isDonut = type === "donut" || type === "pie";
 
   return (
-    <div
-      className={`${styles.chartCard} ${className}`}
-      style={{ height, ...style }}
-    >
+    <div className={`${styles.chartCard} ${className}`} style={{ height, ...style }}>
       {showHeader && (
         <div className={styles.chartHeader}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "60%" }}>
@@ -162,7 +159,12 @@ export function ChartSkeleton({
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className={styles.legendRow}>
                 <div className={styles.legendDot} />
-                <Skeleton variant="text" width={80 + (i % 2) * 30} height={12} style={{ margin: 0 }} />
+                <Skeleton
+                  variant="text"
+                  width={80 + (i % 2) * 30}
+                  height={12}
+                  style={{ margin: 0 }}
+                />
               </div>
             ))}
           </div>
@@ -174,10 +176,7 @@ export function ChartSkeleton({
               const barHeight = BAR_HEIGHTS[idx % BAR_HEIGHTS.length];
               return (
                 <div key={idx} className={styles.chartBarWrapper}>
-                  <div
-                    className={styles.chartBar}
-                    style={{ height: `${barHeight}%` }}
-                  />
+                  <div className={styles.chartBar} style={{ height: `${barHeight}%` }} />
                   <div className={`${styles.skeleton} ${styles.chartXLabel}`} />
                 </div>
               );
@@ -190,4 +189,3 @@ export function ChartSkeleton({
 }
 
 export default Skeleton;
-

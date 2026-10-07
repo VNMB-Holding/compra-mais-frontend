@@ -15,7 +15,7 @@ import {
   DateFilterValue,
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
-import { formatCurrency } from "@/lib/utils/format-display";
+import { formatCurrency, formatDateTimePtBr } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, EconomyAnalyticsResponse } from "@/lib/api/dashboard";
 import { getCompanyFilterOptions } from "@/lib/utils/tenant";
@@ -63,19 +63,25 @@ export default function EconomiaPage() {
 
   const [loading, setLoading] = useState(true);
   const [apiData, setApiData] = useState<EconomyAnalyticsResponse | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
-  const [filterOptions, setFilterOptions] = useState<{ categories: string[]; suppliers: string[] }>({
-    categories: [],
-    suppliers: [],
-  });
+  const [filterOptions, setFilterOptions] = useState<{ categories: string[]; suppliers: string[] }>(
+    {
+      categories: [],
+      suppliers: [],
+    },
+  );
 
   const companyOptions = getCompanyFilterOptions();
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   useEffect(() => {
-    dashboardApi.getFilterOptions(queryCompanyCode).then(setFilterOptions).catch((err) => {
-      logError("analytics/economia/filterOptions", err);
-    });
+    dashboardApi
+      .getFilterOptions(queryCompanyCode)
+      .then(setFilterOptions)
+      .catch((err) => {
+        logError("analytics/economia/filterOptions", err);
+      });
   }, [queryCompanyCode]);
 
   const fetchData = useCallback(async () => {
@@ -88,7 +94,7 @@ export default function EconomiaPage() {
           selectedSupplier,
           dateFilter.preset,
           dateFilter.startDate,
-          dateFilter.endDate
+          dateFilter.endDate,
         ),
         dashboardApi.getMonthlyEconomy(
           queryCompanyCode,
@@ -96,13 +102,15 @@ export default function EconomiaPage() {
           dateFilter.startDate,
           dateFilter.endDate,
           selectedCategory,
-          selectedSupplier
+          selectedSupplier,
         ),
       ]);
       setApiData({
         ...economyData,
-        monthlyEconomy: monthlyData && monthlyData.length > 0 ? monthlyData : economyData.monthlyEconomy,
+        monthlyEconomy:
+          monthlyData && monthlyData.length > 0 ? monthlyData : economyData.monthlyEconomy,
       });
+      setLastUpdatedAt(new Date());
     } catch (err) {
       logError("analytics/economia/fetchData", err);
     } finally {
@@ -118,15 +126,22 @@ export default function EconomiaPage() {
     setExportingType(type);
     try {
       const format = type === "XLS" ? "excel" : "pdf";
-      await dashboardApi.downloadReportFile("savings", format, queryCompanyCode, dateFilter.startDate, dateFilter.endDate, dateFilter.preset);
+      await dashboardApi.downloadReportFile(
+        "savings",
+        format,
+        queryCompanyCode,
+        dateFilter.startDate,
+        dateFilter.endDate,
+        dateFilter.preset,
+      );
       toast({
         variant: "success",
         title: "Download Concluído",
-        message: `O relatório de Economia & Savings foi exportado em ${type === "XLS" ? "Excel (.xlsx)" : "PDF (.pdf)"} com sucesso.`
+        message: `O relatório de Economia & Savings foi exportado em ${type === "XLS" ? "Excel (.xlsx)" : "PDF (.pdf)"} com sucesso.`,
       });
     } catch (err) {
       logError("analytics/economia/export", err);
-      
+
       try {
         const rows: string[][] = [
           ["Iniciativa / Detalhe", "Categoria", "Fornecedor", "Valor Economizado (R$)", "Data"],
@@ -139,11 +154,7 @@ export default function EconomiaPage() {
           ]),
           [],
           ["Categoria", "Valor Economizado (R$)", "% do Total de Savings"],
-          ...categoriesData.map((c) => [
-            c.categoria,
-            c.valor.toFixed(2),
-            `${c.pct}%`,
-          ]),
+          ...categoriesData.map((c) => [c.categoria, c.valor.toFixed(2), `${c.pct}%`]),
           [],
           ["Fornecedor", "Valor Economizado (R$)", "% do Total", "Itens Negociados"],
           ...suppliersData.map((s) => [
@@ -154,11 +165,16 @@ export default function EconomiaPage() {
           ]),
         ];
 
-        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
+        const csvContent =
+          "data:text/csv;charset=utf-8,\uFEFF" +
+          rows.map((row) => row.map((cell) => `"${cell}"`).join(";")).join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `relatorio_savings_economia_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute(
+          "download",
+          `relatorio_savings_economia_${new Date().toISOString().slice(0, 10)}.csv`,
+        );
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -166,13 +182,13 @@ export default function EconomiaPage() {
         toast({
           variant: "success",
           title: "Download Concluído",
-          message: "O relatório foi exportado em formato CSV."
+          message: "O relatório foi exportado em formato CSV.",
         });
       } catch {
         toast({
           variant: "error",
           title: "Erro na exportação",
-          message: "Não foi possível gerar o arquivo de exportação."
+          message: "Não foi possível gerar o arquivo de exportação.",
         });
       }
     } finally {
@@ -190,7 +206,7 @@ export default function EconomiaPage() {
       categoria: c.categoria,
       valor: c.valor,
       pct: Number(c.pct.toFixed(1)),
-      color: c.color || ['#007d79', '#00a39e', '#7c3aed', '#db2777', '#64748b'][idx % 5],
+      color: c.color || ["#007d79", "#00a39e", "#7c3aed", "#db2777", "#64748b"][idx % 5],
     }));
   }, [apiData]);
 
@@ -219,7 +235,10 @@ export default function EconomiaPage() {
     const catSum = categoriesData.reduce((s, c) => s + c.valor, 0);
     const initSum = initiativesData.reduce((s, i) => s + i.valor, 0);
     const suppSum = suppliersData.reduce((s, sup) => s + sup.valor, 0);
-    const itemsSum = suppliersData.reduce((s, sup) => s + (typeof sup.itens === "number" ? sup.itens : 0), 0);
+    const itemsSum = suppliersData.reduce(
+      (s, sup) => s + (typeof sup.itens === "number" ? sup.itens : 0),
+      0,
+    );
     const detailsSum = detailsData.reduce((s, d) => s + d.valor, 0);
 
     return {
@@ -235,9 +254,12 @@ export default function EconomiaPage() {
   const kpis = useMemo(() => {
     const rawGerada = apiData?.kpis?.economiaGerada;
     const baseGeradaNum = totals.economiaGerada > 0 ? totals.economiaGerada : 0;
-    const economiaGeradaDisplay = (rawGerada && rawGerada !== "R$ 0,00")
-      ? rawGerada
-      : (baseGeradaNum > 0 ? formatCurrency(baseGeradaNum) : "R$ 0,00");
+    const economiaGeradaDisplay =
+      rawGerada && rawGerada !== "R$ 0,00"
+        ? rawGerada
+        : baseGeradaNum > 0
+          ? formatCurrency(baseGeradaNum)
+          : "R$ 0,00";
 
     const rawPotencial = apiData?.kpis?.economiaPotencial;
     let economiaPotencialDisplay: string;
@@ -251,7 +273,10 @@ export default function EconomiaPage() {
 
     return {
       economiaGerada: economiaGeradaDisplay,
-      economiaPct: apiData?.kpis?.economiaPct && apiData.kpis.economiaPct !== "0,0%" ? apiData.kpis.economiaPct : "12,4%",
+      economiaPct:
+        apiData?.kpis?.economiaPct && apiData.kpis.economiaPct !== "0,0%"
+          ? apiData.kpis.economiaPct
+          : "12,4%",
       economiaPotencial: economiaPotencialDisplay,
       negociacoesCount: apiData?.kpis?.negociacoesCount || String(suppliersData.length || 0),
       trendEconomia: "Economia efetiva sobre compras negociadas",
@@ -261,21 +286,27 @@ export default function EconomiaPage() {
     };
   }, [apiData, totals.economiaGerada, suppliersData.length]);
 
-  const categoryOptions = useMemo(() => [
-    { value: "all", label: "Todas as Categorias" },
-    ...filterOptions.categories.map((cat) => ({
-      value: cat,
-      label: cat,
-    })),
-  ], [filterOptions.categories]);
+  const categoryOptions = useMemo(
+    () => [
+      { value: "all", label: "Todas as Categorias" },
+      ...filterOptions.categories.map((cat) => ({
+        value: cat,
+        label: cat,
+      })),
+    ],
+    [filterOptions.categories],
+  );
 
-  const supplierOptions = useMemo(() => [
-    { value: "all", label: "Todos os Fornecedores" },
-    ...filterOptions.suppliers.map((sup) => ({
-      value: sup,
-      label: sup,
-    })),
-  ], [filterOptions.suppliers]);
+  const supplierOptions = useMemo(
+    () => [
+      { value: "all", label: "Todos os Fornecedores" },
+      ...filterOptions.suppliers.map((sup) => ({
+        value: sup,
+        label: sup,
+      })),
+    ],
+    [filterOptions.suppliers],
+  );
 
   const handleClearFilters = () => {
     setDateFilter({ mode: "all", preset: "all" });
@@ -285,21 +316,27 @@ export default function EconomiaPage() {
     toast({
       variant: "info",
       title: "Filtros Limpos",
-      message: "Todas as seleções foram reiniciadas para os valores padrão."
+      message: "Todas as seleções foram reiniciadas para os valores padrão.",
     });
   };
 
   return (
     <div className={styles.container}>
       {exportingType && (
-        <Loading variant="fullscreen" message={`Gerando relatório de Savings (${exportingType})...`} />
+        <Loading
+          variant="fullscreen"
+          message={`Gerando relatório de Savings (${exportingType})...`}
+        />
       )}
 
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <div className={styles.titleText}>
             <h1>Análise de Economia & Savings</h1>
-            <p>Acompanhe a eficiência das negociações, metas de savings e valor gerado para o negócio.</p>
+            <p>
+              Acompanhe a eficiência das negociações, metas de savings e valor gerado para o
+              negócio.
+            </p>
           </div>
         </div>
         <div className={styles.headerActions}>
@@ -309,10 +346,7 @@ export default function EconomiaPage() {
 
       <div className={styles.filterRow}>
         <div className={styles.filterInput}>
-          <CalendarFilter
-            value={dateFilter}
-            onChange={setDateFilter}
-          />
+          <CalendarFilter value={dateFilter} onChange={setDateFilter} />
         </div>
 
         <div className={styles.filterInput}>
@@ -340,10 +374,7 @@ export default function EconomiaPage() {
           />
         </div>
 
-        <button 
-          className={styles.clearButton} 
-          onClick={handleClearFilters}
-        >
+        <button className={styles.clearButton} onClick={handleClearFilters}>
           <Icon name="refresh-ccw-01" size={16} /> Limpar filtros
         </button>
       </div>
@@ -352,7 +383,10 @@ export default function EconomiaPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Economia realizada (Saving)</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#e6f7ed", color: "#16a34a" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#e6f7ed", color: "#16a34a" }}
+            >
               <span style={{ fontWeight: "bold" }}>$</span>
             </div>
           </div>
@@ -368,7 +402,10 @@ export default function EconomiaPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>% Médio de economia</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#e0f2fe", color: "#0284c7" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#e0f2fe", color: "#0284c7" }}
+            >
               <span style={{ fontWeight: "bold" }}>%</span>
             </div>
           </div>
@@ -383,14 +420,19 @@ export default function EconomiaPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Economia potencial projetada</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#f0fdf4", color: "#15803d" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#f0fdf4", color: "#15803d" }}
+            >
               <Icon name="target-05" size={16} />
             </div>
           </div>
           <div>
             <h3 className={styles.kpiValue}>{kpis.economiaPotencial}</h3>
             <div className={styles.kpiTrend}>
-              <span className={styles.trendGreen} style={{ color: "#00a39e" }}>{kpis.trendPotencial}</span>
+              <span className={styles.trendGreen} style={{ color: "#00a39e" }}>
+                {kpis.trendPotencial}
+              </span>
             </div>
           </div>
         </div>
@@ -398,7 +440,10 @@ export default function EconomiaPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Negociações realizadas</span>
-            <div className={styles.kpiIconBox} style={{ backgroundColor: "#f8fafc", color: "#475569" }}>
+            <div
+              className={styles.kpiIconBox}
+              style={{ backgroundColor: "#f8fafc", color: "#475569" }}
+            >
               <Icon name="hand" size={16} />
             </div>
           </div>
@@ -424,12 +469,7 @@ export default function EconomiaPage() {
               </div>
             </div>
             <div className={styles.chartWrapper}>
-              <AreaChart
-                data={monthlyEconomyData}
-                color="#007d79"
-                label1="Economia"
-                height={260}
-              />
+              <AreaChart data={monthlyEconomyData} color="#007d79" label1="Economia" height={260} />
             </div>
           </div>
         )}
@@ -447,10 +487,10 @@ export default function EconomiaPage() {
             <div className={styles.donutRow}>
               <div className={styles.donutBox}>
                 <PieChart
-                  data={categoriesData.map(c => ({
+                  data={categoriesData.map((c) => ({
                     name: c.categoria,
                     value: c.pct,
-                    color: c.color
+                    color: c.color,
                   }))}
                 />
               </div>
@@ -458,7 +498,9 @@ export default function EconomiaPage() {
                 {categoriesData.map((item, index) => (
                   <div key={index} className={styles.legendItem}>
                     <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
-                    <span className={styles.legendName} title={item.categoria}>{item.categoria}</span>
+                    <span className={styles.legendName} title={item.categoria}>
+                      {item.categoria}
+                    </span>
                     <span className={styles.legendValue}>{formatCurrency(item.valor)}</span>
                     <span className={styles.legendPct}>{item.pct.toFixed(1)}%</span>
                   </div>
@@ -485,7 +527,9 @@ export default function EconomiaPage() {
           <div className={styles.initiativeList}>
             {initiativesData.map((init, idx) => (
               <div key={idx} className={styles.initiativeRow}>
-                <span className={styles.initiativeName} title={init.iniciativa}>{init.iniciativa}</span>
+                <span className={styles.initiativeName} title={init.iniciativa}>
+                  {init.iniciativa}
+                </span>
                 <div className={styles.progressBarBg}>
                   <div className={styles.progressBarFill} style={{ width: `${init.pct}%` }} />
                 </div>
@@ -591,7 +635,11 @@ export default function EconomiaPage() {
 
       <div className={styles.footerRow}>
         <Icon name="refresh-ccw-01" size={14} />
-        <span>Dados atualizados em 02/06/2025 às 08:30</span>
+        <span>
+          {lastUpdatedAt
+            ? `Dados atualizados em ${formatDateTimePtBr(lastUpdatedAt)}`
+            : "Aguardando atualiza��o dos dados"}
+        </span>
       </div>
     </div>
   );

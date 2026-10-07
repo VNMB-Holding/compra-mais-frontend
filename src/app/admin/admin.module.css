@@ -139,8 +139,12 @@
   vertical-align: middle;
 }
 
-.table tr:last-child td { border-bottom: 0; }
-.table tbody tr:hover td { background: #f8fafc; }
+.table tr:last-child td {
+  border-bottom: 0;
+}
+.table tbody tr:hover td {
+  background: #f8fafc;
+}
 
 .cellPrimary {
   color: #0f172a;
@@ -159,7 +163,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
 }
 
 .iconBtn:hover,
@@ -268,8 +275,13 @@
   padding: 0 11px;
 }
 
-.select { min-width: 220px; }
-.simulatorInput { width: 150px; font-weight: 600; }
+.select {
+  min-width: 220px;
+}
+.simulatorInput {
+  width: 150px;
+  font-weight: 600;
+}
 
 .input:focus,
 .select:focus,
@@ -408,7 +420,10 @@
   font-weight: 600;
 }
 
-.flowPillArrow { color: #94a3b8; font-size: 12px; }
+.flowPillArrow {
+  color: #94a3b8;
+  font-size: 12px;
+}
 
 .flowBody {
   padding: 16px;
@@ -429,8 +444,14 @@
   font-weight: 700;
 }
 
-.flowStartNode { background: #f1f5f9; color: #334155; }
-.flowEndNode { background: #ecfdf5; color: #047857; }
+.flowStartNode {
+  background: #f1f5f9;
+  color: #334155;
+}
+.flowEndNode {
+  background: #ecfdf5;
+  color: #047857;
+}
 
 .flowArrowContainer {
   display: none;
@@ -490,7 +511,10 @@
   color: #007d79;
 }
 
-.addStepBtnRow { display: flex; justify-content: flex-start; }
+.addStepBtnRow {
+  display: flex;
+  justify-content: flex-start;
+}
 
 .addStepBtn,
 .addRangeCard {
@@ -501,7 +525,9 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 700;
-  transition: background 0.16s ease, border-color 0.16s ease;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .addStepBtn {
@@ -532,7 +558,9 @@
   background: #ffffff;
 }
 
-.addRangeText { color: #007d79; }
+.addRangeText {
+  color: #007d79;
+}
 
 .saveBar {
   position: sticky;
@@ -596,8 +624,14 @@
   gap: 12px;
 }
 
-.modalHeader { border-bottom: 1px solid #e2e8f0; }
-.modalFooter { border-top: 1px solid #e2e8f0; background: #f8fafc; justify-content: flex-end; }
+.modalHeader {
+  border-bottom: 1px solid #e2e8f0;
+}
+.modalFooter {
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  justify-content: flex-end;
+}
 
 .modalHeader h3 {
   margin: 0;
@@ -638,41 +672,84 @@
 }
 
 @media (max-width: 1100px) {
-  .workflowToolbar { grid-template-columns: 1fr; }
-  .statsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workflowToolbar {
+    grid-template-columns: 1fr;
+  }
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
-  .container { gap: 14px; }
-  .header { align-items: stretch; }
+  .container {
+    gap: 14px;
+  }
+  .header {
+    align-items: stretch;
+  }
   .headerActions,
-  .headerActions button { width: 100%; justify-content: center; }
-  .statsGrid { grid-template-columns: 1fr; }
+  .headerActions button {
+    width: 100%;
+    justify-content: center;
+  }
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
   .filterBar,
   .workflowToolbar .filterGroup,
   .simulatorBox,
-  .saveBar { align-items: stretch; flex-direction: column; }
+  .saveBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .select,
   .simulatorInput,
-  .filterGroup > * { width: 100%; min-width: 0; }
-  .flowTypeToggle { grid-template-columns: 1fr; }
+  .filterGroup > * {
+    width: 100%;
+    min-width: 0;
+  }
+  .flowTypeToggle {
+    grid-template-columns: 1fr;
+  }
   .rangeCardHeader,
   .tableHeader,
   .stepCard,
-  .saveBar { grid-template-columns: 1fr; align-items: stretch; }
+  .saveBar {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
   .rangeActions,
   .stepControls,
-  .saveBarActions { justify-content: flex-end; flex-wrap: wrap; }
-  .formRow { grid-template-columns: 1fr; }
-  .table { min-width: 760px; }
-  .tableCard { overflow-x: auto; }
+  .saveBarActions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  .table {
+    min-width: 760px;
+  }
+  .tableCard {
+    overflow-x: auto;
+  }
 }
 
 @media (max-width: 480px) {
-  .titleSection h1 { font-size: 19px; }
+  .titleSection h1 {
+    font-size: 19px;
+  }
   .workflowCanvas,
   .workflowToolbar,
-  .tableHeader { padding-left: 14px; padding-right: 14px; }
-  .flowSequencePills { padding-left: 14px; padding-right: 14px; }
-  .modalBackdrop { padding: 10px; }
+  .tableHeader {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .flowSequencePills {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .modalBackdrop {
+    padding: 10px;
+  }
 }

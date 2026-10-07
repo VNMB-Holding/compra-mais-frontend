@@ -11,7 +11,6 @@
   gap: 8px;
   width: 100%;
   min-height: 36px;
-  height: 36px;
   padding: 0 10px;
   background-color: #ffffff;
   border: 1px solid var(--border, #cbd5e1);
@@ -37,6 +36,7 @@
 .triggerLeft {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -96,13 +96,15 @@
   background-color: var(--bg-card, #ffffff);
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-width: 320px;
-  max-width: 95vw;
+  width: min(360px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
   animation: fadeIn 0.15s ease-out;
 }
 @keyframes fadeIn {
@@ -275,6 +277,10 @@
   margin-top: 4px;
 }
 .selectedSummary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.75rem;
   color: var(--text-secondary, #64748b);
   font-weight: 500;
@@ -311,4 +317,83 @@
 }
 .btnApply:hover {
   background-color: #00605d;
+}
+
+@media (max-width: 480px) {
+  .triggerButton {
+    min-height: 40px;
+    padding: 0 12px;
+  }
+
+  .triggerLabel {
+    font-size: 12.5px;
+  }
+
+  .popover {
+    position: fixed;
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+    max-height: min(560px, calc(100dvh - 24px));
+    padding: 14px;
+    gap: 12px;
+    overflow-y: auto;
+    border-radius: 10px;
+  }
+
+  .presetsContainer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .presetBadge {
+    min-height: 34px;
+    padding: 6px 8px;
+    white-space: normal;
+  }
+
+  .calendarNav {
+    padding: 0;
+  }
+
+  .monthLabel {
+    font-size: 0.8125rem;
+  }
+
+  .calendarGrid {
+    gap: 1px;
+  }
+
+  .weekHeader {
+    font-size: 0.6875rem;
+    padding: 4px 0;
+  }
+
+  .dayCell {
+    min-height: 34px;
+    font-size: 0.75rem;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .selectedSummary {
+    text-align: center;
+  }
+
+  .footerActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .btnClean,
+  .btnApply {
+    min-height: 36px;
+  }
 }

@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
@@ -47,13 +41,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
       return id;
     },
-    [dismiss]
+    [dismiss],
   );
 
   return (
-    <ToastContext.Provider value={{ toasts, toast, dismiss }}>
-      {children}
-    </ToastContext.Provider>
+    <ToastContext.Provider value={{ toasts, toast, dismiss }}>{children}</ToastContext.Provider>
   );
 }
 

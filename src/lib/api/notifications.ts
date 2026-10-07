@@ -1,10 +1,10 @@
-import { apiClient } from '../api-client';
+import { apiClient } from "../api-client";
 
 export interface NotificationItem {
   id: string;
   title: string;
   desc: string;
-  type: 'rfq' | 'approval' | 'order' | 'info';
+  type: "rfq" | "approval" | "order" | "info";
   actionUrl?: string;
   read: boolean;
   createdAt: string;
@@ -18,7 +18,7 @@ export interface NotificationsResponse {
 export const notificationsApi = {
   async list(): Promise<NotificationsResponse> {
     try {
-      return await apiClient.get<NotificationsResponse>('/api/notifications');
+      return await apiClient.get<NotificationsResponse>("/api/notifications");
     } catch {
       return { items: [], unreadCount: 0 };
     }
@@ -35,7 +35,7 @@ export const notificationsApi = {
 
   async markAllAsRead(): Promise<boolean> {
     try {
-      await apiClient.post('/api/notifications/read-all');
+      await apiClient.post("/api/notifications/read-all");
       return true;
     } catch {
       return false;
@@ -43,4 +43,4 @@ export const notificationsApi = {
   },
 };
 
-export { resolveNotificationUrl } from '../utils/notifications';
+export { resolveNotificationUrl } from "../utils/notifications";

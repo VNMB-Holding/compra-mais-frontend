@@ -9,7 +9,16 @@ export interface PurchaseRequest {
   requesterName?: string;
   notes?: string;
   estimatedBudget: number;
-  status: "Draft" | "AwaitingApproval" | "Approved" | "Rejected" | "InQuote" | "Finished" | "Pending" | "UnderAnalysis" | "Cancelled";
+  status:
+    | "Draft"
+    | "AwaitingApproval"
+    | "Approved"
+    | "Rejected"
+    | "InQuote"
+    | "Finished"
+    | "Pending"
+    | "UnderAnalysis"
+    | "Cancelled";
   companyCode?: string;
   filialCode?: string;
   corporateCode?: string;
@@ -77,7 +86,7 @@ export interface PurchaseRequestListParams {
 export const purchaseRequestsApi = {
   list: (paramsOrTenant?: string | PurchaseRequestListParams) => {
     const params = new URLSearchParams();
-    if (typeof paramsOrTenant === 'string') {
+    if (typeof paramsOrTenant === "string") {
       const validTenant = cleanTenantParam(paramsOrTenant);
       if (validTenant) params.append("companyCode", validTenant);
     } else if (paramsOrTenant) {
@@ -92,7 +101,7 @@ export const purchaseRequestsApi = {
       if (search) params.append("search", search);
     }
     const qs = params.toString();
-    return apiClient.get<PurchaseRequest[]>(`/api/purchase-requests${qs ? `?${qs}` : ''}`);
+    return apiClient.get<PurchaseRequest[]>(`/api/purchase-requests${qs ? `?${qs}` : ""}`);
   },
 
   getById: (id: string) => apiClient.get<PurchaseRequest>(`/api/purchase-requests/${id}`),
@@ -102,17 +111,27 @@ export const purchaseRequestsApi = {
     const params = new URLSearchParams();
     if (validTenant) params.append("companyCode", validTenant);
     const qs = params.toString();
-    return apiClient.get<PurchaseRequestKpis>(`/api/purchase-requests/kpis${qs ? `?${qs}` : ''}`);
+    return apiClient.get<PurchaseRequestKpis>(`/api/purchase-requests/kpis${qs ? `?${qs}` : ""}`);
   },
 
-  create: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
-    apiClient.post<PurchaseRequest>("/api/purchase-requests", data),
+  create: (
+    data: Omit<Partial<PurchaseRequest>, "items"> & {
+      items?: Partial<Omit<RequestItem, "id" | "requestId">>[];
+    },
+  ) => apiClient.post<PurchaseRequest>("/api/purchase-requests", data),
 
-  update: (id: string, data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
-    apiClient.put<PurchaseRequest>(`/api/purchase-requests/${id}`, data),
+  update: (
+    id: string,
+    data: Omit<Partial<PurchaseRequest>, "items"> & {
+      items?: Partial<Omit<RequestItem, "id" | "requestId">>[];
+    },
+  ) => apiClient.put<PurchaseRequest>(`/api/purchase-requests/${id}`, data),
 
-  createPublic: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
-    apiClient.post<PurchaseRequest>("/api/purchase-requests/public", data),
+  createPublic: (
+    data: Omit<Partial<PurchaseRequest>, "items"> & {
+      items?: Partial<Omit<RequestItem, "id" | "requestId">>[];
+    },
+  ) => apiClient.post<PurchaseRequest>("/api/purchase-requests/public", data),
 
   updateStatus: (id: string, status: PurchaseRequest["status"], comments?: string) =>
     apiClient.patch<PurchaseRequest>(`/api/purchase-requests/${id}/status`, { status, comments }),

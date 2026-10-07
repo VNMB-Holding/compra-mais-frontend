@@ -32,7 +32,7 @@ export async function loginApi(email: string, password: string): Promise<Identit
       password,
       client_id: "compra-mais",
     },
-    { auth: true }
+    { auth: true },
   );
 }
 
@@ -68,17 +68,15 @@ export async function getTenantsApi(): Promise<IdentityTenant[]> {
 }
 
 export async function logoutApi(refreshToken: string): Promise<void> {
-  return apiClient.post<void>(
-    "/api/auth/logout",
-    { refresh_token: refreshToken },
-    { auth: true }
-  );
+  return apiClient.post<void>("/api/auth/logout", { refresh_token: refreshToken }, { auth: true });
 }
 
-export async function refreshTokenApi(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+export async function refreshTokenApi(
+  refreshToken: string,
+): Promise<{ access_token: string; refresh_token: string }> {
   return apiClient.post<{ access_token: string; refresh_token: string }>(
     "/api/auth/refresh",
     { refresh_token: refreshToken },
-    { auth: true }
+    { auth: true },
   );
 }

@@ -10,7 +10,9 @@
   background: white;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.05),
+    0 8px 10px -6px rgba(0, 0, 0, 0.02);
   padding: 40px 32px;
   max-width: 480px;
   width: 100%;

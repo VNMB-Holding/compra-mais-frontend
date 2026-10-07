@@ -2,28 +2,39 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Button, 
-  Card, 
-  Icon, 
-  Select, 
-  TableSkeleton, 
-  Badge, 
-  ErrorState, 
+import {
+  Button,
+  Card,
+  Icon,
+  Select,
+  TableSkeleton,
+  Badge,
+  ErrorState,
   EmptyState,
   QuickDetailDrawer,
   DataTable,
   ColumnDef,
-  KpiCard
+  KpiCard,
 } from "@/components/ui";
 import styles from "./solicitacoes.module.css";
-import { purchaseRequestsApi, PurchaseRequest, PurchaseRequestKpis } from "@/lib/api/purchase-requests";
+import {
+  purchaseRequestsApi,
+  PurchaseRequest,
+  PurchaseRequestKpis,
+} from "@/lib/api/purchase-requests";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCompanyFilterOptions, formatCorporateBranch, resolvePurchaseRequestBranch } from "@/lib/utils/tenant";
+import {
+  getCompanyFilterOptions,
+  formatCorporateBranch,
+  resolvePurchaseRequestBranch,
+} from "@/lib/utils/tenant";
 
-import { PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
+import {
+  PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP,
+  getStatusBadgeVariant,
+} from "@/lib/constants/status";
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { usePurchaseRequests } from "@/hooks/useQueries";
 import { useTour } from "@/hooks/useTour";
@@ -43,7 +54,10 @@ interface SolicitationCorporateRow {
   statusRaw: string;
 }
 
-function mapToCorporateRow(pr: PurchaseRequest, currentUser?: User | null): SolicitationCorporateRow {
+function mapToCorporateRow(
+  pr: PurchaseRequest,
+  currentUser?: User | null,
+): SolicitationCorporateRow {
   const empresaFilial = resolvePurchaseRequestBranch(pr, currentUser);
 
   const codigo = pr.corporateCode ? `#${pr.corporateCode}` : pr.code || "";
@@ -52,7 +66,8 @@ function mapToCorporateRow(pr: PurchaseRequest, currentUser?: User | null): Soli
     ? `${pr.costCenterCode} — ${pr.costCenterName || ""}`
     : pr.costCenterName || "Geral";
   const localEstoque = pr.corporateStockLocation || "Almoxarifado Geral";
-  const solicitante = pr.corporateRequester || pr.requesterName || formatUserDisplayName(pr.requesterId, currentUser);
+  const solicitante =
+    pr.corporateRequester || pr.requesterName || formatUserDisplayName(pr.requesterId, currentUser);
   const data = new Date(pr.createdAt).toLocaleDateString("pt-BR");
   const status = STATUS_MAP[pr.status] || pr.status;
 
@@ -89,13 +104,20 @@ export default function SolicitacoesPage() {
 
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
-  const queryParams = React.useMemo(() => ({
-    companyCode: queryCompanyCode,
-    status: statusFilter !== "Todos" ? statusFilter : undefined,
-    search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
-  }), [queryCompanyCode, statusFilter, searchQuery]);
+  const queryParams = React.useMemo(
+    () => ({
+      companyCode: queryCompanyCode,
+      status: statusFilter !== "Todos" ? statusFilter : undefined,
+      search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+    }),
+    [queryCompanyCode, statusFilter, searchQuery],
+  );
 
-  const { data: rawRequests = [], isLoading: loadingRequests, error: queryError } = usePurchaseRequests(queryParams);
+  const {
+    data: rawRequests = [],
+    isLoading: loadingRequests,
+    error: queryError,
+  } = usePurchaseRequests(queryParams);
 
   const solicitacoes: SolicitationCorporateRow[] = React.useMemo(() => {
     return rawRequests.map((pr) => mapToCorporateRow(pr, user));
@@ -144,7 +166,10 @@ export default function SolicitacoesPage() {
   const filtered = solicitacoes;
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   const columns: ColumnDef<SolicitationCorporateRow>[] = [
     {
@@ -224,7 +249,9 @@ export default function SolicitacoesPage() {
         />
         <KpiCard
           title="Prontas para Cotação"
-          value={String(kpis?.approved ?? rawRequests.filter((r) => r.status === "Approved").length)}
+          value={String(
+            kpis?.approved ?? rawRequests.filter((r) => r.status === "Approved").length,
+          )}
           icon="check-circle"
           loading={loadingKpis}
         />
@@ -236,7 +263,9 @@ export default function SolicitacoesPage() {
         />
         <KpiCard
           title="Finalizadas"
-          value={String(kpis?.finished ?? rawRequests.filter((r) => r.status === "Finished").length)}
+          value={String(
+            kpis?.finished ?? rawRequests.filter((r) => r.status === "Finished").length,
+          )}
           icon="check-verified-01"
           loading={loadingKpis}
         />
@@ -284,7 +313,11 @@ export default function SolicitacoesPage() {
         ) : filtered.length === 0 ? (
           <EmptyState
             illustration={rawRequests.length === 0 ? "cart-empty" : "no-search"}
-            title={rawRequests.length === 0 ? "Nenhuma solicitação sincronizada" : "Nenhuma solicitação encontrada"}
+            title={
+              rawRequests.length === 0
+                ? "Nenhuma solicitação sincronizada"
+                : "Nenhuma solicitação encontrada"
+            }
             description={
               rawRequests.length === 0
                 ? "As solicitações de compra são integradas e sincronizadas automaticamente a partir do ERP Corporate."
@@ -327,7 +360,9 @@ export default function SolicitacoesPage() {
                 >
                   <Icon name="chevron-left" size={16} />
                 </button>
-                <span style={{ fontSize: 13, color: "#475569", alignSelf: "center", margin: "0 8px" }}>
+                <span
+                  style={{ fontSize: 13, color: "#475569", alignSelf: "center", margin: "0 8px" }}
+                >
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
@@ -347,10 +382,17 @@ export default function SolicitacoesPage() {
         <QuickDetailDrawer
           open={!!selectedDrawerRequest}
           onClose={() => setSelectedDrawerRequest(null)}
-          title={selectedDrawerRequest.code || `#${selectedDrawerRequest.corporateCode || selectedDrawerRequest.id}`}
+          title={
+            selectedDrawerRequest.code ||
+            `#${selectedDrawerRequest.corporateCode || selectedDrawerRequest.id}`
+          }
           subtitle={selectedDrawerRequest.description || "Solicitação de Compra"}
           badge={
-            <Badge variant={getStatusBadgeVariant(STATUS_MAP[selectedDrawerRequest.status] || selectedDrawerRequest.status)}>
+            <Badge
+              variant={getStatusBadgeVariant(
+                STATUS_MAP[selectedDrawerRequest.status] || selectedDrawerRequest.status,
+              )}
+            >
               {STATUS_MAP[selectedDrawerRequest.status] || selectedDrawerRequest.status}
             </Badge>
           }
@@ -358,66 +400,178 @@ export default function SolicitacoesPage() {
           onPrimaryAction={() => router.push(`/compras/solicitacoes/${selectedDrawerRequest.id}`)}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, background: "#f8fafc", padding: 16, borderRadius: 8, border: "1px solid #e2e8f0" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+                background: "#f8fafc",
+                padding: 16,
+                borderRadius: 8,
+                border: "1px solid #e2e8f0",
+              }}
+            >
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Unidade / Empresa</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#64748b",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Unidade / Empresa
+                </span>
                 <strong style={{ fontSize: 13, color: "#0f172a" }}>
                   {resolvePurchaseRequestBranch(selectedDrawerRequest, user)}
                 </strong>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Solicitante</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#64748b",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Solicitante
+                </span>
                 <span style={{ fontSize: 13, color: "#0f172a" }}>
-                  {selectedDrawerRequest.corporateRequester || selectedDrawerRequest.requesterName || formatUserDisplayName(selectedDrawerRequest.requesterId, user)}
+                  {selectedDrawerRequest.corporateRequester ||
+                    selectedDrawerRequest.requesterName ||
+                    formatUserDisplayName(selectedDrawerRequest.requesterId, user)}
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Local de Estoque</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#64748b",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Local de Estoque
+                </span>
                 <span style={{ fontSize: 13, color: "#334155" }}>
                   {selectedDrawerRequest.corporateStockLocation || "Almoxarifado Geral"}
                 </span>
               </div>
               {selectedDrawerRequest.notes && (
-                <div style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Justificativa / Observação</span>
-                  <span style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.4 }}>{selectedDrawerRequest.notes}</span>
+                <div
+                  style={{
+                    gridColumn: "span 2",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    marginTop: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Justificativa / Observação
+                  </span>
+                  <span style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.4 }}>
+                    {selectedDrawerRequest.notes}
+                  </span>
                 </div>
               )}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#334155", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6 }}>
-                <Icon name="package" size={16} /> Itens da Solicitação ({selectedDrawerRequest.items?.length || 0})
+              <h4
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#334155",
+                  textTransform: "uppercase",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Icon name="package" size={16} /> Itens da Solicitação (
+                {selectedDrawerRequest.items?.length || 0})
               </h4>
               {selectedDrawerRequest.items && selectedDrawerRequest.items.length > 0 ? (
                 <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                     <thead>
                       <tr style={{ background: "#f1f5f9", textAlign: "left", color: "#475569" }}>
-                        <th style={{ padding: "8px 12px", width: "40px", textAlign: "center" }}>#</th>
+                        <th style={{ padding: "8px 12px", width: "40px", textAlign: "center" }}>
+                          #
+                        </th>
                         <th style={{ padding: "8px 12px" }}>Item / Material</th>
-                        <th style={{ padding: "8px 12px", textAlign: "right", width: "80px" }}>Qtd</th>
-                        <th style={{ padding: "8px 12px", textAlign: "center", width: "60px" }}>Un</th>
+                        <th style={{ padding: "8px 12px", textAlign: "right", width: "80px" }}>
+                          Qtd
+                        </th>
+                        <th style={{ padding: "8px 12px", textAlign: "center", width: "60px" }}>
+                          Un
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedDrawerRequest.items.map((item, idx) => (
                         <tr key={item.id || idx} style={{ borderTop: "1px solid #f1f5f9" }}>
-                          <td style={{ padding: "8px 12px", textAlign: "center", color: "#64748b", fontWeight: 600 }}>{idx + 1}</td>
-                          <td style={{ padding: "8px 12px" }}>
-                            <strong style={{ color: "#0f172a", display: "block" }}>{item.description}</strong>
-                            {item.corporateItemCode && <small style={{ color: "#64748b" }}>Cód: {item.corporateItemCode}</small>}
+                          <td
+                            style={{
+                              padding: "8px 12px",
+                              textAlign: "center",
+                              color: "#64748b",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {idx + 1}
                           </td>
-                          <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "#0f172a" }}>{item.quantity}</td>
-                          <td style={{ padding: "8px 12px", textAlign: "center", color: "#475569" }}>{item.unit || "UN"}</td>
+                          <td style={{ padding: "8px 12px" }}>
+                            <strong style={{ color: "#0f172a", display: "block" }}>
+                              {item.description}
+                            </strong>
+                            {item.corporateItemCode && (
+                              <small style={{ color: "#64748b" }}>
+                                Cód: {item.corporateItemCode}
+                              </small>
+                            )}
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 12px",
+                              textAlign: "right",
+                              fontWeight: 600,
+                              color: "#0f172a",
+                            }}
+                          >
+                            {item.quantity}
+                          </td>
+                          <td
+                            style={{ padding: "8px 12px", textAlign: "center", color: "#475569" }}
+                          >
+                            {item.unit || "UN"}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <div style={{ padding: 16, background: "#f8fafc", borderRadius: 8, textAlign: "center", color: "#64748b", fontSize: 13 }}>
+                <div
+                  style={{
+                    padding: 16,
+                    background: "#f8fafc",
+                    borderRadius: 8,
+                    textAlign: "center",
+                    color: "#64748b",
+                    fontSize: 13,
+                  }}
+                >
                   Nenhum item específico listado nesta solicitação.
                 </div>
               )}

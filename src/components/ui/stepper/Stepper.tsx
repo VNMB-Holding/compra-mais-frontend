@@ -24,7 +24,8 @@ export default function Stepper({ steps }: StepperProps) {
         const isLast = index === steps.length - 1;
 
         const nextStep = steps[index + 1];
-        const isLineActive = nextStep && (nextStep.status === "completed" || nextStep.status === "active");
+        const isLineActive =
+          nextStep && (nextStep.status === "completed" || nextStep.status === "active");
 
         return (
           <React.Fragment key={index}>

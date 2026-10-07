@@ -2,19 +2,19 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Button, 
-  Card, 
-  Icon, 
-  Select, 
-  Loading, 
-  ErrorState, 
-  EmptyState, 
-  Badge, 
+import {
+  Button,
+  Card,
+  Icon,
+  Select,
+  Loading,
+  ErrorState,
+  EmptyState,
+  Badge,
   TableSkeleton,
   DataTable,
   ColumnDef,
-  KpiCard
+  KpiCard,
 } from "@/components/ui";
 import styles from "./rfqs.module.css";
 import { rfqsApi, Rfq, RfqKpis } from "@/lib/api/rfqs";
@@ -23,7 +23,11 @@ import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCompanyFilterOptions, formatCorporateBranch, getTenantDisplayName } from "@/lib/utils/tenant";
+import {
+  getCompanyFilterOptions,
+  formatCorporateBranch,
+  getTenantDisplayName,
+} from "@/lib/utils/tenant";
 
 import { RfqRow } from "@/types/domain";
 import { useRfqs } from "@/hooks/useQueries";
@@ -46,14 +50,17 @@ function mapToRow(rfq: Rfq, currentUser?: any): RfqRow {
     (pr as any)?.corporateColigada,
     (pr as any)?.corporateFilial || (pr as any)?.filialCode || (pr as any)?.companyCode,
     rfq.tenantId,
-    currentUser
+    currentUser,
   );
 
   const status = mapRfqStatus(rfq);
   const dataAbertura = formatDate(rfq.createdAt);
   const dataEncerramento = formatDate(rfq.closesAt);
   const descricao = rfq.title || rfq.purchaseRequest?.description || "Processo de Cotação";
-  const categoria = (rfq.purchaseRequest as any)?.costCenterName || (rfq.purchaseRequest as any)?.category || "Geral";
+  const categoria =
+    (rfq.purchaseRequest as any)?.costCenterName ||
+    (rfq.purchaseRequest as any)?.category ||
+    "Geral";
 
   return {
     id: rfq.id,
@@ -87,12 +94,15 @@ export default function RfqsPage() {
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
   const [searchQuery, setSearchQuery] = useState("");
 
-  const queryParams = React.useMemo(() => ({
-    companyCode: queryCompanyCode,
-    status: status !== "Todos" ? status : undefined,
-    category: category !== "Todas" ? category : undefined,
-    search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
-  }), [queryCompanyCode, status, category, searchQuery]);
+  const queryParams = React.useMemo(
+    () => ({
+      companyCode: queryCompanyCode,
+      status: status !== "Todos" ? status : undefined,
+      category: category !== "Todas" ? category : undefined,
+      search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+    }),
+    [queryCompanyCode, status, category, searchQuery],
+  );
 
   const { data: rawRfqs = [], isLoading: loadingRfqs, error: queryError } = useRfqs(queryParams);
 
@@ -134,8 +144,7 @@ export default function RfqsPage() {
         const kpisData = await rfqsApi.getKpis(queryCompanyCode);
         setKpis(kpisData);
       } catch (err) {
-       } finally {
-        
+      } finally {
       }
     }
     fetchKpis();
@@ -152,13 +161,16 @@ export default function RfqsPage() {
     }
   }, [loading, isTourCompleted, startTour]);
 
-  const categoryOptions = React.useMemo(() => [
-    { label: "Todas as categorias", value: "Todas" },
-    ...Array.from(new Set([...allCategories, ...rfqs.map((r) => r.categoria)]))
-      .filter(Boolean)
-      .sort()
-      .map((c) => ({ label: c, value: c })),
-  ], [allCategories, rfqs]);
+  const categoryOptions = React.useMemo(
+    () => [
+      { label: "Todas as categorias", value: "Todas" },
+      ...Array.from(new Set([...allCategories, ...rfqs.map((r) => r.categoria)]))
+        .filter(Boolean)
+        .sort()
+        .map((c) => ({ label: c, value: c })),
+    ],
+    [allCategories, rfqs],
+  );
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
@@ -178,11 +190,19 @@ export default function RfqsPage() {
     {
       header: "Categoria",
       cell: (row) => (
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#334155" }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 13,
+            color: "#334155",
+          }}
+        >
           <Icon name={getCategoryIcon(row.categoria)} size={16} />
           <span>{row.categoria}</span>
         </div>
-      )
+      ),
     },
     { header: "Abertura", accessorKey: "dataAbertura" },
     { header: "Encerramento", accessorKey: "dataEncerramento" },
@@ -194,14 +214,14 @@ export default function RfqsPage() {
             row.status === "Aberta"
               ? "success"
               : row.status === "Encerrando hoje"
-              ? "warning"
-              : row.status === "Em análise"
-              ? "primary"
-              : row.status === "Rascunho"
-              ? "gray"
-              : row.status === "Cancelada"
-              ? "danger"
-              : "gray"
+                ? "warning"
+                : row.status === "Em análise"
+                  ? "primary"
+                  : row.status === "Rascunho"
+                    ? "gray"
+                    : row.status === "Cancelada"
+                      ? "danger"
+                      : "gray"
           }
         >
           {row.status}
@@ -215,8 +235,8 @@ export default function RfqsPage() {
         <button className={styles.iconBtn}>
           <Icon name="share-03" />
         </button>
-      )
-    }
+      ),
+    },
   ];
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -236,34 +256,61 @@ export default function RfqsPage() {
 
   return (
     <div className={styles.pageContainer}>
-
       <div className={styles.pageHeader}>
         <div>
           <h1>Processos de Cotação (RFQs)</h1>
-          <p>Gerencie cotações com fornecedores, equalização de propostas e rodadas de negociação.</p>
+          <p>
+            Gerencie cotações com fornecedores, equalização de propostas e rodadas de negociação.
+          </p>
         </div>
         <div data-tour="rfqs-new-btn">
-          <Button variant="primary" className={styles.btnAdd} onClick={() => router.push("/compras/rfqs/nova")}>
+          <Button
+            variant="primary"
+            className={styles.btnAdd}
+            onClick={() => router.push("/compras/rfqs/nova")}
+          >
             <Icon name="plus" /> Nova RFQ
           </Button>
         </div>
       </div>
 
       <div className={styles.kpiGrid} data-tour="rfqs-kpis">
-        <KpiCard title="RFQs Abertas" value={String(kpis?.open || 0)} icon="hourglass-01" description="Em andamento" loading={loading} />
-        <KpiCard title="Propostas Recebidas" value={String(kpis?.proposalCount || 0)} icon="file-01" description="Aguardando análise" loading={loading} />
-        <KpiCard title="Finalizadas" value={String(kpis?.total || 0)} icon="check-circle" description="Concluídas" loading={loading} />
-        <KpiCard title="Em Negociação" value={String(kpis?.total || 0)} icon="users-01" loading={loading} />
+        <KpiCard
+          title="RFQs Abertas"
+          value={String(kpis?.open || 0)}
+          icon="hourglass-01"
+          description="Em andamento"
+          loading={loading}
+        />
+        <KpiCard
+          title="Propostas Recebidas"
+          value={String(kpis?.proposalCount || 0)}
+          icon="file-01"
+          description="Aguardando análise"
+          loading={loading}
+        />
+        <KpiCard
+          title="Finalizadas"
+          value={String(kpis?.total || 0)}
+          icon="check-circle"
+          description="Concluídas"
+          loading={loading}
+        />
+        <KpiCard
+          title="Em Negociação"
+          value={String(kpis?.total || 0)}
+          icon="users-01"
+          loading={loading}
+        />
       </div>
 
       <Card noPadding className={styles.mainListCard} data-tour="rfqs-table">
-
         <div className={styles.tableToolbar} data-tour="rfqs-toolbar">
           <div className={styles.searchBox}>
             <Icon name="search-md" />
-            <input 
-              type="text" 
-              placeholder="Buscar RFQ por código, título..." 
+            <input
+              type="text"
+              placeholder="Buscar RFQ por código, título..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -310,15 +357,35 @@ export default function RfqsPage() {
           <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : filtered.length === 0 ? (
           <EmptyState
-            illustration={searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS" ? "no-search" : "orders-empty"}
-            title={searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS" ? "Nenhuma cotação encontrada" : "Nenhuma cotação cadastrada"}
+            illustration={
+              searchQuery ||
+              status !== "Todos" ||
+              category !== "Todas" ||
+              selectedCompanyId !== "TODAS"
+                ? "no-search"
+                : "orders-empty"
+            }
+            title={
+              searchQuery ||
+              status !== "Todos" ||
+              category !== "Todas" ||
+              selectedCompanyId !== "TODAS"
+                ? "Nenhuma cotação encontrada"
+                : "Nenhuma cotação cadastrada"
+            }
             description={
-              searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS"
+              searchQuery ||
+              status !== "Todos" ||
+              category !== "Todas" ||
+              selectedCompanyId !== "TODAS"
                 ? "Não encontramos nenhum registro com os filtros e buscas atuais. Tente alterar os termos e tente novamente."
                 : "Inicie um novo processo de cotação para convidar fornecedores e coletar propostas."
             }
             action={
-              searchQuery || status !== "Todos" || category !== "Todas" || selectedCompanyId !== "TODAS"
+              searchQuery ||
+              status !== "Todos" ||
+              category !== "Todas" ||
+              selectedCompanyId !== "TODAS"
                 ? {
                     label: "Limpar Filtros",
                     variant: "secondary",
@@ -338,18 +405,26 @@ export default function RfqsPage() {
           />
         ) : (
           <>
-            <DataTable data={paginatedRows} columns={columns} onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)} />
+            <DataTable
+              data={paginatedRows}
+              columns={columns}
+              onRowClick={(row) => router.push(`/compras/rfqs/${row.id}`)}
+            />
 
             <div className={styles.tableFooter}>
               <span>
-                Mostrando {filtered.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} RFQs
+                Mostrando {filtered.length > 0 ? startIndex + 1 : 0} -{" "}
+                {Math.min(startIndex + itemsPerPage, filtered.length)} de {filtered.length} RFQs
               </span>
               <div className={styles.paginationControls}>
                 <button
                   className={styles.pageBtn}
                   onClick={handlePrevPage}
                   disabled={currentPage <= 1}
-                  style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+                  style={{
+                    opacity: currentPage <= 1 ? 0.5 : 1,
+                    cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                  }}
                 >
                   <Icon name="chevron-left" />
                 </button>
@@ -360,7 +435,10 @@ export default function RfqsPage() {
                   className={styles.pageBtn}
                   onClick={handleNextPage}
                   disabled={currentPage >= totalPages}
-                  style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+                  style={{
+                    opacity: currentPage >= totalPages ? 0.5 : 1,
+                    cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                  }}
                 >
                   <Icon name="chevron-right" />
                 </button>
@@ -368,7 +446,6 @@ export default function RfqsPage() {
             </div>
           </>
         )}
-
       </Card>
     </div>
   );

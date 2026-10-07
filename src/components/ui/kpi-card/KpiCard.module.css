@@ -9,13 +9,15 @@
 .clickableCard {
   cursor: pointer;
   transition:
-    transform   var(--duration-normal) var(--ease-out),
-    box-shadow  var(--duration-normal) var(--ease-in-out),
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-in-out),
     border-color var(--duration-normal) var(--ease-in-out);
 }
 .clickableCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.09),
+    0 2px 6px rgba(0, 0, 0, 0.04);
   border-color: #c8d5e3;
 }
 .clickableCard:active {
@@ -88,7 +90,7 @@
   cursor: pointer;
   width: fit-content;
   transition:
-    gap   var(--duration-normal) var(--ease-out),
+    gap var(--duration-normal) var(--ease-out),
     color var(--duration-normal) var(--ease-in-out);
 }
 .linkButton:hover {
@@ -97,4 +99,4 @@
 }
 .linkButton span {
   font-size: 14px;
-}
+}

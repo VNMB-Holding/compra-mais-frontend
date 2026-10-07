@@ -14,7 +14,7 @@ export const dashboardTour: TourDefinition = {
       target: '[data-tour="company-filter"]',
       title: "Filtro por Empresa",
       description:
-        "Selecione uma empresa específica para visualizar os indicadores isolados ou mantenha \"Todas\" para o consolidado do grupo.",
+        'Selecione uma empresa específica para visualizar os indicadores isolados ou mantenha "Todas" para o consolidado do grupo.',
       placement: "bottom",
     },
     {

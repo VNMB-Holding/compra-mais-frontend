@@ -12,7 +12,9 @@ export const purchaseRequestItemSchema = z.object({
 });
 
 export const createPurchaseRequestSchema = z.object({
-  description: z.string().min(5, "O título/descrição da solicitação deve ter pelo menos 5 caracteres"),
+  description: z
+    .string()
+    .min(5, "O título/descrição da solicitação deve ter pelo menos 5 caracteres"),
   categoryId: z.string().optional(),
   justification: z.string().min(10, "A justificativa deve ter pelo menos 10 caracteres"),
   estimatedBudget: z.number().min(0, "O orçamento estimado não pode ser negativo"),

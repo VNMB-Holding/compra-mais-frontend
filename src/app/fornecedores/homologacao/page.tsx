@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Icon, Select, ErrorState, TableSkeleton, Badge, DataTable, ColumnDef, KpiCard } from "@/components/ui";
+import {
+  Card,
+  Icon,
+  Select,
+  ErrorState,
+  TableSkeleton,
+  Badge,
+  DataTable,
+  ColumnDef,
+  KpiCard,
+} from "@/components/ui";
 import styles from "./homologacao.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
@@ -32,16 +42,29 @@ function mapSupplierToHomologacao(s: Supplier): HomologacaoRow {
   const isHomologado = s.status === "Active" && s.isActive !== false;
   const isUnderCert = s.status === "UnderCertification";
   const statusStr = isHomologado ? "Conforme" : isUnderCert ? "Em Auditoria" : "Apontamento";
-  const etapaStr = isHomologado ? "Monitoramento Ativo" : isUnderCert ? "Varredura Periódica" : "Apontamento Fiscal";
+  const etapaStr = isHomologado
+    ? "Monitoramento Ativo"
+    : isUnderCert
+      ? "Varredura Periódica"
+      : "Apontamento Fiscal";
 
-  const updatedDate = s.updatedAt ? new Date(s.updatedAt) : s.createdAt ? new Date(s.createdAt) : new Date();
+  const updatedDate = s.updatedAt
+    ? new Date(s.updatedAt)
+    : s.createdAt
+      ? new Date(s.createdAt)
+      : new Date();
   const cidade = s.city || "—";
   const estado = s.state || "";
   const localizacao = cidade !== "—" ? `${cidade}${estado ? ` / ${estado}` : ""}` : "Não informado";
 
   return {
     id: s.id,
-    iniciais: (s.tradeName || s.corporateName || "FR").split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2),
+    iniciais: (s.tradeName || s.corporateName || "FR")
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2),
     fornecedor: s.corporateName || s.tradeName || "Fornecedor",
     cnpj: s.cnpj,
     cidade,
@@ -92,13 +115,13 @@ export default function HomologacaoPage() {
       setError(null);
       setLoading(true);
       const statusMap: Record<string, string> = {
-        "Conforme": "Active",
+        Conforme: "Active",
         "Em Auditoria": "UnderCertification",
-        "Apontamento": "Inactive",
+        Apontamento: "Inactive",
       };
       const [suppliers, kpisData] = await Promise.all([
         suppliersApi.list({
-          status: etapa !== "Todas" && etapa !== "Todos" ? (statusMap[etapa] || etapa) : undefined,
+          status: etapa !== "Todas" && etapa !== "Todos" ? statusMap[etapa] || etapa : undefined,
           state: selectedUf !== "Todas" && selectedUf !== "Todos" ? selectedUf : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
         }),
@@ -131,13 +154,18 @@ export default function HomologacaoPage() {
     { label: "Apontamento", value: "Apontamento" },
   ];
 
-  const ufOptions = React.useMemo(() => [
-    { label: "Estado: Todos (UF)", value: "Todas" },
-    ...Array.from(new Set([...allUfs, ...fornecedores.map((f) => f.estado?.toUpperCase().trim())]))
-      .filter(Boolean)
-      .sort()
-      .map((uf) => ({ label: `UF: ${uf}`, value: uf })),
-  ], [allUfs, fornecedores]);
+  const ufOptions = React.useMemo(
+    () => [
+      { label: "Estado: Todos (UF)", value: "Todas" },
+      ...Array.from(
+        new Set([...allUfs, ...fornecedores.map((f) => f.estado?.toUpperCase().trim())]),
+      )
+        .filter(Boolean)
+        .sort()
+        .map((uf) => ({ label: `UF: ${uf}`, value: uf })),
+    ],
+    [allUfs, fornecedores],
+  );
 
   const columns: ColumnDef<HomologacaoRow>[] = [
     {
@@ -169,18 +197,18 @@ export default function HomologacaoPage() {
         <div className={styles.scoreCell}>
           <div className={styles.scoreInfo}>
             <strong>{row.score}/100</strong>
-            <span className={row.score > 70 ? styles.textHigh : row.score > 30 ? styles.textMid : styles.textLow}>
+            <span
+              className={
+                row.score > 70 ? styles.textHigh : row.score > 30 ? styles.textMid : styles.textLow
+              }
+            >
               {row.score > 70 ? "Baixo Risco" : row.score > 30 ? "Médio" : "Crítico"}
             </span>
           </div>
           <div className={styles.progressTrack}>
             <div
               className={`${styles.progressBar} ${
-                row.score > 70
-                  ? styles.barHigh
-                  : row.score > 30
-                  ? styles.barMid
-                  : styles.barLow
+                row.score > 70 ? styles.barHigh : row.score > 30 ? styles.barMid : styles.barLow
               }`}
               style={{ width: `${row.score}%` }}
             />
@@ -221,19 +249,22 @@ export default function HomologacaoPage() {
             onClick={() => {
               if (typeof window !== "undefined") {
                 const url = `${window.location.origin}/fornecedores/homologacao/${row.id}`;
-                navigator.clipboard.writeText(url).then(() => {
-                  toast({
-                    variant: "success",
-                    title: "Link Copiado!",
-                    message: `Link do dossiê de ${row.fornecedor} copiado para a área de transferência.`,
+                navigator.clipboard
+                  .writeText(url)
+                  .then(() => {
+                    toast({
+                      variant: "success",
+                      title: "Link Copiado!",
+                      message: `Link do dossiê de ${row.fornecedor} copiado para a área de transferência.`,
+                    });
+                  })
+                  .catch(() => {
+                    toast({
+                      variant: "info",
+                      title: "Dossiê",
+                      message: url,
+                    });
                   });
-                }).catch(() => {
-                  toast({
-                    variant: "info",
-                    title: "Dossiê",
-                    message: url,
-                  });
-                });
               }
             }}
           >
@@ -254,7 +285,8 @@ export default function HomologacaoPage() {
       if (risco === "Médio" && (f.score <= 30 || f.score > 70)) return false;
       if (risco === "Crítico" && f.score > 30) return false;
     }
-    if (etapa !== "Todas" && etapa !== "Todos" && f.status !== etapa && f.etapa !== etapa) return false;
+    if (etapa !== "Todas" && etapa !== "Todos" && f.status !== etapa && f.etapa !== etapa)
+      return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       const matchNome = f.fornecedor.toLowerCase().includes(q);
@@ -266,7 +298,10 @@ export default function HomologacaoPage() {
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   return (
     <div className={styles.pageContainer}>
@@ -287,14 +322,20 @@ export default function HomologacaoPage() {
         />
         <KpiCard
           title="Em homologação"
-          value={String(kpis?.underCertification || fornecedores.filter((f) => f.status === "Em análise" || f.status === "Pendente").length)}
+          value={String(
+            kpis?.underCertification ||
+              fornecedores.filter((f) => f.status === "Em análise" || f.status === "Pendente")
+                .length,
+          )}
           icon="clock"
           description="Pendentes de análise"
           loading={loading}
         />
         <KpiCard
           title="Homologados"
-          value={String(kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length)}
+          value={String(
+            kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length,
+          )}
           icon="check-circle"
           description="Aprovados / Regulares"
           loading={loading}
@@ -385,7 +426,10 @@ export default function HomologacaoPage() {
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   className={styles.pageBtn}
-                  style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+                  style={{
+                    opacity: currentPage <= 1 ? 0.5 : 1,
+                    cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                  }}
                 >
                   <Icon name="chevron-left" />
                 </button>
@@ -396,7 +440,10 @@ export default function HomologacaoPage() {
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   className={styles.pageBtn}
-                  style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+                  style={{
+                    opacity: currentPage >= totalPages ? 0.5 : 1,
+                    cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                  }}
                 >
                   <Icon name="chevron-right" />
                 </button>

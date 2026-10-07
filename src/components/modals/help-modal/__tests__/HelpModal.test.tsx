@@ -1,48 +1,50 @@
-import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { HelpModal } from '@/components/modals';
+import React from "react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { HelpModal } from "@/components/modals";
 
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => '/dashboard',
+  usePathname: () => "/dashboard",
 }));
 
-vi.mock('@/hooks/useTour', () => ({
+vi.mock("@/hooks/useTour", () => ({
   useTour: () => ({
     startTour: vi.fn(),
     resetTour: vi.fn(),
   }),
 }));
 
-describe('HelpModal Component', () => {
-  it('não deve renderizar quando open = false', () => {
+describe("HelpModal Component", () => {
+  it("não deve renderizar quando open = false", () => {
     const { container } = render(<HelpModal open={false} onClose={() => {}} />);
     expect(container.firstChild).toBeNull();
   });
 
-  it('deve renderizar perguntas frequentes quando open = true', () => {
+  it("deve renderizar perguntas frequentes quando open = true", () => {
     render(<HelpModal open={true} onClose={() => {}} />);
 
-    expect(screen.getByText('Como cadastrar uma nova RFQ?')).toBeInTheDocument();
-    expect(screen.getByText('Como realizar a homologação de um fornecedor?')).toBeInTheDocument();
+    expect(screen.getByText("Como cadastrar uma nova RFQ?")).toBeInTheDocument();
+    expect(screen.getByText("Como realizar a homologação de um fornecedor?")).toBeInTheDocument();
   });
 
-  it('deve filtrar perguntas ao digitar no campo de busca', () => {
+  it("deve filtrar perguntas ao digitar no campo de busca", () => {
     render(<HelpModal open={true} onClose={() => {}} />);
 
     const searchInput = screen.getByPlaceholderText(/Busque por termos/i);
-    fireEvent.change(searchInput, { target: { value: 'senha' } });
+    fireEvent.change(searchInput, { target: { value: "senha" } });
 
-    expect(screen.getByText('Como recuperar ou alterar minha senha de acesso?')).toBeInTheDocument();
-    expect(screen.queryByText('Como cadastrar uma nova RFQ?')).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Como recuperar ou alterar minha senha de acesso?"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Como cadastrar uma nova RFQ?")).not.toBeInTheDocument();
   });
 
-  it('deve disparar onClose ao clicar no botão de fechar', () => {
+  it("deve disparar onClose ao clicar no botão de fechar", () => {
     const handleClose = vi.fn();
     render(<HelpModal open={true} onClose={handleClose} />);
 
-    const closeBtn = screen.getByRole('button', { name: /^fechar$/i });
+    const closeBtn = screen.getByRole("button", { name: /^fechar$/i });
     fireEvent.click(closeBtn);
 
     expect(handleClose).toHaveBeenCalledTimes(1);

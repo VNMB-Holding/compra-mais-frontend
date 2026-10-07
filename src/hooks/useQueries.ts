@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { purchaseRequestsApi, PurchaseRequest, RequestItem, PurchaseRequestListParams } from "@/lib/api/purchase-requests";
+import {
+  purchaseRequestsApi,
+  PurchaseRequest,
+  RequestItem,
+  PurchaseRequestListParams,
+} from "@/lib/api/purchase-requests";
 import { rfqsApi, RfqListParams } from "@/lib/api/rfqs";
 import { suppliersApi, SupplierListParams } from "@/lib/api/suppliers";
 import { purchaseOrdersApi, PurchaseOrderListParams } from "@/lib/api/purchase-orders";
@@ -7,13 +12,15 @@ import { dashboardApi } from "@/lib/api/dashboard";
 import { itemsApi, CatalogItem } from "@/lib/api/items";
 
 export const QUERY_KEYS = {
-  purchaseRequests: (params?: string | PurchaseRequestListParams) => ["purchase-requests", "list", params] as const,
+  purchaseRequests: (params?: string | PurchaseRequestListParams) =>
+    ["purchase-requests", "list", params] as const,
   purchaseRequest: (id: string) => ["purchase-requests", "detail", id] as const,
   rfqs: (params?: string | RfqListParams) => ["rfqs", "list", params] as const,
   rfq: (id: string) => ["rfqs", "detail", id] as const,
   suppliers: (params?: SupplierListParams) => ["suppliers", "list", params] as const,
   supplier: (id: string) => ["suppliers", "detail", id] as const,
-  purchaseOrders: (params?: string | PurchaseOrderListParams) => ["purchase-orders", "list", params] as const,
+  purchaseOrders: (params?: string | PurchaseOrderListParams) =>
+    ["purchase-orders", "list", params] as const,
   purchaseOrder: (id: string) => ["purchase-orders", "detail", id] as const,
   dashboardKpis: ["dashboard-kpis"] as const,
 };
@@ -37,8 +44,11 @@ export function usePurchaseRequest(id: string) {
 export function useCreatePurchaseRequest() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Partial<PurchaseRequest>, 'items'> & { items?: Partial<Omit<RequestItem, 'id' | 'requestId'>>[] }) =>
-      purchaseRequestsApi.create(data),
+    mutationFn: (
+      data: Omit<Partial<PurchaseRequest>, "items"> & {
+        items?: Partial<Omit<RequestItem, "id" | "requestId">>[];
+      },
+    ) => purchaseRequestsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase-requests"] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboardKpis });
@@ -174,4 +184,3 @@ export function useCreateItem() {
     },
   });
 }
-

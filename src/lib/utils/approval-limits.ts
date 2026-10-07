@@ -17,7 +17,8 @@ function resolveCompanyCode(companyOrTenantName?: string): string {
   if (branch) return branch.code;
 
   const upper = norm.toUpperCase();
-  if (upper.includes("IMÓVEIS") || upper.includes("IMOVEIS") || upper.includes("LORENA")) return "LORENA";
+  if (upper.includes("IMÓVEIS") || upper.includes("IMOVEIS") || upper.includes("LORENA"))
+    return "LORENA";
   if (upper.includes("PURA") || upper.includes("IGREJA")) return "PURAFE";
   if (upper.includes("VB AGRO") || upper.includes("AGRO")) return "2313";
   return norm;
@@ -27,7 +28,7 @@ export function calculateChainFromRules(
   rules: ApprovalRuleConfig[],
   budget: number,
   companyCode?: string,
-  flowType: "solicitacao" | "pedido" = "solicitacao"
+  flowType: "solicitacao" | "pedido" = "solicitacao",
 ): ApprovalChainLevel[] {
   if (!Array.isArray(rules) || rules.length === 0) return [];
 
@@ -38,7 +39,7 @@ export function calculateChainFromRules(
         (r) =>
           r.active !== false &&
           r.companyCode === targetCode &&
-          (r.flowType || "solicitacao") === flowType
+          (r.flowType || "solicitacao") === flowType,
       )
     : [];
 
@@ -49,12 +50,15 @@ export function calculateChainFromRules(
           (r) =>
             r.active !== false &&
             (r.companyCode === "TODAS" || !r.companyCode || !targetCode) &&
-            (r.flowType || "solicitacao") === flowType
+            (r.flowType || "solicitacao") === flowType,
         );
 
   if (candidateRules.length === 0) return [];
 
-  const rangeMap = new Map<string, { minAmount: number; maxAmount: number | null; rules: ApprovalRuleConfig[] }>();
+  const rangeMap = new Map<
+    string,
+    { minAmount: number; maxAmount: number | null; rules: ApprovalRuleConfig[] }
+  >();
   for (const r of candidateRules) {
     const key = `${r.minAmount}_${r.maxAmount ?? "inf"}`;
     if (!rangeMap.has(key)) {
@@ -66,10 +70,11 @@ export function calculateChainFromRules(
   const sortedRanges = Array.from(rangeMap.values()).sort((a, b) => a.minAmount - b.minAmount);
 
   const matchingRangeIndex = sortedRanges.findIndex(
-    (rg) => budget >= rg.minAmount && (rg.maxAmount === null || budget <= rg.maxAmount)
+    (rg) => budget >= rg.minAmount && (rg.maxAmount === null || budget <= rg.maxAmount),
   );
 
-  let targetRange: { minAmount: number; maxAmount: number | null; rules: ApprovalRuleConfig[] } | undefined;
+  let targetRange:
+    { minAmount: number; maxAmount: number | null; rules: ApprovalRuleConfig[] } | undefined;
   if (matchingRangeIndex !== -1) {
     targetRange = sortedRanges[matchingRangeIndex];
   } else if (budget >= sortedRanges[sortedRanges.length - 1].minAmount) {
@@ -97,7 +102,7 @@ export function calculateChainFromRules(
   const levelMap = new Map<number, ApprovalChainLevel>();
   const rangesToConsider = sortedRanges.slice(
     0,
-    matchingRangeIndex !== -1 ? matchingRangeIndex + 1 : sortedRanges.length
+    matchingRangeIndex !== -1 ? matchingRangeIndex + 1 : sortedRanges.length,
   );
 
   for (const rg of rangesToConsider) {
@@ -120,7 +125,7 @@ export function calculateChainFromRules(
 export function getApprovalChainForRequest(
   companyOrTenantName: string,
   estimatedBudget: number,
-  customRules?: ApprovalRuleConfig[]
+  customRules?: ApprovalRuleConfig[],
 ): ApprovalChainLevel[] {
   const companyCode = resolveCompanyCode(companyOrTenantName);
 
@@ -129,14 +134,13 @@ export function getApprovalChainForRequest(
     if (chain.length > 0) return chain;
   }
 
-  
   return [];
 }
 
 export function getApprovalChainForOrder(
   companyOrTenantName: string,
   orderTotal: number,
-  customRules?: ApprovalRuleConfig[]
+  customRules?: ApprovalRuleConfig[],
 ): ApprovalChainLevel[] {
   const companyCode = resolveCompanyCode(companyOrTenantName);
 
@@ -149,16 +153,19 @@ export function getApprovalChainForOrder(
 }
 
 export function isUserEligibleToApprove(
-  user: {
-    name?: string | null;
-    role?: string | null;
-    roles?: string[];
-    email?: string | null;
-    scopes?: string[];
-    id?: string | null;
-  } | null | undefined,
+  user:
+    | {
+        name?: string | null;
+        role?: string | null;
+        roles?: string[];
+        email?: string | null;
+        scopes?: string[];
+        id?: string | null;
+      }
+    | null
+    | undefined,
   approverRoleOrName: string,
-  assignedApproverId?: string
+  assignedApproverId?: string,
 ): boolean {
   if (!user) return false;
 
@@ -183,13 +190,15 @@ export function isUserEligibleToApprove(
     .map(normalize)
     .filter(Boolean);
 
-  const exactUserValues = new Set([
-    normalize(user.id),
-    normalize(user.email),
-    normalize(user.name),
-    normalize(user.role),
-    ...(user.roles || []).map(normalize),
-  ].filter(Boolean));
+  const exactUserValues = new Set(
+    [
+      normalize(user.id),
+      normalize(user.email),
+      normalize(user.name),
+      normalize(user.role),
+      ...(user.roles || []).map(normalize),
+    ].filter(Boolean),
+  );
 
   if (approverTargets.some((target) => exactUserValues.has(target))) {
     return true;
@@ -199,7 +208,10 @@ export function isUserEligibleToApprove(
     user.role?.toLowerCase().includes("diretor") ||
     (user.roles || []).some((r) => r.toLowerCase().includes("diretor"));
 
-  if (isDiretor && approverTargets.some((target) => target.includes("diretor") || target.includes("diretoria"))) {
+  if (
+    isDiretor &&
+    approverTargets.some((target) => target.includes("diretor") || target.includes("diretoria"))
+  ) {
     return true;
   }
 
@@ -207,7 +219,10 @@ export function isUserEligibleToApprove(
     user.role?.toLowerCase().includes("gerente") ||
     (user.roles || []).some((r) => r.toLowerCase().includes("gerente"));
 
-  if (isGerente && approverTargets.some((target) => target.includes("gerente") || target.includes("gestor"))) {
+  if (
+    isGerente &&
+    approverTargets.some((target) => target.includes("gerente") || target.includes("gestor"))
+  ) {
     return true;
   }
 

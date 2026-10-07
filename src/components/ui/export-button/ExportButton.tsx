@@ -34,9 +34,9 @@ export default function ExportButton({ onExport, defaultType = "PDF" }: ExportBu
 
   return (
     <div className={styles.exportGroup} ref={dropdownRef}>
-      <button 
-        type="button" 
-        className={styles.exportMainBtn} 
+      <button
+        type="button"
+        className={styles.exportMainBtn}
         onClick={handleMainClick}
         title={`Exportar como ${defaultType}`}
       >
@@ -51,21 +51,25 @@ export default function ExportButton({ onExport, defaultType = "PDF" }: ExportBu
         aria-label="Opções de exportação"
         aria-expanded={isOpen}
       >
-        <Icon name="chevron-down" size={16} className={`${styles.chevron} ${isOpen ? styles.rotate : ""}`} />
+        <Icon
+          name="chevron-down"
+          size={16}
+          className={`${styles.chevron} ${isOpen ? styles.rotate : ""}`}
+        />
       </button>
 
       {isOpen && (
         <div className={styles.exportDropdown}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className={styles.exportDropdownItem}
             onClick={() => handleOptionClick("PDF")}
           >
             <Icon name="file-02" size={14} style={{ color: "#ef4444" }} />
             <span>Documento PDF (.pdf)</span>
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className={styles.exportDropdownItem}
             onClick={() => handleOptionClick("XLS")}
           >

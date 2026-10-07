@@ -1,5 +1,3 @@
-
-
 .pageEnter {
   animation: pageEnterAnim var(--duration-enter) var(--ease-out) both;
 }

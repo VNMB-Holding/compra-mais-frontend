@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Loading, Skeleton, CardSkeleton, EmptyState, Stepper } from "@/components/ui";
+import {
+  Card,
+  Button,
+  Badge,
+  Icon,
+  ConfirmDialog,
+  Loading,
+  Skeleton,
+  CardSkeleton,
+  EmptyState,
+  Stepper,
+} from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./rfq-detail.module.css";
@@ -10,7 +21,11 @@ import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { purchaseOrdersApi } from "@/lib/api/purchase-orders";
 import { useAuth } from "@/hooks/useAuth";
-import { getTenantDisplayName, formatCorporateBranch, resolvePurchaseRequestBranch } from "@/lib/utils/tenant";
+import {
+  getTenantDisplayName,
+  formatCorporateBranch,
+  resolvePurchaseRequestBranch,
+} from "@/lib/utils/tenant";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
 
@@ -46,7 +61,8 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
     if (rs.supplierId) {
       mapBySupplier.set(rs.supplierId, {
         supplierId: rs.supplierId,
-        supplierName: rs.supplier?.tradeName || rs.supplier?.corporateName || "Razão Social não informada",
+        supplierName:
+          rs.supplier?.tradeName || rs.supplier?.corporateName || "Razão Social não informada",
         cnpj: rs.supplier?.cnpj || "—",
         status: "awaiting",
       });
@@ -72,27 +88,28 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
         }
       }
 
-      const freight = Number((p.items && p.items.length > 0)
-        ? (p.items[0].freightCost ?? (p as any).freightCost ?? (p as any).shippingCost ?? 0)
-        : ((p as any).freightCost ?? (p as any).shippingCost ?? 0));
+      const freight = Number(
+        p.items && p.items.length > 0
+          ? (p.items[0].freightCost ?? (p as any).freightCost ?? (p as any).shippingCost ?? 0)
+          : ((p as any).freightCost ?? (p as any).shippingCost ?? 0),
+      );
 
       const firstItemUnitPrice = Number(p.items?.[0]?.unitPrice) || 0;
       const unitPrice = hasItemPrices
-        ? (subtotal / rawQtdTotal)
-        : (firstItemUnitPrice || Number(p.totalValue ?? 0));
+        ? subtotal / rawQtdTotal
+        : firstItemUnitPrice || Number(p.totalValue ?? 0);
 
-      const totalCalculated = subtotal > 0
-        ? (subtotal + freight)
-        : (unitPrice * rawQtdTotal + freight);
+      const totalCalculated = subtotal > 0 ? subtotal + freight : unitPrice * rawQtdTotal + freight;
 
-      const hasPrices = hasItemPrices || Number(unitPrice) > 0 || subtotal > 0 || Number(p.totalValue ?? 0) > 0;
+      const hasPrices =
+        hasItemPrices || Number(unitPrice) > 0 || subtotal > 0 || Number(p.totalValue ?? 0) > 0;
       const isDeclined = p.status === "Declined" && !hasPrices;
       const isDraftWithoutPrice = p.status === "Draft" && !hasPrices;
       const status: LocalProposal["status"] = isDeclined
         ? "declined"
         : isDraftWithoutPrice
-        ? "awaiting"
-        : "received";
+          ? "awaiting"
+          : "received";
 
       const initialItemPrices: Record<string, number> = {};
       if (p.items && p.items.length > 0) {
@@ -106,7 +123,11 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
       mapBySupplier.set(p.supplierId, {
         supplierId: p.supplierId,
         proposalId: p.id,
-        supplierName: p.supplier?.tradeName || p.supplier?.corporateName || existing?.supplierName || "Razão Social não informada",
+        supplierName:
+          p.supplier?.tradeName ||
+          p.supplier?.corporateName ||
+          existing?.supplierName ||
+          "Razão Social não informada",
         cnpj: p.supplier?.cnpj || existing?.cnpj || "—",
         status,
         unitPrice: Number(unitPrice),
@@ -160,7 +181,8 @@ function PropostaCard({
   const [draft, setDraft] = useState({
     unitPrice: proposta.unitPrice ?? 0,
     freightCost: proposta.freightCost ?? 0,
-    freightType: (proposta.freightType || ((proposta.freightCost ?? 0) > 0 ? "FOB" : "CIF")) as "CIF" | "FOB",
+    freightType: (proposta.freightType || ((proposta.freightCost ?? 0) > 0 ? "FOB" : "CIF")) as
+      "CIF" | "FOB",
     deliveryTime: proposta.deliveryTime ?? 5,
     validityDays: proposta.validityDays ?? 15,
     paymentTerms: proposta.paymentTerms || "30 dias DDL",
@@ -177,7 +199,8 @@ function PropostaCard({
     setDraft({
       unitPrice: proposta.unitPrice ?? 0,
       freightCost: proposta.freightCost ?? 0,
-      freightType: (proposta.freightType || ((proposta.freightCost ?? 0) > 0 ? "FOB" : "CIF")) as "CIF" | "FOB",
+      freightType: (proposta.freightType || ((proposta.freightCost ?? 0) > 0 ? "FOB" : "CIF")) as
+        "CIF" | "FOB",
       deliveryTime: proposta.deliveryTime ?? 5,
       validityDays: proposta.validityDays ?? 15,
       paymentTerms: proposta.paymentTerms || "30 dias DDL",
@@ -209,7 +232,8 @@ function PropostaCard({
 
   const subtotalItens = hasSpecificItems
     ? (rfqItems || []).reduce((acc, it) => {
-        const p = draft.itemPrices[it.id] !== undefined ? draft.itemPrices[it.id] : (draft.unitPrice || 0);
+        const p =
+          draft.itemPrices[it.id] !== undefined ? draft.itemPrices[it.id] : draft.unitPrice || 0;
         return acc + p * (it.quantity || 1);
       }, 0)
     : (draft.unitPrice || 0) * (totalQtd || 1);
@@ -244,7 +268,7 @@ function PropostaCard({
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/cotacao/${rfqCode}?supId=${encodeURIComponent(proposta.supplierId)}&fornecedor=${encodeURIComponent(proposta.supplierName)}&cnpj=${encodeURIComponent(proposta.cnpj || "")}`;
     const text = encodeURIComponent(
-      `Olá, *${proposta.supplierName}*! Segue o link exclusivo para envio da sua proposta comercial referente à cotação *${rfqCode} - ${rfqTitle}*:\n\n${url}\n\nPor favor, preencha os preços e condições no link acima.`
+      `Olá, *${proposta.supplierName}*! Segue o link exclusivo para envio da sua proposta comercial referente à cotação *${rfqCode} - ${rfqTitle}*:\n\n${url}\n\nPor favor, preencha os preços e condições no link acima.`,
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
@@ -273,7 +297,10 @@ function PropostaCard({
             </span>
           )}
           {proposta.status === "declined" && (
-            <span className={styles.badgeAguardando} style={{ background: "#fee2e2", color: "#991b1b" }}>
+            <span
+              className={styles.badgeAguardando}
+              style={{ background: "#fee2e2", color: "#991b1b" }}
+            >
               <Icon name="x-close" size={13} /> Declinada
             </span>
           )}
@@ -283,7 +310,8 @@ function PropostaCard({
                 {formatCurrency(proposta.unitPrice!)} / un
               </span>
               <span className={styles.propostaPrazo}>
-                {proposta.deliveryTime} dia(s) · {proposta.paymentTerms} · Frete {proposta.freightType || (proposta.freightCost ? "FOB" : "CIF")}
+                {proposta.deliveryTime} dia(s) · {proposta.paymentTerms} · Frete{" "}
+                {proposta.freightType || (proposta.freightCost ? "FOB" : "CIF")}
               </span>
             </div>
           )}
@@ -539,7 +567,10 @@ function PropostaCard({
             <div className={styles.propostaSectionTitle}>
               <Icon name="users-01" size={13} /> Dados do Vendedor / Representante Comercial
             </div>
-            <div className={styles.propostaFormGrid} style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+            <div
+              className={styles.propostaFormGrid}
+              style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+            >
               <div className={styles.propostaField}>
                 <label>Nome do Vendedor / Contato</label>
                 <input
@@ -647,7 +678,9 @@ export default function RfqDetailPage() {
 
   const [proposalPage, setProposalPage] = useState(1);
   const [proposalSearch, setProposalSearch] = useState("");
-  const [proposalStatusFilter, setProposalStatusFilter] = useState<"todos" | "awaiting" | "received" | "declined">("todos");
+  const [proposalStatusFilter, setProposalStatusFilter] = useState<
+    "todos" | "awaiting" | "received" | "declined"
+  >("todos");
   const PROPOSALS_PER_PAGE = 5;
 
   const handleCancelRfq = async () => {
@@ -670,7 +703,7 @@ export default function RfqDetailPage() {
           await purchaseRequestsApi.updateStatus(
             originReqId,
             "Approved",
-            `Cotação ${rfqCode} cancelada. Motivo: ${reason}`
+            `Cotação ${rfqCode} cancelada. Motivo: ${reason}`,
           );
         } catch (reqErr) {
           console.warn("Falha ao reabrir solicitação de compra de origem:", reqErr);
@@ -682,7 +715,8 @@ export default function RfqDetailPage() {
       toast({
         variant: "warning",
         title: "Cotação cancelada",
-        message: "A cotação foi cancelada. A solicitação de compra de origem foi reaberta para cotação.",
+        message:
+          "A cotação foi cancelada. A solicitação de compra de origem foi reaberta para cotação.",
       });
     } catch (e) {
       logError("rfqs/[id]/cancel", e);
@@ -732,8 +766,7 @@ export default function RfqDetailPage() {
               pr = { ...fullPr, ...pr };
               data.purchaseRequest = pr;
             }
-          } catch {
-          }
+          } catch {}
         }
         setRfq(data);
         setPropostas(mapPropostas(data));
@@ -747,14 +780,14 @@ export default function RfqDetailPage() {
             (o: any) =>
               (winner && o.winningProposalId === winner.id) ||
               (o.notes && (o.notes.includes(data.code) || o.notes.includes(data.id))) ||
-              ((data.status === "Finished" || data.status === "Closed") && winner && o.supplierId === winner.supplierId)
+              ((data.status === "Finished" || data.status === "Closed") &&
+                winner &&
+                o.supplierId === winner.supplierId),
           );
           if (match) {
             setGeneratedPo({ id: match.id, code: match.code });
           }
-        } catch {
-
-        }
+        } catch {}
       } catch (err) {
         logError("rfqs/[id]/load", err);
         toast({
@@ -778,8 +811,7 @@ export default function RfqDetailPage() {
         !q ||
         p.supplierName.toLowerCase().includes(q) ||
         (p.cnpj && p.cnpj.toLowerCase().includes(q));
-      const matchStatus =
-        proposalStatusFilter === "todos" || p.status === proposalStatusFilter;
+      const matchStatus = proposalStatusFilter === "todos" || p.status === proposalStatusFilter;
       return matchSearch && matchStatus;
     });
   }, [propostas, proposalSearch, proposalStatusFilter]);
@@ -802,10 +834,13 @@ export default function RfqDetailPage() {
   }, [proposalPage, totalProposalPages]);
   const handleSalvarProposta = async (id: string, dados: Partial<LocalProposal>) => {
     setPropostas((c) =>
-      c.map((p) => (p.supplierId === id ? { ...p, ...dados, status: "received" } : p))
+      c.map((p) => (p.supplierId === id ? { ...p, ...dados, status: "received" } : p)),
     );
 
-    if (dados.unitPrice !== undefined || (dados.itemPrices && Object.keys(dados.itemPrices).length > 0)) {
+    if (
+      dados.unitPrice !== undefined ||
+      (dados.itemPrices && Object.keys(dados.itemPrices).length > 0)
+    ) {
       try {
         const itemsPayload =
           dados.itemPrices && Object.keys(dados.itemPrices).length > 0
@@ -837,8 +872,8 @@ export default function RfqDetailPage() {
             c.map((p) =>
               p.supplierId === id
                 ? { ...p, ...dados, proposalId: propostaCriada.id, status: "received" }
-                : p
-            )
+                : p,
+            ),
           );
         }
         toast({
@@ -859,10 +894,7 @@ export default function RfqDetailPage() {
 
   const rfqItems = rfq?.purchaseRequest?.items ?? (rfq as any)?.items ?? [];
   const rawQtd =
-    rfqItems.reduce(
-      (s: number, i: { quantity: number }) => s + Number(i.quantity || 0),
-      0
-    ) ?? 0;
+    rfqItems.reduce((s: number, i: { quantity: number }) => s + Number(i.quantity || 0), 0) ?? 0;
   const totalQtd = rawQtd > 0 ? rawQtd : 1;
 
   const getProposalTotal = (p: LocalProposal | null | undefined) => {
@@ -870,7 +902,7 @@ export default function RfqDetailPage() {
     if (p.totalCalculated !== undefined && p.totalCalculated > 0) {
       return p.totalCalculated;
     }
-    return ((p.unitPrice || 0) * totalQtd) + (p.freightCost || 0);
+    return (p.unitPrice || 0) * totalQtd + (p.freightCost || 0);
   };
 
   const propostasRankeadas = [...recebidas].sort((a, b) => {
@@ -884,9 +916,7 @@ export default function RfqDetailPage() {
   const rfqTitle = rfq?.title || rfq?.purchaseRequest?.description || "—";
   const rfqCode = rfq?.code || rfqId;
   const originCode = rfq?.purchaseRequest?.code || "—";
-  const closesAt = rfq?.closesAt
-    ? new Date(rfq.closesAt).toLocaleDateString("pt-BR")
-    : "—";
+  const closesAt = rfq?.closesAt ? new Date(rfq.closesAt).toLocaleDateString("pt-BR") : "—";
 
   const prObj = rfq?.purchaseRequest as any;
   const companyName = resolvePurchaseRequestBranch(prObj || rfq, user);
@@ -894,34 +924,31 @@ export default function RfqDetailPage() {
   const isFinished = rfq?.status === "Finished" || rfq?.status === "Closed" || !!generatedPo;
   const isDraft = rfq?.status === "Draft";
   const isCancelled = rfq?.status === "Cancelled";
-  const badgeVariant: "primary" | "danger" | "gray" | "dark" | "success" | "warning" =
-    isCancelled
-      ? "danger"
-      : isDraft
+  const badgeVariant: "primary" | "danger" | "gray" | "dark" | "success" | "warning" = isCancelled
+    ? "danger"
+    : isDraft
       ? "gray"
       : isFinished
-      ? "success"
-      : stage === "approval"
-      ? "warning"
-      : stage === "analysis"
-      ? "primary"
-      : "success";
-  const badgeLabel =
-    isCancelled
-      ? "Cancelada"
-      : isDraft
+        ? "success"
+        : stage === "approval"
+          ? "warning"
+          : stage === "analysis"
+            ? "primary"
+            : "success";
+  const badgeLabel = isCancelled
+    ? "Cancelada"
+    : isDraft
       ? "Rascunho"
       : isFinished
-      ? "Pedido Emitido"
-      : stage === "proposal"
-      ? "Aguardando propostas"
-      : stage === "analysis"
-      ? "Em análise"
-      : "Em aprovação";
+        ? "Pedido Emitido"
+        : stage === "proposal"
+          ? "Aguardando propostas"
+          : stage === "analysis"
+            ? "Em análise"
+            : "Em aprovação";
 
   const Header = () => (
     <>
-
       <ConfirmDialog
         open={dialog === "encerrar"}
         variant="warning"
@@ -971,7 +998,7 @@ export default function RfqDetailPage() {
             setSelectingWinner(true);
             try {
               let propostaIdParaEnviar = propostas.find(
-                (p) => p.supplierId === pendingVencedorId
+                (p) => p.supplierId === pendingVencedorId,
               )?.proposalId;
 
               if (!propostaIdParaEnviar) {
@@ -987,7 +1014,11 @@ export default function RfqDetailPage() {
               }
 
               if (!propostaIdParaEnviar) {
-                toast({ variant: "error", title: "Proposta não encontrada", message: "Não foi possível registrar a proposta para este fornecedor." });
+                toast({
+                  variant: "error",
+                  title: "Proposta não encontrada",
+                  message: "Não foi possível registrar a proposta para este fornecedor.",
+                });
                 setDialog(null);
                 setPendingVencedorId(null);
                 return;
@@ -1009,7 +1040,11 @@ export default function RfqDetailPage() {
               });
             } catch (e) {
               logError("rfqs/[id]/selectWinner", e);
-              toast({ variant: "error", title: "Erro ao selecionar vencedor", message: getErrorMessage(e) });
+              toast({
+                variant: "error",
+                title: "Erro ao selecionar vencedor",
+                message: getErrorMessage(e),
+              });
             } finally {
               setSelectingWinner(false);
               setPendingVencedorId(null);
@@ -1034,13 +1069,22 @@ export default function RfqDetailPage() {
           vencedor ? (
             <>
               O PO será emitido para <strong>{vencedor.supplierName}</strong> no valor total de{" "}
-              <strong>
-                {formatCurrency(getProposalTotal(vencedor))}
-              </strong>
-              . Esta ação é definitiva e consolidará o processo de compras.
+              <strong>{formatCurrency(getProposalTotal(vencedor))}</strong>. Esta ação é definitiva
+              e consolidará o processo de compras.
               {recebidas.length < 3 && (
-                <div style={{ marginTop: 10, padding: "8px 12px", background: "#fef3c7", borderRadius: 6, fontSize: 12, color: "#92400e" }}>
-                  <strong>Aviso de Governança:</strong> Processo concluído com {recebidas.length} proposta(s) recebida(s). Certifique-se de que a dispensa ou exclusividade de fornecedor está documentada.
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: "8px 12px",
+                    background: "#fef3c7",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    color: "#92400e",
+                  }}
+                >
+                  <strong>Aviso de Governança:</strong> Processo concluído com {recebidas.length}{" "}
+                  proposta(s) recebida(s). Certifique-se de que a dispensa ou exclusividade de
+                  fornecedor está documentada.
                 </div>
               )}
             </>
@@ -1059,7 +1103,7 @@ export default function RfqDetailPage() {
             if (createdId) {
               setGeneratedPo({ id: createdId, code: createdCode });
             }
-            setRfq((prev) => prev ? { ...prev, status: "Finished" } : null);
+            setRfq((prev) => (prev ? { ...prev, status: "Finished" } : null));
 
             const originReqId = rfq?.purchaseRequest?.id || rfq?.requestId;
             if (originReqId) {
@@ -1067,7 +1111,7 @@ export default function RfqDetailPage() {
                 await purchaseRequestsApi.updateStatus(
                   originReqId,
                   "Finished",
-                  `Pedido de Compra ${createdCode} emitido a partir da RFQ ${rfqCode}. Demanda finalizada com sucesso.`
+                  `Pedido de Compra ${createdCode} emitido a partir da RFQ ${rfqCode}. Demanda finalizada com sucesso.`,
                 );
               } catch (reqErr) {
                 console.warn("Falha ao finalizar solicitação de compra de origem:", reqErr);
@@ -1083,7 +1127,11 @@ export default function RfqDetailPage() {
             setDialog(null);
           } catch (e) {
             logError("rfqs/[id]/createPo", e);
-            toast({ variant: "error", title: "Erro ao emitir Pedido", message: getErrorMessage(e) });
+            toast({
+              variant: "error",
+              title: "Erro ao emitir Pedido",
+              message: getErrorMessage(e),
+            });
           } finally {
             setCreatingPo(false);
           }
@@ -1101,7 +1149,9 @@ export default function RfqDetailPage() {
         confirmDisabled={!cancelReason.trim()}
         message={
           <>
-            Tem certeza de que deseja cancelar a cotação <strong>{rfqCode}</strong>? Esta ação anulará o processo de concorrência e reabrirá a demanda de compra de origem para uma nova cotação.
+            Tem certeza de que deseja cancelar a cotação <strong>{rfqCode}</strong>? Esta ação
+            anulará o processo de concorrência e reabrirá a demanda de compra de origem para uma
+            nova cotação.
           </>
         }
         confirmLabel="Sim, cancelar cotação"
@@ -1112,7 +1162,15 @@ export default function RfqDetailPage() {
         }}
       >
         <div style={{ marginTop: 12, textAlign: "left" }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#334155",
+              marginBottom: 6,
+            }}
+          >
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
@@ -1197,7 +1255,8 @@ export default function RfqDetailPage() {
             {
               label: "Análise e comparativo",
               description: "Equalização comercial",
-              status: stage === "analysis" ? "active" : stage === "approval" ? "completed" : "pending",
+              status:
+                stage === "analysis" ? "active" : stage === "approval" ? "completed" : "pending",
             },
             {
               label: "Aprovação e PO",
@@ -1217,7 +1276,14 @@ export default function RfqDetailPage() {
           <Icon name="chevron-left" /> Voltar para Cotações
         </button>
         <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 16 }}>
-          <div style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+          <div
+            style={{
+              padding: 24,
+              background: "#fff",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+            }}
+          >
             <Skeleton variant="title" width="40%" />
             <Skeleton variant="text" width="65%" style={{ marginBottom: 16 }} />
             <div style={{ display: "flex", gap: 12 }}>
@@ -1248,7 +1314,8 @@ export default function RfqDetailPage() {
             </h2>
             {propostas.length > 0 && (
               <span style={{ fontSize: 13, color: "#64748b" }}>
-                {propostas.length} fornecedor{propostas.length !== 1 ? "es convidados" : " convidado"} para esta cotação
+                {propostas.length} fornecedor
+                {propostas.length !== 1 ? "es convidados" : " convidado"} para esta cotação
               </span>
             )}
           </div>
@@ -1319,7 +1386,11 @@ export default function RfqDetailPage() {
             />
           ) : filteredPropostas.length === 0 ? (
             <div className={styles.emptyFiltered}>
-              <Icon name="search-sm" size={24} style={{ color: "#94a3b8", margin: "0 auto 6px", display: "block" }} />
+              <Icon
+                name="search-sm"
+                size={24}
+                style={{ color: "#94a3b8", margin: "0 auto 6px", display: "block" }}
+              />
               <strong>Nenhum fornecedor encontrado</strong>
               <span>Nenhum fornecedor corresponde aos filtros de busca aplicados.</span>
               <button
@@ -1353,7 +1424,8 @@ export default function RfqDetailPage() {
                   <span>
                     Exibindo {(proposalPage - 1) * PROPOSALS_PER_PAGE + 1} -{" "}
                     {Math.min(proposalPage * PROPOSALS_PER_PAGE, filteredPropostas.length)} de{" "}
-                    {filteredPropostas.length} fornecedor{filteredPropostas.length !== 1 ? "es" : ""}
+                    {filteredPropostas.length} fornecedor
+                    {filteredPropostas.length !== 1 ? "es" : ""}
                   </span>
                   <div className={styles.paginationControls}>
                     <button
@@ -1411,9 +1483,7 @@ export default function RfqDetailPage() {
                     <span>Menor custo equalizado</span>
                     <Icon name="trend-up-01" />
                   </div>
-                  <h3>
-                    {formatCurrency(getProposalTotal(melhorProposta) / totalQtd)}/un
-                  </h3>
+                  <h3>{formatCurrency(getProposalTotal(melhorProposta) / totalQtd)}/un</h3>
                   <span className={styles.subTextDark}>{melhorProposta?.supplierName || "—"}</span>
                 </div>
               </Card>
@@ -1428,7 +1498,7 @@ export default function RfqDetailPage() {
                 <span className={styles.label}>Média das propostas</span>
                 <h3>
                   {formatCurrency(
-                    recebidas.reduce((s, p) => s + (p.unitPrice || 0), 0) / (recebidas.length || 1)
+                    recebidas.reduce((s, p) => s + (p.unitPrice || 0), 0) / (recebidas.length || 1),
                   )}
                 </h3>
                 <span className={styles.sub}>Base: {recebidas.length} propostas</span>
@@ -1439,8 +1509,7 @@ export default function RfqDetailPage() {
                 <span className={styles.sub}>
                   {
                     recebidas.find(
-                      (p) =>
-                        p.deliveryTime === Math.min(...recebidas.map((x) => x.deliveryTime!))
+                      (p) => p.deliveryTime === Math.min(...recebidas.map((x) => x.deliveryTime!)),
                     )?.supplierName
                   }
                 </span>
@@ -1577,10 +1646,16 @@ export default function RfqDetailPage() {
                         <td key={p.supplierId} className={styles.selectCell}>
                           <button
                             className={
-                              i === 0 ? styles.btnSelecionarVencedor : styles.btnSelecionarSecundario
+                              i === 0
+                                ? styles.btnSelecionarVencedor
+                                : styles.btnSelecionarSecundario
                             }
                             disabled={isFinished || !!generatedPo}
-                            title={isFinished || !!generatedPo ? "Pedido já emitido para esta cotação" : undefined}
+                            title={
+                              isFinished || !!generatedPo
+                                ? "Pedido já emitido para esta cotação"
+                                : undefined
+                            }
                             onClick={() => {
                               setPendingVencedorId(p.supplierId);
                               setDialog("selecionar");
@@ -1621,29 +1696,33 @@ export default function RfqDetailPage() {
 
       <div className={styles.aprovacaoContainer}>
         {generatedPo && (
-          <div style={{
-            background: "#f0fdf9",
-            border: "1px solid #99f6e4",
-            borderRadius: 12,
-            padding: "20px 24px",
-            marginBottom: 24,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 16
-          }}>
+          <div
+            style={{
+              background: "#f0fdf9",
+              border: "1px solid #99f6e4",
+              borderRadius: 12,
+              padding: "20px 24px",
+              marginBottom: 24,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: "#007d79",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 10,
+                  background: "#007d79",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <Icon name="file-check-02" size={24} />
               </div>
               <div>
@@ -1654,7 +1733,8 @@ export default function RfqDetailPage() {
                   <Badge variant="success">Gerado</Badge>
                 </div>
                 <p style={{ margin: "4px 0 0", fontSize: 13, color: "#0f766e" }}>
-                  Ordem de Compra oficial: <strong>{generatedPo.code}</strong> vinculada a esta cotação. O ciclo de contratação foi formalizado.
+                  Ordem de Compra oficial: <strong>{generatedPo.code}</strong> vinculada a esta
+                  cotação. O ciclo de contratação foi formalizado.
                 </p>
               </div>
             </div>

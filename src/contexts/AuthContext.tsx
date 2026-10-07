@@ -3,7 +3,13 @@
 import React, { createContext, useState, useCallback, useEffect, useRef } from "react";
 import { User, AuthContextType, UserRole } from "@/types/auth";
 import { saveSession, loadStoredSession, clearSession } from "@/lib/auth/session";
-import { loginApi, getTenantsApi, getUserByIdApi, logoutApi, refreshTokenApi } from "@/lib/auth/api";
+import {
+  loginApi,
+  getTenantsApi,
+  getUserByIdApi,
+  logoutApi,
+  refreshTokenApi,
+} from "@/lib/auth/api";
 import { mapApiRole } from "@/lib/auth/roles";
 import { setTokenProvider, setUnauthorizedHandler, setRefreshHandler } from "@/lib/api-client";
 import { logError } from "@/lib/utils/error";
@@ -19,16 +25,14 @@ function parseJwtExp(token: string): number | null {
         atob(base64)
           .split("")
           .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
+          .join(""),
       );
       const payload = JSON.parse(jsonPayload);
       if (payload && typeof payload.exp === "number") {
         return payload.exp * 1000;
       }
     }
-  } catch {
-    
-  }
+  } catch {}
   return null;
 }
 
@@ -190,7 +194,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               ...updatedUser,
               tenantId: tenantId || updatedUser.tenantId,
               tenantName: tenantName || updatedUser.tenantName,
-              availableTenants: availableTenants.length > 0 ? availableTenants : updatedUser.availableTenants,
+              availableTenants:
+                availableTenants.length > 0 ? availableTenants : updatedUser.availableTenants,
               roles: meRoles.length > 0 ? meRoles : updatedUser.roles,
               scopes: meScopes.length > 0 ? meScopes : updatedUser.scopes,
             };
@@ -244,7 +249,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!meScopes || meScopes.length === 0) meScopes = ["read", "write", "admin"];
 
       let tenantName: string | undefined = backendUser.tenant_name;
-      let availableTenants = (backendUser as { availableTenants?: { id: string; name: string; type?: "Matriz" | "Filial" }[] }).availableTenants || [];
+      let availableTenants =
+        (
+          backendUser as {
+            availableTenants?: { id: string; name: string; type?: "Matriz" | "Filial" }[];
+          }
+        ).availableTenants || [];
 
       if (!availableTenants || availableTenants.length === 0) {
         try {

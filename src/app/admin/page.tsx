@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Button, Card, Badge, Tabs, ConfirmDialog, Loading, SearchInput, Icon } from "@/components/ui";
+import {
+  Button,
+  Card,
+  Badge,
+  Tabs,
+  ConfirmDialog,
+  Loading,
+  SearchInput,
+  Icon,
+} from "@/components/ui";
 import {
   adminApi,
   CompanyBranchConfig,
@@ -72,7 +81,9 @@ export default function AdminPage() {
   const [deleteRuleId, setDeleteRuleId] = useState<string | null>(null);
   const [deleteRangeKey, setDeleteRangeKey] = useState<string | null>(null);
   const [duplicateRangeKey, setDuplicateRangeKey] = useState<string | null>(null);
-  const [toggleCompanyConfirm, setToggleCompanyConfirm] = useState<CompanyBranchConfig | null>(null);
+  const [toggleCompanyConfirm, setToggleCompanyConfirm] = useState<CompanyBranchConfig | null>(
+    null,
+  );
 
   const [isDirty, setIsDirty] = useState(false);
   const [savingBatch, setSavingBatch] = useState(false);
@@ -96,7 +107,10 @@ export default function AdminPage() {
       }
     } catch (err: any) {
       console.error("Erro ao carregar dados administrativos:", err);
-      setApiError(err?.message || "Não foi possível carregar os dados reais de alçadas e empresas do backend.");
+      setApiError(
+        err?.message ||
+          "Não foi possível carregar os dados reais de alçadas e empresas do backend.",
+      );
     } finally {
       setLoading(false);
     }
@@ -144,12 +158,16 @@ export default function AdminPage() {
     for (let i = 0; i < valueRanges.length; i++) {
       const r = valueRanges[i];
       if (r.rules.length === 0) {
-        issues.push(`A faixa ${formatRangeLabel(r.minAmount, r.maxAmount)} não possui nenhum nível de aprovação configurado.`);
+        issues.push(
+          `A faixa ${formatRangeLabel(r.minAmount, r.maxAmount)} não possui nenhum nível de aprovação configurado.`,
+        );
       }
 
       for (const st of r.rules) {
         if (!st.approverIdentifier?.trim()) {
-          issues.push(`O Nível ${st.level} da faixa ${formatRangeLabel(r.minAmount, r.maxAmount)} está sem identificador de aprovador.`);
+          issues.push(
+            `O Nível ${st.level} da faixa ${formatRangeLabel(r.minAmount, r.maxAmount)} está sem identificador de aprovador.`,
+          );
         }
       }
     }
@@ -159,11 +177,17 @@ export default function AdminPage() {
       const next = valueRanges[i + 1];
 
       if (cur.maxAmount === null) {
-        issues.push(`A faixa ${formatRangeLabel(cur.minAmount, cur.maxAmount)} não possui teto máximo, sobrepondo faixas superiores.`);
+        issues.push(
+          `A faixa ${formatRangeLabel(cur.minAmount, cur.maxAmount)} não possui teto máximo, sobrepondo faixas superiores.`,
+        );
       } else if (cur.maxAmount >= next.minAmount) {
-        issues.push(`Sobreposição de limites: a faixa até ${formatCurrency(cur.maxAmount)} invade a faixa seguinte que inicia em ${formatCurrency(next.minAmount)}.`);
+        issues.push(
+          `Sobreposição de limites: a faixa até ${formatCurrency(cur.maxAmount)} invade a faixa seguinte que inicia em ${formatCurrency(next.minAmount)}.`,
+        );
       } else if (next.minAmount - cur.maxAmount > 0.05) {
-        issues.push(`Lacuna de cobertura: valores entre ${formatCurrency(cur.maxAmount)} e ${formatCurrency(next.minAmount)} não possuem regra de alçada associada.`);
+        issues.push(
+          `Lacuna de cobertura: valores entre ${formatCurrency(cur.maxAmount)} e ${formatCurrency(next.minAmount)} não possuem regra de alçada associada.`,
+        );
       }
     }
 
@@ -243,7 +267,7 @@ export default function AdminPage() {
               return { ...r, minAmount: min, maxAmount: max };
             }
             return r;
-          })
+          }),
         );
       }
     } else {
@@ -296,14 +320,20 @@ export default function AdminPage() {
     let newMin = 0;
     if (valueRanges.length > 0) {
       const last = valueRanges[valueRanges.length - 1];
-      newMin = last.maxAmount !== null ? Number((last.maxAmount + 0.01).toFixed(2)) : targetGroup.minAmount + 50000;
+      newMin =
+        last.maxAmount !== null
+          ? Number((last.maxAmount + 0.01).toFixed(2))
+          : targetGroup.minAmount + 50000;
     }
 
     const clonedRules: ApprovalRuleConfig[] = targetGroup.rules.map((r, idx) => ({
       ...r,
       id: `rule-${Date.now()}-${idx}`,
       minAmount: newMin,
-      maxAmount: targetGroup.maxAmount !== null ? newMin + (targetGroup.maxAmount - targetGroup.minAmount) : null,
+      maxAmount:
+        targetGroup.maxAmount !== null
+          ? newMin + (targetGroup.maxAmount - targetGroup.minAmount)
+          : null,
     }));
 
     setRules((prev) => [...prev, ...clonedRules]);
@@ -360,8 +390,8 @@ export default function AdminPage() {
                 department: stepForm.department || undefined,
                 active: stepForm.active,
               }
-            : r
-        )
+            : r,
+        ),
       );
     } else if (targetRangeKey) {
       const targetGroup = valueRanges.find((g) => g.rangeKey === targetRangeKey);
@@ -402,15 +432,13 @@ export default function AdminPage() {
           return { ...r, level: currentRule.level, order: currentRule.order };
         }
         return r;
-      })
+      }),
     );
     setIsDirty(true);
   };
 
   const handleToggleStepActive = (ruleId: string) => {
-    setRules((prev) =>
-      prev.map((r) => (r.id === ruleId ? { ...r, active: !r.active } : r))
-    );
+    setRules((prev) => prev.map((r) => (r.id === ruleId ? { ...r, active: !r.active } : r)));
     setIsDirty(true);
   };
 
@@ -427,7 +455,7 @@ export default function AdminPage() {
         .filter(
           (r) =>
             r.companyCode === selectedWorkflowCompany &&
-            (r.flowType || "solicitacao") === activeFlowType
+            (r.flowType || "solicitacao") === activeFlowType,
         )
         .map((r) => ({
           ...r,
@@ -443,7 +471,11 @@ export default function AdminPage() {
           department: r.department || undefined,
           active: r.active !== false,
         }));
-      await adminApi.batchSaveApprovalRules(selectedWorkflowCompany, currentCompanyRules, activeFlowType);
+      await adminApi.batchSaveApprovalRules(
+        selectedWorkflowCompany,
+        currentCompanyRules,
+        activeFlowType,
+      );
       setIsDirty(false);
       setSaveSuccessMessage("Alçadas sincronizadas e gravadas com sucesso no backend!");
       setTimeout(() => setSaveSuccessMessage(null), 4000);
@@ -518,15 +550,19 @@ export default function AdminPage() {
   const filteredCompanies = useMemo(() => {
     const term = companySearch.toLowerCase();
     return companies
-      .filter((c) => (
-        c.code.toLowerCase().includes(term) ||
-        c.name.toLowerCase().includes(term) ||
-        c.acronym.toLowerCase().includes(term) ||
-        c.unitName.toLowerCase().includes(term)
-      ))
+      .filter(
+        (c) =>
+          c.code.toLowerCase().includes(term) ||
+          c.name.toLowerCase().includes(term) ||
+          c.acronym.toLowerCase().includes(term) ||
+          c.unitName.toLowerCase().includes(term),
+      )
       .sort((a, b) => {
         if (a.type !== b.type) return a.type === "Matriz" ? -1 : 1;
-        return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) || a.code.localeCompare(b.code);
+        return (
+          a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) ||
+          a.code.localeCompare(b.code)
+        );
       });
   }, [companies, companySearch]);
 
@@ -541,7 +577,8 @@ export default function AdminPage() {
             Administração do Sistema
           </h1>
           <p className={styles.subtitle}>
-            Configuração de esteiras de alçadas, aprovadores, critérios operacionais e governança multi-empresa.
+            Configuração de esteiras de alçadas, aprovadores, critérios operacionais e governança
+            multi-empresa.
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -572,14 +609,17 @@ export default function AdminPage() {
           <span className={styles.statTitle}>Faixas de Alçada</span>
           <span className={styles.statValue}>{valueRanges.length}</span>
           <span className={styles.statDesc}>
-            {activeFlowType === "pedido" ? "Pedidos de Compra" : "Solicitações"} ({selectedCompanyObj?.acronym || selectedWorkflowCompany})
+            {activeFlowType === "pedido" ? "Pedidos de Compra" : "Solicitações"} (
+            {selectedCompanyObj?.acronym || selectedWorkflowCompany})
           </span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statTitle}>Níveis Configurados</span>
           <span className={styles.statValue}>{companyRules.length}</span>
           <span className={styles.statDesc}>
-            {diagnostics.isValid ? "Workflow 100% íntegro" : `${diagnostics.issues.length} inconsistência(s)`}
+            {diagnostics.isValid
+              ? "Workflow 100% íntegro"
+              : `${diagnostics.issues.length} inconsistência(s)`}
           </span>
         </div>
       </div>
@@ -616,7 +656,10 @@ export default function AdminPage() {
             <div className={styles.tableCard}>
               <div className={styles.workflowToolbar}>
                 <div className={styles.filterGroup}>
-                  <label htmlFor="companySelectWorkflow" style={{ fontSize: "0.85rem", fontWeight: 700 }}>
+                  <label
+                    htmlFor="companySelectWorkflow"
+                    style={{ fontSize: "0.85rem", fontWeight: 700 }}
+                  >
                     Empresa:
                   </label>
                   <select
@@ -625,7 +668,12 @@ export default function AdminPage() {
                     value={selectedWorkflowCompany}
                     onChange={(e) => {
                       if (isDirty) {
-                        if (!confirm("Existem alterações não salvas nesta empresa. Deseja trocar mesmo assim?")) return;
+                        if (
+                          !confirm(
+                            "Existem alterações não salvas nesta empresa. Deseja trocar mesmo assim?",
+                          )
+                        )
+                          return;
                         setIsDirty(false);
                       }
                       setSelectedWorkflowCompany(e.target.value);
@@ -647,7 +695,8 @@ export default function AdminPage() {
                     }`}
                     onClick={() => {
                       if (isDirty) {
-                        if (!confirm("Existem alterações não salvas. Deseja trocar de fluxo?")) return;
+                        if (!confirm("Existem alterações não salvas. Deseja trocar de fluxo?"))
+                          return;
                         setIsDirty(false);
                       }
                       setActiveFlowType("solicitacao");
@@ -663,7 +712,8 @@ export default function AdminPage() {
                     }`}
                     onClick={() => {
                       if (isDirty) {
-                        if (!confirm("Existem alterações não salvas. Deseja trocar de fluxo?")) return;
+                        if (!confirm("Existem alterações não salvas. Deseja trocar de fluxo?"))
+                          return;
                         setIsDirty(false);
                       }
                       setActiveFlowType("pedido");
@@ -690,7 +740,12 @@ export default function AdminPage() {
                   />
                   {activeSimulatedRange ? (
                     <span className={styles.simulatorResultBadge}>
-                      Ativa: {formatRangeLabel(activeSimulatedRange.minAmount, activeSimulatedRange.maxAmount)} ({activeSimulatedRange.rules.filter((r) => r.active).length} níveis ativos)
+                      Ativa:{" "}
+                      {formatRangeLabel(
+                        activeSimulatedRange.minAmount,
+                        activeSimulatedRange.maxAmount,
+                      )}{" "}
+                      ({activeSimulatedRange.rules.filter((r) => r.active).length} níveis ativos)
                     </span>
                   ) : (
                     <span style={{ fontSize: "0.75rem", color: "#dc2626", fontWeight: 600 }}>
@@ -707,10 +762,7 @@ export default function AdminPage() {
                     : styles.diagnosticsBannerWarning
                 }`}
               >
-                <Icon
-                  name={diagnostics.isValid ? "check-circle" : "alert-triangle"}
-                  size={20}
-                />
+                <Icon name={diagnostics.isValid ? "check-circle" : "alert-triangle"} size={20} />
                 <div style={{ flex: 1 }}>
                   <strong>
                     {diagnostics.isValid
@@ -747,7 +799,7 @@ export default function AdminPage() {
                   valueRanges.map((rg) => {
                     const isSimulatedMatch = activeSimulatedRange?.rangeKey === rg.rangeKey;
                     const sortedSteps = [...rg.rules].sort(
-                      (a, b) => a.order - b.order || a.level - b.level
+                      (a, b) => a.order - b.order || a.level - b.level,
                     );
 
                     return (
@@ -803,11 +855,16 @@ export default function AdminPage() {
 
                         <div style={{ padding: "0.75rem 1.25rem 0" }}>
                           <div className={styles.flowSequencePills}>
-                            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b" }}>
+                            <span
+                              style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b" }}
+                            >
                               Sequência do Fluxo:
                             </span>
                             <span className={styles.flowPill}>
-                              <Icon name={activeFlowType === "pedido" ? "shopping-cart" : "file-text"} size={12} />
+                              <Icon
+                                name={activeFlowType === "pedido" ? "shopping-cart" : "file-text"}
+                                size={12}
+                              />
                               {activeFlowType === "pedido" ? "Pedido" : "Solicitação"}
                             </span>
                             {sortedSteps.map((step, idx) => (
@@ -826,7 +883,10 @@ export default function AdminPage() {
                               </React.Fragment>
                             ))}
                             <span className={styles.flowPillArrow}>→</span>
-                            <span className={styles.flowPill} style={{ borderColor: "#10b981", color: "#047857" }}>
+                            <span
+                              className={styles.flowPill}
+                              style={{ borderColor: "#10b981", color: "#047857" }}
+                            >
                               <Icon name="check-circle" size={12} />
                               Aprovação Final
                             </span>
@@ -868,16 +928,18 @@ export default function AdminPage() {
                                     {step.level}
                                   </div>
                                   <div className={styles.stepDetails}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.5rem",
+                                      }}
+                                    >
                                       <h4>{step.approverName}</h4>
-                                      {!step.active && (
-                                        <Badge variant="gray">Inativo</Badge>
-                                      )}
+                                      {!step.active && <Badge variant="gray">Inativo</Badge>}
                                     </div>
                                     <div className={styles.stepMeta}>
-                                      <span className={styles.stepTypeTag}>
-                                        👤 Usuário
-                                      </span>
+                                      <span className={styles.stepTypeTag}>👤 Usuário</span>
                                       <span className={styles.stepIdTag}>
                                         {step.approverIdentifier}
                                       </span>
@@ -889,7 +951,9 @@ export default function AdminPage() {
                                   <button
                                     className={styles.iconBtn}
                                     onClick={() => handleToggleStepActive(step.id)}
-                                    title={step.active ? "Desativar este nível" : "Ativar este nível"}
+                                    title={
+                                      step.active ? "Desativar este nível" : "Ativar este nível"
+                                    }
                                   >
                                     <Icon name={step.active ? "eye" : "eye-off"} size={16} />
                                   </button>
@@ -907,7 +971,9 @@ export default function AdminPage() {
                                     className={styles.iconBtn}
                                     onClick={() => handleMoveStep(rg, stepIndex, "down")}
                                     title="Mover para baixo"
-                                    style={{ opacity: stepIndex === sortedSteps.length - 1 ? 0.3 : 1 }}
+                                    style={{
+                                      opacity: stepIndex === sortedSteps.length - 1 ? 0.3 : 1,
+                                    }}
                                   >
                                     <Icon name="chevron-down" size={16} />
                                   </button>
@@ -1090,7 +1156,8 @@ export default function AdminPage() {
                 <div>
                   <h3>Matriz de Permissões e Perfis Operacionais</h3>
                   <p>
-                    Resumo dos papéis do sistema e aprovadores autorizados a participar do fluxo e administrar o portal.
+                    Resumo dos papéis do sistema e aprovadores autorizados a participar do fluxo e
+                    administrar o portal.
                   </p>
                 </div>
               </div>
@@ -1105,34 +1172,64 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><code>admin</code></td>
+                    <td>
+                      <code>admin</code>
+                    </td>
                     <td>Administrador Geral da Plataforma e Presidência</td>
-                    <td><Badge variant="success">Sim (Nível Máximo)</Badge></td>
-                    <td><Badge variant="success">Acesso Total</Badge></td>
+                    <td>
+                      <Badge variant="success">Sim (Nível Máximo)</Badge>
+                    </td>
+                    <td>
+                      <Badge variant="success">Acesso Total</Badge>
+                    </td>
                   </tr>
                   <tr>
-                    <td><code>gerente</code></td>
+                    <td>
+                      <code>gerente</code>
+                    </td>
                     <td>Gerentes de Unidade</td>
-                    <td><Badge variant="success">Sim (Até R$ 10.000 / Nível 1)</Badge></td>
-                    <td><Badge variant="success">Acesso Configuração</Badge></td>
+                    <td>
+                      <Badge variant="success">Sim (Até R$ 10.000 / Nível 1)</Badge>
+                    </td>
+                    <td>
+                      <Badge variant="success">Acesso Configuração</Badge>
+                    </td>
                   </tr>
                   <tr>
-                    <td><code>diretor</code> / <code>cfo</code></td>
+                    <td>
+                      <code>diretor</code> / <code>cfo</code>
+                    </td>
                     <td>Diretoria Executiva, Operações e Finanças</td>
-                    <td><Badge variant="success">Sim (Até R$ 250.000+)</Badge></td>
-                    <td><Badge variant="gray">Consulta</Badge></td>
+                    <td>
+                      <Badge variant="success">Sim (Até R$ 250.000+)</Badge>
+                    </td>
+                    <td>
+                      <Badge variant="gray">Consulta</Badge>
+                    </td>
                   </tr>
                   <tr>
-                    <td><code>suprimentos</code> / <code>comprador</code></td>
+                    <td>
+                      <code>suprimentos</code> / <code>comprador</code>
+                    </td>
                     <td>Equipe de Suprimentos / Operação de Compras</td>
-                    <td><Badge variant="success">Sim (Alçadas de Pedido)</Badge></td>
-                    <td><Badge variant="danger">Restrito</Badge></td>
+                    <td>
+                      <Badge variant="success">Sim (Alçadas de Pedido)</Badge>
+                    </td>
+                    <td>
+                      <Badge variant="danger">Restrito</Badge>
+                    </td>
                   </tr>
                   <tr>
-                    <td><code>requisitante</code></td>
+                    <td>
+                      <code>requisitante</code>
+                    </td>
                     <td>Usuário Solicitante de Materiais e Serviços</td>
-                    <td><Badge variant="gray">Não</Badge></td>
-                    <td><Badge variant="danger">Restrito</Badge></td>
+                    <td>
+                      <Badge variant="gray">Não</Badge>
+                    </td>
+                    <td>
+                      <Badge variant="danger">Restrito</Badge>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1175,15 +1272,14 @@ export default function AdminPage() {
                       min={0}
                       className={styles.input}
                       value={rangeForm.maxAmount}
-                      onChange={(e) =>
-                        setRangeForm({ ...rangeForm, maxAmount: e.target.value })
-                      }
+                      onChange={(e) => setRangeForm({ ...rangeForm, maxAmount: e.target.value })}
                       placeholder="Ilimitado / Sem teto"
                     />
                   </div>
                 </div>
                 <p style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                  Empresa vinculada: <strong>{selectedCompanyObj?.name || selectedWorkflowCompany}</strong>
+                  Empresa vinculada:{" "}
+                  <strong>{selectedCompanyObj?.name || selectedWorkflowCompany}</strong>
                 </p>
               </div>
               <div className={styles.modalFooter}>
@@ -1404,7 +1500,11 @@ export default function AdminPage() {
                 </label>
               </div>
               <div className={styles.modalFooter}>
-                <Button variant="secondary" type="button" onClick={() => setCompanyModalOpen(false)}>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => setCompanyModalOpen(false)}
+                >
                   Cancelar
                 </Button>
                 <Button variant="primary" type="submit">

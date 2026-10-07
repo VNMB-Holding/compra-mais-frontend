@@ -1,10 +1,10 @@
-import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { ApprovalModal } from '@/components/modals';
+import React from "react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { ApprovalModal } from "@/components/modals";
 
-describe('ApprovalModal Component', () => {
-  it('deve renderizar dados da solicitação aprovada', () => {
+describe("ApprovalModal Component", () => {
+  it("deve renderizar dados da solicitação aprovada", () => {
     render(
       <ApprovalModal
         title="Compra de Maquinário"
@@ -14,15 +14,15 @@ describe('ApprovalModal Component', () => {
         priorityLabel="Alta"
         onGoToList={() => {}}
         onClose={() => {}}
-      />
+      />,
     );
 
-    expect(screen.getByText('Solicitação enviada para aprovação!')).toBeInTheDocument();
-    expect(screen.getByText('SOL-2026-001')).toBeInTheDocument();
-    expect(screen.getByText('Alta')).toBeInTheDocument();
+    expect(screen.getByText("Solicitação enviada para aprovação!")).toBeInTheDocument();
+    expect(screen.getByText("SOL-2026-001")).toBeInTheDocument();
+    expect(screen.getByText("Alta")).toBeInTheDocument();
   });
 
-  it('deve acionar callbacks ao clicar nos botões de ação', () => {
+  it("deve acionar callbacks ao clicar nos botões de ação", () => {
     const handleGoToList = vi.fn();
     const handleClose = vi.fn();
 
@@ -34,15 +34,15 @@ describe('ApprovalModal Component', () => {
         priority="Medium"
         onGoToList={handleGoToList}
         onClose={handleClose}
-      />
+      />,
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: /Entendido, ir para minhas solicitações/i })
+      screen.getByRole("button", { name: /Entendido, ir para minhas solicitações/i }),
     );
     expect(handleGoToList).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole('dialog'));
+    fireEvent.click(screen.getByRole("dialog"));
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
 });

@@ -22,7 +22,10 @@ import { dashboardApi } from "@/lib/api/dashboard";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tenant";
-import { PURCHASE_ORDER_STATUS_MAP as STATUS_MAP, getStatusBadgeVariant } from "@/lib/constants/status";
+import {
+  PURCHASE_ORDER_STATUS_MAP as STATUS_MAP,
+  getStatusBadgeVariant,
+} from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
 import { useTour } from "@/hooks/useTour";
 import { pedidosTour } from "@/lib/tours";
@@ -39,7 +42,12 @@ interface PedidoRow {
 }
 
 function mapToRow(po: PurchaseOrder, currentUser?: any): PedidoRow {
-  const empresaFilial = formatCorporateBranch(po.corporateColigada, po.corporateFilial || po.filialCode || po.companyCode, po.tenantId, currentUser);
+  const empresaFilial = formatCorporateBranch(
+    po.corporateColigada,
+    po.corporateFilial || po.filialCode || po.companyCode,
+    po.tenantId,
+    currentUser,
+  );
 
   const numero = po.code ? `${po.code}` : po.id.slice(0, 8);
   const fornecedor = po.supplier?.tradeName || po.supplier?.corporateName || "—";
@@ -105,7 +113,11 @@ export default function PedidosPage() {
       });
       const rows = data.map((po) => mapToRow(po, user));
       setPedidos(rows);
-      setTotalValue(data.filter((po) => po.status !== "Cancelled").reduce((sum, po) => sum + Number(po.totalValue), 0));
+      setTotalValue(
+        data
+          .filter((po) => po.status !== "Cancelled")
+          .reduce((sum, po) => sum + Number(po.totalValue), 0),
+      );
 
       const currentSups = rows.map((p) => p.fornecedor).filter((f) => f && f !== "—");
       if (currentSups.length > 0) {
@@ -135,13 +147,16 @@ export default function PedidosPage() {
     }
   }, [loading, error, isTourCompleted, startTour]);
 
-  const supplierOptions = React.useMemo(() => [
-    { label: "Todos os fornecedores", value: "Todos" },
-    ...Array.from(new Set([...allSuppliers, ...pedidos.map((p) => p.fornecedor)]))
-      .filter((f) => f !== "—")
-      .sort()
-      .map((f) => ({ label: f, value: f })),
-  ], [allSuppliers, pedidos]);
+  const supplierOptions = React.useMemo(
+    () => [
+      { label: "Todos os fornecedores", value: "Todos" },
+      ...Array.from(new Set([...allSuppliers, ...pedidos.map((p) => p.fornecedor)]))
+        .filter((f) => f !== "—")
+        .sort()
+        .map((f) => ({ label: f, value: f })),
+    ],
+    [allSuppliers, pedidos],
+  );
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
@@ -158,10 +173,15 @@ export default function PedidosPage() {
 
   const filtered = pedidos;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   const entregueCount = pedidos.filter((p) => p.status === "Entregue").length;
-  const pendentCount = pedidos.filter((p) => p.status !== "Entregue" && p.status !== "Cancelado").length;
+  const pendentCount = pedidos.filter(
+    (p) => p.status !== "Entregue" && p.status !== "Cancelado",
+  ).length;
 
   const columns: ColumnDef<PedidoRow>[] = [
     { header: "Número", cell: (row) => <span className={styles.boldCode}>{row.numero}</span> },
@@ -172,7 +192,7 @@ export default function PedidosPage() {
     { header: "Entrega Prevista", accessorKey: "entrega" },
     {
       header: "Status",
-      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
+      cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>,
     },
     {
       header: "",
@@ -181,29 +201,54 @@ export default function PedidosPage() {
         <button className={styles.iconBtn}>
           <Icon name="share-03" />
         </button>
-      )
-    }
+      ),
+    },
   ];
 
   return (
     <div className={styles.pageContainer}>
-
       <div className={styles.pageHeader}>
         <div>
           <h1>Pedidos de Compra</h1>
-          <p>Acompanhe o faturamento, prazos de entrega e formalização dos contratos com fornecedores.</p>
+          <p>
+            Acompanhe o faturamento, prazos de entrega e formalização dos contratos com
+            fornecedores.
+          </p>
         </div>
       </div>
 
       <div className={styles.kpiGrid} data-tour="pedidos-kpis">
-        <KpiCard title="Total de pedidos" value={String(pedidos.length)} icon="shopping-cart-01" description="Este mês" loading={loading} />
-        <KpiCard title="Pendentes" value={String(pendentCount)} icon="clock" description="Aguardando entrega" loading={loading} />
-        <KpiCard title="Entregues" value={String(entregueCount)} icon="check-circle" description="Finalizados" loading={loading} />
-        <KpiCard title="Valor total" value={formatCurrency(totalValue)} icon="currency-dollar-circle" description="Em pedidos" loading={loading} />
+        <KpiCard
+          title="Total de pedidos"
+          value={String(pedidos.length)}
+          icon="shopping-cart-01"
+          description="Este mês"
+          loading={loading}
+        />
+        <KpiCard
+          title="Pendentes"
+          value={String(pendentCount)}
+          icon="clock"
+          description="Aguardando entrega"
+          loading={loading}
+        />
+        <KpiCard
+          title="Entregues"
+          value={String(entregueCount)}
+          icon="check-circle"
+          description="Finalizados"
+          loading={loading}
+        />
+        <KpiCard
+          title="Valor total"
+          value={formatCurrency(totalValue)}
+          icon="currency-dollar-circle"
+          description="Em pedidos"
+          loading={loading}
+        />
       </div>
 
       <Card noPadding className={styles.mainListCard} data-tour="pedidos-table">
-
         <div className={styles.tableToolbar} data-tour="pedidos-toolbar">
           <div className={styles.searchBox}>
             <Icon name="search-md" />
@@ -258,15 +303,35 @@ export default function PedidosPage() {
           <ErrorState message={error} onRetry={fetchData} />
         ) : filtered.length === 0 ? (
           <EmptyState
-            illustration={searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS" ? "no-search" : "box-empty"}
-            title={searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS" ? "Nenhum pedido encontrado" : "Nenhum pedido gerado"}
+            illustration={
+              searchQuery ||
+              status !== "Todos" ||
+              (supplier !== "Todos" && supplier !== "Todas") ||
+              selectedCompanyId !== "TODAS"
+                ? "no-search"
+                : "box-empty"
+            }
+            title={
+              searchQuery ||
+              status !== "Todos" ||
+              (supplier !== "Todos" && supplier !== "Todas") ||
+              selectedCompanyId !== "TODAS"
+                ? "Nenhum pedido encontrado"
+                : "Nenhum pedido gerado"
+            }
             description={
-              searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS"
+              searchQuery ||
+              status !== "Todos" ||
+              (supplier !== "Todos" && supplier !== "Todas") ||
+              selectedCompanyId !== "TODAS"
                 ? "Não encontramos pedidos com os filtros aplicados. Tente alterar os critérios de busca."
                 : "Quando uma cotação for finalizada e o mapa comparativo for aprovado, os pedidos de compra aparecerão aqui."
             }
             action={
-              searchQuery || status !== "Todos" || (supplier !== "Todos" && supplier !== "Todas") || selectedCompanyId !== "TODAS"
+              searchQuery ||
+              status !== "Todos" ||
+              (supplier !== "Todos" && supplier !== "Todas") ||
+              selectedCompanyId !== "TODAS"
                 ? {
                     label: "Limpar Filtros",
                     variant: "secondary",
@@ -282,16 +347,25 @@ export default function PedidosPage() {
           />
         ) : (
           <>
-            <DataTable data={paginatedData} columns={columns} onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)} />
+            <DataTable
+              data={paginatedData}
+              columns={columns}
+              onRowClick={(row) => router.push(`/compras/pedidos/${row.id}`)}
+            />
 
             <div className={styles.tableFooter}>
-              <span>Mostrando {paginatedData.length} de {filtered.length} pedidos</span>
+              <span>
+                Mostrando {paginatedData.length} de {filtered.length} pedidos
+              </span>
               <div className={styles.paginationControls}>
                 <button
                   className={styles.pageBtn}
                   disabled={currentPage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  style={{ opacity: currentPage <= 1 ? 0.5 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+                  style={{
+                    opacity: currentPage <= 1 ? 0.5 : 1,
+                    cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                  }}
                 >
                   <Icon name="chevron-left" />
                 </button>
@@ -302,7 +376,10 @@ export default function PedidosPage() {
                   className={styles.pageBtn}
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  style={{ opacity: currentPage >= totalPages ? 0.5 : 1, cursor: currentPage >= totalPages ? "not-allowed" : "pointer" }}
+                  style={{
+                    opacity: currentPage >= totalPages ? 0.5 : 1,
+                    cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                  }}
                 >
                   <Icon name="chevron-right" />
                 </button>
@@ -310,7 +387,6 @@ export default function PedidosPage() {
             </div>
           </>
         )}
-
       </Card>
     </div>
   );

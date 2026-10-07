@@ -13,10 +13,10 @@
   white-space: nowrap;
   transition:
     background-color var(--duration-normal) var(--ease-in-out),
-    box-shadow       var(--duration-normal) var(--ease-in-out),
-    transform        var(--duration-fast)   var(--ease-in-out),
-    opacity          var(--duration-fast)   var(--ease-in-out),
-    border-color     var(--duration-normal) var(--ease-in-out);
+    box-shadow var(--duration-normal) var(--ease-in-out),
+    transform var(--duration-fast) var(--ease-in-out),
+    opacity var(--duration-fast) var(--ease-in-out),
+    border-color var(--duration-normal) var(--ease-in-out);
 }
 .btn:active {
   transform: scale(0.97) !important;
@@ -85,4 +85,4 @@
   to {
     transform: rotate(360deg);
   }
-}
+}

@@ -54,7 +54,8 @@ export interface GlobalSearchResults {
 export interface SearchItem {
   id: string;
   title: string;
-  category: "Solicitações" | "Cotações (RFQs)" | "Pedidos de Compra" | "Fornecedores" | "Ações" | "Páginas";
+  category:
+    "Solicitações" | "Cotações (RFQs)" | "Pedidos de Compra" | "Fornecedores" | "Ações" | "Páginas";
   description: string;
   url: string;
   icon: string;
@@ -64,7 +65,10 @@ export interface SearchItem {
   shortcut?: string;
 }
 
-export function formatSearchStatus(status?: string): { label: string; variant: "primary" | "gray" | "success" | "warning" | "danger" | "dark" } {
+export function formatSearchStatus(status?: string): {
+  label: string;
+  variant: "primary" | "gray" | "success" | "warning" | "danger" | "dark";
+} {
   if (!status) return { label: "N/A", variant: "gray" };
   switch (status.toLowerCase()) {
     case "approved":
@@ -102,8 +106,11 @@ export function formatSearchStatus(status?: string): { label: string; variant: "
 }
 
 export const searchApi = {
-  
-  globalSearch: async (query: string, companyCode?: string, limit: number = 5): Promise<GlobalSearchResults> => {
+  globalSearch: async (
+    query: string,
+    companyCode?: string,
+    limit: number = 5,
+  ): Promise<GlobalSearchResults> => {
     const trimmed = query.trim();
     if (!trimmed) {
       return { solicitacoes: [], rfqs: [], pedidos: [], fornecedores: [] };
@@ -116,7 +123,9 @@ export const searchApi = {
     if (limit) params.append("limit", limit.toString());
 
     try {
-      const directResults = await apiClient.get<GlobalSearchResults>(`/api/search?${params.toString()}`);
+      const directResults = await apiClient.get<GlobalSearchResults>(
+        `/api/search?${params.toString()}`,
+      );
       if (directResults && typeof directResults === "object") {
         return {
           solicitacoes: directResults.solicitacoes || [],
@@ -125,21 +134,28 @@ export const searchApi = {
           fornecedores: directResults.fornecedores || [],
         };
       }
-    } catch (err: any) {
-      
-    }
+    } catch (err: any) {}
 
     const [reqsSettled, rfqsSettled, ordersSettled, supsSettled] = await Promise.allSettled([
-      purchaseRequestsApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as PurchaseRequest[]),
+      purchaseRequestsApi
+        .list({ search: trimmed, companyCode: cleanCompany })
+        .catch(() => [] as PurchaseRequest[]),
       rfqsApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as Rfq[]),
-      purchaseOrdersApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as PurchaseOrder[]),
-      suppliersApi.list({ search: trimmed, companyCode: cleanCompany }).catch(() => [] as Supplier[]),
+      purchaseOrdersApi
+        .list({ search: trimmed, companyCode: cleanCompany })
+        .catch(() => [] as PurchaseOrder[]),
+      suppliersApi
+        .list({ search: trimmed, companyCode: cleanCompany })
+        .catch(() => [] as Supplier[]),
     ]);
 
-    const solicitacoesRaw = reqsSettled.status === "fulfilled" ? (reqsSettled.value as PurchaseRequest[]) || [] : [];
+    const solicitacoesRaw =
+      reqsSettled.status === "fulfilled" ? (reqsSettled.value as PurchaseRequest[]) || [] : [];
     const rfqsRaw = rfqsSettled.status === "fulfilled" ? (rfqsSettled.value as Rfq[]) || [] : [];
-    const pedidosRaw = ordersSettled.status === "fulfilled" ? (ordersSettled.value as PurchaseOrder[]) || [] : [];
-    const supsRaw = supsSettled.status === "fulfilled" ? (supsSettled.value as Supplier[]) || [] : [];
+    const pedidosRaw =
+      ordersSettled.status === "fulfilled" ? (ordersSettled.value as PurchaseOrder[]) || [] : [];
+    const supsRaw =
+      supsSettled.status === "fulfilled" ? (supsSettled.value as Supplier[]) || [] : [];
 
     const solicitacoes: SearchSolicitacao[] = solicitacoesRaw.slice(0, limit).map((r) => ({
       id: r.id,

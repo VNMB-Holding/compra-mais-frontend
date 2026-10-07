@@ -1,29 +1,29 @@
-import React from 'react';
-import styles from './Button.module.css';
+import React from "react";
+import styles from "./Button.module.css";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: "primary" | "secondary" | "danger";
   loading?: boolean;
   loadingText?: string;
   children: React.ReactNode;
 }
 
 export default function Button({
-  variant = 'primary',
+  variant = "primary",
   loading = false,
   loadingText,
   disabled,
   children,
-  className = '',
+  className = "",
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
   return (
     <button
-      className={`${styles.btn} ${styles[variant]} ${loading ? styles.loading : ''} ${className}`}
+      className={`${styles.btn} ${styles[variant]} ${loading ? styles.loading : ""} ${className}`}
       disabled={isDisabled}
-      aria-busy={loading ? 'true' : undefined}
+      aria-busy={loading ? "true" : undefined}
       {...props}
     >
       {loading && (
@@ -49,10 +49,7 @@ export default function Button({
           />
         </svg>
       )}
-      <span className={styles.label}>
-        {loading && loadingText ? loadingText : children}
-      </span>
+      <span className={styles.label}>{loading && loadingText ? loadingText : children}</span>
     </button>
   );
 }
-

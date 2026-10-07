@@ -113,7 +113,10 @@ export const adminApi = {
     return apiClient.post<CompanyBranchConfig>("/api/admin/companies", data);
   },
 
-  async updateCompany(id: string, data: Partial<CompanyBranchConfig>): Promise<CompanyBranchConfig> {
+  async updateCompany(
+    id: string,
+    data: Partial<CompanyBranchConfig>,
+  ): Promise<CompanyBranchConfig> {
     return apiClient.put<CompanyBranchConfig>(`/api/admin/companies/${id}`, data);
   },
 
@@ -121,7 +124,10 @@ export const adminApi = {
     return this.updateCompany(id, { active });
   },
 
-  async getApprovalRules(companyCode?: string, flowType?: ApprovalFlowType): Promise<ApprovalRuleConfig[]> {
+  async getApprovalRules(
+    companyCode?: string,
+    flowType?: ApprovalFlowType,
+  ): Promise<ApprovalRuleConfig[]> {
     try {
       const validCompany = cleanCompanyParam(companyCode);
       const params = new URLSearchParams();
@@ -142,7 +148,10 @@ export const adminApi = {
     return apiClient.post<ApprovalRuleConfig>("/api/admin/approval-rules", data);
   },
 
-  async updateApprovalRule(id: string, data: Partial<ApprovalRuleConfig>): Promise<ApprovalRuleConfig> {
+  async updateApprovalRule(
+    id: string,
+    data: Partial<ApprovalRuleConfig>,
+  ): Promise<ApprovalRuleConfig> {
     return apiClient.put<ApprovalRuleConfig>(`/api/admin/approval-rules/${id}`, data);
   },
 
@@ -151,14 +160,20 @@ export const adminApi = {
     return true;
   },
 
-  async batchSaveApprovalRules(companyCode: string, newRules: ApprovalRuleConfig[], flowType?: ApprovalFlowType): Promise<ApprovalRuleConfig[]> {
+  async batchSaveApprovalRules(
+    companyCode: string,
+    newRules: ApprovalRuleConfig[],
+    flowType?: ApprovalFlowType,
+  ): Promise<ApprovalRuleConfig[]> {
     const remote = await apiClient.put<ApprovalRuleConfig[]>(`/api/admin/approval-rules/batch`, {
       companyCode,
       flowType,
       rules: newRules,
     });
     if (!remote || !Array.isArray(remote)) {
-      throw new Error(`Falha ao salvar regras: o servidor não retornou uma lista válida. Resposta: ${JSON.stringify(remote)}`);
+      throw new Error(
+        `Falha ao salvar regras: o servidor não retornou uma lista válida. Resposta: ${JSON.stringify(remote)}`,
+      );
     }
     return remote;
   },

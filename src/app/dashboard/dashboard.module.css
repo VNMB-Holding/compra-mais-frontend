@@ -28,24 +28,40 @@
   transform-origin: 70% 70%;
 }
 @keyframes wave-animation {
-  0% { transform: rotate( 0.0deg) }
-  10% { transform: rotate(14.0deg) }
-  20% { transform: rotate(-8.0deg) }
-  30% { transform: rotate(14.0deg) }
-  40% { transform: rotate(-4.0deg) }
-  50% { transform: rotate(10.0deg) }
-  65% { transform: rotate( 0.0deg) }
-  100% { transform: rotate( 0.0deg) }
+  0% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(14deg);
+  }
+  20% {
+    transform: rotate(-8deg);
+  }
+  30% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+  65% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 .heroBanner {
-  background-image: url('/images/bg-hero-card.png');
+  background-image: url("/images/bg-hero-card.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   border-radius: 12px;
   padding: 24px 28px;
   color: white;
-  min-height: 130px; 
+  min-height: 130px;
 }
 .heroContent h2 {
   font-size: 22px;
@@ -114,9 +130,17 @@
   font-size: 12px;
   font-weight: 600;
 }
-.pos { color: #16a34a; }
-.pos span { font-size: 14px; }
-.trend small { color: #94a3b8; font-weight: 400; margin-left: 2px;}
+.pos {
+  color: #16a34a;
+}
+.pos span {
+  font-size: 14px;
+}
+.trend small {
+  color: #94a3b8;
+  font-weight: 400;
+  margin-left: 2px;
+}
 .chartWrapperElement {
   flex-grow: 1;
   margin-top: 16px;
@@ -136,8 +160,12 @@
   transition: gap 0.2s;
   width: fit-content;
 }
-.cardLink:hover { gap: 10px; }
-.cardLink span { font-size: 16px; }
+.cardLink:hover {
+  gap: 10px;
+}
+.cardLink span {
+  font-size: 16px;
+}
 .urgentCardWrapper {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -178,10 +206,12 @@
   font-weight: 600;
   color: #334155;
 }
-.fullW { grid-column: span 2; }
+.fullW {
+  grid-column: span 2;
+}
 .uqImage {
   height: 140px;
-  background-image: url('/images/bg-hero-card.png'); 
+  background-image: url("/images/bg-hero-card.png");
   background-size: cover;
   background-position: center;
   margin-top: auto;
@@ -196,8 +226,8 @@
 .donutGraphicBox {
   flex-shrink: 0;
   width: 140px;
-  height: 140px; 
-  position: relative; 
+  height: 140px;
+  position: relative;
 }
 .donutLegend {
   display: flex;
@@ -259,7 +289,9 @@
   cursor: pointer;
   transition: color 0.2s;
 }
-.rowActions:hover { color: #0f172a; }
+.rowActions:hover {
+  color: #0f172a;
+}
 .emptyState {
   display: flex;
   flex-direction: column;

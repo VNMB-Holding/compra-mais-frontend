@@ -2,10 +2,7 @@ import fs from "fs";
 import path from "path";
 import ts from "typescript";
 
-const TARGET_DIRS = [
-  path.resolve(process.cwd(), "src"),
-  path.resolve(process.cwd(), "tests"),
-];
+const TARGET_DIRS = [path.resolve(process.cwd(), "src"), path.resolve(process.cwd(), "tests")];
 
 const ALLOWED_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css", ".scss"];
 
@@ -25,7 +22,7 @@ function removeCodeComments(code: string, filePath: string): string {
       code,
       ts.ScriptTarget.Latest,
       true,
-      isJsx ? ts.ScriptKind.TSX : isTs ? ts.ScriptKind.TS : ts.ScriptKind.JS
+      isJsx ? ts.ScriptKind.TSX : isTs ? ts.ScriptKind.TS : ts.ScriptKind.JS,
     );
   } catch {
     return code;
@@ -109,7 +106,10 @@ function removeCssComments(code: string): string {
     const lineStart = code.lastIndexOf("\n", offset - 1) + 1;
     const lineEnd = code.indexOf("\n", offset + match.length);
     const before = code.slice(lineStart, offset);
-    const after = lineEnd === -1 ? code.slice(offset + match.length) : code.slice(offset + match.length, lineEnd);
+    const after =
+      lineEnd === -1
+        ? code.slice(offset + match.length)
+        : code.slice(offset + match.length, lineEnd);
     if (/^\s*$/.test(before) && /^\s*$/.test(after)) {
       return "";
     }
@@ -124,7 +124,8 @@ function processDirectory(dirPath: string, stats: { totalFiles: number; cleanedF
     const fullPath = path.join(dirPath, entry.name);
 
     if (entry.isDirectory()) {
-      if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git") continue;
+      if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git")
+        continue;
       processDirectory(fullPath, stats);
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name).toLowerCase();
@@ -156,4 +157,6 @@ for (const dir of TARGET_DIRS) {
     processDirectory(dir, stats);
   }
 }
-console.log(`✅ Concluído! Processados ${stats.totalFiles} arquivos. Comentários limpos em ${stats.cleanedFiles} arquivo(s).`);
+console.log(
+  `✅ Concluído! Processados ${stats.totalFiles} arquivos. Comentários limpos em ${stats.cleanedFiles} arquivo(s).`,
+);

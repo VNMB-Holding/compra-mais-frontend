@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Card, Button, Badge, Icon, ErrorState, Skeleton } from '@/components/ui';
-import { useToast } from '@/contexts/ToastContext';
-import { useAuth } from '@/hooks/useAuth';
-import styles from './aprovacao.module.css';
+import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Card, Button, Badge, Icon, ErrorState, Skeleton } from "@/components/ui";
+import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/hooks/useAuth";
+import styles from "./aprovacao.module.css";
 
-import { purchaseRequestsApi } from '@/lib/api/purchase-requests';
-import { isUserEligibleToApprove } from '@/lib/utils/approval-limits';
+import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
+import { isUserEligibleToApprove } from "@/lib/utils/approval-limits";
 
 interface Item {
   description: string;
@@ -28,7 +28,7 @@ interface ApprovalDetails {
   approverRole: string;
   approverIdentifier?: string;
   assignedApproverId?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: "PENDING" | "APPROVED" | "REJECTED";
   items: Item[];
 }
 
@@ -45,7 +45,7 @@ export default function AprovacaoPage() {
   const [completed, setCompleted] = useState(false);
   const [rejected, setRejected] = useState(false);
   const [showRejectInput, setShowRejectInput] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -54,14 +54,14 @@ export default function AprovacaoPage() {
       .getApprovalByToken(token)
       .then((data: any) => {
         setDetails(data);
-        if (data.status === 'APPROVED') {
+        if (data.status === "APPROVED") {
           setCompleted(true);
-        } else if (data.status === 'REJECTED') {
+        } else if (data.status === "REJECTED") {
           setRejected(true);
         }
       })
       .catch((err: any) => {
-        setError(err.message || 'Link de aprovação inválido ou expirado.');
+        setError(err.message || "Link de aprovação inválido ou expirado.");
       })
       .finally(() => {
         setLoading(false);
@@ -72,18 +72,18 @@ export default function AprovacaoPage() {
 
   const isEligible = Boolean(
     details &&
-    (
-      user?.role === 'admin' ||
-      user?.roles?.includes('diretor') ||
-      user?.roles?.includes('admin') ||
-      user?.roles?.includes('Diretor') ||
-      user?.roles?.includes('Admin') ||
+    (user?.role === "admin" ||
+      user?.roles?.includes("diretor") ||
+      user?.roles?.includes("admin") ||
+      user?.roles?.includes("Diretor") ||
+      user?.roles?.includes("Admin") ||
       (user && details.assignedApproverId && user.id === details.assignedApproverId) ||
-      (user && isUserEligibleToApprove(user, details.approverIdentifier || details.approverRole || details.approverName || ''))
-    )
+      (user &&
+        isUserEligibleToApprove(
+          user,
+          details.approverIdentifier || details.approverRole || details.approverName || "",
+        ))),
   );
-
-
 
   const handleApprove = async () => {
     if (!token) return;
@@ -172,7 +172,9 @@ export default function AprovacaoPage() {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+      value || 0,
+    );
   };
 
   if (loading) {
@@ -195,7 +197,11 @@ export default function AprovacaoPage() {
             <Card className={styles.approvalCard}>
               <Skeleton variant="title" width="45%" height={26} style={{ marginBottom: 12 }} />
               <Skeleton variant="text" width="70%" style={{ marginBottom: 20 }} />
-              <Skeleton variant="rectangular" height={140} style={{ borderRadius: 8, marginBottom: 16 }} />
+              <Skeleton
+                variant="rectangular"
+                height={140}
+                style={{ borderRadius: 8, marginBottom: 16 }}
+              />
               <Skeleton variant="rectangular" height={40} style={{ borderRadius: 6 }} />
             </Card>
           </div>
@@ -224,7 +230,10 @@ export default function AprovacaoPage() {
             <Card className={styles.approvalCard}>
               <ErrorState
                 title="Link Indisponível ou Expirado"
-                message={error || 'Não foi possível carregar os dados desta aprovação. O link pode ter sido finalizado ou expirado.'}
+                message={
+                  error ||
+                  "Não foi possível carregar os dados desta aprovação. O link pode ter sido finalizado ou expirado."
+                }
               />
             </Card>
           </div>
@@ -251,27 +260,28 @@ export default function AprovacaoPage() {
       <main className={styles.mainContent}>
         <div className={styles.contentWrapper}>
           <Card className={styles.approvalCard}>
-            
             <div className={styles.cardHeader}>
               <div className={styles.titleRow}>
                 <div className={styles.codeGroup}>
                   <h1>Solicitação #{details.code}</h1>
-                  <Badge variant={completed ? 'success' : rejected ? 'danger' : 'warning'}>
-                    {completed ? 'Aprovada' : rejected ? 'Recusada' : 'Aguardando Assinatura'}
+                  <Badge variant={completed ? "success" : rejected ? "danger" : "warning"}>
+                    {completed ? "Aprovada" : rejected ? "Recusada" : "Aguardando Assinatura"}
                   </Badge>
                 </div>
               </div>
               <p className={styles.demandDescription}>{details.description}</p>
-              
+
               <div className={styles.metadataTags}>
                 <span className={styles.infoTag}>
-                  <Icon name="building-01" /> {details.department || 'Geral'}
+                  <Icon name="building-01" /> {details.department || "Geral"}
                 </span>
                 <span className={styles.infoTag}>
-                  <Icon name="user-01" /> Aprovador: <strong>{details.approverName}</strong> ({details.approverRole})
+                  <Icon name="user-01" /> Aprovador: <strong>{details.approverName}</strong> (
+                  {details.approverRole})
                 </span>
                 <span className={styles.infoTag}>
-                  <Icon name="coins-stacked-01" /> Valor Estimado: <strong>{formatCurrency(details.estimatedBudget)}</strong>
+                  <Icon name="coins-stacked-01" /> Valor Estimado:{" "}
+                  <strong>{formatCurrency(details.estimatedBudget)}</strong>
                 </span>
               </div>
             </div>
@@ -283,7 +293,8 @@ export default function AprovacaoPage() {
                 </div>
                 <h2>Aprovação Registrada com Sucesso</h2>
                 <p>
-                  Sua assinatura eletrônica e os registros de auditoria foram gravados no fluxo de compras. A solicitação segue para a próxima alçada / cotação.
+                  Sua assinatura eletrônica e os registros de auditoria foram gravados no fluxo de
+                  compras. A solicitação segue para a próxima alçada / cotação.
                 </p>
               </div>
             ) : rejected ? (
@@ -293,7 +304,8 @@ export default function AprovacaoPage() {
                 </div>
                 <h2>Solicitação Recusada</h2>
                 <p>
-                  A recusa desta demanda foi registrada formalmente no histórico da solicitação com a sua justificativa gravada.
+                  A recusa desta demanda foi registrada formalmente no histórico da solicitação com
+                  a sua justificativa gravada.
                 </p>
               </div>
             ) : (
@@ -305,7 +317,8 @@ export default function AprovacaoPage() {
                       <div>
                         <div className={styles.authNoticeTitle}>Identificação Obrigatória</div>
                         <div className={styles.authNoticeText}>
-                          Esta alçada é designada a <strong>{details.approverName}</strong>. Faça login com sua conta institucional para assinar ou recusar.
+                          Esta alçada é designada a <strong>{details.approverName}</strong>. Faça
+                          login com sua conta institucional para assinar ou recusar.
                         </div>
                       </div>
                     </div>
@@ -324,7 +337,10 @@ export default function AprovacaoPage() {
                     <div>
                       <div className={styles.notEligibleTitle}>Alçada Restrita</div>
                       <div className={styles.notEligibleText}>
-                        Você está autenticado como <strong>{user.name}</strong> ({user.email}). No entanto, esta etapa de aprovação é restrita a <strong>{details.approverName}</strong>. Apenas o aprovador designado ou administradores podem validar este documento.
+                        Você está autenticado como <strong>{user.name}</strong> ({user.email}). No
+                        entanto, esta etapa de aprovação é restrita a{" "}
+                        <strong>{details.approverName}</strong>. Apenas o aprovador designado ou
+                        administradores podem validar este documento.
                       </div>
                     </div>
                   </div>
@@ -333,7 +349,9 @@ export default function AprovacaoPage() {
                 {!authLoading && user && isEligible && (
                   <div className={styles.signedAsBanner}>
                     <Icon name="shield-tick" size={14} />
-                    <span>Conectado como <strong>{user.name}</strong> ({user.role})</span>
+                    <span>
+                      Conectado como <strong>{user.name}</strong> ({user.role})
+                    </span>
                   </div>
                 )}
 
@@ -357,33 +375,40 @@ export default function AprovacaoPage() {
                       <table className={styles.itemsTable}>
                         <thead>
                           <tr>
-                            <th style={{ width: 44, textAlign: 'center' }}>#</th>
+                            <th style={{ width: 44, textAlign: "center" }}>#</th>
                             <th>Descrição do Item</th>
-                            <th style={{ width: 80, textAlign: 'right' }}>Qtd</th>
-                            <th style={{ width: 70, textAlign: 'center' }}>Unid</th>
-                            <th style={{ width: 130, textAlign: 'right' }}>Preço Unit.</th>
-                            <th style={{ width: 130, textAlign: 'right' }}>Subtotal</th>
+                            <th style={{ width: 80, textAlign: "right" }}>Qtd</th>
+                            <th style={{ width: 70, textAlign: "center" }}>Unid</th>
+                            <th style={{ width: 130, textAlign: "right" }}>Preço Unit.</th>
+                            <th style={{ width: 130, textAlign: "right" }}>Subtotal</th>
                           </tr>
                         </thead>
                         <tbody>
                           {details.items.map((item, idx) => (
                             <tr key={idx}>
-                              <td style={{ textAlign: 'center', color: '#64748b', fontSize: 12, fontWeight: 600 }}>
+                              <td
+                                style={{
+                                  textAlign: "center",
+                                  color: "#64748b",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                }}
+                              >
                                 {idx + 1}
                               </td>
                               <td>
                                 <strong className={styles.itemDesc}>{item.description}</strong>
                               </td>
-                              <td style={{ textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>
+                              <td style={{ textAlign: "right", fontWeight: 600, color: "#0f172a" }}>
                                 {item.quantity}
                               </td>
-                              <td style={{ textAlign: 'center' }}>
+                              <td style={{ textAlign: "center" }}>
                                 <span className={styles.unitBadge}>{item.unit}</span>
                               </td>
-                              <td style={{ textAlign: 'right', color: '#475569', fontSize: 12 }}>
+                              <td style={{ textAlign: "right", color: "#475569", fontSize: 12 }}>
                                 {formatCurrency(item.estimatedUnitPrice)}
                               </td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                              <td style={{ textAlign: "right", fontWeight: 700, color: "#0f172a" }}>
                                 {formatCurrency(item.estimatedUnitPrice * item.quantity)}
                               </td>
                             </tr>
@@ -391,10 +416,25 @@ export default function AprovacaoPage() {
                         </tbody>
                         <tfoot>
                           <tr>
-                            <td colSpan={5} style={{ textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: 13 }}>
+                            <td
+                              colSpan={5}
+                              style={{
+                                textAlign: "right",
+                                fontWeight: 600,
+                                color: "#475569",
+                                fontSize: 13,
+                              }}
+                            >
                               Total Estimado:
                             </td>
-                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--primary, #007d79)', fontSize: 14 }}>
+                            <td
+                              style={{
+                                textAlign: "right",
+                                fontWeight: 700,
+                                color: "var(--primary, #007d79)",
+                                fontSize: 14,
+                              }}
+                            >
                               {formatCurrency(details.estimatedBudget)}
                             </td>
                           </tr>
@@ -459,12 +499,14 @@ export default function AprovacaoPage() {
 
                   <div className={styles.securityNote}>
                     <Icon name="shield-tick" size={14} />
-                    <span>Assinatura digital com registro auditável de IP, geolocalização e data/hora de conformidade.</span>
+                    <span>
+                      Assinatura digital com registro auditável de IP, geolocalização e data/hora de
+                      conformidade.
+                    </span>
                   </div>
                 </div>
               </>
             )}
-
           </Card>
         </div>
       </main>

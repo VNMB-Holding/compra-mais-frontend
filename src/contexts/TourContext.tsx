@@ -1,56 +1,48 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 export interface TourStep {
-  
   target: string;
-  
+
   title: string;
-  
+
   description: string;
-  
+
   placement?: "top" | "bottom" | "left" | "right" | "auto";
-  
+
   onBeforeStep?: () => void;
 }
 
 export interface TourDefinition {
-  
   id: string;
-  
+
   steps: TourStep[];
-  
+
   onTourStart?: () => void;
-  
+
   onTourEnd?: () => void;
 }
 
 export interface TourContextValue {
-  
   startTour: (tour: TourDefinition) => void;
-  
+
   endTour: () => void;
-  
+
   nextStep: () => void;
-  
+
   prevStep: () => void;
-  
+
   isActive: boolean;
-  
+
   currentStep: number;
-  
+
   totalSteps: number;
-  
+
   currentTour: TourDefinition | null;
-  
+
   isTourCompleted: (tourId: string) => boolean;
-  
+
   resetTour: (tourId: string) => void;
 }
 
@@ -67,17 +59,13 @@ function checkCompleted(tourId: string): boolean {
 function markCompleted(tourId: string) {
   try {
     localStorage.setItem(`${STORAGE_PREFIX}${tourId}`, "1");
-  } catch {
-    
-  }
+  } catch {}
 }
 
 function clearCompleted(tourId: string) {
   try {
     localStorage.removeItem(`${STORAGE_PREFIX}${tourId}`);
-  } catch {
-    
-  }
+  } catch {}
 }
 
 const TourContext = createContext<TourContextValue | null>(null);

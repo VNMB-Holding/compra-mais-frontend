@@ -10,7 +10,11 @@ import { formatCorporateBranch } from "@/lib/utils/tenant";
 import { getApprovalChainForOrder } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
-import { usePurchaseOrder, usePurchaseOrders, useUpdatePurchaseOrderStatus } from "@/hooks/useQueries";
+import {
+  usePurchaseOrder,
+  usePurchaseOrders,
+  useUpdatePurchaseOrderStatus,
+} from "@/hooks/useQueries";
 
 function getPdfFilename(response: Response, fallbackCode: string) {
   const disposition = response.headers.get("content-disposition") || "";
@@ -24,7 +28,8 @@ function getPdfFilename(response: Response, fallbackCode: string) {
     return filenameMatch[1].trim();
   }
 
-  const safeCode = fallbackCode.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "") || "pedido-compra";
+  const safeCode =
+    fallbackCode.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "") || "pedido-compra";
   return `${safeCode}.pdf`;
 }
 
@@ -72,7 +77,7 @@ export default function PedidoDetailPage() {
 
   const [loadingPdf, setLoadingPdf] = useState(false);
   const { toast } = useToast();
-  
+
   const rawId = (params.id as string) || "";
   const isNewFlow = rawId === "PED-NOVO";
   const isUuid = rawId.length > 20 && !rawId.startsWith("PED-");
@@ -169,7 +174,7 @@ export default function PedidoDetailPage() {
     try {
       const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
       const note = `NF-e confirmada: ${nfeVal}${inputChaveNfe ? ` (Chave: ${inputChaveNfe})` : ""}`;
-      
+
       if (orderIdToUpdate) {
         await updateStatusMutation.mutateAsync({
           id: orderIdToUpdate,
@@ -201,7 +206,7 @@ export default function PedidoDetailPage() {
       const transpVal = inputTransportadora.trim() || "Transportadora Contratada";
       const rastrVal = inputRastreio.trim() ? ` (Rastreio: ${inputRastreio.trim()})` : "";
       const note = `Em transporte via ${transpVal}${rastrVal}`;
-      
+
       if (orderIdToUpdate) {
         await updateStatusMutation.mutateAsync({
           id: orderIdToUpdate,
@@ -258,7 +263,11 @@ export default function PedidoDetailPage() {
   const handlePrintPO = async () => {
     const idToUse = po?.id || (isUuid ? rawId : null);
     if (!idToUse || !po) {
-      toast({ variant: "warning", title: "PDF indisponível", message: "O PDF só está disponível para pedidos carregados do banco de dados." });
+      toast({
+        variant: "warning",
+        title: "PDF indisponível",
+        message: "O PDF só está disponível para pedidos carregados do banco de dados.",
+      });
       return;
     }
 
@@ -286,13 +295,18 @@ export default function PedidoDetailPage() {
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
     } catch (e) {
-      toast({ variant: "error", title: "Erro ao gerar PDF", message: e instanceof Error ? e.message : "Tente novamente." });
+      toast({
+        variant: "error",
+        title: "Erro ao gerar PDF",
+        message: e instanceof Error ? e.message : "Tente novamente.",
+      });
     } finally {
       setLoadingPdf(false);
     }
   };
 
-  const fornecedorNome = po?.supplier?.tradeName || po?.supplier?.corporateName || searchParams.get("fornecedor") || "—";
+  const fornecedorNome =
+    po?.supplier?.tradeName || po?.supplier?.corporateName || searchParams.get("fornecedor") || "—";
   const fornecedorCnpj = po?.supplier?.cnpj || searchParams.get("cnpj") || "—";
   const precoUnit = searchParams.get("precoUnit") ? Number(searchParams.get("precoUnit")) : 0;
   const frete = searchParams.get("frete") ? Number(searchParams.get("frete")) : 0;
@@ -302,9 +316,11 @@ export default function PedidoDetailPage() {
   const rfqOrigem = searchParams.get("rfq") || "—";
   const solOrigem = searchParams.get("origem") || "—";
 
-  const valorTotal = po?.totalValue ?? ((precoUnit * qtdTotal) + frete);
+  const valorTotal = po?.totalValue ?? precoUnit * qtdTotal + frete;
 
-  const dataEntrega = po?.estimatedDeliveryDate ? new Date(po.estimatedDeliveryDate) : new Date(Date.now() + prazo * 86400000);
+  const dataEntrega = po?.estimatedDeliveryDate
+    ? new Date(po.estimatedDeliveryDate)
+    : new Date(Date.now() + prazo * 86400000);
   const dataEntregaFormatada = dataEntrega.toLocaleDateString("pt-BR");
 
   const dataVencimento = new Date(Date.now() + 30 * 86400000);
@@ -320,7 +336,9 @@ export default function PedidoDetailPage() {
         <button className={styles.backBtn} onClick={() => router.push("/compras/pedidos")}>
           <Icon name="chevron-left" /> Voltar para Pedidos
         </button>
-        <div style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+        <div
+          style={{ padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}
+        >
           <Skeleton variant="title" width="30%" />
           <Skeleton variant="text" width="50%" style={{ marginBottom: 16 }} />
           <div style={{ display: "flex", gap: 12 }}>
@@ -352,9 +370,12 @@ export default function PedidoDetailPage() {
 
   const companyName = formatCorporateBranch(
     po?.corporateColigada,
-    po?.corporateFilial || (po as any)?.filialCode || (po as any)?.companyCode || (po as any)?.branchName,
+    po?.corporateFilial ||
+      (po as any)?.filialCode ||
+      (po as any)?.companyCode ||
+      (po as any)?.branchName,
     po?.tenantId,
-    user
+    user,
   );
   const items = po?.items && po.items.length > 0 ? po.items : null;
 
@@ -372,7 +393,8 @@ export default function PedidoDetailPage() {
         onCancel={() => setConfirmAssinatura(false)}
         message={
           <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
-            Ao assinar, o pedido <strong>{displayId}</strong> será formalizado com o fornecedor <strong>{fornecedorNome}</strong> e liberado para faturamento e despacho logístico.
+            Ao assinar, o pedido <strong>{displayId}</strong> será formalizado com o fornecedor{" "}
+            <strong>{fornecedorNome}</strong> e liberado para faturamento e despacho logístico.
           </p>
         }
       />
@@ -390,7 +412,8 @@ export default function PedidoDetailPage() {
         message={
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
-              Confirme a emissão da Nota Fiscal Eletrônica de <strong>{displayId}</strong>. O pedido avançará para a etapa de Faturado.
+              Confirme a emissão da Nota Fiscal Eletrônica de <strong>{displayId}</strong>. O pedido
+              avançará para a etapa de Faturado.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
@@ -449,7 +472,8 @@ export default function PedidoDetailPage() {
         message={
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
-              Informe os dados de despacho de <strong>{displayId}</strong> para iniciar a etapa de rastreamento logístico.
+              Informe os dados de despacho de <strong>{displayId}</strong> para iniciar a etapa de
+              rastreamento logístico.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
@@ -508,7 +532,8 @@ export default function PedidoDetailPage() {
         message={
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
-              Os itens de <strong>{displayId}</strong> foram conferidos e estão em conformidade com o pedido. Esta ação finaliza o ciclo de entrega.
+              Os itens de <strong>{displayId}</strong> foram conferidos e estão em conformidade com
+              o pedido. Esta ação finaliza o ciclo de entrega.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
@@ -550,12 +575,22 @@ export default function PedidoDetailPage() {
         }}
         message={
           <>
-            Tem certeza de que deseja cancelar o pedido de compra <strong>{displayId}</strong>? Esta ação anulará o fornecimento e marcará o pedido como cancelado para controle de auditoria.
+            Tem certeza de que deseja cancelar o pedido de compra <strong>{displayId}</strong>? Esta
+            ação anulará o fornecimento e marcará o pedido como cancelado para controle de
+            auditoria.
           </>
         }
       >
         <div style={{ marginTop: 12, textAlign: "left" }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#334155",
+              marginBottom: 6,
+            }}
+          >
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
@@ -578,10 +613,7 @@ export default function PedidoDetailPage() {
         </div>
       </ConfirmDialog>
 
-      <button
-        className={styles.backBtn}
-        onClick={() => router.push("/compras/pedidos")}
-      >
+      <button className={styles.backBtn} onClick={() => router.push("/compras/pedidos")}>
         <Icon name="chevron-left" /> Voltar para Pedidos
       </button>
 
@@ -589,8 +621,32 @@ export default function PedidoDetailPage() {
         <div>
           <div className={styles.titleRow}>
             <h1>{displayId}</h1>
-            <Badge variant={isCancelled ? "danger" : isDelivered ? "success" : isInTransit ? "primary" : isBilled ? "warning" : currentStatus === "AwaitingSignature" ? "warning" : "gray"}>
-              {isCancelled ? "Cancelado" : isDelivered ? "Entregue" : isInTransit ? "Em Transporte" : isBilled ? "Faturado" : currentStatus === "AwaitingSignature" ? "Aguardando Assinatura" : "Emitido"}
+            <Badge
+              variant={
+                isCancelled
+                  ? "danger"
+                  : isDelivered
+                    ? "success"
+                    : isInTransit
+                      ? "primary"
+                      : isBilled
+                        ? "warning"
+                        : currentStatus === "AwaitingSignature"
+                          ? "warning"
+                          : "gray"
+              }
+            >
+              {isCancelled
+                ? "Cancelado"
+                : isDelivered
+                  ? "Entregue"
+                  : isInTransit
+                    ? "Em Transporte"
+                    : isBilled
+                      ? "Faturado"
+                      : currentStatus === "AwaitingSignature"
+                        ? "Aguardando Assinatura"
+                        : "Emitido"}
             </Badge>
           </div>
           <p className={styles.subtitleLarge}>{fornecedorNome}</p>
@@ -678,32 +734,49 @@ export default function PedidoDetailPage() {
                 </p>
               </div>
               <div className={styles.flowCurrentBadge}>
-                Etapa Atual: <strong>
+                Etapa Atual:{" "}
+                <strong>
                   {isDelivered
                     ? "Entregue (Concluído)"
                     : isInTransit
-                    ? "Em Transporte"
-                    : isBilled
-                    ? "Faturado (Aguardando Envio)"
-                    : currentStatus === "AwaitingSignature"
-                    ? "Aguardando Assinatura do Gestor"
-                    : "Emitido (Aguardando Faturamento)"}
+                      ? "Em Transporte"
+                      : isBilled
+                        ? "Faturado (Aguardando Envio)"
+                        : currentStatus === "AwaitingSignature"
+                          ? "Aguardando Assinatura do Gestor"
+                          : "Emitido (Aguardando Faturamento)"}
                 </strong>
               </div>
             </div>
 
             <div className={styles.stepperContainer}>
-              <div className={`${styles.step} ${currentStatus === "AwaitingSignature" ? styles.active : styles.completed}`}>
+              <div
+                className={`${styles.step} ${currentStatus === "AwaitingSignature" ? styles.active : styles.completed}`}
+              >
                 <div className={styles.stepIcon}>
                   <Icon name="receipt-check" />
                   {currentStatus !== "AwaitingSignature" && (
-                    <div className={styles.checkBadge}><Icon name="check" /></div>
+                    <div className={styles.checkBadge}>
+                      <Icon name="check" />
+                    </div>
                   )}
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>{currentStatus === "AwaitingSignature" ? "Assinatura Pendente" : "Pedido Emitido"}</strong>
-                  <span>{po?.createdAt ? new Date(po.createdAt).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</span>
-                  <small>{currentStatus === "AwaitingSignature" ? "Aguardando gestor" : "Ordem formalizada"}</small>
+                  <strong>
+                    {currentStatus === "AwaitingSignature"
+                      ? "Assinatura Pendente"
+                      : "Pedido Emitido"}
+                  </strong>
+                  <span>
+                    {po?.createdAt
+                      ? new Date(po.createdAt).toLocaleDateString("pt-BR")
+                      : new Date().toLocaleDateString("pt-BR")}
+                  </span>
+                  <small>
+                    {currentStatus === "AwaitingSignature"
+                      ? "Aguardando gestor"
+                      : "Ordem formalizada"}
+                  </small>
                   {currentStatus === "AwaitingSignature" ? (
                     <button
                       type="button"
@@ -726,12 +799,18 @@ export default function PedidoDetailPage() {
                 <div className={styles.stepIcon}>
                   <Icon name="file-02" />
                   {isBilled && (
-                    <div className={styles.checkBadge}><Icon name="check" /></div>
+                    <div className={styles.checkBadge}>
+                      <Icon name="check" />
+                    </div>
                   )}
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Faturado (NF-e)</strong>
-                  <span>{isBilled ? (savedNfe || (po?.id ? `NF-${po.id.slice(0, 6).toUpperCase()}` : "Emitida")) : "Aguardando NF"}</span>
+                  <span>
+                    {isBilled
+                      ? savedNfe || (po?.id ? `NF-${po.id.slice(0, 6).toUpperCase()}` : "Emitida")
+                      : "Aguardando NF"}
+                  </span>
                   <small>{isBilled ? "Nota fiscal emitida" : "Faturamento pendente"}</small>
                   {isBilled ? (
                     <span className={styles.stepStatusBadgeCompleted}>
@@ -751,16 +830,26 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isInTransit ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.step} ${isInTransit ? styles.completed : isBilled ? styles.active : styles.disabledStep}`}>
+              <div
+                className={`${styles.step} ${isInTransit ? styles.completed : isBilled ? styles.active : styles.disabledStep}`}
+              >
                 <div className={styles.stepIcon}>
                   <Icon name="truck-01" />
                   {isInTransit && (
-                    <div className={styles.checkBadge}><Icon name="check" /></div>
+                    <div className={styles.checkBadge}>
+                      <Icon name="check" />
+                    </div>
                   )}
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>Em Transporte</strong>
-                  <span>{isInTransit ? (savedRastreio || po?.shippingType || "Despachado") : (isBilled ? "Pronto p/ envio" : "Aguardando")}</span>
+                  <span>
+                    {isInTransit
+                      ? savedRastreio || po?.shippingType || "Despachado"
+                      : isBilled
+                        ? "Pronto p/ envio"
+                        : "Aguardando"}
+                  </span>
                   <small>{isInTransit ? "Despachado" : "Transportadora"}</small>
                   {isInTransit ? (
                     <span className={styles.stepStatusBadgeCompleted}>
@@ -782,11 +871,15 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isDelivered ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.step} ${isDelivered ? styles.completed : isInTransit ? styles.active : styles.disabledStep}`}>
+              <div
+                className={`${styles.step} ${isDelivered ? styles.completed : isInTransit ? styles.active : styles.disabledStep}`}
+              >
                 <div className={styles.stepIcon}>
                   <Icon name="package-check" />
                   {isDelivered && (
-                    <div className={styles.checkBadge}><Icon name="check" /></div>
+                    <div className={styles.checkBadge}>
+                      <Icon name="check" />
+                    </div>
                   )}
                 </div>
                 <div className={styles.stepInfo}>
@@ -814,7 +907,14 @@ export default function PedidoDetailPage() {
           </Card>
 
           <Card className={styles.infoCard}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "16px",
+              }}
+            >
               <h4 style={{ margin: 0 }}>Detalhamento Comercial do Pedido</h4>
               <span className={styles.originTag}>
                 <Icon name="check-verified-01" size={13} /> Sincronizado com ERP
@@ -840,18 +940,26 @@ export default function PedidoDetailPage() {
               </div>
               <div className={styles.infoItem}>
                 <label>Data de Emissão</label>
-                <span>{po?.createdAt ? new Date(po.createdAt).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</span>
+                <span>
+                  {po?.createdAt
+                    ? new Date(po.createdAt).toLocaleDateString("pt-BR")
+                    : new Date().toLocaleDateString("pt-BR")}
+                </span>
               </div>
               <div className={styles.infoItem}>
                 <label>Previsão de Entrega</label>
-                <span>{dataEntregaFormatada} ({prazo} dia{prazo !== 1 ? "s" : ""})</span>
+                <span>
+                  {dataEntregaFormatada} ({prazo} dia{prazo !== 1 ? "s" : ""})
+                </span>
               </div>
             </div>
           </Card>
 
           <div className={styles.itemsTableCard}>
             <div className={styles.itemsCardHeader}>
-              <h4><Icon name="package" size={16} /> Itens do Pedido ({items?.length || 1})</h4>
+              <h4>
+                <Icon name="package" size={16} /> Itens do Pedido ({items?.length || 1})
+              </h4>
             </div>
             <div className={styles.itemsTableWrapper}>
               <table className={styles.itemsTable}>
@@ -885,7 +993,9 @@ export default function PedidoDetailPage() {
                         <td style={{ textAlign: "center" }}>
                           <span className={styles.badgeUm}>{item.unit || "UN"}</span>
                         </td>
-                        <td style={{ textAlign: "right" }}>{formatCurrency(Number(item.unitPrice))}</td>
+                        <td style={{ textAlign: "right" }}>
+                          {formatCurrency(Number(item.unitPrice))}
+                        </td>
                         <td style={{ textAlign: "right", fontWeight: "700", color: "#0f172a" }}>
                           {formatCurrency(Number(item.quantity) * Number(item.unitPrice))}
                         </td>
@@ -893,7 +1003,10 @@ export default function PedidoDetailPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: "center", color: "#64748b", padding: 24 }}>
+                      <td
+                        colSpan={5}
+                        style={{ textAlign: "center", color: "#64748b", padding: 24 }}
+                      >
                         Nenhum item cadastrado diretamente neste pedido de compra.
                       </td>
                     </tr>
@@ -907,15 +1020,43 @@ export default function PedidoDetailPage() {
         <div className={styles.colSide}>
           <Card className={styles.sideCard}>
             <h4>Resumo Financeiro</h4>
-            <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", marginBottom: "16px" }}>
-              <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>Valor Total do Pedido</span>
-              <h2 style={{ fontSize: "26px", fontWeight: "800", color: "#007d79", margin: "6px 0 0 0" }}>
+            <div
+              style={{
+                background: "#f8fafc",
+                padding: "16px",
+                borderRadius: "8px",
+                border: "1px solid #e2e8f0",
+                marginBottom: "16px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "#64748b",
+                  fontWeight: "600",
+                  textTransform: "uppercase",
+                }}
+              >
+                Valor Total do Pedido
+              </span>
+              <h2
+                style={{
+                  fontSize: "26px",
+                  fontWeight: "800",
+                  color: "#007d79",
+                  margin: "6px 0 0 0",
+                }}
+              >
                 {formatCurrency(valorTotal)}
               </h2>
-              <small style={{ color: "#94a3b8", fontSize: "11px" }}>Inclui impostos e frete ({po?.shippingType || "CIF"})</small>
+              <small style={{ color: "#94a3b8", fontSize: "11px" }}>
+                Inclui impostos e frete ({po?.shippingType || "CIF"})
+              </small>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}
+            >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "#64748b" }}>Condição:</span>
                 <strong style={{ color: "#0f172a" }}>{pagamento}</strong>
@@ -929,17 +1070,39 @@ export default function PedidoDetailPage() {
 
           <Card className={styles.sideCard}>
             <h4>Fornecedor Contratado</h4>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
-              <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "#f0fdf9", border: "1px solid #ccfbf1", display: "flex", alignItems: "center", justifyContent: "center", color: "#007d79", fontWeight: "700", fontSize: "15px" }}>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}
+            >
+              <div
+                style={{
+                  width: "42px",
+                  height: "42px",
+                  borderRadius: "50%",
+                  background: "#f0fdf9",
+                  border: "1px solid #ccfbf1",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#007d79",
+                  fontWeight: "700",
+                  fontSize: "15px",
+                }}
+              >
                 {fornecedorNome.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <strong style={{ fontSize: "14px", color: "#0f172a", display: "block" }}>{fornecedorNome}</strong>
+                <strong style={{ fontSize: "14px", color: "#0f172a", display: "block" }}>
+                  {fornecedorNome}
+                </strong>
                 <small style={{ color: "#64748b", fontSize: "12px" }}>CNPJ: {fornecedorCnpj}</small>
               </div>
             </div>
             {po?.supplier?.id && (
-              <Button variant="secondary" onClick={() => router.push(`/fornecedores/${po.supplier?.id}`)} style={{ width: "100%", justifyContent: "center" }}>
+              <Button
+                variant="secondary"
+                onClick={() => router.push(`/fornecedores/${po.supplier?.id}`)}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
                 <Icon name="arrow-right" /> Ver Cadastro do Fornecedor
               </Button>
             )}
