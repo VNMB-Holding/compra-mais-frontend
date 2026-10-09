@@ -101,15 +101,39 @@ export function calculateChainFromRules(
 
   if (!targetRange || !targetRange.rules || targetRange.rules.length === 0) return [];
 
-  return targetRange.rules
-    .sort((a, b) => a.level - b.level || (a.order || 0) - (b.order || 0))
-    .map((r) => ({
-      level: r.level,
-      roleOrName: r.approverName || r.approverIdentifier,
-      maxLimit: r.maxAmount,
-      approverType: r.approverType,
-      approverIdentifier: r.approverIdentifier,
-    }));
+  const hasOwnLevel1 = targetRange.rules.some((r) => r.level === 1);
+  if (hasOwnLevel1) {
+    return targetRange.rules
+      .sort((a, b) => a.level - b.level || (a.order || 0) - (b.order || 0))
+      .map((r) => ({
+        level: r.level,
+        roleOrName: r.approverName || r.approverIdentifier,
+        maxLimit: r.maxAmount,
+        approverType: r.approverType,
+        approverIdentifier: r.approverIdentifier,
+      }));
+  }
+
+  const rangesToConsider = sortedRanges.slice(
+    0,
+    matchingRangeIndex !== -1 ? matchingRangeIndex + 1 : sortedRanges.length,
+  );
+  const levelMap = new Map<number, ApprovalChainLevel>();
+  for (const rg of rangesToConsider) {
+    for (const r of rg.rules) {
+      if (!levelMap.has(r.level)) {
+        levelMap.set(r.level, {
+          level: r.level,
+          roleOrName: r.approverName || r.approverIdentifier,
+          maxLimit: r.maxAmount,
+          approverType: r.approverType,
+          approverIdentifier: r.approverIdentifier,
+        });
+      }
+    }
+  }
+
+  return Array.from(levelMap.values()).sort((a, b) => a.level - b.level);
 }
 
 export function getApprovalChainForRequest(
