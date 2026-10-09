@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Card, Button, Badge, Icon, ConfirmDialog, Skeleton, CardSkeleton } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
@@ -92,11 +92,32 @@ export default function PedidoDetailPage() {
 
   const displayId = po?.code || rawId;
 
-  const currentStatus = statusOverride || po?.status || "Sent";
+  const extractedNfe = useMemo(() => {
+    const notes = (po as any)?.notes;
+    if (!notes) return "";
+    const match = String(notes).match(/NF-e(?:\s*confirmada)?:\s*([^\s|()]+)/i);
+    return match ? match[1] : "";
+  }, [(po as any)?.notes]);
+
+  const extractedTracking = useMemo(() => {
+    const notes = (po as any)?.notes;
+    if (!notes) return "";
+    const match = String(notes).match(/Em transporte via\s*([^|]+)/i);
+    return match ? match[1].trim() : "";
+  }, [(po as any)?.notes]);
+
+  const activeNfe = savedNfe || extractedNfe;
+  const activeTracking = savedRastreio || extractedTracking;
+
+  const currentStatus = statusOverride || po?.status || "AwaitingSignature";
   const isCancelled = currentStatus === "Cancelled";
   const isDelivered = currentStatus === "Delivered";
   const isInTransit = (currentStatus === "InTransit" || isDelivered) && !isCancelled;
-  const isBilled = (currentStatus === "Signed" || isInTransit || isDelivered) && !isCancelled;
+  const isBilled =
+    (Boolean(activeNfe) || currentStatus === "Processing" || isInTransit || isDelivered) &&
+    !isCancelled;
+  const isSigned =
+    (currentStatus === "Signed" || currentStatus === "Sent" || isBilled) && !isCancelled;
 
   const handleCancelPo = async () => {
     const reason = cancelReason.trim();
@@ -141,11 +162,11 @@ export default function PedidoDetailPage() {
       if (orderIdToUpdate) {
         await updateStatusMutation.mutateAsync({
           id: orderIdToUpdate,
-          status: "Sent",
+          status: "Signed",
           notes: "Pedido de compra assinado e formalizado pelo gestor responsável.",
         });
       }
-      setStatusOverride("Sent");
+      setStatusOverride("Signed");
       setConfirmAssinatura(false);
       toast({
         variant: "success",
@@ -179,12 +200,12 @@ export default function PedidoDetailPage() {
       if (orderIdToUpdate) {
         await updateStatusMutation.mutateAsync({
           id: orderIdToUpdate,
-          status: "Signed",
+          status: "Processing",
           notes: note,
         });
       }
       setSavedNfe(nfeVal);
-      setStatusOverride("Signed");
+      setStatusOverride("Processing");
       setConfirmFaturamento(false);
       toast({
         variant: "success",
@@ -766,7 +787,7 @@ export default function PedidoDetailPage() {
                   <strong>
                     {currentStatus === "AwaitingSignature"
                       ? "Assinatura Pendente"
-                      : "Pedido Emitido"}
+                      : "Pedido Assinado"}
                   </strong>
                   <span>
                     {po?.createdAt
@@ -796,7 +817,7 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isBilled ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.step} ${isBilled ? styles.completed : styles.active}`}>
+              <div className={`${styles.step} ${isBilled ? styles.completed : isSigned ? styles.active : styles.disabledStep}`}>
                 <div className={styles.stepIcon}>
                   <Icon name="file-02" />
                   {isBilled && (
@@ -809,7 +830,7 @@ export default function PedidoDetailPage() {
                   <strong>Faturado (NF-e)</strong>
                   <span>
                     {isBilled
-                      ? savedNfe || (po?.id ? `NF-${po.id.slice(0, 6).toUpperCase()}` : "Emitida")
+                      ? activeNfe || "Nota Fiscal Emitida"
                       : "Aguardando NF"}
                   </span>
                   <small>{isBilled ? "Nota fiscal emitida" : "Faturamento pendente"}</small>
@@ -846,7 +867,7 @@ export default function PedidoDetailPage() {
                   <strong>Em Transporte</strong>
                   <span>
                     {isInTransit
-                      ? savedRastreio || po?.shippingType || "Despachado"
+                      ? activeTracking || (po?.shippingType || "Despachado")
                       : isBilled
                         ? "Pronto p/ envio"
                         : "Aguardando"}

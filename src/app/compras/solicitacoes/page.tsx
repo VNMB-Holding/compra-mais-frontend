@@ -458,7 +458,24 @@ export default function SolicitacoesPage() {
                   {selectedDrawerRequest.corporateStockLocation || "Almoxarifado Geral"}
                 </span>
               </div>
-              {selectedDrawerRequest.notes && (
+              {selectedDrawerRequest.department && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Área / Setor
+                  </span>
+                  <span style={{ fontSize: 13, color: "#334155" }}>
+                    {selectedDrawerRequest.department}
+                  </span>
+                </div>
+              )}
+              {selectedDrawerRequest.justification && (
                 <div
                   style={{
                     gridColumn: "span 2",
@@ -476,7 +493,32 @@ export default function SolicitacoesPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    Justificativa / Observação
+                    Destino / Justificativa
+                  </span>
+                  <span style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.4 }}>
+                    {selectedDrawerRequest.justification}
+                  </span>
+                </div>
+              )}
+              {selectedDrawerRequest.notes && selectedDrawerRequest.notes !== selectedDrawerRequest.justification && (
+                <div
+                  style={{
+                    gridColumn: "span 2",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    marginTop: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Observação Geral
                   </span>
                   <span style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.4 }}>
                     {selectedDrawerRequest.notes}

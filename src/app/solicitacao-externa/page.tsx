@@ -151,6 +151,8 @@ export default function SolicitacaoExternaPage() {
 
   const [titulo, setTitulo] = useState("");
   const [justificativa, setJustificativa] = useState("");
+  const [observacao, setObservacao] = useState("");
+  const [localEntrega, setLocalEntrega] = useState("");
   const [prioridade, setPrioridade] = useState("Media");
   const [dataDesejada, setDataDesejada] = useState("");
 
@@ -411,7 +413,7 @@ export default function SolicitacaoExternaPage() {
       const payload: any = {
         description: titulo.trim(),
         corporateRequester: `${solicitanteNome.trim()} (${solicitanteWhats.trim()}${solicitanteEmail ? ` - ${solicitanteEmail.trim()}` : ""})`,
-        notes: `Destino/Justificativa: ${justificativa.trim() || "Não informada"}\nÁrea/Setor: ${setorNomeFormatado}\nEmpresa/Unidade: ${branchName}`,
+        notes: observacao.trim() || undefined,
         companyCode: empresaCode,
         costCenterName: setorNomeFormatado,
         costCenterCode: setor,
@@ -422,7 +424,8 @@ export default function SolicitacaoExternaPage() {
         requesterPhone: solicitanteWhats.trim(),
         department: setorNomeFormatado,
         branchName: branchName,
-        justification: justificativa.trim() || "Não informada",
+        justification: justificativa.trim() || undefined,
+        deliveryLocation: localEntrega.trim() || undefined,
         priority:
           prioridade === "Critica"
             ? "Critical"
@@ -535,13 +538,31 @@ export default function SolicitacaoExternaPage() {
                 <strong style={{ color: "#0f172a" }}>{solicitanteNome}</strong>
               </div>
               <div className={styles.summaryRow}>
-                <span style={{ color: "#64748b" }}>Área / Setor:</span>
+                <span style={{ color: "#64748b" }}>Àrea / Setor:</span>
                 <strong style={{ color: "#0f172a" }}>{setorNomeFormatado}</strong>
               </div>
               <div className={styles.summaryRow}>
                 <span style={{ color: "#64748b" }}>Empresa / Unidade:</span>
                 <strong style={{ color: "#0f172a" }}>{branchName}</strong>
               </div>
+              {justificativa && (
+                <div className={styles.summaryRow}>
+                  <span style={{ color: "#64748b" }}>Destino / Justificativa:</span>
+                  <strong style={{ color: "#0f172a" }}>{justificativa}</strong>
+                </div>
+              )}
+              {localEntrega && (
+                <div className={styles.summaryRow}>
+                  <span style={{ color: "#64748b" }}>Local de Entrega:</span>
+                  <strong style={{ color: "#0f172a" }}>{localEntrega}</strong>
+                </div>
+              )}
+              {observacao && (
+                <div className={styles.summaryRow}>
+                  <span style={{ color: "#64748b" }}>Observações:</span>
+                  <strong style={{ color: "#0f172a" }}>{observacao}</strong>
+                </div>
+              )}
               <div className={styles.summaryRow}>
                 <span style={{ color: "#64748b" }}>Total de Itens:</span>
                 <strong style={{ color: "#0f172a" }}>{itens.length} item(ns)</strong>
@@ -690,7 +711,7 @@ export default function SolicitacaoExternaPage() {
 
               <div className={styles.formGroup}>
                 <label>
-                  Área / Setor <span className={styles.extraText}>de Destino</span>{" "}
+                  Àrea / Setor <span className={styles.extraText}>de Destino</span>{" "}
                   <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <Select
@@ -772,6 +793,32 @@ export default function SolicitacaoExternaPage() {
                   onChange={(e) => setDataDesejada(e.target.value)}
                 />
               </div>
+
+              <div className={styles.formGroup}>
+                <label>
+                  Local de Entrega / Almoxarifado <span className={styles.extraText}>(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Almoxarifado Central, Fazenda Santa Fé..."
+                  className={styles.inputField}
+                  value={localEntrega}
+                  onChange={(e) => setLocalEntrega(e.target.value)}
+                />
+              </div>
+
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <label>
+                  Observações Gerais <span className={styles.extraText}>/ Instruções Adicionais (opcional)</span>
+                </label>
+                <textarea
+                  placeholder="Informações adicionais para a equipe de compras, especificações complementares, etc..."
+                  className={styles.textareaField}
+                  value={observacao}
+                  onChange={(e) => setObservacao(e.target.value)}
+                  rows={3}
+                />
+              </div>
             </div>
           </div>
 
@@ -818,6 +865,7 @@ export default function SolicitacaoExternaPage() {
                           type="text"
                           required
                           placeholder="Digite para buscar itens já cadastrados..."
+                          readOnly={Boolean(item.catalogItemId)}
                           className={styles.inputField}
                           value={item.descricao}
                           onChange={(e) => handleDescriptionChange(item.id, e.target.value)}
@@ -848,7 +896,7 @@ export default function SolicitacaoExternaPage() {
                                         suggestion.unit,
                                       ]
                                         .filter(Boolean)
-                                        .join(" • ")}
+                                        .join(" Ã¢â‚¬Â¢ ")}
                                     </small>
                                   </span>
                                   {suggestion.lastUnitPrice && (
@@ -870,7 +918,7 @@ export default function SolicitacaoExternaPage() {
                         <div className={styles.catalogSelectedNotice}>
                           <Icon name="check-circle" size={14} />
                           <span>
-                            Item selecionado do catálogo
+                            Item selecionado do catálogo. Descrição, unidade e preço base foram bloqueados
                             {item.fornecedorBase ? ` com base em ${item.fornecedorBase}` : ""}.
                           </span>
                         </div>
@@ -904,6 +952,7 @@ export default function SolicitacaoExternaPage() {
                         options={UNIDADE_MEDIDA_OPTIONS}
                         value={item.unidade}
                         onChange={(val) => handleUpdateItem(item.id, "unidade", val)}
+                        disabled={Boolean(item.catalogItemId)}
                         triggerClassName={styles.selectTrigger}
                       />
                     </div>
@@ -927,6 +976,7 @@ export default function SolicitacaoExternaPage() {
                             parseFloat(e.target.value) || 0,
                           )
                         }
+                        readOnly={Boolean(item.catalogItemId)}
                       />
                     </div>
 

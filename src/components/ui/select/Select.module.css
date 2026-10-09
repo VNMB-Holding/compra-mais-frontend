@@ -73,8 +73,12 @@
   background-color: #f1f5f9;
 }
 .dropdown {
-  position: fixed;
-  z-index: 10000;
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: min(380px, calc(100vh - 120px));
   display: flex;
   flex-direction: column;
   background-color: #ffffff;

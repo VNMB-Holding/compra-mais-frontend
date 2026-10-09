@@ -9,6 +9,7 @@ import styles from "./aprovacao.module.css";
 
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { isUserEligibleToApprove } from "@/lib/utils/approval-limits";
+import { isUuid } from "@/lib/utils/format-display";
 
 interface Item {
   description: string;
@@ -100,7 +101,7 @@ export default function AprovacaoPage() {
       toast({
         variant: "error",
         title: "Alçada Não Autorizada",
-        message: `Esta solicitação exige assinatura de ${details?.approverName}. Sua conta atual (${user.name}) não possui essa alçada.`,
+        message: `Esta solicitação exige assinatura de ${displayApproverName}. Sua conta atual (${user.name}) não possui essa alçada.`,
       });
       return;
     }
@@ -139,7 +140,7 @@ export default function AprovacaoPage() {
       toast({
         variant: "error",
         title: "Alçada Não Autorizada",
-        message: `Esta solicitação exige assinatura de ${details?.approverName}. Sua conta atual (${user.name}) não possui essa alçada.`,
+        message: `Esta solicitação exige assinatura de ${displayApproverName}. Sua conta atual (${user.name}) não possui essa alçada.`,
       });
       return;
     }
@@ -170,6 +171,16 @@ export default function AprovacaoPage() {
       setSubmitting(false);
     }
   };
+
+  const approverNameLabel = details?.approverName?.trim();
+  const displayApproverName =
+    approverNameLabel && !isUuid(approverNameLabel) ? approverNameLabel : "Aprovador designado";
+  const approverRoleLabel = details?.approverRole?.trim();
+  const shouldShowApproverRole = Boolean(
+    approverRoleLabel &&
+    !isUuid(approverRoleLabel) &&
+    approverRoleLabel.toLowerCase() !== displayApproverName.toLowerCase(),
+  );
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
@@ -276,8 +287,8 @@ export default function AprovacaoPage() {
                   <Icon name="building-01" /> {details.department || "Geral"}
                 </span>
                 <span className={styles.infoTag}>
-                  <Icon name="user-01" /> Aprovador: <strong>{details.approverName}</strong> (
-                  {details.approverRole})
+                  <Icon name="user-01" /> Aprovador: <strong>{displayApproverName}</strong>
+                  {shouldShowApproverRole ? ` (${approverRoleLabel})` : ""}
                 </span>
                 <span className={styles.infoTag}>
                   <Icon name="coins-stacked-01" /> Valor Estimado:{" "}
@@ -317,7 +328,7 @@ export default function AprovacaoPage() {
                       <div>
                         <div className={styles.authNoticeTitle}>Identificação Obrigatória</div>
                         <div className={styles.authNoticeText}>
-                          Esta alçada é designada a <strong>{details.approverName}</strong>. Faça
+                          Esta alçada é designada a <strong>{displayApproverName}</strong>. Faça
                           login com sua conta institucional para assinar ou recusar.
                         </div>
                       </div>
@@ -339,7 +350,7 @@ export default function AprovacaoPage() {
                       <div className={styles.notEligibleText}>
                         Você está autenticado como <strong>{user.name}</strong> ({user.email}). No
                         entanto, esta etapa de aprovação é restrita a{" "}
-                        <strong>{details.approverName}</strong>. Apenas o aprovador designado ou
+                        <strong>{displayApproverName}</strong>. Apenas o aprovador designado ou
                         administradores podem validar este documento.
                       </div>
                     </div>

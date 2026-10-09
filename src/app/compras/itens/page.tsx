@@ -16,7 +16,7 @@ import {
   DataTable,
   ColumnDef,
 } from "@/components/ui";
-import { useItems, useItem, useItemKpis, useCreateItem } from "@/hooks/useQueries";
+import { useItemsPaginated, useItem, useItemKpis, useCreateItem } from "@/hooks/useQueries";
 import { CatalogItem } from "@/lib/api/items";
 import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -57,17 +57,20 @@ export default function ItensCatalogoPage() {
     () => ({
       search: search.trim() ? search.trim() : undefined,
       category: selectedCategory !== "Todas" ? selectedCategory : undefined,
+      page: currentPage,
+      limit: itemsPerPage,
     }),
-    [search, selectedCategory],
+    [search, selectedCategory, currentPage, itemsPerPage],
   );
 
-  const { data: items = [], isLoading, error, refetch } = useItems(queryParams);
+  const { data: paginatedData, isLoading, error, refetch } = useItemsPaginated(queryParams);
   const { data: kpis, isLoading: loadingKpis } = useItemKpis();
   const createItemMutation = useCreateItem();
   const { data: itemDetail, isLoading: isLoadingDetail } = useItem(selectedItemForAudit?.id || "");
 
-  const totalPages = Math.ceil(items.length / itemsPerPage) || 1;
-  const paginatedItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const items = paginatedData?.items || [];
+  const totalItems = paginatedData?.total || 0;
+  const totalPages = paginatedData?.totalPages || 1;
 
   const handleOpenNewModal = async () => {
     setIsNewModalOpen(true);
@@ -312,12 +315,12 @@ export default function ItensCatalogoPage() {
           <>
             <DataTable
               columns={columns}
-              data={paginatedItems}
+              data={items}
               onRowClick={setSelectedItemForAudit}
             />
             <div className={styles.tableFooter}>
               <span>
-                Mostrando {paginatedItems.length} de {items.length} itens
+                Mostrando {items.length} de {totalItems} itens
               </span>
               <div className={styles.paginationControls}>
                 <button

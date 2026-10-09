@@ -156,7 +156,6 @@ export const rfqsApi = {
     try {
       return await apiClient.get<Rfq>(`/api/rfqs/${id}`);
     } catch (err) {
-      // 1. Tenta encontrar na listagem geral por id, código ou solicitação
       try {
         const list = await rfqsApi.list({ companyCode: "TODAS" });
         const found = list.find(
@@ -170,7 +169,6 @@ export const rfqsApi = {
         if (found) return found;
       } catch {}
 
-      // 2. Tenta recuperar dados via endpoint público caso o escopo autenticado bloqueie por tenant
       try {
         const pub = await rfqsApi.getPublicRfq(id);
         if (pub && pub.id) {
@@ -275,7 +273,8 @@ export const rfqsApi = {
   selectWinner: (rfqId: string, proposalId: string) =>
     apiClient.patch(`/api/rfqs/${rfqId}/winner`, { proposalId }),
 
-  createPo: (rfqId: string) => apiClient.post(`/api/rfqs/${rfqId}/create-po`, {}),
+  createPo: (rfqId: string, buyerId?: string) =>
+    apiClient.post(`/api/rfqs/${rfqId}/create-po`, buyerId ? { buyerId } : {}),
 
   updateStatus: (id: string, status: Rfq["status"], reason?: string) =>
     apiClient.patch<Rfq>(`/api/rfqs/${id}/status`, { status, reason }),

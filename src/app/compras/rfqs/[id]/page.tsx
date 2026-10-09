@@ -13,6 +13,7 @@ import {
   CardSkeleton,
   EmptyState,
   Stepper,
+  Select,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -449,21 +450,22 @@ function PropostaCard({
             <div className={styles.propostaFormGrid}>
               <div className={styles.propostaField}>
                 <label>Tipo de Frete (Incoterm)</label>
-                <select
-                  className={styles.propostaSelect}
+                <Select
+                  options={[
+                    { label: "CIF (Incluso pelo fornecedor)", value: "CIF" },
+                    { label: "FOB (A pagar pelo comprador)", value: "FOB" },
+                  ]}
                   value={draft.freightType}
-                  onChange={(e) => {
-                    const type = e.target.value as "CIF" | "FOB";
+                  onChange={(val) => {
+                    const type = val as "CIF" | "FOB";
                     setDraft((d) => ({
                       ...d,
                       freightType: type,
                       freightCost: type === "CIF" ? 0 : d.freightCost,
                     }));
                   }}
-                >
-                  <option value="CIF">CIF (Incluso pelo fornecedor)</option>
-                  <option value="FOB">FOB (A pagar pelo comprador)</option>
-                </select>
+                  searchable={false}
+                />
               </div>
 
               <div className={styles.propostaField}>
@@ -1096,7 +1098,8 @@ export default function RfqDetailPage() {
         onConfirm={async () => {
           setCreatingPo(true);
           try {
-            const po = await rfqsApi.createPo(rfqId);
+            const buyerId = user?.name || user?.email || user?.id || "COMPRADOR";
+            const po = await rfqsApi.createPo(rfqId, buyerId);
             const poObj = po as any;
             const createdCode = poObj?.code || "PO Gerado";
             const createdId = poObj?.id || poObj?.code || "";

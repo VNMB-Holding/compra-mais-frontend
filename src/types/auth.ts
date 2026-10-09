@@ -1,4 +1,4 @@
-export type UserRole = "procurist" | "solicitante" | "gerente" | "admin";
+export type UserRole = "procurist" | "solicitante" | "gerente" | "diretor" | "admin";
 
 export interface User {
   id: string;

@@ -82,11 +82,10 @@ export default function DashboardPage() {
         const descricao = rfq.title || rfq.purchaseRequest?.description || "";
         const localEstoqueOuCategoria =
           (rfq.purchaseRequest as any)?.corporateStockLocation ||
-          (rfq.purchaseRequest as any)?.category?.name ||
-          "Almoxarifado Geral";
+          (rfq.purchaseRequest as any)?.category?.name
         const dataAbertura = formatDate(rfq.createdAt);
         const dataEncerramento = formatDate(rfq.closesAt);
-        const tipoSegmento = (rfq.purchaseRequest as any)?.category?.name || "Geral";
+        const tipoSegmento = (rfq.purchaseRequest as any)?.category?.name;
         const status = mapRfqStatus(rfq);
         const empresa = getTenantDisplayName(
           rfq.purchaseRequest?.companyCode || rfq.tenantId || rfq.purchaseRequest?.tenantId,

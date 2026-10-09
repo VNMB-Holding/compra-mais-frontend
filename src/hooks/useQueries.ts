@@ -159,6 +159,20 @@ export function useItems(params?: { search?: string; category?: string; supplier
   });
 }
 
+export function useItemsPaginated(params?: {
+  search?: string;
+  category?: string;
+  supplierId?: string;
+  page?: number;
+  limit?: number;
+}) {
+  return useQuery({
+    queryKey: ["catalog-items", "paginated", params] as const,
+    queryFn: () => itemsApi.listPaginated(params),
+    staleTime: 1000 * 30,
+  });
+}
+
 export function useItem(id: string) {
   return useQuery({
     queryKey: ["catalog-items", "detail", id] as const,

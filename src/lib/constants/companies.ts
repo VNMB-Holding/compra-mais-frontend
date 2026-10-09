@@ -72,6 +72,12 @@ export const COMPANY_BRANCHES: CompanyBranchMapping[] = [
     acronym: "IPF",
     unitName: "Igreja Pura Fé - Sede",
   },
+  {
+    code: "LORENA",
+    name: "VB IMÓVEIS E PARTICIPAÇÕES",
+    acronym: "VBI",
+    unitName: "Lorena",
+  },
 ];
 
 export const COMPANY_BY_CODE_MAP: Record<string, CompanyBranchMapping> = COMPANY_BRANCHES.reduce(

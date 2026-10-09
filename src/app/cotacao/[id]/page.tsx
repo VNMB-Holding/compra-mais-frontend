@@ -12,6 +12,7 @@ import {
   CardSkeleton,
   Badge,
   ConfirmDialog,
+  Select,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -603,14 +604,21 @@ export default function CotacaoFornecedorPage() {
             <div className={styles.formGrid}>
               <div className={styles.formGroup}>
                 <label>Tipo de Frete</label>
-                <select
-                  className={styles.inputField}
+                <Select
+                  options={[
+                    {
+                      label: "CIF - Frete por conta do Vendedor (Incluso no preço)",
+                      value: "CIF",
+                    },
+                    {
+                      label: "FOB - Frete por conta do Comprador (Valor adicional)",
+                      value: "FOB",
+                    },
+                  ]}
                   value={freightType}
-                  onChange={(e) => setFreightType(e.target.value as any)}
-                >
-                  <option value="CIF">CIF - Frete por conta do Vendedor (Incluso no preço)</option>
-                  <option value="FOB">FOB - Frete por conta do Comprador (Valor adicional)</option>
-                </select>
+                  onChange={(val) => setFreightType(val as any)}
+                  searchable={false}
+                />
               </div>
 
               {freightType === "FOB" && (
@@ -724,21 +732,21 @@ export default function CotacaoFornecedorPage() {
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Banco (opcional)</label>
-                    <select
-                      className={styles.inputField}
+                    <Select
+                      options={[
+                        { label: "001 - Banco do Brasil", value: "001 - Banco do Brasil" },
+                        { label: "033 - Santander", value: "033 - Santander" },
+                        { label: "104 - Caixa Econômica", value: "104 - Caixa Econômica Federal" },
+                        { label: "237 - Bradesco", value: "237 - Bradesco" },
+                        { label: "341 - Itaú Unibanco", value: "341 - Itaú Unibanco" },
+                        { label: "260 - Nubank", value: "260 - Nubank" },
+                        { label: "077 - Banco Inter", value: "077 - Banco Inter" },
+                        { label: "Outro Banco", value: "Outro" },
+                      ]}
                       value={bankCode}
-                      onChange={(e) => setBankCode(e.target.value)}
-                      required
-                    >
-                      <option value="001 - Banco do Brasil">001 - Banco do Brasil</option>
-                      <option value="033 - Santander">033 - Santander</option>
-                      <option value="104 - Caixa Econômica Federal">104 - Caixa Econômica</option>
-                      <option value="237 - Bradesco">237 - Bradesco</option>
-                      <option value="341 - Itaú Unibanco">341 - Itaú Unibanco</option>
-                      <option value="260 - Nubank">260 - Nubank</option>
-                      <option value="077 - Banco Inter">077 - Banco Inter</option>
-                      <option value="Outro">Outro Banco</option>
-                    </select>
+                      onChange={(val) => setBankCode(val)}
+                      placeholder="Selecione o banco..."
+                    />
                   </div>
 
                   <div className={styles.formGroup}>

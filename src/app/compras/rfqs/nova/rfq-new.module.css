@@ -100,16 +100,17 @@
   min-width: 0;
 }
 .linkedSolBadge {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
+  width: min(100%, 820px);
+  min-width: 0;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 10px 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  flex-shrink: 0;
-  max-width: 600px;
 }
 .linkedSolIcon {
   display: flex;
@@ -121,10 +122,12 @@
 .linkedSolInfo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
   min-width: 0;
   overflow: hidden;
+  font-size: 13px;
+  line-height: 1.35;
 }
 .linkedSolLabel {
   color: #64748b;
@@ -147,12 +150,14 @@
   flex-shrink: 0;
 }
 .linkedSolTitle {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 360px;
   color: #1e293b;
   font-weight: 600;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 250px;
+  white-space: nowrap;
 }
 .btnTrocarSol {
   display: inline-flex;
@@ -1301,11 +1306,19 @@ textarea.formControl {
     gap: 14px;
   }
   .linkedSolBadge {
-    flex-wrap: wrap;
-    max-width: 100%;
+    grid-template-columns: auto minmax(0, 1fr);
+    width: 100%;
+  }
+  .linkedSolInfo {
+    align-items: flex-start;
   }
   .linkedSolTitle {
+    flex-basis: 100%;
     max-width: 100%;
+  }
+  .btnTrocarSol {
+    grid-column: 2;
+    justify-self: flex-start;
   }
   .itemSummaryRow {
     flex-direction: column;

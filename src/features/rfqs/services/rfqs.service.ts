@@ -18,7 +18,7 @@ export const rfqsService = {
   submitPublicProposal: (id: string, data: PublicProposalPayload) =>
     rfqsApi.submitPublicProposal(id, data),
   selectWinner: (rfqId: string, proposalId: string) => rfqsApi.selectWinner(rfqId, proposalId),
-  createPo: (rfqId: string) => rfqsApi.createPo(rfqId),
+  createPo: (rfqId: string, buyerId?: string) => rfqsApi.createPo(rfqId, buyerId),
   updateStatus: (id: string, status: Rfq["status"]) => rfqsApi.updateStatus(id, status),
   inviteUnregisteredSupplier: (
     rfqId: string,

@@ -4,17 +4,18 @@
   gap: 16px;
 }
 .backBtn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
+  align-self: flex-start;
+  min-height: auto;
+  padding: 0;
+  background: transparent;
   border: none;
   color: var(--primary, #007d79);
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  align-self: flex-start;
-  padding: 0;
+}
+.backBtn:hover {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 .titleRow {
   display: flex;
@@ -39,6 +40,17 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+}
+.headerContent {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.headerActionGroup {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 0 0 auto;
   flex-wrap: wrap;
 }
 .metadataTags {
@@ -467,11 +479,15 @@
     flex-direction: column;
     align-items: stretch;
   }
-  .headerActions {
+  .headerActionGroup,
+  .headerActions,
+  .waitingApproverInfo {
     width: 100%;
     flex-direction: column;
   }
-  .headerActions button {
+  .headerActionGroup button,
+  .headerActions button,
+  .waitingApproverInfo button {
     width: 100%;
     justify-content: center;
   }

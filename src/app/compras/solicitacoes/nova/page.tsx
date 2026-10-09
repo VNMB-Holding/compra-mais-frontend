@@ -34,6 +34,7 @@ interface RequestItem {
   baseSupplierCnpj?: string;
   lastPurchasePrice?: number;
   lastPurchaseDate?: string;
+  catalogItemId?: string;
 }
 
 const priorityLabels: Record<Priority, string> = {
@@ -110,6 +111,7 @@ export default function NovaSolicitacaoPage() {
               requiredDate: item.requiredDate
                 ? new Date(item.requiredDate).toISOString().split("T")[0]
                 : "",
+              catalogItemId: (item as any).catalogItemId,
             })),
           );
         }
@@ -222,6 +224,7 @@ export default function NovaSolicitacaoPage() {
           baseSupplierCnpj: supCnpj,
           lastPurchasePrice: lastPrice,
           lastPurchaseDate: catalogItem.lastPurchaseDate,
+          catalogItemId: catalogItem.id,
         };
       }),
     );
@@ -295,10 +298,9 @@ export default function NovaSolicitacaoPage() {
         purchaseType: purchaseType,
         paymentTerms: paymentTerms || undefined,
         preferredSupplier: preferredSupplier || undefined,
-        notes:
-          (justification || notes || "") +
-          (deliveryWindow ? `\nJanela de recebimento: ${deliveryWindow}` : ""),
-        justification: justification,
+        notes: notes?.trim() || undefined,
+        justification: justification?.trim() || undefined,
+        deliveryWindow: deliveryWindow || undefined,
         estimatedBudget: totalEstimated,
         deliveryLocation: deliveryLocation,
         deadline: derivedDeadline,
@@ -320,6 +322,7 @@ export default function NovaSolicitacaoPage() {
             estimatedUnitPrice: Number(i.unitPrice) || 0,
             category: i.category || "Geral",
             requiredDate: i.requiredDate || undefined,
+            catalogItemId: i.catalogItemId || undefined,
           })),
       };
 
@@ -468,7 +471,7 @@ export default function NovaSolicitacaoPage() {
                   </div>
                   <div className={styles.formGroup}>
                     <label>
-                      Área requisitante <span className="required-asterisk">*</span>
+                      Área requisitante <span className="required-asterisk">*</span>
                     </label>
                     <Select
                       options={[
@@ -554,6 +557,7 @@ export default function NovaSolicitacaoPage() {
                   {items.map((item, index) => {
                     const isExpanded = expandedItemId === item.id;
                     const itemTotalValue = item.quantity * item.unitPrice;
+                    const isCatalogItem = Boolean(item.catalogItemId);
 
                     return (
                       <div className={styles.itemPanel} key={item.id}>
@@ -569,7 +573,7 @@ export default function NovaSolicitacaoPage() {
                               </span>
                               <span className={styles.itemSummaryMeta}>
                                 {item.quantity} {item.unit}{" "}
-                                {item.unitPrice > 0 ? `× ${formatCurrency(item.unitPrice)}` : ""}
+                                {item.unitPrice > 0 ? `×  ${formatCurrency(item.unitPrice)}` : ""}
                               </span>
                             </div>
                           </div>
@@ -627,6 +631,7 @@ export default function NovaSolicitacaoPage() {
                                       handleDescriptionChange(item.id, event.target.value)
                                     }
                                     placeholder="Ex: Filtro de ar motor X1 (digite para sugestões do catálogo...)"
+                                    readOnly={isCatalogItem}
                                   />
                                   {activeSearchItemId === item.id && suggestedItems.length > 0 && (
                                     <div className={styles.autocompleteDropdown}>
@@ -643,15 +648,15 @@ export default function NovaSolicitacaoPage() {
                                             <span className={styles.autocompleteItemSub}>
                                               {sug.lastSupplier ? (
                                                 <span className={styles.autocompleteItemSupplier}>
-                                                  ⭐ Base:{" "}
+                                                  À¢­ Base:{" "}
                                                   {sug.lastSupplier.tradeName ||
                                                     sug.lastSupplier.corporateName}
                                                 </span>
                                               ) : (
                                                 <span>Sem fornecedor base</span>
                                               )}
-                                              <span>• {sug.category || "Geral"}</span>
-                                              <span>• {sug.unit}</span>
+                                              <span>À¢Ã¢â€šÂ¬¢ {sug.category || "Geral"}</span>
+                                              <span>À¢Ã¢â€šÂ¬¢ {sug.unit}</span>
                                             </span>
                                           </div>
                                           {sug.lastUnitPrice && (
@@ -664,6 +669,16 @@ export default function NovaSolicitacaoPage() {
                                     </div>
                                   )}
                                 </div>
+                                {isCatalogItem && (
+                                  <div className={styles.baseSupplierNotice}>
+                                    <div className={styles.baseSupplierNoticeLeft}>
+                                      <Icon name="lock-01" size={14} />
+                                      <span>
+                                        Item cadastrado selecionado. Descrição, categoria, unidade e valor base foram bloqueados.
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
                                 {item.baseSupplierName && (
                                   <div className={styles.baseSupplierNotice}>
                                     <div className={styles.baseSupplierNoticeLeft}>
@@ -678,7 +693,7 @@ export default function NovaSolicitacaoPage() {
                                     </div>
                                     {Boolean(item.lastPurchasePrice) && (
                                       <span>
-                                        Última compra:{" "}
+                                        última compra:{" "}
                                         <strong>
                                           {formatCurrency(Number(item.lastPurchasePrice))}
                                         </strong>
@@ -697,6 +712,7 @@ export default function NovaSolicitacaoPage() {
                                   options={uniqueCategoryOptions}
                                   value={item.category}
                                   onChange={(value) => updateItem(item.id, "category", value)}
+                                  disabled={isCatalogItem}
                                 />
                               </div>
 
@@ -729,6 +745,7 @@ export default function NovaSolicitacaoPage() {
                                   ]}
                                   value={item.unit}
                                   onChange={(value) => updateItem(item.id, "unit", value)}
+                                  disabled={isCatalogItem}
                                 />
                               </div>
                               <div className={`${styles.formGroup} ${styles.col3}`}>
@@ -742,6 +759,7 @@ export default function NovaSolicitacaoPage() {
                                   onChange={(event) =>
                                     updateItem(item.id, "unitPrice", Number(event.target.value))
                                   }
+                                  readOnly={isCatalogItem}
                                 />
                               </div>
                               <div
@@ -1054,7 +1072,7 @@ export default function NovaSolicitacaoPage() {
                 </dd>
               </div>
               <div>
-                <dt>Área</dt>
+                <dt>Área</dt>
                 <dd>{department}</dd>
               </div>
               <div>

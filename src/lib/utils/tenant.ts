@@ -164,6 +164,13 @@ export function resolvePurchaseRequestBranch(
 ): string {
   if (!pr) return formatCorporateBranch(undefined, undefined, undefined, user);
 
+  const rawBranch = (pr as any).branchName || pr.branchName;
+  if (rawBranch) {
+    const b = findCompanyBranch(rawBranch);
+    if (b) return `${b.name} (${b.acronym})`;
+    if (!rawBranch.toUpperCase().includes("VNMB")) return rawBranch;
+  }
+
   if (pr.notes) {
     const match = pr.notes.match(/Empresa\/Unidade:\s*([^\n\r]+)/i);
     if (match && match[1]) {
@@ -176,13 +183,6 @@ export function resolvePurchaseRequestBranch(
         return parsed;
       }
     }
-  }
-
-  const rawBranch = (pr as any).branchName || pr.branchName;
-  if (rawBranch) {
-    const b = findCompanyBranch(rawBranch);
-    if (b) return `${b.name} (${b.acronym})`;
-    if (!rawBranch.toUpperCase().includes("VNMB")) return rawBranch;
   }
 
   if (pr.companyCode) {

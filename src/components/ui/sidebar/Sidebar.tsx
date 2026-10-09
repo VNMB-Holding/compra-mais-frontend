@@ -107,7 +107,7 @@ export default function Sidebar({
         </Link>
       </div>
 
-      {(user?.role === "admin" || user?.role === "gerente") && (
+      {(user?.role === "admin" || user?.role === "gerente" || user?.role === "diretor") && (
         <div className={styles.navSection}>
           <div className={styles.sectionTitle}>SISTEMA</div>
           <Link

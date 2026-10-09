@@ -61,6 +61,7 @@ export default function SolicitacaoDetailPage() {
   const [codeLoading, setCodeLoading] = useState(false);
   const [dialog, setDialog] = useState<DialogType>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
   const [approved, setApproved] = useState<boolean | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -179,38 +180,39 @@ export default function SolicitacaoDetailPage() {
   };
 
   const handleReject = async () => {
-    if (sol) {
-      try {
-        await rejectMutation.mutateAsync({ id: sol.id });
-        const fresh = await purchaseRequestsApi.getById(sol.id);
-        setSolOverride(fresh);
-        setApproved(false);
-      } catch (e) {
-        logError("solicitacoes/[id]/reject", e);
-        toast({ variant: "error", title: "Erro ao rejeitar", message: getErrorMessage(e) });
-        return;
-      }
+    if (!sol) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      toast({
+        variant: "warning",
+        title: "Justificativa obrigatória",
+        message: "Por favor, informe a justificativa da rejeição.",
+      });
+      return;
     }
-    setDialog(null);
-    toast({
-      variant: "warning",
-      title: "Solicitação rejeitada",
-      message: `${sol?.code || solId} foi rejeitada. O solicitante será notificado.`,
-    });
+    try {
+      await rejectMutation.mutateAsync({ id: sol.id, comments: reason });
+      const fresh = await purchaseRequestsApi.getById(sol.id);
+      setSolOverride(fresh);
+      setApproved(false);
+      setRejectReason("");
+      toast({
+        variant: "warning",
+        title: "Solicitação rejeitada",
+        message: `${sol?.code || solId} foi rejeitada. O solicitante será notificado.`,
+      });
+    } catch (e) {
+      logError("solicitacoes/[id]/reject", e);
+      toast({ variant: "error", title: "Erro ao rejeitar", message: getErrorMessage(e) });
+      return;
+    } finally {
+      setDialog(null);
+    }
   };
 
   const [cancelling, setCancelling] = useState(false);
   const handleCancel = async () => {
     if (!sol) return;
-    if (isInQuote) {
-      toast({
-        variant: "warning",
-        title: "Cancelamento bloqueado",
-        message: "N�o � possível cancelar uma Solicitação que j� est� em processo de Cotação.",
-      });
-      setDialog(null);
-      return;
-    }
     const reason = cancelReason.trim();
     if (!reason) {
       toast({
@@ -255,7 +257,6 @@ export default function SolicitacaoDetailPage() {
       return;
     }
 
-    // Busca ativa das RFQs vinculadas a esta solicitação caso a relação não tenha vindo populada
     let cancelled = false;
     rfqsApi
       .list({ search: sol.code || sol.id })
@@ -444,6 +445,9 @@ export default function SolicitacaoDetailPage() {
         variant="danger"
         icon="x-circle"
         title="Rejeitar esta Solicitação?"
+        loading={rejectMutation.isPending}
+        loadingConfirmLabel="Rejeitando..."
+        confirmDisabled={!rejectReason.trim()}
         message={
           <>
             A Solicitação <strong>{sol?.code || solId}</strong> será rejeitada na Alçada de{" "}
@@ -452,8 +456,40 @@ export default function SolicitacaoDetailPage() {
         }
         confirmLabel="Sim, rejeitar"
         onConfirm={handleReject}
-        onCancel={() => setDialog(null)}
-      />
+        onCancel={() => {
+          setDialog(null);
+          setRejectReason("");
+        }}
+      >
+        <div style={{ marginTop: 12, textAlign: "left" }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#334155",
+              marginBottom: 6,
+            }}
+          >
+            Justificativa da rejeição <span style={{ color: "#dc2626" }}>*</span>
+          </label>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Descreva detalhadamente o motivo da reprovação..."
+            rows={3}
+            style={{
+              width: "100%",
+              padding: "8px 10px",
+              borderRadius: 6,
+              border: "1px solid #cbd5e1",
+              fontSize: 13,
+              fontFamily: "inherit",
+              resize: "vertical",
+            }}
+          />
+        </div>
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={dialog === "cancel"}
@@ -466,7 +502,9 @@ export default function SolicitacaoDetailPage() {
         message={
           <>
             Tem certeza de que deseja cancelar a Solicitação <strong>{sol?.code || solId}</strong>?
-            Esta ação interromperá o fluxo de compras e arquivará a demanda.
+            {isInQuote
+              ? " Atenção: Como há processo de cotação em andamento, as cotações e propostas vinculadas também serão canceladas automaticamente."
+              : " Esta ação interromperá o fluxo de compras e arquivará a demanda."}
           </>
         }
         confirmLabel="Sim, cancelar Solicitação"
@@ -508,9 +546,13 @@ export default function SolicitacaoDetailPage() {
         </div>
       </ConfirmDialog>
 
-      <button className={styles.backBtn} onClick={() => router.push("/compras/solicitacoes")}>
+      <Button
+        variant="secondary"
+        className={styles.backBtn}
+        onClick={() => router.push("/compras/solicitacoes")}
+      >
         <Icon name="chevron-left" /> Voltar para Solicitações
-      </button>
+      </Button>
 
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -542,7 +584,7 @@ export default function SolicitacaoDetailPage() {
       ) : (
         <>
           <div className={styles.pageHeader}>
-            <div>
+            <div className={styles.headerContent}>
               <div className={styles.titleRow}>
                 <h1>{sol?.code || solId}</h1>
                 <Badge
@@ -577,132 +619,140 @@ export default function SolicitacaoDetailPage() {
               </div>
             </div>
 
-            {isDraft ? (
-              <div className={styles.headerActions}>
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    router.push(`/compras/solicitacoes/nova?editId=${sol?.id || solId}`)
-                  }
-                >
-                  <Icon name="edit-01" /> Editar Rascunho
-                </Button>
-                <Button variant="primary" disabled={sendingApproval} onClick={handleSendToApproval}>
-                  <Icon name="send-01" />{" "}
-                  {sendingApproval ? "Enviando..." : "Enviar para Aprovação"}
-                </Button>
-              </div>
-            ) : isEligibleForRfq ? (
-              <div className={styles.headerActions}>
-                <Button
-                  variant="primary"
-                  onClick={() =>
-                    router.push(`/compras/rfqs/nova?solicitationId=${sol?.id || solId}`)
-                  }
-                >
-                  <Icon name="plus" /> Criar Cotação (RFQ)
-                </Button>
-              </div>
-            ) : isInQuote ? (
-              <div className={styles.headerActions}>
-                {activeRfqs.length > 0 ? (
+            <div className={styles.headerActionGroup}>
+              {isDraft ? (
+                <div className={styles.headerActions}>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      router.push(`/compras/solicitacoes/nova?editId=${sol?.id || solId}`)
+                    }
+                  >
+                    <Icon name="edit-01" /> Editar Rascunho
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={sendingApproval}
+                    onClick={handleSendToApproval}
+                  >
+                    <Icon name="send-01" />{" "}
+                    {sendingApproval ? "Enviando..." : "Enviar para Aprovação"}
+                  </Button>
+                </div>
+              ) : isEligibleForRfq ? (
+                <div className={styles.headerActions}>
                   <Button
                     variant="primary"
                     onClick={() =>
-                      router.push(`/compras/rfqs/${activeRfqs[0]?.id || activeRfqs[0]?.code}`)
+                      router.push(`/compras/rfqs/nova?solicitationId=${sol?.id || solId}`)
                     }
                   >
-                    <Icon name="arrow-right" /> Ver Cotação ({activeRfqs[0]?.code || "RFQ"})
+                    <Icon name="plus" /> Criar Cotação (RFQ)
                   </Button>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      router.push(`/compras/rfqs?search=${encodeURIComponent(sol?.code || solId)}`)
-                    }
-                  >
-                    <Icon name="arrow-right" /> Ver Cotação no Painel
-                  </Button>
-                )}
-              </div>
-            ) : isFinished ? (
-              <div className={styles.headerActions}>
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: "#16a34a",
-                    fontWeight: 600,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    background: "#f0fdf4",
-                    padding: "6px 12px",
-                    borderRadius: 6,
-                    border: "1px solid #bbf7d0",
-                  }}
-                >
-                  <Icon name="check-circle" size={16} /> Demanda Atendida
-                </span>
-                {activeRfqs.length > 0 && (
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      router.push(`/compras/rfqs/${activeRfqs[0]?.id || activeRfqs[0]?.code}`)
-                    }
-                  >
-                    <Icon name="arrow-right" /> Ver Cotação ({activeRfqs[0]?.code || "RFQ"})
-                  </Button>
-                )}
-              </div>
-            ) : (
-              !isRejected && (
+                </div>
+              ) : isInQuote ? (
                 <div className={styles.headerActions}>
-                  {canUserApproveCurrentLevel ? (
-                    <>
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleCopyApprovalLink()}
-                        title="Copiar link desta Aprovação"
-                      >
-                        <Icon name="copy-01" /> Copiar Link
-                      </Button>
-                      <Button variant="secondary" onClick={() => setDialog("reject")}>
-                        <Icon name="x-close" /> Rejeitar Demanda
-                      </Button>
-                      <Button variant="primary" onClick={() => setDialog("approve")}>
-                        <Icon name="check" /> Aprovar como {currentApproverName}
-                      </Button>
-                    </>
+                  {activeRfqs.length > 0 ? (
+                    <Button
+                      variant="primary"
+                      onClick={() =>
+                        router.push(`/compras/rfqs/${activeRfqs[0]?.id || activeRfqs[0]?.code}`)
+                      }
+                    >
+                      <Icon name="arrow-right" /> Ver Cotação ({activeRfqs[0]?.code || "RFQ"})
+                    </Button>
                   ) : (
-                    <div className={styles.waitingApproverInfo}>
-                      <span className={styles.waitingBadge}>
-                        <Icon name="clock" size={14} /> Aguardando Aprovação de{" "}
-                        <strong>{currentApproverName}</strong>
-                      </span>
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleCopyApprovalLink()}
-                        title="Copiar link de Aprovação para enviar ao gestor"
-                      >
-                        <Icon name="copy-01" /> Copiar Link
-                      </Button>
-                    </div>
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        router.push(
+                          `/compras/rfqs?search=${encodeURIComponent(sol?.code || solId)}`,
+                        )
+                      }
+                    >
+                      <Icon name="arrow-right" /> Ver Cotação no Painel
+                    </Button>
                   )}
                 </div>
-              )
-            )}
+              ) : isFinished ? (
+                <div className={styles.headerActions}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      color: "#16a34a",
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "#f0fdf4",
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      border: "1px solid #bbf7d0",
+                    }}
+                  >
+                    <Icon name="check-circle" size={16} /> Demanda Atendida
+                  </span>
+                  {activeRfqs.length > 0 && (
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        router.push(`/compras/rfqs/${activeRfqs[0]?.id || activeRfqs[0]?.code}`)
+                      }
+                    >
+                      <Icon name="arrow-right" /> Ver Cotação ({activeRfqs[0]?.code || "RFQ"})
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                !isRejected && (
+                  <div className={styles.headerActions}>
+                    {canUserApproveCurrentLevel ? (
+                      <>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleCopyApprovalLink()}
+                          title="Copiar link desta Aprovação"
+                        >
+                          <Icon name="copy-01" /> Copiar Link
+                        </Button>
+                        <Button variant="secondary" onClick={() => setDialog("reject")}>
+                          <Icon name="x-close" /> Rejeitar Demanda
+                        </Button>
+                        <Button variant="primary" onClick={() => setDialog("approve")}>
+                          <Icon name="check" /> Aprovar como {currentApproverName}
+                        </Button>
+                      </>
+                    ) : (
+                      <div className={styles.waitingApproverInfo}>
+                        <span className={styles.waitingBadge}>
+                          <Icon name="clock" size={14} /> Aguardando Aprovação de{" "}
+                          <strong>{currentApproverName}</strong>
+                        </span>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleCopyApprovalLink()}
+                          title="Copiar link de Aprovação para enviar ao gestor"
+                        >
+                          <Icon name="copy-01" /> Copiar Link
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
 
-            {!isCancelled && !isFinished && !isInQuote && (
-              <div className={styles.headerActions}>
-                <Button
-                  variant="danger"
-                  onClick={() => setDialog("cancel")}
-                  title="Cancelar esta Solicitação de compra"
-                >
-                  <Icon name="x-close" /> Cancelar Solicitação
-                </Button>
-              </div>
-            )}
+              {!isCancelled && !isFinished && (
+                <div className={styles.headerActions}>
+                  <Button
+                    variant="danger"
+                    onClick={() => setDialog("cancel")}
+                    title="Cancelar esta Solicitação de compra"
+                  >
+                    <Icon name="x-close" /> Cancelar Solicitação
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {isDraft && (
@@ -912,18 +962,34 @@ export default function SolicitacaoDetailPage() {
                 </div>
 
                 <div className={styles.infoGrid}>
-                  <div className={`${styles.infoItem} ${styles.span2}`}>
-                    <label>Observação Geral / Demanda</label>
-                    <span
-                      style={{ fontSize: 14, color: "#1e293b", fontWeight: 500, lineHeight: 1.5 }}
-                    >
-                      {sol?.notes || sol?.description || "—"}
-                    </span>
-                  </div>
+                  {sol?.justification ? (
+                    <div className={`${styles.infoItem} ${styles.span2}`}>
+                      <label>Destino / Justificativa</label>
+                      <span
+                        style={{ fontSize: 14, color: "#1e293b", fontWeight: 500, lineHeight: 1.5 }}
+                      >
+                        {sol.justification}
+                      </span>
+                    </div>
+                  ) : !sol?.notes ? (
+                    <div className={`${styles.infoItem} ${styles.span2}`}>
+                      <label>Descrição / Demanda</label>
+                      <span
+                        style={{ fontSize: 14, color: "#1e293b", fontWeight: 500, lineHeight: 1.5 }}
+                      >
+                        {sol?.description || "—"}
+                      </span>
+                    </div>
+                  ) : null}
 
                   <div className={styles.infoItem}>
                     <label>Empresa / Unidade</label>
-                    <strong>{companyName || "—"}</strong>
+                    <strong>{sol?.branchName || companyName || "—"}</strong>
+                  </div>
+
+                  <div className={styles.infoItem}>
+                    <label>Área / Setor</label>
+                    <span>{sol?.department || sol?.costCenterName || "—"}</span>
                   </div>
 
                   <div className={styles.infoItem}>
@@ -934,6 +1000,29 @@ export default function SolicitacaoDetailPage() {
                         formatUserDisplayName(sol?.requesterId, user)}
                     </span>
                   </div>
+
+                  {sol?.notes && sol.notes !== sol?.justification && (
+                    <div className={`${styles.infoItem} ${styles.span2}`}>
+                      <label>Observação Geral</label>
+                      <span style={{ fontSize: 14, color: "#334155", lineHeight: 1.5 }}>
+                        {sol.notes}
+                      </span>
+                    </div>
+                  )}
+
+                  {sol?.deliveryLocation && (
+                    <div className={styles.infoItem}>
+                      <label>Local de Entrega</label>
+                      <span>{sol.deliveryLocation}</span>
+                    </div>
+                  )}
+
+                  {sol?.deliveryWindow && (
+                    <div className={styles.infoItem}>
+                      <label>Janela de Recebimento</label>
+                      <span>{sol.deliveryWindow}</span>
+                    </div>
+                  )}
 
                   {sol?.corporateCode && (
                     <>

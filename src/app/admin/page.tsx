@@ -10,6 +10,7 @@ import {
   Loading,
   SearchInput,
   Icon,
+  Select,
 } from "@/components/ui";
 import {
   adminApi,
@@ -19,6 +20,7 @@ import {
   ApproverOption,
 } from "@/lib/api/admin";
 import { maskCnpj } from "@/lib/utils/masks";
+import { COMPANY_BRANCHES } from "@/lib/constants/companies";
 import styles from "./admin.module.css";
 
 const ADMIN_TABS = [
@@ -100,11 +102,49 @@ export default function AdminPage() {
         adminApi.getApprovalRules(),
         adminApi.getApprovers(),
       ]);
-      setCompanies(comps);
+      const mergedComps: CompanyBranchConfig[] = [];
+      const seen = new Set<string>();
+
+      mergedComps.push({
+        id: "comp-todas",
+        code: "TODAS",
+        name: "Todas as Empresas (Padrão Global)",
+        acronym: "ALL",
+        unitName: "Corporativo Holding",
+        type: "Matriz",
+        active: true,
+      });
+      seen.add("TODAS");
+
+      for (const c of comps) {
+        if (!seen.has(c.code)) {
+          mergedComps.push(c);
+          seen.add(c.code);
+        }
+      }
+
+      for (const b of COMPANY_BRANCHES) {
+        if (!seen.has(b.code)) {
+          mergedComps.push({
+            id: `comp-${b.code.toLowerCase()}`,
+            code: b.code,
+            name: b.name,
+            acronym: b.acronym,
+            unitName: b.unitName,
+            type: b.code === "2313" ? "Matriz" : "Filial",
+            active: true,
+          });
+          seen.add(b.code);
+        }
+      }
+
+      setCompanies(mergedComps);
       setRules(rls);
       setApproverOptions(approvers);
-      if (comps.length > 0 && !comps.some((c) => c.code === selectedWorkflowCompany)) {
-        setSelectedWorkflowCompany(comps[0].code);
+      if (mergedComps.length > 0 && !mergedComps.some((c) => c.code === selectedWorkflowCompany)) {
+        setSelectedWorkflowCompany(
+          mergedComps.some((c) => c.code === "2313") ? "2313" : mergedComps[0].code,
+        );
       }
     } catch (err: any) {
       console.error("Erro ao carregar dados administrativos:", err);
@@ -449,6 +489,35 @@ export default function AdminPage() {
     setDeleteRuleId(null);
   };
 
+  const handleCopyRulesFromTemplate = () => {
+    const sourceRules = rules.filter(
+      (r) =>
+        (r.companyCode === "2313" || r.companyCode === "TODAS") &&
+        (r.flowType || "solicitacao") === activeFlowType,
+    );
+    if (sourceRules.length === 0) {
+      alert("Nenhuma regra de modelo encontrada na Matriz ou Regras Globais para copiar.");
+      return;
+    }
+    const clonedRules: ApprovalRuleConfig[] = sourceRules.map((r, i) => ({
+      ...r,
+      id: `rule-${Date.now()}-${i}`,
+      companyCode: selectedWorkflowCompany,
+      flowType: activeFlowType,
+    }));
+    setRules((prev) => [
+      ...prev.filter(
+        (r) =>
+          !(
+            r.companyCode === selectedWorkflowCompany &&
+            (r.flowType || "solicitacao") === activeFlowType
+          ),
+      ),
+      ...clonedRules,
+    ]);
+    setIsDirty(true);
+  };
+
   const handleSaveAllRules = async () => {
     setSavingBatch(true);
     try {
@@ -663,11 +732,15 @@ export default function AdminPage() {
                   >
                     Empresa:
                   </label>
-                  <select
-                    id="companySelectWorkflow"
-                    className={styles.select}
+                  <Select
+                    className={styles.selectWrapper}
+                    triggerClassName={styles.select}
                     value={selectedWorkflowCompany}
-                    onChange={(e) => {
+                    options={companies.map((c) => ({
+                      label: `${c.code} - ${c.name} (${c.acronym})`,
+                      value: c.code,
+                    }))}
+                    onChange={(value: string) => {
                       if (isDirty) {
                         if (
                           !confirm(
@@ -677,15 +750,11 @@ export default function AdminPage() {
                           return;
                         setIsDirty(false);
                       }
-                      setSelectedWorkflowCompany(e.target.value);
+                      setSelectedWorkflowCompany(value);
                     }}
-                  >
-                    {companies.map((c) => (
-                      <option key={c.id} value={c.code}>
-                        {c.code} - {c.name} ({c.acronym})
-                      </option>
-                    ))}
-                  </select>
+                    searchThreshold={8}
+                    pageSize={8}
+                  />
                 </div>
 
                 <div className={styles.flowTypeToggle}>
@@ -767,7 +836,7 @@ export default function AdminPage() {
                 <div style={{ flex: 1 }}>
                   <strong>
                     {diagnostics.isValid
-                      ? "Workflow Íntegro e Sequência Contínua"
+                      ? "Workflow Ántegro e Sequência Contínua"
                       : "Atenção: Inconsistências ou lacunas identificadas nas regras"}
                   </strong>
                   {!diagnostics.isValid && (
@@ -789,11 +858,17 @@ export default function AdminPage() {
                     <p style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
                       Clique no botão abaixo para definir a primeira faixa de aprovação.
                     </p>
-                    <div style={{ marginTop: "1rem" }}>
+                    <div style={{ marginTop: "1rem", display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
                       <Button variant="primary" onClick={handleOpenNewRange}>
                         <Icon name="plus" size={16} />
                         Criar Primeira Faixa
                       </Button>
+                      {selectedWorkflowCompany !== "TODAS" && (
+                        <Button variant="secondary" onClick={handleCopyRulesFromTemplate}>
+                          <Icon name="copy" size={16} />
+                          Copiar Modelo da Matriz (VB Agro)
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1118,7 +1193,7 @@ export default function AdminPage() {
                               {c.type}
                             </Badge>
                           </td>
-                          <td>{c.cnpj || "—"}</td>
+                          <td>{c.cnpj || "¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</td>
                           <td>
                             <Badge variant={c.active ? "success" : "danger"}>
                               {c.active ? "Ativo" : "Inativo"}
@@ -1245,7 +1320,7 @@ export default function AdminPage() {
             <div className={styles.modalHeader}>
               <h3>{editingRangeKey ? "Editar Limites da Faixa" : "Nova Faixa de Valor"}</h3>
               <button className={styles.modalClose} onClick={() => setRangeModalOpen(false)}>
-                ✕
+                ✓
               </button>
             </div>
             <form onSubmit={handleSaveRange}>
@@ -1302,7 +1377,7 @@ export default function AdminPage() {
             <div className={styles.modalHeader}>
               <h3>{editingRule ? "Editar Aprovador do Nível" : "Adicionar Nível de Aprovação"}</h3>
               <button className={styles.modalClose} onClick={() => setStepModalOpen(false)}>
-                ✕
+                ✓
               </button>
             </div>
             <form onSubmit={handleSaveStep}>
@@ -1336,27 +1411,28 @@ export default function AdminPage() {
 
                 <div className={styles.formGroup}>
                   <label>Selecionar Pessoa / Colaborador Responsável</label>
-                  <select
-                    className={styles.select}
+                  <Select
+                    className={styles.selectWrapper}
+                    triggerClassName={styles.select}
                     value={stepForm.approverIdentifier}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const match = approverOptions.find((a) => a.id === val);
+                    placeholder="Selecione um colaborador ou preencha manualmente"
+                    options={approverOptions.map((opt) => ({
+                      label: `${opt.name} ${opt.email ? `(${opt.email})` : `[${opt.id}]`}`,
+                      value: opt.id,
+                      icon: "user-01",
+                    }))}
+                    onChange={(value: string) => {
+                      const match = approverOptions.find((a) => a.id === value);
                       setStepForm({
                         ...stepForm,
                         approverType: "user",
-                        approverIdentifier: val,
-                        approverName: match ? match.name : val,
+                        approverIdentifier: value,
+                        approverName: match ? match.name : value,
                       });
                     }}
-                  >
-                    <option value="">— Selecione um colaborador ou preencha manualmente —</option>
-                    {approverOptions.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        👤 {opt.name} {opt.email ? `(${opt.email})` : `[${opt.id}]`}
-                      </option>
-                    ))}
-                  </select>
+                    searchThreshold={8}
+                    pageSize={8}
+                  />
                 </div>
 
                 <div className={styles.formRow}>
@@ -1413,7 +1489,7 @@ export default function AdminPage() {
             <div className={styles.modalHeader}>
               <h3>{editingCompany ? "Editar Unidade" : "Nova Unidade / Filial"}</h3>
               <button className={styles.modalClose} onClick={() => setCompanyModalOpen(false)}>
-                ✕
+                ✓
               </button>
             </div>
             <form onSubmit={handleSaveCompany}>
@@ -1466,19 +1542,20 @@ export default function AdminPage() {
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label>Tipo</label>
-                    <select
-                      className={styles.select}
+                    <Select
+                      options={[
+                        { label: "Matriz", value: "Matriz" },
+                        { label: "Filial", value: "Filial" },
+                      ]}
                       value={companyForm.type}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setCompanyForm({
                           ...companyForm,
-                          type: e.target.value as "Matriz" | "Filial",
+                          type: value as "Matriz" | "Filial",
                         })
                       }
-                    >
-                      <option value="Matriz">Matriz</option>
-                      <option value="Filial">Filial</option>
-                    </select>
+                      searchable={false}
+                    />
                   </div>
                   <div className={styles.formGroup}>
                     <label>CNPJ (Opcional)</label>

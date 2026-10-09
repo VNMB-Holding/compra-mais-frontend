@@ -7,6 +7,17 @@ export interface PurchaseRequest {
   description: string;
   requesterId?: string;
   requesterName?: string;
+  requesterEmail?: string;
+  requesterPhone?: string;
+  department?: string;
+  branchName?: string;
+  justification?: string;
+  deliveryLocation?: string;
+  deliveryWindow?: string;
+  preferredSupplier?: string;
+  paymentTerms?: string;
+  purchaseType?: string;
+  priority?: string;
   notes?: string;
   estimatedBudget: number;
   status:
@@ -139,10 +150,11 @@ export const purchaseRequestsApi = {
   getApprovalByToken: (token: string) =>
     apiClient.get<any>(`/api/purchase-requests/approval-link/${token}`),
 
-  getApprovalChain: (companyCode?: string, budget?: number) => {
+  getApprovalChain: (companyCode?: string, budget?: number, flowType?: string) => {
     const params = new URLSearchParams();
     if (companyCode) params.set("companyCode", companyCode);
     if (budget !== undefined) params.set("budget", String(budget));
+    if (flowType) params.set("flowType", flowType);
     const qs = params.toString() ? `?${params.toString()}` : "";
     return apiClient.get<any[]>(`/api/purchase-requests/approval-chain${qs}`);
   },

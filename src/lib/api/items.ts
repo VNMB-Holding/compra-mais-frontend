@@ -64,12 +64,24 @@ export interface ItemKpis {
   totalCategories: number;
 }
 
+export interface PaginatedItemsResponse {
+  items: CatalogItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ItemListParams {
+  search?: string;
+  category?: string;
+  supplierId?: string;
+  page?: number;
+  limit?: number;
+}
+
 export const itemsApi = {
-  list: async (params?: {
-    search?: string;
-    category?: string;
-    supplierId?: string;
-  }): Promise<CatalogItem[]> => {
+  list: async (params?: ItemListParams): Promise<CatalogItem[]> => {
     try {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set("search", params.search);
@@ -77,12 +89,59 @@ export const itemsApi = {
         searchParams.set("category", params.category);
       if (params?.supplierId && params.supplierId !== "Todos")
         searchParams.set("supplierId", params.supplierId);
+      if (params?.page !== undefined) searchParams.set("page", String(params.page));
+      if (params?.limit !== undefined) searchParams.set("limit", String(params.limit));
 
       const qs = searchParams.toString();
-      const res = await apiClient.get<CatalogItem[]>(`/api/items${qs ? `?${qs}` : ""}`);
-      return res || [];
+      const res = await apiClient.get<any>(`/api/items${qs ? `?${qs}` : ""}`);
+      if (res && Array.isArray(res.items)) {
+        return res.items;
+      }
+      return Array.isArray(res) ? res : [];
     } catch {
       return [];
+    }
+  },
+
+  listPaginated: async (params?: ItemListParams): Promise<PaginatedItemsResponse> => {
+    try {
+      const searchParams = new URLSearchParams();
+      if (params?.search) searchParams.set("search", params.search);
+      if (params?.category && params.category !== "Todas")
+        searchParams.set("category", params.category);
+      if (params?.supplierId && params.supplierId !== "Todos")
+        searchParams.set("supplierId", params.supplierId);
+      searchParams.set("page", String(params?.page || 1));
+      searchParams.set("limit", String(params?.limit || 20));
+
+      const qs = searchParams.toString();
+      const res = await apiClient.get<any>(`/api/items?${qs}`);
+      if (Array.isArray(res)) {
+        return {
+          items: res,
+          total: res.length,
+          page: 1,
+          limit: res.length,
+          totalPages: 1,
+        };
+      }
+      return (
+        res || {
+          items: [],
+          total: 0,
+          page: params?.page || 1,
+          limit: params?.limit || 20,
+          totalPages: 1,
+        }
+      );
+    } catch {
+      return {
+        items: [],
+        total: 0,
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        totalPages: 1,
+      };
     }
   },
 
