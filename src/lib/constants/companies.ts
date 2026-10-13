@@ -37,10 +37,10 @@ export const PRIMARY_COMPANIES: PrimaryCompany[] = [
     type: "Matriz",
   },
   {
-    code: "LORENA",
-    name: "VB IMÓVEIS E PARTICIPAÇÕES",
-    acronym: "VBI",
-    unitName: "Lorena",
+    code: "VNMB",
+    name: "VNMB PARTICIPAÇÕES",
+    acronym: "VNB",
+    unitName: "Sede / Imóveis",
     type: "Matriz",
   },
 ];
@@ -51,7 +51,7 @@ export function getCanonicalCompanyCode(codeOrSlug?: string | null): string {
   if (clean === "todas" || clean === "all" || clean === "global") return "TODAS";
   if (clean === "2313" || clean === "vb-agro" || clean === "vbagro" || clean === "brd") return "2313";
   if (clean === "purafe" || clean === "igreja-pura-fe" || clean === "igrejapurafe" || clean === "ipf") return "PURAFE";
-  if (clean === "lorena" || clean === "vbi" || clean === "vb-imoveis") return "LORENA";
+  if (clean === "vnmb" || clean === "vnb" || clean === "lorena" || clean === "vbi" || clean.includes("vnmb") || clean.includes("imoveis")) return "VNMB";
 
   const vbBranches = ["2345", "2346", "2363", "2364", "2394", "2395", "2396", "2397", "2419"];
   if (vbBranches.includes(String(codeOrSlug).trim())) {
@@ -140,11 +140,11 @@ export const COMPANY_BRANCHES: CompanyBranchMapping[] = [
     parentCompanyCode: "PURAFE",
   },
   {
-    code: "LORENA",
-    name: "VB IMÓVEIS E PARTICIPAÇÕES",
-    acronym: "VBI",
-    unitName: "Lorena",
-    parentCompanyCode: "LORENA",
+    code: "VNMB",
+    name: "VNMB PARTICIPAÇÕES",
+    acronym: "VNB",
+    unitName: "Sede / Imóveis",
+    parentCompanyCode: "VNMB",
   },
 ];
 

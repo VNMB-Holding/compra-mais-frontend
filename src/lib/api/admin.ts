@@ -10,6 +10,11 @@ export interface CompanyBranchConfig {
   type: "Matriz" | "Filial";
   active: boolean;
   cnpj?: string;
+  email?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
 }
 
 export type ApproverType = "user" | "role" | "group";

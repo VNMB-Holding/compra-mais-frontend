@@ -19,6 +19,7 @@ import {
   ApproverType,
   ApproverOption,
 } from "@/lib/api/admin";
+import { maskCnpj } from "@/lib/utils/masks";
 import {
   COMPANY_BRANCHES,
   PRIMARY_COMPANIES,
@@ -143,7 +144,7 @@ export default function AdminPage() {
       }
 
       for (const b of COMPANY_BRANCHES) {
-        if (b.code === "2313" || b.code === "PURAFE" || b.code === "LORENA") {
+        if (b.code === "2313" || b.code === "PURAFE" || b.code === "VNMB") {
           continue;
         }
         if (!seenCode.has(b.code)) {
