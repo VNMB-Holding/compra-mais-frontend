@@ -269,21 +269,16 @@ export default function EconomiaPage() {
           : "R$ 0,00";
 
     const rawPotencial = apiData?.kpis?.economiaPotencial;
-    let economiaPotencialDisplay: string;
-    if (rawPotencial && rawPotencial !== rawGerada && rawPotencial !== "R$ 0,00") {
-      economiaPotencialDisplay = rawPotencial;
-    } else if (baseGeradaNum > 0) {
-      economiaPotencialDisplay = formatCurrency(Math.round(baseGeradaNum * 1.25));
-    } else {
-      economiaPotencialDisplay = rawPotencial || "R$ 0,00";
-    }
+    const economiaPotencialDisplay =
+      rawPotencial && rawPotencial !== "R$ 0,00"
+        ? rawPotencial
+        : baseGeradaNum > 0
+          ? formatCurrency(baseGeradaNum)
+          : "R$ 0,00";
 
     return {
       economiaGerada: economiaGeradaDisplay,
-      economiaPct:
-        apiData?.kpis?.economiaPct && apiData.kpis.economiaPct !== "0,0%"
-          ? apiData.kpis.economiaPct
-          : "12,4%",
+      economiaPct: apiData?.kpis?.economiaPct || "0,0%",
       economiaPotencial: economiaPotencialDisplay,
       negociacoesCount: apiData?.kpis?.negociacoesCount || String(suppliersData.length || 0),
       trendEconomia: "Economia efetiva sobre compras negociadas",

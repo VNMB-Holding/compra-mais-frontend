@@ -208,7 +208,7 @@ export default function SpendPage() {
     );
     return {
       spendTotal: apiData?.kpis?.spendTotal || "R$ 0,00",
-      economiaPotencial: formatCurrency(totalEcon),
+      economiaPotencial: apiData?.kpis?.economiaPotencial || formatCurrency(totalEcon),
       pedidosEmitidos: apiData?.kpis?.pedidosEmitidos || "0",
       fornecedoresAtivos: apiData?.kpis?.fornecedoresAtivos || "0",
       trendSpend: "Filtro ativo no servidor",

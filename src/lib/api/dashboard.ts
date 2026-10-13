@@ -51,6 +51,7 @@ export interface SpendAnalyticsResponse {
     spendTotal?: string;
     pedidosEmitidos?: string;
     fornecedoresAtivos?: string;
+    economiaPotencial?: string;
   };
 }
 
