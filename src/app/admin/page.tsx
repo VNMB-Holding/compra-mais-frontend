@@ -19,8 +19,11 @@ import {
   ApproverType,
   ApproverOption,
 } from "@/lib/api/admin";
-import { maskCnpj } from "@/lib/utils/masks";
-import { COMPANY_BRANCHES } from "@/lib/constants/companies";
+import {
+  COMPANY_BRANCHES,
+  PRIMARY_COMPANIES,
+  getCanonicalCompanyCode,
+} from "@/lib/constants/companies";
 import styles from "./admin.module.css";
 
 const ADMIN_TABS = [
@@ -103,38 +106,57 @@ export default function AdminPage() {
         adminApi.getApprovers(),
       ]);
       const mergedComps: CompanyBranchConfig[] = [];
-      const seen = new Set<string>();
+      const seenCanonical = new Set<string>();
+      const seenCode = new Set<string>();
 
-      mergedComps.push({
-        id: "comp-todas",
-        code: "TODAS",
-        name: "Todas as Empresas (Padrão Global)",
-        acronym: "ALL",
-        unitName: "Corporativo Holding",
-        type: "Matriz",
-        active: true,
-      });
-      seen.add("TODAS");
+      for (const p of PRIMARY_COMPANIES) {
+        mergedComps.push({
+          id: `comp-${p.code.toLowerCase()}`,
+          code: p.code,
+          name: p.name,
+          acronym: p.acronym,
+          unitName: p.unitName,
+          type: "Matriz",
+          active: true,
+        });
+        seenCanonical.add(p.code);
+        seenCode.add(p.code);
+      }
 
       for (const c of comps) {
-        if (!seen.has(c.code)) {
+        const canonical = getCanonicalCompanyCode(c.code);
+        const existing = mergedComps.find(
+          (m) => m.code === canonical || getCanonicalCompanyCode(m.code) === canonical,
+        );
+        if (existing) {
+          if (c.cnpj && !existing.cnpj) existing.cnpj = c.cnpj;
+          if (c.email && !existing.email) existing.email = c.email;
+          if (c.address && !existing.address) existing.address = c.address;
+          if (c.city && !existing.city) existing.city = c.city;
+          if (c.state && !existing.state) existing.state = c.state;
+          if (c.zipCode && !existing.zipCode) existing.zipCode = c.zipCode;
+        } else if (!seenCode.has(c.code) && !seenCanonical.has(canonical)) {
           mergedComps.push(c);
-          seen.add(c.code);
+          seenCode.add(c.code);
+          seenCanonical.add(canonical);
         }
       }
 
       for (const b of COMPANY_BRANCHES) {
-        if (!seen.has(b.code)) {
+        if (b.code === "2313" || b.code === "PURAFE" || b.code === "LORENA") {
+          continue;
+        }
+        if (!seenCode.has(b.code)) {
           mergedComps.push({
             id: `comp-${b.code.toLowerCase()}`,
             code: b.code,
             name: b.name,
             acronym: b.acronym,
             unitName: b.unitName,
-            type: b.code === "2313" ? "Matriz" : "Filial",
+            type: "Filial",
             active: true,
           });
-          seen.add(b.code);
+          seenCode.add(b.code);
         }
       }
 
@@ -162,14 +184,27 @@ export default function AdminPage() {
   }, [loadData]);
 
   const companyRules = useMemo(() => {
+    const targetCanonical = getCanonicalCompanyCode(selectedWorkflowCompany);
     return rules
       .filter((r) => {
-        const matchCompany = r.companyCode === selectedWorkflowCompany;
+        const ruleCanonical = getCanonicalCompanyCode(r.companyCode);
+        const matchCompany =
+          selectedWorkflowCompany === "TODAS"
+            ? r.companyCode === "TODAS" || !r.companyCode
+            : r.companyCode === selectedWorkflowCompany || ruleCanonical === targetCanonical;
         const matchFlow = (r.flowType || "solicitacao") === activeFlowType;
         return matchCompany && matchFlow;
       })
       .sort((a, b) => a.minAmount - b.minAmount || a.level - b.level || a.order - b.order);
   }, [rules, selectedWorkflowCompany, activeFlowType]);
+
+  const workflowCompanyOptions = useMemo(() => {
+    const primary = companies.filter((c) => c.type === "Matriz");
+    return primary.map((c) => ({
+      label: `${c.code} - ${c.name} (${c.acronym})`,
+      value: c.code,
+    }));
+  }, [companies]);
 
   const valueRanges = useMemo(() => {
     const groups: Record<string, ValueRangeGroup> = {};
@@ -521,15 +556,18 @@ export default function AdminPage() {
   const handleSaveAllRules = async () => {
     setSavingBatch(true);
     try {
+      const canonicalCompany = getCanonicalCompanyCode(selectedWorkflowCompany);
       const currentCompanyRules = rules
-        .filter(
-          (r) =>
-            r.companyCode === selectedWorkflowCompany &&
-            (r.flowType || "solicitacao") === activeFlowType,
-        )
+        .filter((r) => {
+          const ruleCanonical = getCanonicalCompanyCode(r.companyCode);
+          return (
+            (r.companyCode === selectedWorkflowCompany || ruleCanonical === canonicalCompany) &&
+            (r.flowType || "solicitacao") === activeFlowType
+          );
+        })
         .map((r) => ({
           ...r,
-          companyCode: selectedWorkflowCompany,
+          companyCode: canonicalCompany,
           flowType: activeFlowType,
           level: Number(r.level) || 1,
           order: Number(r.order) || Number(r.level) || 1,
@@ -542,7 +580,7 @@ export default function AdminPage() {
           active: r.active !== false,
         }));
       await adminApi.batchSaveApprovalRules(
-        selectedWorkflowCompany,
+        canonicalCompany,
         currentCompanyRules,
         activeFlowType,
       );
@@ -736,10 +774,7 @@ export default function AdminPage() {
                     className={styles.selectWrapper}
                     triggerClassName={styles.select}
                     value={selectedWorkflowCompany}
-                    options={companies.map((c) => ({
-                      label: `${c.code} - ${c.name} (${c.acronym})`,
-                      value: c.code,
-                    }))}
+                    options={workflowCompanyOptions}
                     onChange={(value: string) => {
                       if (isDirty) {
                         if (
