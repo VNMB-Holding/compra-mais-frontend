@@ -648,7 +648,7 @@ export default function NovaSolicitacaoPage() {
                                             <span className={styles.autocompleteItemSub}>
                                               {sug.lastSupplier ? (
                                                 <span className={styles.autocompleteItemSupplier}>
-                                                  À¢­ Base:{" "}
+                                                  Fornecedor Base:{" "}
                                                   {sug.lastSupplier.tradeName ||
                                                     sug.lastSupplier.corporateName}
                                                 </span>
