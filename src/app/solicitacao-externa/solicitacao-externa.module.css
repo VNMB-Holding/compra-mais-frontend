@@ -309,6 +309,33 @@
   cursor: wait;
 }
 
+.userBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #f0fdf9;
+  border: 1px solid #ccfbf1;
+  color: #007d79;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.userBadgeIcon {
+  color: #007d79;
+}
+
+.userBadgeText {
+  color: #134e4a;
+}
+
+.userBadgeText strong {
+  font-weight: 700;
+  color: #007d79;
+}
+
 .tourAction {
   display: inline-flex;
   align-items: center;
@@ -408,6 +435,49 @@
   padding-bottom: 14px;
 }
 
+.sectionHeaderBetween {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.sectionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.restoreDataBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.restoreDataBtn:hover {
+  background: #f0fdf9;
+  border-color: #007d79;
+  color: #007d79;
+}
+
+.restoreDataBtn:focus-visible {
+  outline: none;
+  border-color: #007d79;
+  box-shadow: 0 0 0 3px rgba(0, 125, 121, 0.15);
+}
+
 .sectionHeaderNoBorder {
   display: flex;
   align-items: center;
@@ -427,6 +497,7 @@
 }
 
 .sectionHeader h2,
+.sectionHeaderBetween h2,
 .sectionHeaderNoBorder h2 {
   font-size: 16px;
   font-weight: 700;
@@ -927,7 +998,8 @@
     flex: 0 0 34px;
   }
 
-  .accountAction {
+  .accountAction,
+  .userBadge {
     min-height: 34px;
     padding: 6px 10px;
     font-size: 11.5px;

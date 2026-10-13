@@ -43,6 +43,8 @@ const ICON_ALIASES: Record<string, string> = {
   mail: "mail-01",
   lock: "lock-01",
   building: "building-01",
+  login: "log-in-01",
+  "login-01": "log-in-01",
 };
 
 export default function Icon({ name, size = 20, className = "", onClick, style = {} }: IconProps) {

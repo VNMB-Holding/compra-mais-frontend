@@ -179,10 +179,20 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     try {
       errorData = await response.json();
     } catch {}
-    const message =
+    let message =
       (errorData as { message?: string; error?: string })?.message ||
       (errorData as { error?: string })?.error ||
       `Erro ${response.status}: ${response.statusText}`;
+
+    if (typeof message === "string") {
+      const lower = message.toLowerCase().trim();
+      if (lower.includes("invalid email or password")) {
+        message = "E-mail ou senha incorretos.";
+      } else if (lower.includes("invalid credentials")) {
+        message = "Credenciais inválidas.";
+      }
+    }
+
     throw new ApiError(message, response.status, errorData);
   }
 

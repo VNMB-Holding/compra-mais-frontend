@@ -179,7 +179,7 @@ export default function SolicitacaoExternaPage() {
           target: "#tour-identificacao",
           title: "1. Quem está solicitando",
           description:
-            "Preencha seus dados de contato (Nome, WhatsApp e E-mail) e selecione seu setor e unidade da empresa. Se você já possui uma conta Compra+, use o botão 'Usar meus dados' no topo para preencher tudo num clique!",
+            "Preencha seus dados de contato (Nome, WhatsApp e E-mail) e selecione seu setor e unidade da empresa. Se você estiver conectado à sua conta Compra+, os dados já são preenchidos automaticamente!",
           placement: "bottom",
         },
         {
@@ -264,17 +264,17 @@ export default function SolicitacaoExternaPage() {
     };
   }, [activeSearchItemId]);
 
-  const handleIdentityAction = () => {
-    if (!user) {
-      window.location.href = "/login?redirect=/solicitacao-externa";
-      return;
-    }
+  const handleLoginAction = () => {
+    window.location.href = "/login?redirect=/solicitacao-externa";
+  };
 
+  const handleRestoreIdentityData = () => {
+    if (!user) return;
     applyIdentityData(true);
     toast({
       variant: "success",
-      title: "Dados carregados",
-      message: "Preenchi os campos disponíveis na sua conta.",
+      title: "Dados restaurados",
+      message: "Preenchemos os campos com as informações da sua conta.",
     });
   };
 
@@ -701,15 +701,27 @@ export default function SolicitacaoExternaPage() {
           >
             <Icon name="help-circle" size={16} />
           </button>
-          <button
-            type="button"
-            className={styles.accountAction}
-            onClick={handleIdentityAction}
-            disabled={authLoading}
-          >
-            <Icon name={user ? "user-check-01" : "login-01"} size={14} />
-            {user ? "Usar meus dados" : "Possui conta?"}
-          </button>
+          {user ? (
+            <div
+              className={styles.userBadge}
+              title={`Conectado como ${user.name || user.email}`}
+            >
+              <Icon name="user-check-01" size={14} className={styles.userBadgeIcon} />
+              <span className={styles.userBadgeText}>
+                Olá, <strong>{user.name?.split(" ")[0] || "Usuário"}</strong>
+              </span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={styles.accountAction}
+              onClick={handleLoginAction}
+              disabled={authLoading}
+            >
+              <Icon name="log-in-01" size={14} />
+              Já tem conta? Entrar
+            </button>
+          )}
           <span className={styles.securityTag}>
             <Icon name="shield-tick" size={14} /> Portal Seguro
           </span>
@@ -733,11 +745,24 @@ export default function SolicitacaoExternaPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div id="tour-identificacao" className={styles.sectionCard}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.sectionIcon}>
-                <Icon name="user-01" size={18} />
+            <div className={styles.sectionHeaderBetween}>
+              <div className={styles.sectionHeaderLeft}>
+                <div className={styles.sectionIcon}>
+                  <Icon name="user-01" size={18} />
+                </div>
+                <h2>1. Quem está solicitando</h2>
               </div>
-              <h2>1. Quem está solicitando</h2>
+              {user && (
+                <button
+                  type="button"
+                  className={styles.restoreDataBtn}
+                  onClick={handleRestoreIdentityData}
+                  title="Restaurar dados com informações do seu perfil Compra+"
+                >
+                  <Icon name="refresh-cw-01" size={13} />
+                  <span>Restaurar meus dados</span>
+                </button>
+              )}
             </div>
 
             <div className={styles.formGrid}>

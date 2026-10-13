@@ -52,7 +52,14 @@ export default function LoginPage() {
 
       window.location.href = targetUrl;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao fazer login");
+      const rawMsg = err instanceof Error ? err.message : "";
+      if (/invalid email or password/i.test(rawMsg)) {
+        setError("E-mail ou senha incorretos.");
+      } else if (/invalid credentials/i.test(rawMsg)) {
+        setError("Credenciais inválidas.");
+      } else {
+        setError(rawMsg || "Erro ao fazer login");
+      }
     }
   };
 
