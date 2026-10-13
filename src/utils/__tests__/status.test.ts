@@ -64,7 +64,7 @@ describe("Status & Priority Constants & Mappings", () => {
       expect(mapRfqStatus({ status: "Open", closesAt: today })).toBe("Encerrando hoje");
     });
 
-    it("deve tratar cota��o vencida como encerrada", () => {
+    it("deve tratar cotação vencida como encerrada", () => {
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       expect(mapRfqStatus({ status: "Open", closesAt: yesterday })).toBe("Encerrada");
     });

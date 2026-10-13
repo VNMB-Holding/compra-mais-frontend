@@ -471,7 +471,7 @@ export default function NovaSolicitacaoPage() {
                   </div>
                   <div className={styles.formGroup}>
                     <label>
-                      Área requisitante <span className="required-asterisk">*</span>
+                      Área requisitante <span className="required-asterisk">*</span>
                     </label>
                     <Select
                       options={[
@@ -655,8 +655,8 @@ export default function NovaSolicitacaoPage() {
                                               ) : (
                                                 <span>Sem fornecedor base</span>
                                               )}
-                                              <span>À¢Ã¢â€šÂ¬¢ {sug.category || "Geral"}</span>
-                                              <span>À¢Ã¢â€šÂ¬¢ {sug.unit}</span>
+                                              <span>• {sug.category || "Geral"}</span>
+                                              <span>• {sug.unit}</span>
                                             </span>
                                           </div>
                                           {sug.lastUnitPrice && (
@@ -1072,7 +1072,7 @@ export default function NovaSolicitacaoPage() {
                 </dd>
               </div>
               <div>
-                <dt>Área</dt>
+                <dt>Área</dt>
                 <dd>{department}</dd>
               </div>
               <div>

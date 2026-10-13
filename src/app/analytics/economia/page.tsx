@@ -676,7 +676,7 @@ export default function EconomiaPage() {
         <span>
           {lastUpdatedAt
             ? `Dados atualizados em ${formatDateTimePtBr(lastUpdatedAt)}`
-            : "Aguardando atualiza��o dos dados"}
+            : "Aguardando atualização dos dados"}
         </span>
       </div>
     </div>

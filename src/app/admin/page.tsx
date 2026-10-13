@@ -1229,7 +1229,7 @@ export default function AdminPage() {
                               {c.type}
                             </Badge>
                           </td>
-                          <td>{c.cnpj || "¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</td>
+                          <td>{c.cnpj || "—"}</td>
                           <td>
                             <Badge variant={c.active ? "success" : "danger"}>
                               {c.active ? "Ativo" : "Inativo"}

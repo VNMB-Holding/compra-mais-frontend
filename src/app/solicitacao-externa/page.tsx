@@ -4,6 +4,8 @@ import React, { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import styles from "./solicitacao-externa.module.css";
 import { Icon, Select } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
+import { TourDefinition } from "@/contexts/TourContext";
+import { useTour } from "@/hooks/useTour";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { CatalogItem } from "@/lib/api/items";
@@ -142,6 +144,7 @@ const UNIDADE_MEDIDA_OPTIONS = [
 export default function SolicitacaoExternaPage() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
+  const { startTour, resetTour } = useTour();
 
   const [solicitanteNome, setSolicitanteNome] = useState("");
   const [solicitanteWhats, setSolicitanteWhats] = useState("");
@@ -167,6 +170,48 @@ export default function SolicitacaoExternaPage() {
   const [loadingSearchItemId, setLoadingSearchItemId] = useState<number | null>(null);
   const [identityApplied, setIdentityApplied] = useState(false);
   const searchRequestRef = useRef(0);
+
+  const tourDefinition: TourDefinition = useMemo(
+    () => ({
+      id: "solicitacao-externa-tutorial",
+      steps: [
+        {
+          target: "#tour-identificacao",
+          title: "1. Quem está solicitando",
+          description:
+            "Preencha seus dados de contato (Nome, WhatsApp e E-mail) e selecione seu setor e unidade da empresa. Se você já possui uma conta Compra+, use o botão 'Usar meus dados' no topo para preencher tudo num clique!",
+          placement: "bottom",
+        },
+        {
+          target: "#tour-dados-compra",
+          title: "2. O que precisa ser adquirido",
+          description:
+            "Defina o título principal do pedido e a justificativa para que o setor de compras compreenda a finalidade da demanda. Você também pode informar a urgência e data desejada de entrega.",
+          placement: "bottom",
+        },
+        {
+          target: "#tour-itens",
+          title: "3. Catálogo & Itens Detalhados",
+          description:
+            "Digite o produto que precisa. Se estiver no catálogo, selecione para puxar preço e dados de referência. Não achou no catálogo? Não tem problema: continue digitando normalmente, pois ele será aceito e cadastrado automaticamente!",
+          placement: "top",
+        },
+        {
+          target: "#tour-enviar",
+          title: "4. Envio & Protocolo Oficial",
+          description:
+            "Ao clicar em 'Enviar Solicitação de Compra', geramos um protocolo oficial imediato e enviamos o comprovante para seu WhatsApp e e-mail para acompanhar cada etapa da cotação.",
+          placement: "top",
+        },
+      ],
+    }),
+    [],
+  );
+
+  const handleStartTour = useCallback(() => {
+    resetTour("solicitacao-externa-tutorial");
+    startTour(tourDefinition);
+  }, [resetTour, startTour, tourDefinition]);
 
   const applyIdentityData = useCallback(
     (overwrite = false) => {
@@ -195,6 +240,29 @@ export default function SolicitacaoExternaPage() {
     if (!user || identityApplied) return;
     applyIdentityData(false);
   }, [user, identityApplied, applyIdentityData]);
+
+  useEffect(() => {
+    if (activeSearchItemId === null) return;
+
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      if (!target.closest(`.${styles.catalogAutocompleteWrapper}`)) {
+        setActiveSearchItemId(null);
+        setSuggestedItems([]);
+        setLoadingSearchItemId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [activeSearchItemId]);
 
   const handleIdentityAction = () => {
     if (!user) {
@@ -538,7 +606,7 @@ export default function SolicitacaoExternaPage() {
                 <strong style={{ color: "#0f172a" }}>{solicitanteNome}</strong>
               </div>
               <div className={styles.summaryRow}>
-                <span style={{ color: "#64748b" }}>Àrea / Setor:</span>
+                <span style={{ color: "#64748b" }}>Àrea / Setor:</span>
                 <strong style={{ color: "#0f172a" }}>{setorNomeFormatado}</strong>
               </div>
               <div className={styles.summaryRow}>
@@ -626,6 +694,15 @@ export default function SolicitacaoExternaPage() {
         <div className={styles.headerRight}>
           <button
             type="button"
+            className={styles.tourAction}
+            onClick={handleStartTour}
+            aria-label="Como funciona o preenchimento"
+            title="Como funciona o preenchimento"
+          >
+            <Icon name="help-circle" size={16} />
+          </button>
+          <button
+            type="button"
             className={styles.accountAction}
             onClick={handleIdentityAction}
             disabled={authLoading}
@@ -655,7 +732,7 @@ export default function SolicitacaoExternaPage() {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.sectionCard}>
+          <div id="tour-identificacao" className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
                 <Icon name="user-01" size={18} />
@@ -711,7 +788,7 @@ export default function SolicitacaoExternaPage() {
 
               <div className={styles.formGroup}>
                 <label>
-                  Àrea / Setor <span className={styles.extraText}>de Destino</span>{" "}
+                  Àrea / Setor <span className={styles.extraText}>de Destino</span>{" "}
                   <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <Select
@@ -737,7 +814,7 @@ export default function SolicitacaoExternaPage() {
             </div>
           </div>
 
-          <div className={styles.sectionCard}>
+          <div id="tour-dados-compra" className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
                 <Icon name="file-02" size={18} />
@@ -822,15 +899,20 @@ export default function SolicitacaoExternaPage() {
             </div>
           </div>
 
-          <div className={styles.sectionCard}>
+          <div id="tour-itens" className={styles.sectionCard}>
             <div className={styles.itemsHeader}>
               <div className={styles.sectionHeaderNoBorder}>
                 <div className={styles.sectionIcon}>
                   <Icon name="package" size={18} />
                 </div>
-                <h2>
-                  3. Itens <span className={styles.extraText}>detalhados</span> ({itens.length})
-                </h2>
+                <div>
+                  <h2>
+                    3. Itens <span className={styles.extraText}>detalhados</span> ({itens.length})
+                  </h2>
+                  <p className={styles.sectionSubtitle}>
+                    Selecione um item já cadastrado ou digite livremente o que você precisa.
+                  </p>
+                </div>
               </div>
               <button type="button" className={styles.btnAddItem} onClick={handleAddItem}>
                 <Icon name="plus" size={14} /> Adicionar Item
@@ -896,7 +978,7 @@ export default function SolicitacaoExternaPage() {
                                         suggestion.unit,
                                       ]
                                         .filter(Boolean)
-                                        .join(" Ã¢â‚¬Â¢ ")}
+                                        .join(" • ")}
                                     </small>
                                   </span>
                                   {suggestion.lastUnitPrice && (
@@ -908,20 +990,52 @@ export default function SolicitacaoExternaPage() {
                               ))
                             ) : (
                               <div className={styles.catalogEmptySuggestion}>
-                                Nenhum item encontrado.
+                                <div className={styles.catalogEmptySuggestionHeader}>
+                                  <Icon name="info-circle" size={15} />
+                                  <span>Item não encontrado no catálogo?</span>
+                                </div>
+                                <span className={styles.catalogEmptySuggestionText}>
+                                  Sem problemas! Continue digitando o produto normalmente. Ele será aceito e cadastrado automaticamente ao enviar a solicitação.
+                                </span>
                               </div>
                             )}
                           </div>
                         )}
                       </div>
-                      {item.catalogItemId && (
+                      {item.catalogItemId ? (
                         <div className={styles.catalogSelectedNotice}>
-                          <Icon name="check-circle" size={14} />
-                          <span>
-                            Item selecionado do catálogo. Descrição, unidade e preço base foram bloqueados
-                            {item.fornecedorBase ? ` com base em ${item.fornecedorBase}` : ""}.
-                          </span>
+                          <div className={styles.catalogSelectedNoticeLeft}>
+                            <Icon name="check-circle" size={15} />
+                            <span>
+                              Item oficial do catálogo{item.fornecedorBase ? ` (referência: ${item.fornecedorBase})` : ""}.
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.catalogUnbindButton}
+                            onClick={() =>
+                              setItens((prev) =>
+                                prev.map((it) =>
+                                  it.id === item.id
+                                    ? { ...it, catalogItemId: undefined, fornecedorBase: undefined }
+                                    : it,
+                                ),
+                              )
+                            }
+                            title="Editar descrição livremente"
+                          >
+                            Alterar / Desvincular
+                          </button>
                         </div>
+                      ) : (
+                        item.descricao.trim().length >= 2 && (
+                          <div className={styles.catalogUnregisteredNotice}>
+                            <Icon name="info-circle" size={14} />
+                            <span>
+                              Item avulso: será cadastrado no catálogo corporativo automaticamente ao enviar.
+                            </span>
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -1014,7 +1128,7 @@ export default function SolicitacaoExternaPage() {
             )}
           </div>
 
-          <div className={styles.submitActions}>
+          <div id="tour-enviar" className={styles.submitActions}>
             <button type="submit" className={styles.btnSubmit} disabled={submitting}>
               <Icon name={submitting ? "loading-01" : "send-01"} size={18} />
               {submitting ? "Enviando solicitação..." : "Enviar Solicitação de Compra"}
