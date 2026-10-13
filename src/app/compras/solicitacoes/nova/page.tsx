@@ -573,7 +573,7 @@ export default function NovaSolicitacaoPage() {
                               </span>
                               <span className={styles.itemSummaryMeta}>
                                 {item.quantity} {item.unit}{" "}
-                                {item.unitPrice > 0 ? `×  ${formatCurrency(item.unitPrice)}` : ""}
+                                {item.unitPrice > 0 ? `× ${formatCurrency(item.unitPrice)}` : ""}
                               </span>
                             </div>
                           </div>

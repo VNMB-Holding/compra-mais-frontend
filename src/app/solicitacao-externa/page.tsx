@@ -606,7 +606,7 @@ export default function SolicitacaoExternaPage() {
                 <strong style={{ color: "#0f172a" }}>{solicitanteNome}</strong>
               </div>
               <div className={styles.summaryRow}>
-                <span style={{ color: "#64748b" }}>Àrea / Setor:</span>
+                <span style={{ color: "#64748b" }}>Área / Setor:</span>
                 <strong style={{ color: "#0f172a" }}>{setorNomeFormatado}</strong>
               </div>
               <div className={styles.summaryRow}>
@@ -788,7 +788,7 @@ export default function SolicitacaoExternaPage() {
 
               <div className={styles.formGroup}>
                 <label>
-                  Àrea / Setor <span className={styles.extraText}>de Destino</span>{" "}
+                  Área / Setor <span className={styles.extraText}>de Destino</span>{" "}
                   <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <Select

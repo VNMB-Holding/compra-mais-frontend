@@ -872,7 +872,7 @@ export default function AdminPage() {
                 <div style={{ flex: 1 }}>
                   <strong>
                     {diagnostics.isValid
-                      ? "Workflow Ántegro e Sequência Contínua"
+                      ? "Workflow Íntegro e Sequência Contínua"
                       : "Atenção: Inconsistências ou lacunas identificadas nas regras"}
                   </strong>
                   {!diagnostics.isValid && (
