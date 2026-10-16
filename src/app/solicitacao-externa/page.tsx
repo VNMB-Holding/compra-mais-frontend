@@ -12,6 +12,7 @@ import { CatalogItem } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { maskPhone } from "@/lib/utils/masks";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
+import { BIZ_API_URL } from "@/config/env";
 
 interface ItemDemanda {
   id: number;
@@ -44,9 +45,7 @@ const PRIORIDADE_OPTIONS = [
   { label: "Planejada (Baixa) - sem urgência", value: "Baixa" },
 ];
 
-const BIZ_API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com"
-).replace(/\/+$/, "");
+
 function normalizeIdentityText(value?: string) {
   return (value || "")
     .normalize("NFD")

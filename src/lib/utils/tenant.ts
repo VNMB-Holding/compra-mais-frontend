@@ -38,23 +38,66 @@ function sortCompanyBranchesMatrixFirst(branches: CompanyBranchMapping[]): Compa
   });
 }
 
-export function isVnmbUser(_user: User | null): boolean {
-  return true;
+export function isPuraFeUser(user?: User | null): boolean {
+  if (!user) return false;
+  const tid = (user.tenantId || "").trim().toLowerCase();
+  const tname = (user.tenantName || "").trim().toLowerCase();
+  const email = (user.email || "").trim().toLowerCase();
+  const dept = (user.department || "").trim().toLowerCase();
+
+  return (
+    tid === "purafe" ||
+    tid === "igreja-pura-fe" ||
+    tid === "igrejapurafe" ||
+    tid === "ipf" ||
+    tname.includes("pura f") ||
+    tname.includes("purafe") ||
+    tname.includes("igreja") ||
+    email.includes("@purafe") ||
+    email.includes("@igrejapurafe") ||
+    dept.includes("pura f") ||
+    dept.includes("igreja")
+  );
 }
 
-export function getCompanyFilterOptions(): { label: string; value: string }[] {
+export function isVnmbUser(user: User | null): boolean {
+  return !isPuraFeUser(user);
+}
+
+export function getCompanyFilterOptions(user?: User | null): { label: string; value: string }[] {
+  if (isPuraFeUser(user)) {
+    return [{ label: "IGREJA PURA FÉ (IPF)", value: "PURAFE" }];
+  }
+
+  const branches = sortCompanyBranchesMatrixFirst(COMPANY_BRANCHES);
+  const filtered = user?.role === "admin" ? branches : branches.filter((b) => b.code !== "PURAFE");
+
   return [
     { label: "Unidade: Todas as Unidades", value: "TODAS" },
-    ...sortCompanyBranchesMatrixFirst(COMPANY_BRANCHES).map((b) => ({
+    ...filtered.map((b) => ({
       label: `${b.code} - ${b.name} (${b.acronym})`,
       value: b.code,
     })),
   ];
 }
 
-export function getPrimaryCompanyOptions(_user?: User | null): TenantOption[] {
+export function getPrimaryCompanyOptions(user?: User | null): TenantOption[] {
+  if (isPuraFeUser(user)) {
+    return [
+      {
+        id: "PURAFE",
+        name: "IGREJA PURA FÉ (IPF)",
+        type: "Matriz",
+        code: "PURAFE",
+        acronym: "IPF",
+      },
+    ];
+  }
+
+  const branches = COMPANY_BRANCHES.filter((b) => user?.role === "admin" || b.code !== "PURAFE");
+
   return sortMatrixFirst(
-    COMPANY_BRANCHES.map((b) => ({
+    branches.map((b) => ({
       id: b.code,
       name: `${b.name} (${b.acronym})`,
       type: b.code === "2313" ? "Matriz" : "Filial",

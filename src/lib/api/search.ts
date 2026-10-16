@@ -3,6 +3,7 @@ import { purchaseRequestsApi, PurchaseRequest } from "./purchase-requests";
 import { rfqsApi, Rfq } from "./rfqs";
 import { purchaseOrdersApi, PurchaseOrder } from "./purchase-orders";
 import { suppliersApi, Supplier } from "./suppliers";
+import { getSupplierDetailUrl } from "@/lib/utils/routes";
 
 export interface SearchSolicitacao {
   id: string;
@@ -131,7 +132,10 @@ export const searchApi = {
           solicitacoes: directResults.solicitacoes || [],
           rfqs: directResults.rfqs || [],
           pedidos: directResults.pedidos || [],
-          fornecedores: directResults.fornecedores || [],
+          fornecedores: (directResults.fornecedores || []).map((supplier) => ({
+            ...supplier,
+            url: getSupplierDetailUrl(supplier.id),
+          })),
         };
       }
     } catch (err: any) {}
@@ -194,7 +198,7 @@ export const searchApi = {
       cnpj: s.cnpj || "CNPJ não informado",
       segment: s.segment,
       status: s.status || "Ativo",
-      url: `/fornecedores/${s.id}`,
+      url: getSupplierDetailUrl(s.id),
     }));
 
     return {

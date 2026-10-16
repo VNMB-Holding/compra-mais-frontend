@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
-  Button,
   Icon,
   Select,
   ErrorState,
@@ -18,9 +17,10 @@ import {
 import styles from "./fornecedores.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { getSupplierDetailUrl } from "@/lib/utils/routes";
 
 import { useAuth } from "@/hooks/useAuth";
-import { getPrimaryCompanyOptions, getBranchCompanyOptions, isVnmbUser } from "@/lib/utils/tenant";
+import { isPuraFeUser } from "@/lib/utils/tenant";
 import { User } from "@/types/auth";
 import { useTour } from "@/hooks/useTour";
 import { fornecedoresTour } from "@/lib/tours";
@@ -88,6 +88,7 @@ function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRo
 export default function FornecedoresListPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
 
   const [selectedSegment, setSelectedSegment] = useState("Todos");
   const [selectedCity, setSelectedCity] = useState("Todas");
@@ -103,7 +104,7 @@ export default function FornecedoresListPage() {
   useEffect(() => {
     let isMounted = true;
     suppliersApi
-      .list()
+      .list(isPuraFe ? { companyCode: "PURAFE" } : undefined)
       .then((data) => {
         if (!isMounted || !data) return;
         const segs = data.map((s) => s.segment || "").filter(Boolean);
@@ -117,7 +118,7 @@ export default function FornecedoresListPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isPuraFe]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -133,12 +134,13 @@ export default function FornecedoresListPage() {
       };
       const [suppliers, kpisData] = await Promise.all([
         suppliersApi.list({
+          companyCode: isPuraFe ? "PURAFE" : undefined,
           status: status !== "Todos" ? statusMap[status] || status : undefined,
           city: selectedCity !== "Todas" ? selectedCity : undefined,
           segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
         }),
-        suppliersApi.getKpis(user?.tenantId),
+        suppliersApi.getKpis(isPuraFe ? "PURAFE" : user?.tenantId),
       ]);
       const rows = (suppliers || []).map((s) => mapSupplierToRow(s, user));
       setFornecedores(rows);
@@ -156,7 +158,7 @@ export default function FornecedoresListPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, status, selectedCity, selectedSegment, searchQuery]);
+  }, [user, isPuraFe, status, selectedCity, selectedSegment, searchQuery]);
 
   useEffect(() => {
     fetchData();
@@ -291,7 +293,7 @@ export default function FornecedoresListPage() {
             title="Ver detalhes do fornecedor"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/fornecedores/${row.id}`);
+              router.push(getSupplierDetailUrl(row.id));
             }}
           >
             <Icon name="eye" size={16} />
@@ -476,7 +478,7 @@ export default function FornecedoresListPage() {
             <DataTable
               data={paginatedData}
               columns={columns}
-              onRowClick={(row) => router.push(`/fornecedores/${row.id}`)}
+              onRowClick={(row) => router.push(getSupplierDetailUrl(row.id))}
             />
 
             <div className={styles.tableFooter}>

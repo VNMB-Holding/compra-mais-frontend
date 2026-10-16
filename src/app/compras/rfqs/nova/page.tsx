@@ -17,7 +17,11 @@ import { novaRfqTour } from "@/lib/tours";
 import styles from "./rfq-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatPriority } from "@/lib/constants/status";
-import { getCompanyFilterOptions, resolvePurchaseRequestBranch } from "@/lib/utils/tenant";
+import {
+  getCompanyFilterOptions,
+  resolvePurchaseRequestBranch,
+  isPuraFeUser,
+} from "@/lib/utils/tenant";
 
 interface Solicitacao {
   id: string;
@@ -131,8 +135,18 @@ export default function NewRfqPage() {
     setIsInviteModalOpen(false);
   };
 
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
-  const companyOptions = useMemo(() => getCompanyFilterOptions(), []);
+  const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(() =>
+    isPuraFeUser(user) ? "PURAFE" : "TODAS",
+  );
+
+  useEffect(() => {
+    if (isPuraFe) {
+      setSelectedCompanyId("PURAFE");
+    }
+  }, [isPuraFe]);
+
+  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
 
   const [requestsApi, setRequestsApi] = useState<Solicitacao[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -140,7 +154,16 @@ export default function NewRfqPage() {
   const loadApiData = React.useCallback(async () => {
     setLoadingData(true);
     try {
-      const [reqs, sups] = await Promise.all([purchaseRequestsApi.list(), suppliersApi.list()]);
+      const filterCompany = isPuraFe
+        ? "PURAFE"
+        : selectedCompanyId !== "TODAS"
+          ? selectedCompanyId
+          : undefined;
+
+      const [reqs, sups] = await Promise.all([
+        purchaseRequestsApi.list(filterCompany ? { companyCode: filterCompany } : undefined),
+        suppliersApi.list(filterCompany ? { companyCode: filterCompany } : undefined),
+      ]);
 
       if (reqs && reqs.length > 0) {
         const isApprovedStatus = (s?: string) => {
@@ -191,7 +214,17 @@ export default function NewRfqPage() {
       }
 
       if (sups && sups.length > 0) {
-        const mappedSups: FornecedorConvidado[] = sups.map((s) => ({
+        const domainFilteredSups = sups.filter((s) => {
+          const isSupPuraFe =
+            s.companyCode === "PURAFE" ||
+            s.tenantId === "PURAFE" ||
+            (s.corporateName || "").toLowerCase().includes("pura fe") ||
+            (s.corporateName || "").toLowerCase().includes("pura fé");
+          if (isPuraFe) return isSupPuraFe;
+          return user?.role === "admin" || !isSupPuraFe;
+        });
+
+        const mappedSups: FornecedorConvidado[] = domainFilteredSups.map((s) => ({
           id: s.id,
           nome: s.corporateName || s.tradeName || "Fornecedor",
           cnpj: s.cnpj,
@@ -215,7 +248,7 @@ export default function NewRfqPage() {
     } finally {
       setLoadingData(false);
     }
-  }, [user, toast]);
+  }, [user, toast, isPuraFe, selectedCompanyId]);
 
   useEffect(() => {
     loadApiData();

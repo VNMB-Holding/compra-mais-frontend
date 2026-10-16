@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/utils/format-display";
 import { formatCorporateBranch } from "@/lib/utils/tenant";
 import { getApprovalChainForOrder } from "@/lib/utils/approval-limits";
 import { maskNfeAccessKey } from "@/lib/utils/masks";
+import { getSupplierDetailUrl } from "@/lib/utils/routes";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import {
@@ -92,19 +93,19 @@ export default function PedidoDetailPage() {
 
   const displayId = po?.code || rawId;
 
+  const poNotes = (po as any)?.notes;
+
   const extractedNfe = useMemo(() => {
-    const notes = (po as any)?.notes;
-    if (!notes) return "";
-    const match = String(notes).match(/NF-e(?:\s*confirmada)?:\s*([^\s|()]+)/i);
+    if (!poNotes) return "";
+    const match = String(poNotes).match(/NF-e(?:\s*confirmada)?:\s*([^\s|()]+)/i);
     return match ? match[1] : "";
-  }, [(po as any)?.notes]);
+  }, [poNotes]);
 
   const extractedTracking = useMemo(() => {
-    const notes = (po as any)?.notes;
-    if (!notes) return "";
-    const match = String(notes).match(/Em transporte via\s*([^|]+)/i);
+    if (!poNotes) return "";
+    const match = String(poNotes).match(/Em transporte via\s*([^|]+)/i);
     return match ? match[1].trim() : "";
-  }, [(po as any)?.notes]);
+  }, [poNotes]);
 
   const activeNfe = savedNfe || extractedNfe;
   const activeTracking = savedRastreio || extractedTracking;
@@ -1122,13 +1123,51 @@ export default function PedidoDetailPage() {
             {po?.supplier?.id && (
               <Button
                 variant="secondary"
-                onClick={() => router.push(`/fornecedores/${po.supplier?.id}`)}
+                onClick={() => router.push(getSupplierDetailUrl(po.supplier?.id || ""))}
                 style={{ width: "100%", justifyContent: "center" }}
               >
                 <Icon name="arrow-right" /> Ver Cadastro do Fornecedor
               </Button>
             )}
           </Card>
+
+          {orderApprovalLevels && orderApprovalLevels.length > 0 && (
+            <Card className={styles.sideCard}>
+              <h4>Alçadas de Aprovação Requeridas</h4>
+              <p style={{ fontSize: "12px", color: "#64748b", margin: "4px 0 12px 0" }}>
+                Com base no valor de {formatCurrency(valorTotal)}, o fluxo exige aprovação de:
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {orderApprovalLevels.map((lvl) => (
+                  <div
+                    key={lvl.level}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      fontSize: "12px",
+                    }}
+                  >
+                    <div>
+                      <strong style={{ color: "#0f172a", display: "block" }}>
+                        Nível {lvl.level}: {lvl.roleOrName}
+                      </strong>
+                      <span style={{ color: "#64748b", fontSize: "11px" }}>
+                        {lvl.maxLimit ? `Até ${formatCurrency(lvl.maxLimit)}` : "Sem limite máximo"}
+                      </span>
+                    </div>
+                    <Badge variant="gray">
+                      Nível {lvl.level}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

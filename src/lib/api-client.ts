@@ -1,7 +1,4 @@
-const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "https://identity.vnmbholding.com";
-const BIZ_API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "https://api-compramais.vnmbholding.com"
-).replace(/\/+$/, "");
+import { AUTH_API_URL, BIZ_API_URL } from "@/config/env";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -66,6 +63,43 @@ function getStoredToken(): string | null {
   return null;
 }
 
+async function refreshToken(): Promise<string> {
+  if (!refreshHandler) {
+    throw new Error("No refreshHandler configured");
+  }
+  if (isRefreshing) {
+    return new Promise<string>((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    });
+  }
+
+  isRefreshing = true;
+  try {
+    const newToken = await refreshHandler();
+    isRefreshing = false;
+    if (newToken) {
+      processQueue(null, newToken);
+      return newToken;
+    } else {
+      const err = new Error("Falha na renovação da sessão");
+      processQueue(err, null);
+      throw err;
+    }
+  } catch (e) {
+    isRefreshing = false;
+    processQueue(e, null);
+    throw e;
+  }
+}
+
+function notifyUnauthorized() {
+  const now = Date.now();
+  if (unauthorizedHandler && now - lastUnauthorizedTime > UNAUTHORIZED_DEBOUNCE_MS) {
+    lastUnauthorizedTime = now;
+    unauthorizedHandler();
+  }
+}
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const {
     body,
@@ -122,10 +156,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     cleanEndpoint.includes("/auth/facial/authenticate");
   if (response.status === 401 && !isAuthEndpoint) {
     if (refreshHandler) {
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(async (newToken) => {
+      try {
+        const newToken = await refreshToken();
+        if (newToken) {
           headers["Authorization"] = `Bearer ${newToken}`;
           const retryRes = await fetch(`${baseUrl}${cleanEndpoint}`, {
             ...rest,
@@ -135,42 +168,12 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
           if (retryRes.ok) {
             return retryRes.status === 204 ? (undefined as T) : (retryRes.json() as Promise<T>);
           }
-          throw new ApiError("Sessão expirada. Faça login novamente.", 401);
-        });
-      }
-
-      isRefreshing = true;
-
-      try {
-        const newToken = await refreshHandler();
-        isRefreshing = false;
-        if (newToken) {
-          processQueue(null, newToken);
-          headers["Authorization"] = `Bearer ${newToken}`;
-          const retryResponse = await fetch(`${baseUrl}${cleanEndpoint}`, {
-            ...rest,
-            headers,
-            body: body !== undefined ? JSON.stringify(body) : undefined,
-          });
-          if (retryResponse.ok) {
-            return retryResponse.status === 204
-              ? (undefined as T)
-              : (retryResponse.json() as Promise<T>);
-          }
-        } else {
-          processQueue(new Error("Falha na renovação da sessão"), null);
         }
-      } catch (e) {
-        isRefreshing = false;
-        processQueue(e, null);
+      } catch {
       }
     }
 
-    const now = Date.now();
-    if (unauthorizedHandler && now - lastUnauthorizedTime > UNAUTHORIZED_DEBOUNCE_MS) {
-      lastUnauthorizedTime = now;
-      unauthorizedHandler();
-    }
+    notifyUnauthorized();
     throw new ApiError("Sessão expirada. Faça login novamente.", 401);
   }
 
@@ -228,17 +231,18 @@ export const apiClient = {
     const {
       headers: customHeaders,
       auth = false,
-      body: _body,
       timeoutMs = DEFAULT_TIMEOUT_MS,
-      ...rest
+      ...rawRest
     } = options || {};
+    const rest = rawRest as Omit<RequestInit, "body">;
 
     const headers: Record<string, string> = {
       ...(customHeaders as Record<string, string>),
     };
 
+    const isRefreshEndpoint = endpoint.includes("/auth/refresh");
     const token = getStoredToken();
-    if (token) {
+    if (token && !isRefreshEndpoint) {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
@@ -248,15 +252,15 @@ export const apiClient = {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+    let response: Response;
     try {
-      const response = await fetch(`${baseUrl}${cleanEndpoint}`, {
+      response = await fetch(`${baseUrl}${cleanEndpoint}`, {
         ...rest,
         method: "GET",
         headers,
         signal: rest.signal ?? controller.signal,
       });
       clearTimeout(timeoutId);
-      return response;
     } catch (err) {
       clearTimeout(timeoutId);
       if (err instanceof Error && err.name === "AbortError") {
@@ -266,6 +270,36 @@ export const apiClient = {
       }
       throw err;
     }
+
+    const isAuthEndpoint =
+      cleanEndpoint.includes("/auth/refresh") ||
+      cleanEndpoint.includes("/auth/login") ||
+      cleanEndpoint.includes("/auth/facial/authenticate");
+    if (response.status === 401 && !isAuthEndpoint) {
+      if (refreshHandler) {
+        try {
+          const newToken = await refreshToken();
+          if (newToken) {
+            headers["Authorization"] = `Bearer ${newToken}`;
+            const retryRes = await fetch(`${baseUrl}${cleanEndpoint}`, {
+              ...rest,
+              method: "GET",
+              headers,
+              signal: rest.signal,
+            });
+            if (retryRes.ok) {
+              return retryRes;
+            }
+          }
+        } catch {
+        }
+      }
+
+      notifyUnauthorized();
+      throw new ApiError("Sessão expirada. Faça login novamente.", 401);
+    }
+
+    return response;
   },
 };
 
