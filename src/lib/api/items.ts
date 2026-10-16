@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, cleanCompanyParam } from "@/lib/api-client";
 
 export interface ItemPurchaseAudit {
   id: string;
@@ -76,6 +76,7 @@ export interface ItemListParams {
   search?: string;
   category?: string;
   supplierId?: string;
+  companyCode?: string;
   page?: number;
   limit?: number;
 }
@@ -89,6 +90,10 @@ export const itemsApi = {
         searchParams.set("category", params.category);
       if (params?.supplierId && params.supplierId !== "Todos")
         searchParams.set("supplierId", params.supplierId);
+      if (params?.companyCode) {
+        const cleanCode = cleanCompanyParam(params.companyCode);
+        if (cleanCode) searchParams.set("companyCode", cleanCode);
+      }
       if (params?.page !== undefined) searchParams.set("page", String(params.page));
       if (params?.limit !== undefined) searchParams.set("limit", String(params.limit));
 
@@ -111,6 +116,10 @@ export const itemsApi = {
         searchParams.set("category", params.category);
       if (params?.supplierId && params.supplierId !== "Todos")
         searchParams.set("supplierId", params.supplierId);
+      if (params?.companyCode) {
+        const cleanCode = cleanCompanyParam(params.companyCode);
+        if (cleanCode) searchParams.set("companyCode", cleanCode);
+      }
       searchParams.set("page", String(params?.page || 1));
       searchParams.set("limit", String(params?.limit || 20));
 
@@ -145,11 +154,16 @@ export const itemsApi = {
     }
   },
 
-  search: async (query: string): Promise<CatalogItem[]> => {
+  search: async (query: string, companyCode?: string): Promise<CatalogItem[]> => {
     try {
       if (!query || query.trim().length === 0) return [];
+      const searchParams = new URLSearchParams();
+      searchParams.set("q", query.trim());
+      const cleanCode = cleanCompanyParam(companyCode);
+      if (cleanCode) searchParams.set("companyCode", cleanCode);
+
       const res = await apiClient.get<CatalogItem[]>(
-        `/api/items/search?q=${encodeURIComponent(query.trim())}`,
+        `/api/items/search?${searchParams.toString()}`,
       );
       return res || [];
     } catch {

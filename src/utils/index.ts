@@ -4,3 +4,4 @@ export * from "@/lib/utils/tenant";
 export * from "@/lib/utils/category-icon";
 export * from "@/lib/utils/approval-limits";
 export * from "@/lib/utils/masks";
+export * from "@/lib/utils/routes";

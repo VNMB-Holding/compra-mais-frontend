@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Button,
   Card,
   Icon,
   Select,
@@ -27,7 +26,6 @@ import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import {
   getCompanyFilterOptions,
-  formatCorporateBranch,
   resolvePurchaseRequestBranch,
 } from "@/lib/utils/tenant";
 
@@ -86,8 +84,10 @@ function mapToCorporateRow(
   };
 }
 
-export default function SolicitacoesPage() {
+function SolicitacoesContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedId = searchParams.get("id");
   const { user } = useAuth();
 
   const [statusFilter, setStatusFilter] = useState("Todos");
@@ -125,6 +125,30 @@ export default function SolicitacoesPage() {
 
   const loading = loadingRequests;
   const error = queryError ? getErrorMessage(queryError) : null;
+
+  useEffect(() => {
+    if (!requestedId) return;
+
+    const found = rawRequests.find((r) => r.id === requestedId || r.code === requestedId);
+    if (found) {
+      setSelectedDrawerRequest(found);
+      return;
+    }
+
+    let isCancelled = false;
+    purchaseRequestsApi
+      .getById(requestedId)
+      .then((req) => {
+        if (!isCancelled && req) {
+          setSelectedDrawerRequest(req);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [requestedId, rawRequests]);
 
   useEffect(() => {
     async function fetchKpis() {
@@ -381,7 +405,12 @@ export default function SolicitacoesPage() {
       {selectedDrawerRequest && (
         <QuickDetailDrawer
           open={!!selectedDrawerRequest}
-          onClose={() => setSelectedDrawerRequest(null)}
+          onClose={() => {
+            setSelectedDrawerRequest(null);
+            if (requestedId) {
+              router.replace("/compras/solicitacoes");
+            }
+          }}
           title={
             selectedDrawerRequest.code ||
             `#${selectedDrawerRequest.corporateCode || selectedDrawerRequest.id}`
@@ -622,5 +651,13 @@ export default function SolicitacoesPage() {
         </QuickDetailDrawer>
       )}
     </div>
+  );
+}
+
+export default function SolicitacoesPage() {
+  return (
+    <React.Suspense fallback={<div style={{ padding: 24 }}><TableSkeleton rows={8} /></div>}>
+      <SolicitacoesContent />
+    </React.Suspense>
   );
 }

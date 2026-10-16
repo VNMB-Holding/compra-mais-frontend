@@ -1,9 +1,9 @@
 import { apiClient, cleanTenantParam, cleanFilterParam } from "@/lib/api-client";
-import { CategoryType } from "@/lib/utils/category-icon";
 
 export interface Supplier {
   id: string;
   tenantId: string;
+  companyCode?: string;
   corporateName: string;
   tradeName: string;
   cnpj: string;

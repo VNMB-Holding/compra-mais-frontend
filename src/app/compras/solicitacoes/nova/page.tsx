@@ -16,9 +16,11 @@ import { formatCurrency } from "@/lib/utils/format-display";
 import { useCreatePurchaseRequest } from "@/hooks/useQueries";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
+import { isPuraFeUser } from "@/lib/utils/tenant";
 import { CATEGORY_LABEL_MAP } from "@/lib/utils/category-icon";
 import { ApprovalModal } from "@/components";
 import { itemsApi, CatalogItem } from "@/lib/api/items";
+import { GEOAPIFY_API_KEY } from "@/config/env";
 
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";
 
@@ -139,16 +141,28 @@ export default function NovaSolicitacaoPage() {
     }
   }, [user, editId]);
 
-  const [targetTenantId, setTargetTenantId] = useState<string>(
-    () => user?.tenantId || COMPANY_BRANCHES[0]?.code || "",
-  );
+  const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
+
+  const [targetTenantId, setTargetTenantId] = useState<string>(() => {
+    if (isPuraFeUser(user)) return "PURAFE";
+    return user?.tenantId || COMPANY_BRANCHES[0]?.code || "";
+  });
+
+  useEffect(() => {
+    if (isPuraFe) {
+      setTargetTenantId("PURAFE");
+    }
+  }, [isPuraFe]);
 
   const tenantOptions = useMemo(() => {
-    return COMPANY_BRANCHES.map((b) => ({
+    if (isPuraFe) {
+      return [{ label: "IGREJA PURA FÉ (IPF)", value: "PURAFE" }];
+    }
+    return COMPANY_BRANCHES.filter((b) => user?.role === "admin" || b.code !== "PURAFE").map((b) => ({
       label: `${b.name} (${b.acronym})`,
       value: b.code,
     }));
-  }, []);
+  }, [isPuraFe, user?.role]);
 
   const selectedTenantName = useMemo(() => {
     const fromBranch = findCompanyBranch(targetTenantId);
@@ -195,7 +209,7 @@ export default function NovaSolicitacaoPage() {
     if (text.trim().length >= 2) {
       setActiveSearchItemId(itemId);
       try {
-        const results = await itemsApi.search(text.trim());
+        const results = await itemsApi.search(text.trim(), targetTenantId);
         setSuggestedItems(results || []);
       } catch {
         setSuggestedItems([]);
@@ -449,11 +463,17 @@ export default function NovaSolicitacaoPage() {
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>
                       Empresa / Unidade Destino <span className="required-asterisk">*</span>
+                      {isPuraFe && (
+                        <span style={{ marginLeft: 8, fontSize: "12px", color: "#007d79", fontWeight: "normal" }}>
+                          (Exclusivo Igreja Pura Fé)
+                        </span>
+                      )}
                     </label>
                     <Select
                       options={tenantOptions}
                       value={targetTenantId}
                       onChange={setTargetTenantId}
+                      disabled={isPuraFe}
                       icon="building-01"
                       placeholder="Selecione a empresa para a qual a compra se destina..."
                     />
@@ -822,12 +842,7 @@ export default function NovaSolicitacaoPage() {
                       className="geoapify-autocomplete-wrapper"
                       style={{ position: "relative", zIndex: 10 }}
                     >
-                      <GeoapifyContext
-                        apiKey={
-                          process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ||
-                          "2259d519a04e42bcbf5003b9366404a0"
-                        }
-                      >
+                      <GeoapifyContext apiKey={GEOAPIFY_API_KEY}>
                         <GeoapifyGeocoderAutocomplete
                           placeholder="Digite o local de entrega..."
                           lang="pt"

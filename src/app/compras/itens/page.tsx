@@ -22,6 +22,8 @@ import { suppliersApi, Supplier } from "@/lib/api/suppliers";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage } from "@/lib/utils/error";
 import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/hooks/useAuth";
+import { isPuraFeUser } from "@/lib/utils/tenant";
 import styles from "./itens.module.css";
 
 const CATEGORY_OPTIONS = [
@@ -37,6 +39,9 @@ const CATEGORY_OPTIONS = [
 
 export default function ItensCatalogoPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
   const [selectedItemForAudit, setSelectedItemForAudit] = useState<CatalogItem | null>(null);
@@ -57,10 +62,11 @@ export default function ItensCatalogoPage() {
     () => ({
       search: search.trim() ? search.trim() : undefined,
       category: selectedCategory !== "Todas" ? selectedCategory : undefined,
+      companyCode: isPuraFe ? "PURAFE" : undefined,
       page: currentPage,
       limit: itemsPerPage,
     }),
-    [search, selectedCategory, currentPage, itemsPerPage],
+    [search, selectedCategory, isPuraFe, currentPage, itemsPerPage],
   );
 
   const { data: paginatedData, isLoading, error, refetch } = useItemsPaginated(queryParams);
@@ -76,7 +82,7 @@ export default function ItensCatalogoPage() {
     setIsNewModalOpen(true);
     if (suppliersList.length === 0) {
       try {
-        const sups = await suppliersApi.list();
+        const sups = await suppliersApi.list(isPuraFe ? { companyCode: "PURAFE" } : undefined);
         setSuppliersList(sups || []);
       } catch {}
     }
