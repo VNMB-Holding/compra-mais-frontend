@@ -17,6 +17,7 @@ import {
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
+import { SupplierEngagementBadge, SupplierActivityDrawer } from "@/components/supplier-tracking";
 import styles from "./rfq-detail.module.css";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
@@ -166,16 +167,20 @@ function PropostaCard({
   totalQtd,
   rfqItems,
   rfqCode,
+  rfqId,
   rfqTitle,
   onSalvar,
+  onOpenTracking,
 }: {
   proposta: LocalProposal;
   isWinner: boolean;
   totalQtd: number;
   rfqItems?: { id: string; description: string; quantity: number; unit: string }[];
   rfqCode: string;
+  rfqId?: string;
   rfqTitle: string;
   onSalvar: (id: string, dados: Partial<LocalProposal>) => void;
+  onOpenTracking?: (proposta: LocalProposal) => void;
 }) {
   const { toast } = useToast();
   const [aberto, setAberto] = useState(false);
@@ -292,19 +297,13 @@ function PropostaCard({
         </div>
 
         <div className={styles.propostaCardRight}>
-          {proposta.status === "awaiting" && (
-            <span className={styles.badgeAguardando}>
-              <Icon name="clock" size={13} /> Aguardando
-            </span>
-          )}
-          {proposta.status === "declined" && (
-            <span
-              className={styles.badgeAguardando}
-              style={{ background: "#fee2e2", color: "#991b1b" }}
-            >
-              <Icon name="x-close" size={13} /> Declinada
-            </span>
-          )}
+          <SupplierEngagementBadge
+            rfqId={rfqId}
+            supplierId={proposta.supplierId}
+            supplierName={proposta.supplierName}
+            proposalStatus={proposta.status}
+            onClick={() => onOpenTracking && onOpenTracking(proposta)}
+          />
           {proposta.status === "received" && !aberto && (
             <div className={styles.propostaSumario}>
               <span className={styles.propostaPreco}>
@@ -318,6 +317,15 @@ function PropostaCard({
           )}
 
           <div className={styles.propostaActions}>
+            <button
+              type="button"
+              className={styles.btnActionIcon}
+              onClick={() => onOpenTracking && onOpenTracking(proposta)}
+              title={`Ver histórico de leitura e atividades de ${proposta.supplierName}`}
+            >
+              <Icon name="activity" size={14} />
+              <span>Atividades</span>
+            </button>
             <button
               type="button"
               className={styles.btnActionIcon}
@@ -669,6 +677,7 @@ export default function RfqDetailPage() {
   const [dialog, setDialog] = useState<DialogType>(null);
   const [pendingVencedorId, setPendingVencedorId] = useState<string | null>(null);
   const [generatedPo, setGeneratedPo] = useState<{ id: string; code: string } | null>(null);
+  const [trackingSupplier, setTrackingSupplier] = useState<LocalProposal | null>(null);
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -1417,8 +1426,10 @@ export default function RfqDetailPage() {
                   totalQtd={totalQtd}
                   rfqItems={rfqItems}
                   rfqCode={rfqCode}
+                  rfqId={rfq?.id || rfqId}
                   rfqTitle={rfqTitle}
                   onSalvar={handleSalvarProposta}
+                  onOpenTracking={(prop) => setTrackingSupplier(prop)}
                 />
               ))}
 
@@ -1841,6 +1852,21 @@ export default function RfqDetailPage() {
           )}
         </div>
       </div>
+
+      {trackingSupplier && (
+        <SupplierActivityDrawer
+          open={Boolean(trackingSupplier)}
+          onClose={() => setTrackingSupplier(null)}
+          rfqId={rfq?.id || rfqId}
+          rfqCode={rfq?.code}
+          supplierId={trackingSupplier.supplierId}
+          supplierName={trackingSupplier.supplierName}
+          cnpj={trackingSupplier.cnpj}
+          contactEmail={trackingSupplier.contactEmail}
+          contactPhone={trackingSupplier.contactPhone}
+          proposalStatus={trackingSupplier.status}
+        />
+      )}
     </div>
   );
 }

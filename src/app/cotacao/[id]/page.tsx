@@ -17,6 +17,7 @@ import {
 
 import { useToast } from "@/contexts/ToastContext";
 import { rfqsApi, PublicRfq, PublicProposalPayload } from "@/lib/api/rfqs";
+import { supplierTrackingApi } from "@/lib/api/supplier-tracking";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { maskCnpj, maskPhone } from "@/lib/utils/masks";
 
@@ -100,6 +101,17 @@ export default function CotacaoFornecedorPage() {
           initialPrices[item.id] = 0;
         });
         setItemPrices(initialPrices);
+
+        const targetSup = paramSupId || (paramCnpj ? paramCnpj.replace(/\D/g, "") : "");
+        if (targetSup) {
+          supplierTrackingApi.recordEvent(data.id || id, targetSup, {
+            type: "portal_accessed",
+            channel: "portal",
+            title: "Portal de Cotação Acessado",
+            description: `Fornecedor ${paramFornecedor || "Convidado"} abriu o link da cotação`,
+            device: typeof navigator !== "undefined" ? navigator.userAgent : "Navegador Web",
+          });
+        }
       } catch (err: any) {
         setError(err.message || "Cotação não encontrada ou link expirado.");
       } finally {
@@ -107,7 +119,7 @@ export default function CotacaoFornecedorPage() {
       }
     }
     loadRfq();
-  }, [id]);
+  }, [id, paramSupId, paramCnpj, paramFornecedor]);
 
   const handlePriceChange = (itemId: string, valueStr: string) => {
     const cleanValue = valueStr.replace(",", ".");
@@ -116,6 +128,17 @@ export default function CotacaoFornecedorPage() {
       ...prev,
       [itemId]: num,
     }));
+
+    const targetSup = paramSupId || (supplierCnpj ? supplierCnpj.replace(/\D/g, "") : "");
+    if (targetSup && num > 0) {
+      supplierTrackingApi.recordEvent(rfq?.id || id, targetSup, {
+        type: "quote_drafting",
+        channel: "portal",
+        title: "Preenchendo Proposta Comercial",
+        description: "Fornecedor está inserindo valores unitários para os itens",
+        device: typeof navigator !== "undefined" ? navigator.userAgent : "Navegador Web",
+      });
+    }
   };
 
   const itemsSubtotal = useMemo(() => {
@@ -203,6 +226,18 @@ export default function CotacaoFornecedorPage() {
         protocol: res.protocol,
         supplierName: res.supplierName || supplierName,
       });
+
+      const targetSup = paramSupId || (supplierCnpj ? supplierCnpj.replace(/\D/g, "") : "");
+      if (targetSup) {
+        supplierTrackingApi.recordEvent(rfq.id, targetSup, {
+          type: "proposal_submitted",
+          channel: "portal",
+          title: "Proposta Comercial Enviada",
+          description: `Proposta protocolada com sucesso pelo fornecedor (${res.protocol})`,
+          device: typeof navigator !== "undefined" ? navigator.userAgent : "Navegador Web",
+        });
+      }
+
       toast({
         variant: "success",
         title: "Proposta Enviada!",
