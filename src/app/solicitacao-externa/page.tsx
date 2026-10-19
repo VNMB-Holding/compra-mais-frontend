@@ -696,7 +696,8 @@ export default function SolicitacaoExternaPage() {
             >
               <Icon name="user-check-01" size={14} className={styles.userBadgeIcon} />
               <span className={styles.userBadgeText}>
-                Olá, <strong>{user.name?.split(" ")[0] || "Usuário"}</strong>
+                <span className={styles.userGreeting}>Olá, </span>
+                <strong>{user.name?.split(" ")[0] || "Usuário"}</strong>
               </span>
             </div>
           ) : null}
