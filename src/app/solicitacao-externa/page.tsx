@@ -467,7 +467,27 @@ export default function SolicitacaoExternaPage() {
       toast({
         variant: "warning",
         title: "Item sem descrição",
-        message: "Preencha o que precisa ser comprado em todos os itens.",
+        message: "Preencha o que precisa ser comprado em todos os itens da solicitação.",
+      });
+      return;
+    }
+
+    const itemQtdInvalida = itens.some((i) => !i.quantidade || Number(i.quantidade) <= 0);
+    if (itemQtdInvalida) {
+      toast({
+        variant: "warning",
+        title: "Quantidade inválida",
+        message: "A quantidade de cada item deve ser um número maior que zero.",
+      });
+      return;
+    }
+
+    const itemUnidadeVazia = itens.some((i) => !i.unidade || !i.unidade.trim());
+    if (itemUnidadeVazia) {
+      toast({
+        variant: "warning",
+        title: "Unidade de medida obrigatória",
+        message: "Selecione ou informe a unidade de medida para todos os itens.",
       });
       return;
     }
