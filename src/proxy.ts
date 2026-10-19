@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 const PUBLIC_PATHS = [
   "/login",
   "/unauthorized",
-  "/solicitar",
-  "/solicitacao-externa",
   "/aprovacao",
   "/cotacao",
 ];
