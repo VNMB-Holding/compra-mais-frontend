@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/api-client";
 import {
   SupplierEngagementEvent,
   SupplierTrackingSummary,
@@ -237,6 +238,17 @@ export const supplierTrackingApi = {
     supplierId: string,
     supplierInfo?: { name?: string; cnpj?: string; email?: string; phone?: string; status?: string },
   ): Promise<SupplierTrackingSummary> {
+    try {
+      const remote = await apiClient.get<SupplierTrackingSummary>(
+        `/api/rfqs/${rfqId}/suppliers/${supplierId}/tracking`,
+      );
+      if (remote && remote.events && remote.events.length > 0) {
+        return remote;
+      }
+    } catch {
+      // Backend inacessível ou mock offline
+    }
+
     const store = getStoredEvents();
     const key = `${rfqId}:${supplierId}`;
     let events = store[key];
@@ -280,6 +292,33 @@ export const supplierTrackingApi = {
       timestamp?: string;
     },
   ): Promise<SupplierEngagementEvent> {
+    try {
+      const remoteEvent = await apiClient.post<SupplierEngagementEvent>(
+        `/api/rfqs/public/${rfqId}/tracking`,
+        {
+          supplierId,
+          type: eventData.type,
+          channel: eventData.channel,
+          title: eventData.title,
+          description: eventData.description,
+          device: eventData.device,
+          ipAddress: eventData.ipAddress,
+          metadata: eventData.metadata,
+        },
+      );
+      if (remoteEvent && remoteEvent.id) {
+        const store = getStoredEvents();
+        const key = `${rfqId}:${supplierId}`;
+        const list = store[key] || [];
+        list.push(remoteEvent);
+        store[key] = list;
+        saveStoredEvents(store);
+        return remoteEvent;
+      }
+    } catch {
+      // Backend inacessível ou mock offline
+    }
+
     const store = getStoredEvents();
     const key = `${rfqId}:${supplierId}`;
     const list = store[key] || [];
@@ -320,6 +359,18 @@ export const supplierTrackingApi = {
     recipientEmail: string,
     supplierName?: string,
   ): Promise<boolean> {
+    try {
+      const res = await apiClient.post<{ success: boolean; event?: SupplierEngagementEvent }>(
+        `/api/rfqs/${rfqId}/suppliers/${supplierId}/resend-invite`,
+        { email: recipientEmail },
+      );
+      if (res?.success) {
+        return true;
+      }
+    } catch {
+      // Fallback
+    }
+
     const now = new Date();
     await this.recordEvent(rfqId, supplierId, {
       type: "email_sent",
