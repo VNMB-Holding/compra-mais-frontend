@@ -8,11 +8,10 @@ import { TourDefinition } from "@/contexts/TourContext";
 import { useTour } from "@/hooks/useTour";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
-import { CatalogItem } from "@/lib/api/items";
+import { CatalogItem, itemsApi } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { maskPhone } from "@/lib/utils/masks";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
-import { BIZ_API_URL } from "@/config/env";
 
 interface ItemDemanda {
   id: number;
@@ -70,37 +69,30 @@ function resolveSetorFromIdentity(department?: string) {
   })?.value;
 }
 
-async function requestCatalogItems(
-  endpoint: string,
-  init?: RequestInit,
-): Promise<CatalogItem[] | CatalogItem | null> {
-  const response = await fetch(`${BIZ_API_URL}${endpoint}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-  });
-  if (!response.ok) return null;
-  return response.json();
-}
-
-async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
-  const trimmed = query.trim();
-  const endpoint =
-    trimmed.length >= 2
-      ? `/api/items/public/search?q=${encodeURIComponent(trimmed)}`
-      : "/api/items/public";
-
-  const data = await requestCatalogItems(endpoint);
-  return Array.isArray(data) ? data.slice(0, 20) : [];
-}
-
 function normalizeCatalogDescription(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-async function createPublicCatalogItem(item: ItemDemanda, category: string): Promise<CatalogItem> {
+async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
+  const trimmed = query.trim();
+  if (trimmed.length >= 2) {
+    try {
+      const results = await itemsApi.search(trimmed);
+      return Array.isArray(results) ? results.slice(0, 20) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  try {
+    const res = await itemsApi.listPaginated({ limit: 20 });
+    return Array.isArray(res.items) ? res.items : [];
+  } catch {
+    return [];
+  }
+}
+
+async function findOrCreateCatalogItem(item: ItemDemanda, category: string): Promise<CatalogItem> {
   const description = item.descricao.trim();
   const matches = await loadCatalogItems(description);
   const exactMatch = matches.find(
@@ -110,24 +102,29 @@ async function createPublicCatalogItem(item: ItemDemanda, category: string): Pro
   );
   if (exactMatch) return exactMatch;
 
-  const created = await requestCatalogItems("/api/items/public", {
-    method: "POST",
-    body: JSON.stringify({
+  try {
+    const created = await itemsApi.create({
       description,
       category,
       unit: item.unidade || "UN",
       lastUnitPrice: Number(item.valorEstimado) || undefined,
       notes: item.linkReferencia?.trim()
-        ? `Cadastrado via solicitação externa. Referência: ${item.linkReferencia.trim()}`
-        : "Cadastrado via solicitação externa.",
-    }),
-  });
-
-  if (!created || Array.isArray(created)) {
-    throw new Error(`Não foi possível cadastrar o item "${description}" no catálogo.`);
+        ? `Cadastrado via solicitação. Referência: ${item.linkReferencia.trim()}`
+        : "Cadastrado via solicitação.",
+    });
+    return created;
+  } catch {
+    return {
+      id: "",
+      description,
+      category,
+      unit: item.unidade || "UN",
+      totalPurchases: 0,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
   }
-
-  return created;
 }
 const UNIDADE_MEDIDA_OPTIONS = [
   { label: "Unidade (UN)", value: "UN" },
@@ -241,6 +238,12 @@ export default function SolicitacaoExternaPage() {
   }, [user, identityApplied, applyIdentityData]);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      window.location.href = "/login?redirect=/solicitacao-externa";
+    }
+  }, [authLoading, user]);
+
+  useEffect(() => {
     if (activeSearchItemId === null) return;
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
@@ -262,10 +265,6 @@ export default function SolicitacaoExternaPage() {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [activeSearchItemId]);
-
-  const handleLoginAction = () => {
-    window.location.href = "/login?redirect=/solicitacao-externa";
-  };
 
   const handleRestoreIdentityData = () => {
     if (!user) return;
@@ -459,7 +458,7 @@ export default function SolicitacaoExternaPage() {
       const catalogItemsByDemandId = new Map<number, CatalogItem>();
       for (const item of itens) {
         if (item.catalogItemId) continue;
-        const catalogItem = await createPublicCatalogItem(item, setorNomeFormatado);
+        const catalogItem = await findOrCreateCatalogItem(item, setorNomeFormatado);
         catalogItemsByDemandId.set(item.id, catalogItem);
       }
 
@@ -515,7 +514,7 @@ export default function SolicitacaoExternaPage() {
         })),
       };
 
-      const res = await purchaseRequestsApi.createPublic(payload);
+      const res = await purchaseRequestsApi.create(payload);
       const code = res?.code;
       if (!code) {
         throw new Error("O servidor não retornou o código da solicitação criada.");
@@ -710,19 +709,17 @@ export default function SolicitacaoExternaPage() {
                 Olá, <strong>{user.name?.split(" ")[0] || "Usuário"}</strong>
               </span>
             </div>
-          ) : (
-            <button
-              type="button"
-              className={styles.accountAction}
-              onClick={handleLoginAction}
-              disabled={authLoading}
-            >
-              <Icon name="log-in-01" size={14} />
-              Já tem conta? Entrar
-            </button>
-          )}
+          ) : null}
+          <a
+            href="/solicitacoes"
+            className={styles.panelAction}
+            title="Ir para o painel de solicitações"
+          >
+            <Icon name="layout-grid" size={14} />
+            <span>Painel</span>
+          </a>
           <span className={styles.securityTag}>
-            <Icon name="shield-tick" size={14} /> Portal Seguro
+            <Icon name="shield-tick" size={14} /> Portal Autenticado
           </span>
         </div>
       </header>
