@@ -100,7 +100,7 @@ function SolicitacoesContent() {
   const [selectedDrawerRequest, setSelectedDrawerRequest] = useState<PurchaseRequest | null>(null);
   const itemsPerPage = 10;
 
-  const companyOptions = getCompanyFilterOptions();
+  const companyOptions = React.useMemo(() => getCompanyFilterOptions(user), [user]);
 
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 

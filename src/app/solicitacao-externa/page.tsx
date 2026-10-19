@@ -2,16 +2,18 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import styles from "./solicitacao-externa.module.css";
-import { Icon, Select } from "@/components/ui";
+import { Icon, Select, Tabs } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { TourDefinition } from "@/contexts/TourContext";
 import { useTour } from "@/hooks/useTour";
 import { useAuth } from "@/hooks/useAuth";
+import { usePurchaseRequests } from "@/hooks/useQueries";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { CatalogItem, itemsApi } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { maskPhone } from "@/lib/utils/masks";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
+import MinhasSolicitacoesTab from "./MinhasSolicitacoesTab";
 
 interface ItemDemanda {
   id: number;
@@ -158,6 +160,33 @@ export default function SolicitacaoExternaPage() {
   const [itens, setItens] = useState<ItemDemanda[]>([
     { id: 1, descricao: "", quantidade: 1, unidade: "UN", valorEstimado: 0, linkReferencia: "" },
   ]);
+
+  const [activeTab, setActiveTab] = useState<"nova" | "historico">("nova");
+  const [selectedProtocolToView, setSelectedProtocolToView] = useState<string | null>(null);
+
+  const { data: allRequests = [] } = usePurchaseRequests();
+
+  const myRequestsCount = useMemo(() => {
+    if (!allRequests || !user) return 0;
+    const normalizedUserEmail = user.email?.trim().toLowerCase();
+    const normalizedUserName = user.name?.trim().toLowerCase();
+
+    return allRequests.filter((pr) => {
+      if (pr.requesterId && pr.requesterId === user.id) return true;
+      if (normalizedUserEmail && pr.requesterEmail?.trim().toLowerCase() === normalizedUserEmail) {
+        return true;
+      }
+      if (normalizedUserName && pr.requesterName?.trim().toLowerCase() === normalizedUserName) {
+        return true;
+      }
+      if (pr.corporateRequester) {
+        const lowerCorp = pr.corporateRequester.toLowerCase();
+        if (normalizedUserEmail && lowerCorp.includes(normalizedUserEmail)) return true;
+        if (normalizedUserName && lowerCorp.includes(normalizedUserName)) return true;
+      }
+      return false;
+    }).length;
+  }, [allRequests, user]);
 
   const [submitting, setSubmitting] = useState(false);
   const [protocoloGerado, setProtocoloGerado] = useState<string | null>(null);
@@ -644,6 +673,18 @@ export default function SolicitacaoExternaPage() {
             <div className={styles.successActions}>
               <button
                 type="button"
+                className={styles.btnPrimaryAction}
+                onClick={() => {
+                  const prot = protocoloGerado;
+                  setProtocoloGerado(null);
+                  setActiveTab("historico");
+                  setSelectedProtocolToView(prot);
+                }}
+              >
+                <Icon name="clock-fast-forward" size={16} /> Acompanhar Status
+              </button>
+              <button
+                type="button"
                 className={styles.btnSecondaryAction}
                 onClick={handleCopyProtocol}
               >
@@ -713,7 +754,7 @@ export default function SolicitacaoExternaPage() {
             Solicitação Externa de Compras <span className={styles.extraText}>& Suprimentos</span>
           </h1>
           <p>
-            <span>Envie sua necessidade de compra para cotação e aprovação corporativa.</span>
+            <span>Envie sua necessidade de compra para cotação e acompanhe suas solicitações.</span>
             <span className={styles.extraText}>
               {" "}
               O pedido será processado pela equipe central de suprimentos com transparência e
@@ -722,7 +763,26 @@ export default function SolicitacaoExternaPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.tabsWrapper}>
+          <Tabs
+            tabs={[
+              { id: "nova", label: "Nova Solicitação" },
+              { id: "historico", label: "Minhas Solicitações", count: myRequestsCount },
+            ]}
+            activeTab={activeTab}
+            onChange={(tabId) => setActiveTab(tabId as "nova" | "historico")}
+          />
+        </div>
+
+        {activeTab === "historico" ? (
+          <MinhasSolicitacoesTab
+            user={user}
+            onNewRequestClick={() => setActiveTab("nova")}
+            initialSelectedProtocol={selectedProtocolToView}
+            onClearInitialProtocol={() => setSelectedProtocolToView(null)}
+          />
+        ) : (
+          <form onSubmit={handleSubmit} className={styles.form}>
           <div id="tour-identificacao" className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionIcon}>
@@ -1126,6 +1186,7 @@ export default function SolicitacaoExternaPage() {
             </button>
           </div>
         </form>
+        )}
       </main>
     </div>
   );

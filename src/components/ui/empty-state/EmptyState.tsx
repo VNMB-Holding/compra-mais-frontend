@@ -63,13 +63,25 @@ export interface EmptyStateProps {
 
 const ILLUSTRATION_MAP: Record<string, string> = {
   "box-empty": "/illustrations/box-empty.svg",
-  "folder-empty": "/illustrations/folder-empty.svg",
-  "document-empty": "/illustrations/document-empty.svg",
-  "calendar-empty": "/illustrations/calendar-empty.svg",
+  "folder-empty": "/illustrations/box-empty.svg",
+  "document-empty": "/illustrations/orders-empty.svg",
+  "calendar-empty": "/illustrations/box-empty.svg",
   "orders-empty": "/illustrations/orders-empty.svg",
   "basket-empty": "/illustrations/basket-empty.svg",
   "cart-empty": "/illustrations/cart-empty.svg",
-  "discount-empty": "/illustrations/discount-empty.svg",
+  "discount-empty": "/illustrations/cart-empty.svg",
+  "zero-items": "/illustrations/zero-items.svg",
+  "all-done": "/illustrations/all-done.svg",
+  "no-search": "/illustrations/no-search.svg",
+  "no-suppliers": "/illustrations/no-suppliers.svg",
+  "no-users": "/illustrations/no-users.svg",
+  "ghost": "/illustrations/ghost.svg",
+  "budget-empty": "/illustrations/budget-empty.svg",
+  "card-add": "/illustrations/card-add.svg",
+  "card-broken": "/illustrations/card-broken.svg",
+  "cards": "/illustrations/cards.svg",
+  "wallet-empty": "/illustrations/wallet-empty.svg",
+  "mailbox-empty": "/illustrations/mailbox-empty.svg",
 
   disconnected: "/illustrations/disconnected.svg",
   "server-error": "/illustrations/server-error.svg",
@@ -96,7 +108,7 @@ export default function EmptyState({
 }: EmptyStateProps) {
   const src =
     (ILLUSTRATION_MAP as Record<string, string>)[illustration] ||
-    (illustration.startsWith("/") ? illustration : `/illustrations/${illustration}.svg`);
+    (illustration.startsWith("/") ? illustration : "/illustrations/box-empty.svg");
 
   const sizeClass = size === "sm" ? styles.sizeSm : size === "lg" ? styles.sizeLg : styles.sizeMd;
   const imageDimension = size === "sm" ? 120 : size === "lg" ? 220 : 160;

@@ -980,6 +980,37 @@
   color: #0f172a;
 }
 
+.btnPrimaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #007d79;
+  border: 1px solid #007d79;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+.btnPrimaryAction:hover {
+  background: #00605d;
+  border-color: #00605d;
+  box-shadow: 0 4px 12px rgba(0, 125, 121, 0.25);
+}
+
+.tabsWrapper {
+  width: 100%;
+  display: flex;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 10px 14px;

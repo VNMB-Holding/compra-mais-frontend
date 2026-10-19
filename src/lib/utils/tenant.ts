@@ -70,11 +70,10 @@ export function getCompanyFilterOptions(user?: User | null): { label: string; va
   }
 
   const branches = sortCompanyBranchesMatrixFirst(COMPANY_BRANCHES);
-  const filtered = user?.role === "admin" ? branches : branches.filter((b) => b.code !== "PURAFE");
 
   return [
     { label: "Unidade: Todas as Unidades", value: "TODAS" },
-    ...filtered.map((b) => ({
+    ...branches.map((b) => ({
       label: `${b.code} - ${b.name} (${b.acronym})`,
       value: b.code,
     })),
@@ -94,7 +93,7 @@ export function getPrimaryCompanyOptions(user?: User | null): TenantOption[] {
     ];
   }
 
-  const branches = COMPANY_BRANCHES.filter((b) => user?.role === "admin" || b.code !== "PURAFE");
+  const branches = COMPANY_BRANCHES;
 
   return sortMatrixFirst(
     branches.map((b) => ({

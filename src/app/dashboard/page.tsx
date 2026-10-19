@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
 import {
@@ -61,7 +61,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const companyOptions = getCompanyFilterOptions();
+  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   const fetchData = useCallback(async () => {
