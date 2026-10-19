@@ -20,7 +20,7 @@ import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getSupplierDetailUrl } from "@/lib/utils/routes";
 
 import { useAuth } from "@/hooks/useAuth";
-import { isPuraFeUser } from "@/lib/utils/tenant";
+import { isPuraFeUser, getCompanyFilterOptions } from "@/lib/utils/tenant";
 import { User } from "@/types/auth";
 import { useTour } from "@/hooks/useTour";
 import { fornecedoresTour } from "@/lib/tours";
@@ -89,6 +89,8 @@ export default function FornecedoresListPage() {
   const router = useRouter();
   const { user } = useAuth();
   const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
+  const [selectedCompany, setSelectedCompany] = useState<string>("TODAS");
+  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
 
   const [selectedSegment, setSelectedSegment] = useState("Todos");
   const [selectedCity, setSelectedCity] = useState("Todas");
@@ -101,10 +103,15 @@ export default function FornecedoresListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const queryCompany = useMemo(() => {
+    if (isPuraFe) return "PURAFE";
+    return selectedCompany !== "TODAS" ? selectedCompany : undefined;
+  }, [isPuraFe, selectedCompany]);
+
   useEffect(() => {
     let isMounted = true;
     suppliersApi
-      .list(isPuraFe ? { companyCode: "PURAFE" } : undefined)
+      .list(queryCompany ? { companyCode: queryCompany } : undefined)
       .then((data) => {
         if (!isMounted || !data) return;
         const segs = data.map((s) => s.segment || "").filter(Boolean);
@@ -118,7 +125,7 @@ export default function FornecedoresListPage() {
     return () => {
       isMounted = false;
     };
-  }, [isPuraFe]);
+  }, [queryCompany]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -134,13 +141,13 @@ export default function FornecedoresListPage() {
       };
       const [suppliers, kpisData] = await Promise.all([
         suppliersApi.list({
-          companyCode: isPuraFe ? "PURAFE" : undefined,
+          companyCode: queryCompany,
           status: status !== "Todos" ? statusMap[status] || status : undefined,
           city: selectedCity !== "Todas" ? selectedCity : undefined,
           segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
           search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
         }),
-        suppliersApi.getKpis(isPuraFe ? "PURAFE" : user?.tenantId),
+        suppliersApi.getKpis(queryCompany || user?.tenantId),
       ]);
       const rows = (suppliers || []).map((s) => mapSupplierToRow(s, user));
       setFornecedores(rows);
@@ -391,6 +398,19 @@ export default function FornecedoresListPage() {
           </div>
 
           <div className={styles.filtersGroup}>
+            {!isPuraFe && (
+              <Select
+                options={companyOptions}
+                value={selectedCompany}
+                onChange={(val) => {
+                  setSelectedCompany(val);
+                  setCurrentPage(1);
+                }}
+                icon="building-07"
+                className={styles.customSelectFilter}
+              />
+            )}
+
             <Select
               options={segmentOptions}
               value={selectedSegment}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -84,7 +84,7 @@ export default function PedidosPage() {
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const companyOptions = getCompanyFilterOptions();
+  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   useEffect(() => {

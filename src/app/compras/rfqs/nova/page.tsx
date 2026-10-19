@@ -221,7 +221,7 @@ export default function NewRfqPage() {
             (s.corporateName || "").toLowerCase().includes("pura fe") ||
             (s.corporateName || "").toLowerCase().includes("pura fé");
           if (isPuraFe) return isSupPuraFe;
-          return user?.role === "admin" || !isSupPuraFe;
+          return true;
         });
 
         const mappedSups: FornecedorConvidado[] = domainFilteredSups.map((s) => ({

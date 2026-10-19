@@ -23,7 +23,7 @@ import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage } from "@/lib/utils/error";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
-import { isPuraFeUser } from "@/lib/utils/tenant";
+import { isPuraFeUser, getCompanyFilterOptions } from "@/lib/utils/tenant";
 import styles from "./itens.module.css";
 
 const CATEGORY_OPTIONS = [
@@ -41,6 +41,8 @@ export default function ItensCatalogoPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
+  const [selectedCompany, setSelectedCompany] = useState<string>("TODAS");
+  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
@@ -58,15 +60,20 @@ export default function ItensCatalogoPage() {
   const [newNotes, setNewNotes] = useState("");
   const [suppliersList, setSuppliersList] = useState<Supplier[]>([]);
 
+  const queryCompany = useMemo(() => {
+    if (isPuraFe) return "PURAFE";
+    return selectedCompany !== "TODAS" ? selectedCompany : undefined;
+  }, [isPuraFe, selectedCompany]);
+
   const queryParams = useMemo(
     () => ({
       search: search.trim() ? search.trim() : undefined,
       category: selectedCategory !== "Todas" ? selectedCategory : undefined,
-      companyCode: isPuraFe ? "PURAFE" : undefined,
+      companyCode: queryCompany,
       page: currentPage,
       limit: itemsPerPage,
     }),
-    [search, selectedCategory, isPuraFe, currentPage, itemsPerPage],
+    [search, selectedCategory, queryCompany, currentPage, itemsPerPage],
   );
 
   const { data: paginatedData, isLoading, error, refetch } = useItemsPaginated(queryParams);
@@ -82,7 +89,9 @@ export default function ItensCatalogoPage() {
     setIsNewModalOpen(true);
     if (suppliersList.length === 0) {
       try {
-        const sups = await suppliersApi.list(isPuraFe ? { companyCode: "PURAFE" } : undefined);
+        const sups = await suppliersApi.list(
+          queryCompany ? { companyCode: queryCompany } : undefined,
+        );
         setSuppliersList(sups || []);
       } catch {}
     }
@@ -283,6 +292,16 @@ export default function ItensCatalogoPage() {
             />
           </div>
           <div className={styles.filtersGroup}>
+            {!isPuraFe && (
+              <Select
+                options={companyOptions}
+                value={selectedCompany}
+                onChange={(value) => {
+                  setSelectedCompany(value);
+                  setCurrentPage(1);
+                }}
+              />
+            )}
             <Select
               options={CATEGORY_OPTIONS}
               value={selectedCategory}

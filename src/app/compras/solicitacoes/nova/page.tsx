@@ -158,11 +158,11 @@ export default function NovaSolicitacaoPage() {
     if (isPuraFe) {
       return [{ label: "IGREJA PURA FÉ (IPF)", value: "PURAFE" }];
     }
-    return COMPANY_BRANCHES.filter((b) => user?.role === "admin" || b.code !== "PURAFE").map((b) => ({
+    return COMPANY_BRANCHES.map((b) => ({
       label: `${b.name} (${b.acronym})`,
       value: b.code,
     }));
-  }, [isPuraFe, user?.role]);
+  }, [isPuraFe]);
 
   const selectedTenantName = useMemo(() => {
     const fromBranch = findCompanyBranch(targetTenantId);

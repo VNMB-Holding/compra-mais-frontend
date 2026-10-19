@@ -8,9 +8,7 @@ import {
   QuickDetailDrawer,
 } from "@/components/ui";
 import { User } from "@/types/auth";
-import {
-  PurchaseRequest,
-} from "@/lib/api/purchase-requests";
+
 import { usePurchaseRequests, usePurchaseRequest } from "@/hooks/useQueries";
 import {
   PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP,
@@ -35,7 +33,7 @@ export default function MinhasSolicitacoesTab({
   onClearInitialProtocol,
 }: MinhasSolicitacoesTabProps) {
   const { toast } = useToast();
-  const { data: allRequests = [], isLoading, refetch } = usePurchaseRequests();
+  const { data: allRequests = [], isLoading } = usePurchaseRequests();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -637,7 +635,7 @@ export default function MinhasSolicitacoesTab({
                         </span>
                       </div>
                       {hist.comments && (
-                        <p className={styles.verticalStepDesc}>"{hist.comments}"</p>
+                        <p className={styles.verticalStepDesc}>&quot;{hist.comments}&quot;</p>
                       )}
                     </div>
                   ))}

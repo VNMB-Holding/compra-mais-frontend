@@ -90,7 +90,7 @@ export default function RfqsPage() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [kpis, setKpis] = useState<RfqKpis | null>(null);
 
-  const companyOptions = getCompanyFilterOptions();
+  const companyOptions = React.useMemo(() => getCompanyFilterOptions(user), [user]);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
   const [searchQuery, setSearchQuery] = useState("");
 
