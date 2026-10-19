@@ -54,26 +54,15 @@
 }
 
 .selectWrap {
-  min-width: 180px;
+  min-width: 220px;
 }
 
-.statusFilterSelect {
+.selectTrigger {
   height: 42px;
-  padding: 0 12px;
-  border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 13.5px;
-  color: #334155;
-  background: #ffffff;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.15s;
-  width: 100%;
 }
 
-.statusFilterSelect:focus {
-  border-color: #007d79;
-}
 
 .requestsGrid {
   display: grid;

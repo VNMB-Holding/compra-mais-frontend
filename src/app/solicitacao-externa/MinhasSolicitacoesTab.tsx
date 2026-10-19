@@ -6,6 +6,7 @@ import {
   Icon,
   EmptyState,
   QuickDetailDrawer,
+  Select,
 } from "@/components/ui";
 import { User } from "@/types/auth";
 
@@ -25,6 +26,16 @@ interface MinhasSolicitacoesTabProps {
   initialSelectedProtocol?: string | null;
   onClearInitialProtocol?: () => void;
 }
+
+const STATUS_OPTIONS = [
+  { label: "Todos os status", value: "ALL" },
+  { label: "Aguardando aprovação", value: "AwaitingApproval" },
+  { label: "Aprovada", value: "Approved" },
+  { label: "Em Cotação", value: "InQuote" },
+  { label: "Atendida", value: "Finished" },
+  { label: "Rejeitada", value: "Rejected" },
+  { label: "Cancelada", value: "Cancelled" },
+];
 
 export default function MinhasSolicitacoesTab({
   user,
@@ -159,20 +170,13 @@ export default function MinhasSolicitacoesTab({
         </div>
 
         <div className={styles.selectWrap}>
-          <select
-            className={styles.statusFilterSelect}
+          <Select
+            options={STATUS_OPTIONS}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            aria-label="Filtrar por status"
-          >
-            <option value="ALL">Todos os status</option>
-            <option value="AwaitingApproval">Aguardando aprovação</option>
-            <option value="Approved">Aprovada</option>
-            <option value="InQuote">Em Cotação</option>
-            <option value="Finished">Atendida</option>
-            <option value="Rejected">Rejeitada</option>
-            <option value="Cancelled">Cancelada</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            triggerClassName={styles.selectTrigger}
+            searchable={false}
+          />
         </div>
       </div>
 
