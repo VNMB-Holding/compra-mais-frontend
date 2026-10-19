@@ -266,16 +266,6 @@ export default function SolicitacaoExternaPage() {
     };
   }, [activeSearchItemId]);
 
-  const handleRestoreIdentityData = () => {
-    if (!user) return;
-    applyIdentityData(true);
-    toast({
-      variant: "success",
-      title: "Dados restaurados",
-      message: "Preenchemos os campos com as informações da sua conta.",
-    });
-  };
-
   const totalEstimado = useMemo(() => {
     return itens.reduce((sum, item) => {
       const q = Number(item.quantidade) || 0;
@@ -710,14 +700,6 @@ export default function SolicitacaoExternaPage() {
               </span>
             </div>
           ) : null}
-          <a
-            href="/solicitacoes"
-            className={styles.panelAction}
-            title="Ir para o painel de solicitações"
-          >
-            <Icon name="layout-grid" size={14} />
-            <span>Painel</span>
-          </a>
           <span className={styles.securityTag}>
             <Icon name="shield-tick" size={14} /> Portal Autenticado
           </span>
@@ -741,24 +723,11 @@ export default function SolicitacaoExternaPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div id="tour-identificacao" className={styles.sectionCard}>
-            <div className={styles.sectionHeaderBetween}>
-              <div className={styles.sectionHeaderLeft}>
-                <div className={styles.sectionIcon}>
-                  <Icon name="user-01" size={18} />
-                </div>
-                <h2>1. Quem está solicitando</h2>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionIcon}>
+                <Icon name="user-01" size={18} />
               </div>
-              {user && (
-                <button
-                  type="button"
-                  className={styles.restoreDataBtn}
-                  onClick={handleRestoreIdentityData}
-                  title="Restaurar dados com informações do seu perfil Compra+"
-                >
-                  <Icon name="refresh-cw-01" size={13} />
-                  <span>Restaurar meus dados</span>
-                </button>
-              )}
+              <h2>1. Quem está solicitando</h2>
             </div>
 
             <div className={styles.formGrid}>
