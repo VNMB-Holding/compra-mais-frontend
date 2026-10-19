@@ -9,7 +9,6 @@ function resolveApiUrl(): string {
     return RAW_API_URL || "http://localhost:3001";
   }
 
-  // 1. Resolução dinâmica no navegador baseada no hostname ativo
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (host.includes("hml-")) {
@@ -23,7 +22,6 @@ function resolveApiUrl(): string {
     }
   }
 
-  // 2. Variável de build estática injetada pelo Next.js
   if (RAW_API_URL && RAW_API_URL.trim() !== "") {
     return RAW_API_URL.trim().replace(/\/+$/, "");
   }
@@ -36,7 +34,6 @@ function resolveAuthApiUrl(): string {
     return RAW_AUTH_API_URL || "http://localhost:19842";
   }
 
-  // 1. Resolução dinâmica no navegador baseada no hostname ativo
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (host.includes("hml-")) {
@@ -50,7 +47,6 @@ function resolveAuthApiUrl(): string {
     }
   }
 
-  // 2. Variável de build estática injetada pelo Next.js
   if (RAW_AUTH_API_URL && RAW_AUTH_API_URL.trim() !== "") {
     return RAW_AUTH_API_URL.trim().replace(/\/+$/, "");
   }

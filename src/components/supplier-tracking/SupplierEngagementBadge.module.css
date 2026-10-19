@@ -1,0 +1,37 @@
+.badgeButton {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 9999px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.badgeButton:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.badgeButton:active {
+  transform: translateY(0);
+}
+
+.interactiveBadge {
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.badgeContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeText {
+  font-size: 11px;
+  opacity: 0.75;
+  font-weight: 500;
+}
