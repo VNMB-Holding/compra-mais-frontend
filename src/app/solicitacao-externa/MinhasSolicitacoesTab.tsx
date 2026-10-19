@@ -188,7 +188,7 @@ export default function MinhasSolicitacoesTab({
         </div>
       ) : filteredRequests.length === 0 ? (
         <EmptyState
-          illustration="document-empty"
+          illustration={search || statusFilter !== "ALL" ? "no-search" : "orders-empty"}
           title={
             search || statusFilter !== "ALL"
               ? "Nenhuma solicitação encontrada"
