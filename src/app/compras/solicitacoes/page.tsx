@@ -22,6 +22,10 @@ import {
   PurchaseRequest,
   PurchaseRequestKpis,
 } from "@/lib/api/purchase-requests";
+import {
+  extractItemReferenceUrlsFromNotes,
+  cleanNotesDisplay,
+} from "@/lib/utils/item-description";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
@@ -530,7 +534,7 @@ function SolicitacoesContent() {
                   </span>
                 </div>
               )}
-              {selectedDrawerRequest.notes && selectedDrawerRequest.notes !== selectedDrawerRequest.justification && (
+              {cleanNotesDisplay(selectedDrawerRequest.notes) && selectedDrawerRequest.notes !== selectedDrawerRequest.justification && (
                 <div
                   style={{
                     gridColumn: "span 2",
@@ -551,7 +555,7 @@ function SolicitacoesContent() {
                     Observação Geral
                   </span>
                   <span style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.4 }}>
-                    {selectedDrawerRequest.notes}
+                    {cleanNotesDisplay(selectedDrawerRequest.notes)}
                   </span>
                 </div>
               )}
@@ -591,46 +595,55 @@ function SolicitacoesContent() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedDrawerRequest.items.map((item, idx) => (
-                        <tr key={item.id || idx} style={{ borderTop: "1px solid #f1f5f9" }}>
-                          <td
-                            style={{
-                              padding: "8px 12px",
-                              textAlign: "center",
-                              color: "#64748b",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {idx + 1}
-                          </td>
-                          <td style={{ padding: "8px 12px" }}>
-                            <ItemCell
-                              description={item.description}
-                              referenceUrl={(item as any).referenceUrl}
-                              subtitle={
-                                item.corporateItemCode
-                                  ? `Cód: ${item.corporateItemCode}`
-                                  : undefined
-                              }
-                            />
-                          </td>
-                          <td
-                            style={{
-                              padding: "8px 12px",
-                              textAlign: "right",
-                              fontWeight: 600,
-                              color: "#0f172a",
-                            }}
-                          >
-                            {item.quantity}
-                          </td>
-                          <td
-                            style={{ padding: "8px 12px", textAlign: "center", color: "#475569" }}
-                          >
-                            {item.unit || "UN"}
-                          </td>
-                        </tr>
-                      ))}
+                      {selectedDrawerRequest.items.map((item, idx) => {
+                        const drawerNotesRefUrls = extractItemReferenceUrlsFromNotes(
+                          selectedDrawerRequest.notes
+                        );
+                        const resolvedRefUrl =
+                          (item as any).referenceUrl ||
+                          drawerNotesRefUrls.get(item.description?.trim().toLowerCase());
+
+                        return (
+                          <tr key={item.id || idx} style={{ borderTop: "1px solid #f1f5f9" }}>
+                            <td
+                              style={{
+                                padding: "8px 12px",
+                                textAlign: "center",
+                                color: "#64748b",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {idx + 1}
+                            </td>
+                            <td style={{ padding: "8px 12px" }}>
+                              <ItemCell
+                                description={item.description}
+                                referenceUrl={resolvedRefUrl}
+                                subtitle={
+                                  item.corporateItemCode
+                                    ? `Cód: ${item.corporateItemCode}`
+                                    : undefined
+                                }
+                              />
+                            </td>
+                            <td
+                              style={{
+                                padding: "8px 12px",
+                                textAlign: "right",
+                                fontWeight: 600,
+                                color: "#0f172a",
+                              }}
+                            >
+                              {item.quantity}
+                            </td>
+                            <td
+                              style={{ padding: "8px 12px", textAlign: "center", color: "#475569" }}
+                            >
+                              {item.unit || "UN"}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

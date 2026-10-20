@@ -9,6 +9,7 @@ import {
   Select,
   ItemCell,
 } from "@/components/ui";
+import { extractItemReferenceUrlsFromNotes } from "@/lib/utils/item-description";
 import { User } from "@/types/auth";
 
 import { usePurchaseRequests, usePurchaseRequest } from "@/hooks/useQueries";
@@ -579,23 +580,30 @@ export default function MinhasSolicitacoesTab({
                       </tr>
                     </thead>
                     <tbody>
-                      {activeRequest.items.map((it, idx) => (
-                        <tr key={it.id || idx}>
-                          <td>
-                            <ItemCell
-                              description={it.description}
-                              referenceUrl={(it as any).referenceUrl}
-                            />
-                          </td>
-                          <td>{it.quantity}</td>
-                          <td>{it.unit || "UN"}</td>
-                          <td>
-                            {it.estimatedUnitPrice
-                              ? formatCurrency(it.estimatedUnitPrice * it.quantity)
-                              : "—"}
-                          </td>
-                        </tr>
-                      ))}
+                      {activeRequest.items.map((it, idx) => {
+                        const notesRefUrls = extractItemReferenceUrlsFromNotes(activeRequest.notes);
+                        const resolvedRefUrl =
+                          (it as any).referenceUrl ||
+                          notesRefUrls.get(it.description?.trim().toLowerCase());
+
+                        return (
+                          <tr key={it.id || idx}>
+                            <td>
+                              <ItemCell
+                                description={it.description}
+                                referenceUrl={resolvedRefUrl}
+                              />
+                            </td>
+                            <td>{it.quantity}</td>
+                            <td>{it.unit || "UN"}</td>
+                            <td>
+                              {it.estimatedUnitPrice
+                                ? formatCurrency(it.estimatedUnitPrice * it.quantity)
+                                : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

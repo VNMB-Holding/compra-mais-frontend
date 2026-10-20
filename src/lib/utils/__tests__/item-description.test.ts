@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { parseItemDescription, sanitizeUrl } from "../item-description";
+import {
+  parseItemDescription,
+  sanitizeUrl,
+  deriveTitleFromUrl,
+  extractItemReferenceUrlsFromNotes,
+  cleanNotesDisplay,
+} from "../item-description";
 
 describe("item-description utility", () => {
   describe("sanitizeUrl", () => {
@@ -15,10 +21,35 @@ describe("item-description utility", () => {
       );
     });
 
+    it("deve remover pontuação residual no final da URL", () => {
+      expect(sanitizeUrl("https://mercadolivre.com.br/item/123.")).toBe(
+        "https://mercadolivre.com.br/item/123"
+      );
+      expect(sanitizeUrl("https://mercadolivre.com.br/item/123);")).toBe(
+        "https://mercadolivre.com.br/item/123"
+      );
+    });
+
     it("deve rejeitar javascript: ou strings maliciosas", () => {
       expect(sanitizeUrl("javascript:alert(1)")).toBeUndefined();
       expect(sanitizeUrl("")).toBeUndefined();
       expect(sanitizeUrl(null)).toBeUndefined();
+    });
+  });
+
+  describe("deriveTitleFromUrl", () => {
+    it("deve derivar título a partir do slug do produto", () => {
+      expect(
+        deriveTitleFromUrl(
+          "https://www.mercadolivre.com.br/mouse-gamer-redragon-cobra-m711-chroma-rgb/p/MLB123"
+        )
+      ).toBe("Mouse gamer redragon cobra m711 chroma rgb");
+    });
+
+    it("deve usar o domínio caso não haja slug legível", () => {
+      expect(deriveTitleFromUrl("https://www.dell.com.br/")).toBe(
+        "Item Referenciado (dell.com.br)"
+      );
     });
   });
 
@@ -34,7 +65,9 @@ describe("item-description utility", () => {
         "Cadeira Giratória NR17 (Ref: https://mercadolivre.com.br/item/123?tracking=abc)"
       );
       expect(res.cleanDescription).toBe("Cadeira Giratória NR17");
-      expect(res.referenceUrl).toBe("https://mercadolivre.com.br/item/123?tracking=abc");
+      expect(res.referenceUrl).toBe(
+        "https://mercadolivre.com.br/item/123?tracking=abc"
+      );
     });
 
     it("deve extrair link embutido no padrão (Link: https://...)", () => {
@@ -53,6 +86,46 @@ describe("item-description utility", () => {
       expect(res.referenceUrl).toBe("https://amazon.com.br/dp/B08XYZ");
     });
 
+    it("deve extrair link com prefixo sem parênteses", () => {
+      const res = parseItemDescription(
+        "Mouse Gamer Ref: https://mercadolivre.com.br/mouse-gamer-redragon/p/123"
+      );
+      expect(res.cleanDescription).toBe("Mouse Gamer");
+      expect(res.referenceUrl).toBe(
+        "https://mercadolivre.com.br/mouse-gamer-redragon/p/123"
+      );
+    });
+
+    it("deve extrair link no meio do texto e limpar os conectores", () => {
+      const res = parseItemDescription(
+        "Cadeira Giratória https://mercadolivre.com.br/item para o setor administrativo"
+      );
+      expect(res.cleanDescription).toBe(
+        "Cadeira Giratória para o setor administrativo"
+      );
+      expect(res.referenceUrl).toBe("https://mercadolivre.com.br/item");
+    });
+
+    it("NÃO DEVE deixar a URL no nome quando a descrição for apenas a URL", () => {
+      const res = parseItemDescription(
+        "https://www.mercadolivre.com.br/mouse-gamer-redragon-cobra-m711-chroma-rgb/p/MLB123"
+      );
+      expect(res.cleanDescription).toBe(
+        "Mouse gamer redragon cobra m711 chroma rgb"
+      );
+      expect(res.referenceUrl).toBe(
+        "https://www.mercadolivre.com.br/mouse-gamer-redragon-cobra-m711-chroma-rgb/p/MLB123"
+      );
+    });
+
+    it("deve lidar com URLs www. sem protocolo", () => {
+      const res = parseItemDescription(
+        "Papel Sulfite A4 (Link: www.kalunga.com.br/item)"
+      );
+      expect(res.cleanDescription).toBe("Papel Sulfite A4");
+      expect(res.referenceUrl).toBe("https://www.kalunga.com.br/item");
+    });
+
     it("deve priorizar explicitUrl se fornecido", () => {
       const res = parseItemDescription(
         "Papel Sulfite A4",
@@ -66,6 +139,25 @@ describe("item-description utility", () => {
       const res = parseItemDescription(null);
       expect(res.cleanDescription).toBe("Item sem descrição");
       expect(res.referenceUrl).toBeUndefined();
+    });
+  });
+
+  describe("extractItemReferenceUrlsFromNotes and cleanNotesDisplay", () => {
+    it("deve extrair mapeamento de links de referência das observações", () => {
+      const notes =
+        "Demanda prioritária.\n\nLinks de referência:\n• Mouse Sem Fio: https://mercadolivre.com.br/mouse\n• Teclado USB: https://amazon.com.br/teclado";
+
+      const map = extractItemReferenceUrlsFromNotes(notes);
+      expect(map.get("mouse sem fio")).toBe(
+        "https://mercadolivre.com.br/mouse"
+      );
+      expect(map.get("teclado usb")).toBe("https://amazon.com.br/teclado");
+    });
+
+    it("deve limpar bloco de links da exibição das notas", () => {
+      const notes =
+        "Demanda prioritária.\n\nLinks de referência:\n• Mouse Sem Fio: https://mercadolivre.com.br/mouse";
+      expect(cleanNotesDisplay(notes)).toBe("Demanda prioritária.");
     });
   });
 });

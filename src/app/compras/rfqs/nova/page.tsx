@@ -22,6 +22,7 @@ import {
   resolvePurchaseRequestBranch,
   isPuraFeUser,
 } from "@/lib/utils/tenant";
+import { parseItemDescription } from "@/lib/utils/item-description";
 
 interface Solicitacao {
   id: string;
@@ -245,7 +246,7 @@ export default function NewRfqPage() {
             return {
               id: idx + 1,
               originalId: it.id,
-              descricao: it.description,
+              descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
               qtd: Number(it.quantity) || 1,
               unidade: it.unit || "UN",
               category: (it as any).category || (it as any).costCenterName,
@@ -441,7 +442,7 @@ export default function NewRfqPage() {
               valorEstimado: Number(r.estimatedBudget) || 0,
               itens: (r.items || []).map((it, idx) => ({
                 id: idx + 1,
-                descricao: it.description,
+                descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
                 qtd: Number(it.quantity) || 1,
                 unidade: it.unit || "UN",
               })),
@@ -461,6 +462,8 @@ export default function NewRfqPage() {
             setCondicaoPagamento(mapped.condicaoPagamento);
             setObservacoes(mapped.observacoes);
             setItens(mapped.itens.map((i) => ({ ...i })));
+            const defaultAvailable = mapped.itens.filter((i) => !i.isOccupied).map((i) => i.id);
+            setSelectedScopeItemIds(defaultAvailable);
             if (mapped.itens.length > 0) {
               setExpandedItemId(mapped.itens[0].id);
             }
@@ -542,11 +545,13 @@ export default function NewRfqPage() {
   const addItem = () => {
     const nextId = Math.max(...itens.map((i) => i.id), 0) + 1;
     setItens((cur) => [...cur, { id: nextId, descricao: "", qtd: 1, unidade: "UN" }]);
+    setSelectedScopeItemIds((prev) => [...prev, nextId]);
     setExpandedItemId(nextId);
   };
 
   const removeItem = (id: number) => {
     setItens((cur) => cur.filter((i) => i.id !== id));
+    setSelectedScopeItemIds((prev) => prev.filter((x) => x !== id));
   };
 
   const updateItem = <K extends keyof ItemCotacao>(id: number, field: K, value: ItemCotacao[K]) => {
@@ -1049,7 +1054,6 @@ export default function NewRfqPage() {
                   </div>
                 </div>
 
-                {/* Banner de Fatiamento de Escopo */}
                 <div className={styles.scopeSelectionBanner}>
                   <div className={styles.scopeBannerLeft}>
                     <div className={styles.scopeBannerIcon}>
@@ -1104,28 +1108,35 @@ export default function NewRfqPage() {
                           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
                         >
                           <div className={styles.itemSummaryLeft}>
-                            <div
+                            <label
                               className={styles.itemCheckboxWrapper}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!isOccupied) toggleItemSelection(item.id);
                               }}
+                              title={
+                                isOccupied
+                                  ? `Item em cotação na RFQ ${item.activeRfqCode}`
+                                  : isSelected
+                                    ? "Desmarcar item do escopo"
+                                    : "Incluir item no escopo"
+                              }
                             >
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 disabled={isOccupied}
-                                onChange={() => {
+                                onChange={(e) => {
+                                  e.stopPropagation();
                                   if (!isOccupied) toggleItemSelection(item.id);
                                 }}
                                 className={styles.itemCheckbox}
                                 aria-label={`Incluir ${item.descricao || "item"}`}
                               />
-                            </div>
+                            </label>
                             <span className={styles.itemSummaryBadge}>Item {index + 1}</span>
                             <div className={styles.itemSummaryText}>
                               <span className={styles.itemSummaryTitle}>
-                                {item.descricao || "Novo item complementar sem descrição"}
+                                {parseItemDescription(item.descricao).cleanDescription || "Novo item complementar sem descrição"}
                               </span>
                               <span className={styles.itemSummaryMeta}>
                                 Qtd: {item.qtd.toLocaleString("pt-BR")} {item.unidade}{" "}
@@ -1139,14 +1150,27 @@ export default function NewRfqPage() {
                               <Badge variant="warning" icon="clock">
                                 Em cotação: {item.activeRfqCode}
                               </Badge>
-                            ) : isSelected ? (
-                              <Badge variant="success" icon="check">
-                                Incluído no Escopo
-                              </Badge>
                             ) : (
-                              <Badge variant="gray">
-                                Não incluído nesta RFQ
-                              </Badge>
+                              <button
+                                type="button"
+                                className={styles.scopeBadgeBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleItemSelection(item.id);
+                                }}
+                                title={
+                                  isSelected
+                                    ? "Clique para desmarcar do escopo"
+                                    : "Clique para incluir no escopo"
+                                }
+                              >
+                                <Badge
+                                  variant={isSelected ? "success" : "gray"}
+                                  icon={isSelected ? "check" : undefined}
+                                >
+                                  {isSelected ? "Incluído no Escopo" : "Não incluído nesta RFQ"}
+                                </Badge>
+                              </button>
                             )}
                             <button
                               type="button"
