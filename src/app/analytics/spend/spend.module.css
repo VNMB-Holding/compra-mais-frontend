@@ -440,7 +440,11 @@
   .supplierPct {
     display: none;
   }
+  .spendDetailTable {
+    min-width: 580px;
+  }
 }
+
 
 .linkButton {
   border: none;

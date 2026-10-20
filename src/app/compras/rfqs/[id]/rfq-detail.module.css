@@ -1171,4 +1171,25 @@
   .propostaActions button {
     flex: 1;
   }
+  .propostaItemsTable {
+    min-width: 520px;
+  }
+  .compareTable {
+    min-width: 640px;
+  }
+  .proposalFilterToolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .proposalSearchInput {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .filterTabs {
+    overflow-x: auto;
+    width: 100%;
+    white-space: nowrap;
+  }
 }
+

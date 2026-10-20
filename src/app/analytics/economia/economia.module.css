@@ -401,6 +401,24 @@
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 640px) {
+  .initiativeRow,
+  .initiativeTotalRow {
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+  }
+  .progressBarBg {
+    grid-column: span 2;
+    order: 3;
+  }
+  .initiativePct {
+    display: none;
+  }
+  .economyTable {
+    min-width: 580px;
+  }
+}
+
 .linkText {
   font-size: 12px;
   font-weight: 600;

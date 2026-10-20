@@ -34,3 +34,15 @@
 .table :global(tr:last-child td) {
   border-bottom: none;
 }
+
+@media (max-width: 768px) {
+  .table {
+    min-width: 580px;
+  }
+  .table th,
+  .table :global(td) {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+

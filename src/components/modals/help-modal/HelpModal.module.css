@@ -391,12 +391,20 @@
   }
 }
 @media (max-width: 640px) {
-  .supportGrid {
+  .supportGrid,
+  .toursGrid {
     grid-template-columns: 1fr;
   }
   .modalBox {
     max-height: 95dvh;
     border-radius: 12px;
     margin: 12px;
+    width: calc(100vw - 24px);
+  }
+  .modalHeader,
+  .modalBody,
+  .modalFooter {
+    padding: 16px;
   }
 }
+

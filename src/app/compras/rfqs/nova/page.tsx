@@ -37,13 +37,19 @@ interface Solicitacao {
   observacoes: string;
   empresa?: string;
   companyCode?: string;
+  availableItemsCount?: number;
+  totalItemsCount?: number;
 }
 
 interface ItemCotacao {
   id: number;
+  originalId?: string;
   descricao: string;
   qtd: number;
   unidade: string;
+  category?: string;
+  activeRfqCode?: string;
+  isOccupied?: boolean;
 }
 
 interface FornecedorConvidado {
@@ -114,6 +120,22 @@ export default function NewRfqPage() {
   const [moeda, setMoeda] = useState("BRL");
   const [observacoes, setObservacoes] = useState("");
   const [itens, setItens] = useState<ItemCotacao[]>([]);
+  const [selectedScopeItemIds, setSelectedScopeItemIds] = useState<number[]>([]);
+
+  const toggleItemSelection = (id: number) => {
+    setSelectedScopeItemIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAllAvailable = () => {
+    const available = itens.filter((i) => !i.isOccupied).map((i) => i.id);
+    setSelectedScopeItemIds(available);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedScopeItemIds([]);
+  };
   const [fornecedores, setFornecedores] = useState<FornecedorConvidado[]>([]);
 
   const [supplierSearch, setSupplierSearch] = useState("");
@@ -169,44 +191,90 @@ export default function NewRfqPage() {
         const isApprovedStatus = (s?: string) => {
           if (!s) return false;
           const lower = String(s).toLowerCase().trim();
-          return lower === "approved" || lower === "aprovada" || lower === "aprovado";
+          return (
+            lower === "approved" ||
+            lower === "aprovada" ||
+            lower === "aprovado" ||
+            lower === "inquote" ||
+            lower === "em cotação" ||
+            lower === "em cotacao"
+          );
         };
 
         const eligibleReqs = reqs.filter((r) => {
           if (!isApprovedStatus(r.status)) return false;
-          if (r.rfqs && r.rfqs.length > 0) {
-            const hasActive = r.rfqs.some((q: any) => {
+          const items = r.items || [];
+          if (items.length === 0) return false;
+
+          const hasAvailableItem = items.some((it) => {
+            if (!r.rfqs || r.rfqs.length === 0) return true;
+            return !r.rfqs.some((q: any) => {
               const qs = (q.status || "").toLowerCase().trim();
-              return (
-                qs !== "cancelled" && qs !== "cancelada" && qs !== "draft" && qs !== "rascunho"
-              );
+              const isActive =
+                qs !== "cancelled" && qs !== "cancelada" && qs !== "draft" && qs !== "rascunho";
+              if (!isActive) return false;
+              if (q.selectedItemIds && q.selectedItemIds.length > 0) {
+                return q.selectedItemIds.includes(it.id);
+              }
+              return true;
             });
-            if (hasActive) return false;
-          }
-          return true;
+          });
+
+          return hasAvailableItem;
         });
 
-        const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => ({
-          id: r.id,
-          codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
-          titulo: r.description || r.notes || "Demanda de Compra",
-          area: (r as any).department || "Operações",
-          solicitante:
-            r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
-          prioridade: formatPriority((r as any).priority || (r as any).prioridade),
-          valorEstimado: Number(r.estimatedBudget) || 0,
-          itens: (r.items || []).map((it, idx) => ({
-            id: idx + 1,
-            descricao: it.description,
-            qtd: Number(it.quantity) || 1,
-            unidade: it.unit || "UN",
-          })),
-          incoterm: "CIF",
-          condicaoPagamento: "30 dias DDL",
-          observacoes: r.notes || "",
-          empresa: resolvePurchaseRequestBranch(r, user),
-          companyCode: r.companyCode,
-        }));
+        const mappedReqs: Solicitacao[] = eligibleReqs.map((r) => {
+          const mappedItens: ItemCotacao[] = (r.items || []).map((it, idx) => {
+            let activeRfqCode: string | undefined;
+            if (r.rfqs && r.rfqs.length > 0) {
+              const activeRfq = r.rfqs.find((q: any) => {
+                const qs = (q.status || "").toLowerCase().trim();
+                const isActive =
+                  qs !== "cancelled" && qs !== "cancelada" && qs !== "draft" && qs !== "rascunho";
+                if (!isActive) return false;
+                if (q.selectedItemIds && q.selectedItemIds.length > 0) {
+                  return q.selectedItemIds.includes(it.id);
+                }
+                return true;
+              });
+              if (activeRfq) {
+                activeRfqCode = activeRfq.code;
+              }
+            }
+
+            return {
+              id: idx + 1,
+              originalId: it.id,
+              descricao: it.description,
+              qtd: Number(it.quantity) || 1,
+              unidade: it.unit || "UN",
+              category: (it as any).category || (it as any).costCenterName,
+              activeRfqCode,
+              isOccupied: Boolean(activeRfqCode),
+            };
+          });
+
+          const availableCount = mappedItens.filter((i) => !i.isOccupied).length;
+
+          return {
+            id: r.id,
+            codigo: r.corporateCode ? `#${r.corporateCode}` : r.code || r.id,
+            titulo: r.description || r.notes || "Demanda de Compra",
+            area: (r as any).department || "Operações",
+            solicitante:
+              r.corporateRequester || r.requesterName || formatUserDisplayName(r.requesterId, user),
+            prioridade: formatPriority((r as any).priority || (r as any).prioridade),
+            valorEstimado: Number(r.estimatedBudget) || 0,
+            itens: mappedItens,
+            availableItemsCount: availableCount,
+            totalItemsCount: mappedItens.length,
+            incoterm: "CIF",
+            condicaoPagamento: "30 dias DDL",
+            observacoes: r.notes || "",
+            empresa: resolvePurchaseRequestBranch(r, user),
+            companyCode: r.companyCode,
+          };
+        });
 
         setRequestsApi(mappedReqs);
       } else {
@@ -419,6 +487,8 @@ export default function NewRfqPage() {
     setCondicaoPagamento(sol.condicaoPagamento);
     setObservacoes(sol.observacoes);
     setItens(sol.itens.map((i) => ({ ...i })));
+    const defaultAvailable = sol.itens.filter((i) => !i.isOccupied).map((i) => i.id);
+    setSelectedScopeItemIds(defaultAvailable);
     setCurrentStep(1);
     if (sol.itens.length > 0) {
       setExpandedItemId(sol.itens[0].id);
@@ -457,6 +527,7 @@ export default function NewRfqPage() {
     setSolicitacaoSelecionada("");
     setTituloRfq("");
     setItens([]);
+    setSelectedScopeItemIds([]);
     setObservacoes("");
     setFornecedores((cur) => cur.map((f) => ({ ...f, selecionado: false })));
     setCurrentStep(1);
@@ -623,7 +694,7 @@ export default function NewRfqPage() {
                       </label>
                       <Select
                         options={displayRequests.map((s) => ({
-                          label: `${s.codigo ? `${s.codigo} — ` : ""}${s.titulo}${s.empresa ? ` (${s.empresa})` : ""}`,
+                          label: `${s.codigo ? `${s.codigo} — ` : ""}${s.titulo}${s.empresa ? ` (${s.empresa})` : ""}${s.availableItemsCount !== undefined && s.totalItemsCount !== undefined ? ` [${s.availableItemsCount}/${s.totalItemsCount} disponíveis]` : ""}`,
                           value: s.id,
                         }))}
                         value={solicitacaoSelecionada}
@@ -978,18 +1049,79 @@ export default function NewRfqPage() {
                   </div>
                 </div>
 
+                {/* Banner de Fatiamento de Escopo */}
+                <div className={styles.scopeSelectionBanner}>
+                  <div className={styles.scopeBannerLeft}>
+                    <div className={styles.scopeBannerIcon}>
+                      <Icon name="layers-three-01" size={18} />
+                    </div>
+                    <div>
+                      <div className={styles.scopeBannerTitle}>
+                        Escopo da Cotação & Seleção de Itens
+                      </div>
+                      <div className={styles.scopeBannerSubtitle}>
+                        Selecione apenas os itens deste escopo de fornecimento (ex: TI ou Materiais). Os itens desmarcados continuarão disponíveis na demanda para abertura de outras cotações.
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.scopeBannerRight}>
+                    <span className={styles.scopeSelectedCountBadge}>
+                      {selectedScopeItemIds.length} de {itens.filter((i) => !i.isOccupied).length} item(ns) selecionado(s)
+                    </span>
+                    <div className={styles.scopeActionButtons}>
+                      <button
+                        type="button"
+                        className={styles.scopeActionBtn}
+                        onClick={handleSelectAllAvailable}
+                      >
+                        Selecionar Todos
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.scopeActionBtn}
+                        onClick={handleDeselectAll}
+                      >
+                        Limpar Seleção
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className={styles.itemsList}>
                   {itens.map((item, index) => {
                     const isFromSol = solicitacaoConfirmada.itens.some((si) => si.id === item.id);
                     const isExpanded = expandedItemId === item.id;
+                    const isSelected = selectedScopeItemIds.includes(item.id);
+                    const isOccupied = !!item.isOccupied;
 
                     return (
-                      <div className={styles.itemPanel} key={item.id}>
+                      <div
+                        className={`${styles.itemPanel} ${isOccupied ? styles.itemPanelDisabled : isSelected ? styles.itemPanelSelected : styles.itemPanelUnselected}`}
+                        key={item.id}
+                      >
                         <div
                           className={styles.itemSummaryRow}
                           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
                         >
                           <div className={styles.itemSummaryLeft}>
+                            <div
+                              className={styles.itemCheckboxWrapper}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isOccupied) toggleItemSelection(item.id);
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={isOccupied}
+                                onChange={() => {
+                                  if (!isOccupied) toggleItemSelection(item.id);
+                                }}
+                                className={styles.itemCheckbox}
+                                aria-label={`Incluir ${item.descricao || "item"}`}
+                              />
+                            </div>
                             <span className={styles.itemSummaryBadge}>Item {index + 1}</span>
                             <div className={styles.itemSummaryText}>
                               <span className={styles.itemSummaryTitle}>
@@ -1003,10 +1135,18 @@ export default function NewRfqPage() {
                           </div>
 
                           <div className={styles.itemSummaryRight}>
-                            {isFromSol && (
-                              <span className={styles.itemOrigemTag} style={{ marginRight: "8px" }}>
-                                <Icon name="lock-01" size={12} /> Da solicitação
-                              </span>
+                            {isOccupied ? (
+                              <Badge variant="warning" icon="clock">
+                                Em cotação: {item.activeRfqCode}
+                              </Badge>
+                            ) : isSelected ? (
+                              <Badge variant="success" icon="check">
+                                Incluído no Escopo
+                              </Badge>
+                            ) : (
+                              <Badge variant="gray">
+                                Não incluído nesta RFQ
+                              </Badge>
                             )}
                             <button
                               type="button"
@@ -1370,11 +1510,19 @@ export default function NewRfqPage() {
                     type="button"
                     className={styles.btnSubmit}
                     onClick={() => {
-                      if (itens.some((i) => !i.descricao.trim() || i.qtd <= 0)) {
+                      if (selectedScopeItemIds.length === 0) {
+                        toast({
+                          variant: "warning",
+                          title: "Escopo Vazio",
+                          message: "Selecione ao menos 1 item para compor o escopo desta cotação.",
+                        });
+                        return;
+                      }
+                      if (itens.filter((i) => selectedScopeItemIds.includes(i.id)).some((i) => !i.descricao.trim() || i.qtd <= 0)) {
                         toast({
                           variant: "warning",
                           title: "Atenção",
-                          message: "Por favor, preencha a descrição e quantidade de todos os itens",
+                          message: "Por favor, preencha a descrição e quantidade de todos os itens selecionados",
                         });
                         return;
                       }
@@ -1456,11 +1604,16 @@ export default function NewRfqPage() {
                           ? new Date(dataEncerramento).toISOString()
                           : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+                        const selectedOriginalIds = itens
+                          .filter((it) => selectedScopeItemIds.includes(it.id) && it.originalId)
+                          .map((it) => it.originalId as string);
+
                         const createdDraft = await rfqsApi.create({
                           requestId: targetRequestId,
                           title: tituloRfq || "Rascunho de Cotação",
                           closesAt: endClosesAt,
                           supplierIds: selectedSupplierIds,
+                          itemIds: selectedOriginalIds.length > 0 ? selectedOriginalIds : undefined,
                           status: "Draft",
                           incoterm: incoterm || "CIF",
                           paymentTerms: condicaoPagamento || "30 dias DDL",
@@ -1513,11 +1666,16 @@ export default function NewRfqPage() {
                           ? new Date(dataEncerramento).toISOString()
                           : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+                        const selectedOriginalIds = itens
+                          .filter((it) => selectedScopeItemIds.includes(it.id) && it.originalId)
+                          .map((it) => it.originalId as string);
+
                         const createdRfq = await rfqsApi.create({
                           requestId: solicitacaoConfirmada?.id || paramSol,
                           title: tituloRfq || "Cotação de Compra",
                           closesAt: endClosesAt,
                           supplierIds: selectedSupplierIds,
+                          itemIds: selectedOriginalIds.length > 0 ? selectedOriginalIds : undefined,
                           status: "Open",
                           incoterm: incoterm || "CIF",
                           paymentTerms: condicaoPagamento || "30 dias DDL",

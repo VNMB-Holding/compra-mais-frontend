@@ -429,3 +429,44 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .headerLeft {
+    width: 100%;
+  }
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .headerActions button {
+    width: 100%;
+    justify-content: center;
+  }
+  .tabsBar {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 2px;
+    gap: 16px;
+  }
+  .tabBtn {
+    white-space: nowrap;
+  }
+  .contentCard {
+    padding: 18px 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .kpiStrip {
+    grid-template-columns: 1fr;
+  }
+  .titleRow h1 {
+    font-size: 20px;
+  }
+}
+
