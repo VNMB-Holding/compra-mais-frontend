@@ -18,6 +18,7 @@ export interface Rfq {
     | "InQuote";
   createdAt: string;
   updatedAt: string;
+  selectedItemIds?: string[];
   purchaseRequest?: {
     id: string;
     code: string;
@@ -236,6 +237,7 @@ export const rfqsApi = {
     title: string;
     closesAt: string;
     supplierIds?: string[];
+    itemIds?: string[];
     status?: "Draft" | "Open";
     incoterm?: string;
     paymentTerms?: string;

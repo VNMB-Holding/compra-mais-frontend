@@ -60,6 +60,8 @@ export interface PurchaseRequest {
   rfqs?: {
     id: string;
     code: string;
+    status?: string;
+    selectedItemIds?: string[];
   }[];
 }
 
