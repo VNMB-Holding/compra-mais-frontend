@@ -246,7 +246,6 @@ export const supplierTrackingApi = {
         return remote;
       }
     } catch {
-      // Backend inacessível ou mock offline
     }
 
     const store = getStoredEvents();
@@ -316,7 +315,6 @@ export const supplierTrackingApi = {
         return remoteEvent;
       }
     } catch {
-      // Backend inacessível ou mock offline
     }
 
     const store = getStoredEvents();
@@ -368,7 +366,6 @@ export const supplierTrackingApi = {
         return true;
       }
     } catch {
-      // Fallback
     }
 
     const now = new Date();

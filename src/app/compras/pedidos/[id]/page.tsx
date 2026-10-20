@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Skeleton, CardSkeleton } from "@/components/ui";
+import { Card, Button, Badge, Icon, ConfirmDialog, Skeleton, CardSkeleton, ItemCell } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -1005,8 +1005,10 @@ export default function PedidoDetailPage() {
                               <Icon name="package" size={18} />
                             </div>
                             <div className={styles.itemDescText}>
-                              <strong>{item.description}</strong>
-                              <small>Código do Item: {item.id.slice(0, 8)}</small>
+                              <ItemCell
+                                description={item.description}
+                                subtitle={`Código do Item: ${item.id.slice(0, 8)}`}
+                              />
                             </div>
                           </div>
                         </td>

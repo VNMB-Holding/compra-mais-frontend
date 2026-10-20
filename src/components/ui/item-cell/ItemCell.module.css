@@ -1,0 +1,79 @@
+.itemCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.itemHeader {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.itemNumber {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.itemTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.itemSubtitle {
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.referenceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background-color: #f0fdf9;
+  border: 1px solid #ccfbf1;
+  border-radius: 6px;
+  color: #007d79;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.referenceBadge:hover {
+  background-color: #ccfbf1;
+  border-color: #99f6e4;
+  color: #0f766e;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(0, 125, 121, 0.12);
+}
+
+.referenceIcon {
+  display: inline-flex;
+  color: #007d79;
+  flex-shrink: 0;
+}
+
+.arrowIcon {
+  display: inline-flex;
+  opacity: 0.7;
+  flex-shrink: 0;
+  transition: transform 0.15s ease-in-out;
+}
+
+.referenceBadge:hover .arrowIcon {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}

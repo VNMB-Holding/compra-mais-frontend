@@ -14,6 +14,7 @@ import {
   DataTable,
   ColumnDef,
   KpiCard,
+  ItemCell,
 } from "@/components/ui";
 import styles from "./solicitacoes.module.css";
 import {
@@ -603,14 +604,15 @@ function SolicitacoesContent() {
                             {idx + 1}
                           </td>
                           <td style={{ padding: "8px 12px" }}>
-                            <strong style={{ color: "#0f172a", display: "block" }}>
-                              {item.description}
-                            </strong>
-                            {item.corporateItemCode && (
-                              <small style={{ color: "#64748b" }}>
-                                Cód: {item.corporateItemCode}
-                              </small>
-                            )}
+                            <ItemCell
+                              description={item.description}
+                              referenceUrl={(item as any).referenceUrl}
+                              subtitle={
+                                item.corporateItemCode
+                                  ? `Cód: ${item.corporateItemCode}`
+                                  : undefined
+                              }
+                            />
                           </td>
                           <td
                             style={{

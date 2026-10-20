@@ -22,7 +22,7 @@ export const novaRfqTour: TourDefinition = {
   steps: [
     {
       target: '[data-tour="rfq-gate-card"]',
-      title: "Vinculação de Demanda Aprovada 🔗",
+      title: "Vinculação de Demanda Aprovada",
       description:
         "Toda cotação nasce de uma solicitação de compra aprovada. Os itens, quantidades e especificações técnicas são importados diretamente para garantir integridade e governança.",
       placement: "bottom",
@@ -44,7 +44,7 @@ export const novaRfqTour: TourDefinition = {
     },
     {
       target: '[data-tour="rfq-step-indicator-1"]',
-      title: "Etapa 1: Parâmetros Gerais ⚙️",
+      title: "Etapa 1: Parâmetros Gerais",
       description:
         "Aqui você define a estratégia da cotação (ex: Menor Preço Equalizado, Técnica e Preço), prazo final de resposta e título do processo.",
       placement: "bottom",
@@ -60,7 +60,7 @@ export const novaRfqTour: TourDefinition = {
     },
     {
       target: '[data-tour="rfq-step-indicator-2"]',
-      title: "Etapa 2: Itens e Quantidades 📦",
+      title: "Etapa 2: Itens e Quantidades",
       description:
         "Veja os itens importados da demanda original e adicione itens complementares ao escopo se necessário.",
       placement: "bottom",
@@ -76,7 +76,7 @@ export const novaRfqTour: TourDefinition = {
     },
     {
       target: '[data-tour="rfq-step-indicator-3"]',
-      title: "Etapa 3: Seleção de Fornecedores 🏢",
+      title: "Etapa 3: Seleção de Fornecedores",
       description:
         "Convide parceiros comerciais homologados ou convide novas empresas externas não cadastradas para participar da concorrência.",
       placement: "bottom",
@@ -92,7 +92,7 @@ export const novaRfqTour: TourDefinition = {
     },
     {
       target: '[data-tour="rfq-step-indicator-4"]',
-      title: "Etapa 4: Compliance e Logística 📜",
+      title: "Etapa 4: Compliance e Logística",
       description:
         "Equalize o processo estipulando termos comerciais claros de frete, pagamento e moeda base antes da publicação.",
       placement: "bottom",
@@ -108,7 +108,7 @@ export const novaRfqTour: TourDefinition = {
     },
     {
       target: '[data-tour="rfq-btn-publish"]',
-      title: "Publicar ou Salvar Rascunho 🚀",
+      title: "Publicar ou Salvar Rascunho",
       description:
         "Você pode salvar o rascunho a qualquer momento para continuar depois, ou publicar a RFQ para enviar convites formais imediatos a todos os fornecedores selecionados.",
       placement: "top",

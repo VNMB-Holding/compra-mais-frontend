@@ -13,6 +13,7 @@ import {
   Badge,
   ConfirmDialog,
   Select,
+  ItemCell,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -577,12 +578,11 @@ export default function CotacaoFornecedorPage() {
                     return (
                       <tr key={item.id}>
                         <td>
-                          <div className={styles.itemDesc}>
-                            <strong>
-                              {idx + 1}. {item.description}
-                            </strong>
-                            {item.notes && <span>Obs: {item.notes}</span>}
-                          </div>
+                          <ItemCell
+                            itemNumber={idx + 1}
+                            description={item.description}
+                            subtitle={item.notes ? `Obs: ${item.notes}` : undefined}
+                          />
                         </td>
                         <td style={{ textAlign: "center", fontWeight: 600 }}>{item.quantity}</td>
                         <td style={{ textAlign: "center" }}>{item.unit}</td>

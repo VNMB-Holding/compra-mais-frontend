@@ -7,6 +7,7 @@ import {
   EmptyState,
   QuickDetailDrawer,
   Select,
+  ItemCell,
 } from "@/components/ui";
 import { User } from "@/types/auth";
 
@@ -581,7 +582,10 @@ export default function MinhasSolicitacoesTab({
                       {activeRequest.items.map((it, idx) => (
                         <tr key={it.id || idx}>
                           <td>
-                            <strong>{it.description}</strong>
+                            <ItemCell
+                              description={it.description}
+                              referenceUrl={(it as any).referenceUrl}
+                            />
                           </td>
                           <td>{it.quantity}</td>
                           <td>{it.unit || "UN"}</td>

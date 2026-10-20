@@ -515,10 +515,22 @@ export default function SolicitacaoExternaPage() {
           : item;
       });
 
+      const linksReferencias = itensComCatalogo
+        .filter((it) => it.linkReferencia?.trim())
+        .map((it) => `• ${it.descricao.trim()}: ${it.linkReferencia!.trim()}`)
+        .join("\n");
+
+      const notasFinais = [
+        observacao.trim() ? observacao.trim() : "",
+        linksReferencias ? `Links de referência:\n${linksReferencias}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
       const payload: any = {
         description: titulo.trim(),
         corporateRequester: `${solicitanteNome.trim()} (${solicitanteWhats.trim()}${solicitanteEmail ? ` - ${solicitanteEmail.trim()}` : ""})`,
-        notes: observacao.trim() || undefined,
+        notes: notasFinais || undefined,
         companyCode: empresaCode,
         costCenterName: setorNomeFormatado,
         costCenterCode: setor,
@@ -540,9 +552,7 @@ export default function SolicitacaoExternaPage() {
                 ? "Low"
                 : "Medium",
         items: itensComCatalogo.map((it) => ({
-          description: it.linkReferencia?.trim()
-            ? `${it.descricao.trim()} (Ref: ${it.linkReferencia.trim()})`
-            : it.descricao.trim(),
+          description: it.descricao.trim(),
           quantity: Number(it.quantidade) || 1,
           unit: it.unidade || "UN",
           estimatedUnitPrice: Number(it.valorEstimado) || 0,
@@ -550,6 +560,7 @@ export default function SolicitacaoExternaPage() {
           costCenterName: setorNomeFormatado,
           costCenterCode: setor,
           requiredDate: dataDesejada ? new Date(dataDesejada).toISOString() : undefined,
+          referenceUrl: it.linkReferencia?.trim() || undefined,
         })),
       };
 
