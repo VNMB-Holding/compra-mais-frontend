@@ -21,6 +21,7 @@ import { CATEGORY_LABEL_MAP } from "@/lib/utils/category-icon";
 import { ApprovalModal } from "@/components";
 import { itemsApi, CatalogItem } from "@/lib/api/items";
 import { GEOAPIFY_API_KEY } from "@/config/env";
+import { parseItemDescription } from "@/lib/utils/item-description";
 
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";
 
@@ -593,7 +594,7 @@ export default function NovaSolicitacaoPage() {
                             <span className={styles.itemSummaryBadge}>Item {index + 1}</span>
                             <div className={styles.itemSummaryText}>
                               <span className={styles.itemSummaryTitle}>
-                                {item.description || "Novo item sem descrição"}
+                                {parseItemDescription(item.description, item.referenceUrl).cleanDescription}
                               </span>
                               <span className={styles.itemSummaryMeta}>
                                 {item.quantity} {item.unit}{" "}

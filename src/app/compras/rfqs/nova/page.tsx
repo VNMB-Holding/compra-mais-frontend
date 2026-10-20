@@ -22,6 +22,7 @@ import {
   resolvePurchaseRequestBranch,
   isPuraFeUser,
 } from "@/lib/utils/tenant";
+import { parseItemDescription } from "@/lib/utils/item-description";
 
 interface Solicitacao {
   id: string;
@@ -245,7 +246,7 @@ export default function NewRfqPage() {
             return {
               id: idx + 1,
               originalId: it.id,
-              descricao: it.description,
+              descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
               qtd: Number(it.quantity) || 1,
               unidade: it.unit || "UN",
               category: (it as any).category || (it as any).costCenterName,
@@ -441,7 +442,7 @@ export default function NewRfqPage() {
               valorEstimado: Number(r.estimatedBudget) || 0,
               itens: (r.items || []).map((it, idx) => ({
                 id: idx + 1,
-                descricao: it.description,
+                descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
                 qtd: Number(it.quantity) || 1,
                 unidade: it.unit || "UN",
               })),
@@ -1049,7 +1050,6 @@ export default function NewRfqPage() {
                   </div>
                 </div>
 
-                {/* Banner de Fatiamento de Escopo */}
                 <div className={styles.scopeSelectionBanner}>
                   <div className={styles.scopeBannerLeft}>
                     <div className={styles.scopeBannerIcon}>
@@ -1125,7 +1125,7 @@ export default function NewRfqPage() {
                             <span className={styles.itemSummaryBadge}>Item {index + 1}</span>
                             <div className={styles.itemSummaryText}>
                               <span className={styles.itemSummaryTitle}>
-                                {item.descricao || "Novo item complementar sem descrição"}
+                                {parseItemDescription(item.descricao).cleanDescription || "Novo item complementar sem descrição"}
                               </span>
                               <span className={styles.itemSummaryMeta}>
                                 Qtd: {item.qtd.toLocaleString("pt-BR")} {item.unidade}{" "}

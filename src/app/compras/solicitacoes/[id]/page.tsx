@@ -18,6 +18,10 @@ import { useToast } from "@/contexts/ToastContext";
 import styles from "./solicitacoes-detail.module.css";
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
 import { rfqsApi } from "@/lib/api/rfqs";
+import {
+  extractItemReferenceUrlsFromNotes,
+  cleanNotesDisplay,
+} from "@/lib/utils/item-description";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
 import {
@@ -1002,11 +1006,11 @@ export default function SolicitacaoDetailPage() {
                     </span>
                   </div>
 
-                  {sol?.notes && sol.notes !== sol?.justification && (
+                  {cleanNotesDisplay(sol?.notes) && sol?.notes !== sol?.justification && (
                     <div className={`${styles.infoItem} ${styles.span2}`}>
                       <label>Observação Geral</label>
                       <span style={{ fontSize: 14, color: "#334155", lineHeight: 1.5 }}>
-                        {sol.notes}
+                        {cleanNotesDisplay(sol?.notes)}
                       </span>
                     </div>
                   )}
@@ -1134,56 +1138,63 @@ export default function SolicitacaoDetailPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {sol.items.map((item: any, idx: number) => (
-                          <tr key={item.id || idx}>
-                            <td
-                              style={{
-                                textAlign: "center",
-                                color: "#64748b",
-                                fontWeight: 600,
-                                fontSize: 12,
-                              }}
-                            >
-                              {item.corporateItemNumber || idx + 1}
-                            </td>
-                            <td>
-                              {item.corporateItemCode ? (
-                                <Badge variant="gray">Cód: {item.corporateItemCode}</Badge>
-                              ) : (
-                                <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>
-                              )}
-                            </td>
-                            <td>
-                              <ItemCell
-                                description={item.description}
-                                referenceUrl={(item as any).referenceUrl}
-                                subtitle={item.notes}
-                              />
-                            </td>
-                            <td style={{ textAlign: "right", fontWeight: 600, color: "#0f172a" }}>
-                              {item.quantity}
-                            </td>
-                            <td style={{ textAlign: "center" }}>
-                              <span
+                        {sol.items.map((item: any, idx: number) => {
+                          const notesRefUrls = extractItemReferenceUrlsFromNotes(sol.notes);
+                          const resolvedRefUrl =
+                            (item as any).referenceUrl ||
+                            notesRefUrls.get(item.description?.trim().toLowerCase());
+
+                          return (
+                            <tr key={item.id || idx}>
+                              <td
                                 style={{
-                                  fontSize: 12,
-                                  background: "#f1f5f9",
-                                  padding: "2px 6px",
-                                  borderRadius: 4,
-                                  color: "#475569",
+                                  textAlign: "center",
+                                  color: "#64748b",
                                   fontWeight: 600,
+                                  fontSize: 12,
                                 }}
                               >
-                                {item.unit}
-                              </span>
-                            </td>
-                            <td style={{ textAlign: "center", fontSize: 12, color: "#475569" }}>
-                              {item.requiredDate
-                                ? new Date(item.requiredDate).toLocaleDateString("pt-BR")
-                                : "—"}
-                            </td>
-                          </tr>
-                        ))}
+                                {item.corporateItemNumber || idx + 1}
+                              </td>
+                              <td>
+                                {item.corporateItemCode ? (
+                                  <Badge variant="gray">Cód: {item.corporateItemCode}</Badge>
+                                ) : (
+                                  <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>
+                                )}
+                              </td>
+                              <td>
+                                <ItemCell
+                                  description={item.description}
+                                  referenceUrl={resolvedRefUrl}
+                                  subtitle={item.notes}
+                                />
+                              </td>
+                              <td style={{ textAlign: "right", fontWeight: 600, color: "#0f172a" }}>
+                                {item.quantity}
+                              </td>
+                              <td style={{ textAlign: "center" }}>
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    background: "#f1f5f9",
+                                    padding: "2px 6px",
+                                    borderRadius: 4,
+                                    color: "#475569",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {item.unit}
+                                </span>
+                              </td>
+                              <td style={{ textAlign: "center", fontSize: 12, color: "#475569" }}>
+                                {item.requiredDate
+                                  ? new Date(item.requiredDate).toLocaleDateString("pt-BR")
+                                  : "—"}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
