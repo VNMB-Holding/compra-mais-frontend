@@ -9,7 +9,7 @@ import { rfqsApi, RfqListParams } from "@/lib/api/rfqs";
 import { suppliersApi, SupplierListParams } from "@/lib/api/suppliers";
 import { purchaseOrdersApi, PurchaseOrderListParams } from "@/lib/api/purchase-orders";
 import { dashboardApi } from "@/lib/api/dashboard";
-import { itemsApi, CatalogItem } from "@/lib/api/items";
+import { itemsApi, CatalogItem, ItemListParams } from "@/lib/api/items";
 
 export const QUERY_KEYS = {
   purchaseRequests: (params?: string | PurchaseRequestListParams) =>
@@ -151,7 +151,7 @@ export function useUpdatePurchaseOrderStatus() {
   });
 }
 
-export function useItems(params?: { search?: string; category?: string; supplierId?: string }) {
+export function useItems(params?: ItemListParams) {
   return useQuery({
     queryKey: ["catalog-items", "list", params] as const,
     queryFn: () => itemsApi.list(params),
@@ -159,13 +159,7 @@ export function useItems(params?: { search?: string; category?: string; supplier
   });
 }
 
-export function useItemsPaginated(params?: {
-  search?: string;
-  category?: string;
-  supplierId?: string;
-  page?: number;
-  limit?: number;
-}) {
+export function useItemsPaginated(params?: ItemListParams) {
   return useQuery({
     queryKey: ["catalog-items", "paginated", params] as const,
     queryFn: () => itemsApi.listPaginated(params),
@@ -181,10 +175,10 @@ export function useItem(id: string) {
   });
 }
 
-export function useItemKpis() {
+export function useItemKpis(companyCode?: string) {
   return useQuery({
-    queryKey: ["catalog-items", "kpis"] as const,
-    queryFn: () => itemsApi.getKpis(),
+    queryKey: ["catalog-items", "kpis", companyCode] as const,
+    queryFn: () => itemsApi.getKpis(companyCode),
     staleTime: 1000 * 60,
   });
 }

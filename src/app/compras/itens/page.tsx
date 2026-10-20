@@ -77,7 +77,7 @@ export default function ItensCatalogoPage() {
   );
 
   const { data: paginatedData, isLoading, error, refetch } = useItemsPaginated(queryParams);
-  const { data: kpis, isLoading: loadingKpis } = useItemKpis();
+  const { data: kpis, isLoading: loadingKpis } = useItemKpis(queryCompany);
   const createItemMutation = useCreateItem();
   const { data: itemDetail, isLoading: isLoadingDetail } = useItem(selectedItemForAudit?.id || "");
 
@@ -130,6 +130,7 @@ export default function ItensCatalogoPage() {
         lastSupplierId: newSupplierId || undefined,
         lastUnitPrice: newUnitPrice ? Number(newUnitPrice) : undefined,
         notes: newNotes.trim() || undefined,
+        companyCode: queryCompany || (isPuraFe ? "PURAFE" : undefined),
       });
 
       toast({

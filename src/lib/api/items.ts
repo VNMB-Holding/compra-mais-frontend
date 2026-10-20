@@ -175,9 +175,13 @@ export const itemsApi = {
     return apiClient.get<CatalogItem>(`/api/items/${id}`);
   },
 
-  getKpis: async (): Promise<ItemKpis> => {
+  getKpis: async (companyCode?: string): Promise<ItemKpis> => {
     try {
-      return await apiClient.get<ItemKpis>("/api/items/kpis");
+      const searchParams = new URLSearchParams();
+      const cleanCode = cleanCompanyParam(companyCode);
+      if (cleanCode) searchParams.set("companyCode", cleanCode);
+      const qs = searchParams.toString();
+      return await apiClient.get<ItemKpis>(`/api/items/kpis${qs ? `?${qs}` : ""}`);
     } catch {
       return {
         totalItems: 0,
@@ -197,6 +201,7 @@ export const itemsApi = {
     lastSupplierId?: string;
     lastUnitPrice?: number;
     notes?: string;
+    companyCode?: string;
   }): Promise<CatalogItem> => {
     return apiClient.post<CatalogItem>("/api/items", data);
   },
