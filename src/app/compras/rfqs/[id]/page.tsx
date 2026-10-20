@@ -14,6 +14,7 @@ import {
   EmptyState,
   Stepper,
   Select,
+  ItemCell,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -387,7 +388,7 @@ function PropostaCard({
                       return (
                         <tr key={item.id || idx}>
                           <td>
-                            <strong>{item.description}</strong>
+                            <ItemCell description={item.description} />
                           </td>
                           <td style={{ textAlign: "right", color: "#64748b" }}>
                             {item.quantity} {item.unit || "UN"}

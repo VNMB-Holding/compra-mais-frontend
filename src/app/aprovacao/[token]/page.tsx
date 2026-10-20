@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Badge, Icon, ErrorState, Skeleton } from "@/components/ui";
+import { Card, Button, Badge, Icon, ErrorState, Skeleton, ItemCell } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
 import styles from "./aprovacao.module.css";
@@ -408,7 +408,10 @@ export default function AprovacaoPage() {
                                 {idx + 1}
                               </td>
                               <td>
-                                <strong className={styles.itemDesc}>{item.description}</strong>
+                                <ItemCell
+                                  description={item.description}
+                                  referenceUrl={(item as any).referenceUrl}
+                                />
                               </td>
                               <td style={{ textAlign: "right", fontWeight: 600, color: "#0f172a" }}>
                                 {item.quantity}

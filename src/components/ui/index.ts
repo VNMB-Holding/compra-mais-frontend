@@ -42,3 +42,5 @@ export type {
 export { DataTable } from "./data-table/DataTable";
 export type { ColumnDef } from "./data-table/DataTable";
 export { default as GuidedTour } from "./guided-tour/GuidedTour";
+export { default as ItemCell } from "./item-cell/ItemCell";
+export type { ItemCellProps } from "./item-cell/ItemCell";

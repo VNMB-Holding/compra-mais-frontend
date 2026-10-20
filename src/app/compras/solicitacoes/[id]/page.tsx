@@ -11,6 +11,7 @@ import {
   Loading,
   Skeleton,
   CardSkeleton,
+  ItemCell,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -1153,16 +1154,11 @@ export default function SolicitacaoDetailPage() {
                               )}
                             </td>
                             <td>
-                              <div style={{ display: "flex", flexDirection: "column" }}>
-                                <strong style={{ color: "#0f172a", fontSize: 13 }}>
-                                  {item.description}
-                                </strong>
-                                {item.notes && (
-                                  <small style={{ color: "#64748b", marginTop: 2 }}>
-                                    {item.notes}
-                                  </small>
-                                )}
-                              </div>
+                              <ItemCell
+                                description={item.description}
+                                referenceUrl={(item as any).referenceUrl}
+                                subtitle={item.notes}
+                              />
                             </td>
                             <td style={{ textAlign: "right", fontWeight: 600, color: "#0f172a" }}>
                               {item.quantity}

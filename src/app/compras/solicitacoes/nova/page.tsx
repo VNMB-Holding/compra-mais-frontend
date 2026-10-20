@@ -32,6 +32,7 @@ interface RequestItem {
   unit: string;
   unitPrice: number;
   requiredDate: string;
+  referenceUrl?: string;
   baseSupplierName?: string;
   baseSupplierCnpj?: string;
   lastPurchasePrice?: number;
@@ -114,6 +115,7 @@ export default function NovaSolicitacaoPage() {
                 ? new Date(item.requiredDate).toISOString().split("T")[0]
                 : "",
               catalogItemId: (item as any).catalogItemId,
+              referenceUrl: (item as any).referenceUrl || "",
             })),
           );
         }
@@ -263,6 +265,7 @@ export default function NovaSolicitacaoPage() {
         unit: "UN",
         unitPrice: 0,
         requiredDate: "",
+        referenceUrl: "",
       },
     ]);
     setExpandedItemId(nextId);
@@ -337,6 +340,7 @@ export default function NovaSolicitacaoPage() {
             category: i.category || "Geral",
             requiredDate: i.requiredDate || undefined,
             catalogItemId: i.catalogItemId || undefined,
+            referenceUrl: i.referenceUrl?.trim() || undefined,
           })),
       };
 
@@ -794,7 +798,7 @@ export default function NovaSolicitacaoPage() {
                                 </strong>
                               </div>
 
-                              <div className={`${styles.formGroup} ${styles.col12}`}>
+                              <div className={`${styles.formGroup} ${styles.col6}`}>
                                 <label>
                                   Necessário até <span className="required-asterisk">*</span>
                                 </label>
@@ -804,6 +808,19 @@ export default function NovaSolicitacaoPage() {
                                   value={item.requiredDate}
                                   onChange={(event) =>
                                     updateItem(item.id, "requiredDate", event.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div className={`${styles.formGroup} ${styles.col6}`}>
+                                <label>Link de referência / Modelo (opcional)</label>
+                                <input
+                                  type="url"
+                                  placeholder="https://exemplo.com.br/produto/..."
+                                  className={styles.formControl}
+                                  value={item.referenceUrl || ""}
+                                  onChange={(event) =>
+                                    updateItem(item.id, "referenceUrl", event.target.value)
                                   }
                                 />
                               </div>
