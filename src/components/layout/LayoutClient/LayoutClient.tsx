@@ -21,6 +21,10 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     pathname.startsWith("/aprovacao") ||
     pathname.startsWith("/cotacao");
 
+  React.useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [pathname]);
+
   if (isStandalone) {
     return <>{children}</>;
   }
