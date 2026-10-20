@@ -13,6 +13,7 @@ import { CatalogItem, itemsApi } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { maskPhone } from "@/lib/utils/masks";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
+import { isPuraFeUser } from "@/lib/utils/tenant";
 import MinhasSolicitacoesTab from "./MinhasSolicitacoesTab";
 
 interface ItemDemanda {
@@ -75,11 +76,11 @@ function normalizeCatalogDescription(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
+async function loadCatalogItems(query = "", companyCode?: string): Promise<CatalogItem[]> {
   const trimmed = query.trim();
   if (trimmed.length >= 2) {
     try {
-      const results = await itemsApi.search(trimmed);
+      const results = await itemsApi.search(trimmed, companyCode);
       return Array.isArray(results) ? results.slice(0, 20) : [];
     } catch {
       return [];
@@ -87,16 +88,16 @@ async function loadCatalogItems(query = ""): Promise<CatalogItem[]> {
   }
 
   try {
-    const res = await itemsApi.listPaginated({ limit: 20 });
+    const res = await itemsApi.listPaginated({ limit: 20, companyCode });
     return Array.isArray(res.items) ? res.items : [];
   } catch {
     return [];
   }
 }
 
-async function findOrCreateCatalogItem(item: ItemDemanda, category: string): Promise<CatalogItem> {
+async function findOrCreateCatalogItem(item: ItemDemanda, category: string, companyCode?: string): Promise<CatalogItem> {
   const description = item.descricao.trim();
-  const matches = await loadCatalogItems(description);
+  const matches = await loadCatalogItems(description, companyCode);
   const exactMatch = matches.find(
     (catalogItem) =>
       normalizeCatalogDescription(catalogItem.description) ===
@@ -110,6 +111,7 @@ async function findOrCreateCatalogItem(item: ItemDemanda, category: string): Pro
       category,
       unit: item.unidade || "UN",
       lastUnitPrice: Number(item.valorEstimado) || undefined,
+      companyCode,
       notes: item.linkReferencia?.trim()
         ? `Cadastrado via solicitação. Referência: ${item.linkReferencia.trim()}`
         : "Cadastrado via solicitação.",
@@ -149,6 +151,11 @@ export default function SolicitacaoExternaPage() {
   const [solicitanteEmail, setSolicitanteEmail] = useState("");
   const [setor, setSetor] = useState("Administracao");
   const [empresaCode, setEmpresaCode] = useState("");
+  const isPuraFe = useMemo(() => isPuraFeUser(user) || empresaCode === "PURAFE", [user, empresaCode]);
+  const activeCompanyCode = useMemo(() => {
+    if (isPuraFe) return "PURAFE";
+    return empresaCode || undefined;
+  }, [isPuraFe, empresaCode]);
 
   const [titulo, setTitulo] = useState("");
   const [justificativa, setJustificativa] = useState("");
@@ -348,7 +355,7 @@ export default function SolicitacaoExternaPage() {
     setActiveSearchItemId(id);
     setLoadingSearchItemId(id);
     try {
-      const results = await loadCatalogItems(value.trim());
+      const results = await loadCatalogItems(value.trim(), activeCompanyCode);
       if (searchRequestRef.current === requestId) {
         setSuggestedItems(results || []);
       }
@@ -372,7 +379,7 @@ export default function SolicitacaoExternaPage() {
     setLoadingSearchItemId(id);
 
     try {
-      const results = await loadCatalogItems(value.trim());
+      const results = await loadCatalogItems(value.trim(), activeCompanyCode);
       if (searchRequestRef.current === requestId) {
         setSuggestedItems(results || []);
       }
@@ -497,7 +504,7 @@ export default function SolicitacaoExternaPage() {
       const catalogItemsByDemandId = new Map<number, CatalogItem>();
       for (const item of itens) {
         if (item.catalogItemId) continue;
-        const catalogItem = await findOrCreateCatalogItem(item, setorNomeFormatado);
+        const catalogItem = await findOrCreateCatalogItem(item, setorNomeFormatado, activeCompanyCode);
         catalogItemsByDemandId.set(item.id, catalogItem);
       }
 
