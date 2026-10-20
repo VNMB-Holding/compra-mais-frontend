@@ -231,3 +231,20 @@
   }
 }
 
+@media (max-width: 480px) {
+  .right {
+    padding: 16px;
+  }
+  .card {
+    padding: 24px 18px;
+    border-radius: 12px;
+  }
+  .cardTitle {
+    font-size: 20px;
+  }
+  .cardSub {
+    margin-bottom: 20px;
+  }
+}
+
+
