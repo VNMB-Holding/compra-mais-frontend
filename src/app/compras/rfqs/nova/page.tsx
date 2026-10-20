@@ -462,6 +462,8 @@ export default function NewRfqPage() {
             setCondicaoPagamento(mapped.condicaoPagamento);
             setObservacoes(mapped.observacoes);
             setItens(mapped.itens.map((i) => ({ ...i })));
+            const defaultAvailable = mapped.itens.filter((i) => !i.isOccupied).map((i) => i.id);
+            setSelectedScopeItemIds(defaultAvailable);
             if (mapped.itens.length > 0) {
               setExpandedItemId(mapped.itens[0].id);
             }
@@ -543,11 +545,13 @@ export default function NewRfqPage() {
   const addItem = () => {
     const nextId = Math.max(...itens.map((i) => i.id), 0) + 1;
     setItens((cur) => [...cur, { id: nextId, descricao: "", qtd: 1, unidade: "UN" }]);
+    setSelectedScopeItemIds((prev) => [...prev, nextId]);
     setExpandedItemId(nextId);
   };
 
   const removeItem = (id: number) => {
     setItens((cur) => cur.filter((i) => i.id !== id));
+    setSelectedScopeItemIds((prev) => prev.filter((x) => x !== id));
   };
 
   const updateItem = <K extends keyof ItemCotacao>(id: number, field: K, value: ItemCotacao[K]) => {
@@ -1104,24 +1108,31 @@ export default function NewRfqPage() {
                           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
                         >
                           <div className={styles.itemSummaryLeft}>
-                            <div
+                            <label
                               className={styles.itemCheckboxWrapper}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!isOccupied) toggleItemSelection(item.id);
                               }}
+                              title={
+                                isOccupied
+                                  ? `Item em cotação na RFQ ${item.activeRfqCode}`
+                                  : isSelected
+                                    ? "Desmarcar item do escopo"
+                                    : "Incluir item no escopo"
+                              }
                             >
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 disabled={isOccupied}
-                                onChange={() => {
+                                onChange={(e) => {
+                                  e.stopPropagation();
                                   if (!isOccupied) toggleItemSelection(item.id);
                                 }}
                                 className={styles.itemCheckbox}
                                 aria-label={`Incluir ${item.descricao || "item"}`}
                               />
-                            </div>
+                            </label>
                             <span className={styles.itemSummaryBadge}>Item {index + 1}</span>
                             <div className={styles.itemSummaryText}>
                               <span className={styles.itemSummaryTitle}>
@@ -1139,14 +1150,27 @@ export default function NewRfqPage() {
                               <Badge variant="warning" icon="clock">
                                 Em cotação: {item.activeRfqCode}
                               </Badge>
-                            ) : isSelected ? (
-                              <Badge variant="success" icon="check">
-                                Incluído no Escopo
-                              </Badge>
                             ) : (
-                              <Badge variant="gray">
-                                Não incluído nesta RFQ
-                              </Badge>
+                              <button
+                                type="button"
+                                className={styles.scopeBadgeBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleItemSelection(item.id);
+                                }}
+                                title={
+                                  isSelected
+                                    ? "Clique para desmarcar do escopo"
+                                    : "Clique para incluir no escopo"
+                                }
+                              >
+                                <Badge
+                                  variant={isSelected ? "success" : "gray"}
+                                  icon={isSelected ? "check" : undefined}
+                                >
+                                  {isSelected ? "Incluído no Escopo" : "Não incluído nesta RFQ"}
+                                </Badge>
+                              </button>
                             )}
                             <button
                               type="button"
