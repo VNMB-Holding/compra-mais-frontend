@@ -3,6 +3,159 @@ export interface ParsedItemDescription {
   referenceUrl?: string;
 }
 
+export interface MarketplaceSource {
+  id:
+    | "mercadolivre"
+    | "amazon"
+    | "shopee"
+    | "magalu"
+    | "kalunga"
+    | "kabum"
+    | "aliexpress"
+    | "americanas"
+    | "whatsapp"
+    | "ecommerce";
+  label: string;
+  shortLabel: string;
+  isMercadoLivre: boolean;
+  logoPath?: string;
+}
+
+export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource | null {
+  if (!url) return null;
+  const lower = String(url).trim().toLowerCase();
+  if (!lower) return null;
+
+  if (
+    lower.includes("mercadolivre.com") ||
+    lower.includes("mercadolibre.com") ||
+    lower.includes("produto.mercadolivre") ||
+    lower.includes("meli.la") ||
+    lower === "mercadolivre" ||
+    lower.includes("mercado livre")
+  ) {
+    return {
+      id: "mercadolivre",
+      label: "Mercado Livre",
+      shortLabel: "Mercado Livre",
+      isMercadoLivre: true,
+      logoPath: "/logos/marketplaces/mercadolivre.svg",
+    };
+  }
+  if (
+    lower.includes("amazon.com") ||
+    lower.includes("amzn.to") ||
+    lower.includes("a.co/") ||
+    lower === "amazon"
+  ) {
+    return {
+      id: "amazon",
+      label: "Amazon",
+      shortLabel: "Amazon",
+      isMercadoLivre: false,
+      logoPath: "/logos/marketplaces/amazon.svg",
+    };
+  }
+  if (lower.includes("shopee.com") || lower.includes("shp.ee") || lower === "shopee") {
+    return {
+      id: "shopee",
+      label: "Shopee",
+      shortLabel: "Shopee",
+      isMercadoLivre: false,
+      logoPath: "/logos/marketplaces/shopee.svg",
+    };
+  }
+  if (
+    lower.includes("magazineluiza.com") ||
+    lower.includes("magalu.com") ||
+    lower === "magalu" ||
+    lower.includes("magazine luiza")
+  ) {
+    return {
+      id: "magalu",
+      label: "Magazine Luiza",
+      shortLabel: "Magalu",
+      isMercadoLivre: false,
+      logoPath: "/logos/marketplaces/magalu.svg",
+    };
+  }
+  if (lower.includes("wa.me") || lower.includes("whatsapp.com") || lower === "whatsapp") {
+    return {
+      id: "whatsapp",
+      label: "WhatsApp / Local",
+      shortLabel: "WhatsApp",
+      isMercadoLivre: false,
+      logoPath: "/logos/marketplaces/whatsapp.svg",
+    };
+  }
+  if (lower.includes("kalunga.com")) {
+    return {
+      id: "kalunga",
+      label: "Kalunga",
+      shortLabel: "Kalunga",
+      isMercadoLivre: false,
+    };
+  }
+  if (lower.includes("kabum.com")) {
+    return {
+      id: "kabum",
+      label: "KaBuM!",
+      shortLabel: "KaBuM!",
+      isMercadoLivre: false,
+    };
+  }
+  if (lower.includes("aliexpress.com")) {
+    return {
+      id: "aliexpress",
+      label: "AliExpress",
+      shortLabel: "AliExpress",
+      isMercadoLivre: false,
+    };
+  }
+  if (lower.includes("americanas.com")) {
+    return {
+      id: "americanas",
+      label: "Americanas",
+      shortLabel: "Americanas",
+      isMercadoLivre: false,
+    };
+  }
+
+  if (/^https?:\/\//i.test(lower) || /^www\./i.test(lower)) {
+    try {
+      const full = lower.startsWith("http") ? lower : `https://${lower}`;
+      const host = new URL(full).hostname.replace(/^www\./i, "");
+      return {
+        id: "ecommerce",
+        label: `Link (${host})`,
+        shortLabel: host,
+        isMercadoLivre: false,
+      };
+    } catch {
+      return {
+        id: "ecommerce",
+        label: "Link Externo",
+        shortLabel: "Link Web",
+        isMercadoLivre: false,
+      };
+    }
+  }
+
+  return null;
+}
+
+export function extractProposalOfferUrl(notes?: string | null, brandModel?: string | null): string | undefined {
+  const fromBrand = sanitizeUrl(brandModel);
+  if (fromBrand) return fromBrand;
+  if (!notes) return undefined;
+  const match = notes.match(/(https?:\/\/[^\s,;\)\]]+|www\.[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\.[a-z]{2,}[^\s,;\)\]]*)/i);
+  if (match && match[1]) {
+    return sanitizeUrl(match[1]);
+  }
+  return undefined;
+}
+
+
 export function sanitizeUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
   let trimmed = String(url).trim();

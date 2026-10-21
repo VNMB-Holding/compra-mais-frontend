@@ -5,6 +5,8 @@ import {
   deriveTitleFromUrl,
   extractItemReferenceUrlsFromNotes,
   cleanNotesDisplay,
+  detectMarketplaceFromUrl,
+  extractProposalOfferUrl,
 } from "../item-description";
 
 describe("item-description utility", () => {
@@ -158,6 +160,48 @@ describe("item-description utility", () => {
       const notes =
         "Demanda prioritária.\n\nLinks de referência:\n• Mouse Sem Fio: https://mercadolivre.com.br/mouse";
       expect(cleanNotesDisplay(notes)).toBe("Demanda prioritária.");
+    });
+  });
+
+  describe("detectMarketplaceFromUrl", () => {
+    it("deve identificar Mercado Livre corretamente", () => {
+      const ml = detectMarketplaceFromUrl(
+        "https://produto.mercadolivre.com.br/MLB-123456-microfone-sem-fio",
+      );
+      expect(ml?.id).toBe("mercadolivre");
+      expect(ml?.label).toBe("Mercado Livre");
+      expect(ml?.isMercadoLivre).toBe(true);
+    });
+
+    it("deve identificar Amazon, Shopee e outros marketplaces", () => {
+      const amz = detectMarketplaceFromUrl("https://www.amazon.com.br/dp/B09XYZ");
+      expect(amz?.id).toBe("amazon");
+      expect(amz?.label).toBe("Amazon");
+      expect(amz?.isMercadoLivre).toBe(false);
+
+      const shp = detectMarketplaceFromUrl("https://shopee.com.br/item-123");
+      expect(shp?.id).toBe("shopee");
+      expect(shp?.label).toBe("Shopee");
+    });
+
+    it("deve retornar ecommerce genérico para outros domínios", () => {
+      const web = detectMarketplaceFromUrl("https://www.lojaespecializada.com.br/produto");
+      expect(web?.id).toBe("ecommerce");
+      expect(web?.isMercadoLivre).toBe(false);
+    });
+  });
+
+  describe("extractProposalOfferUrl", () => {
+    it("deve extrair o link da oferta a partir das notas ou marca/modelo da proposta", () => {
+      const url = extractProposalOfferUrl(
+        "Frete grátis Full\nLink da Oferta: https://produto.mercadolivre.com.br/MLB-999",
+        "Shure",
+      );
+      expect(url).toBe("https://produto.mercadolivre.com.br/MLB-999");
+    });
+
+    it("deve retornar undefined quando não houver URL", () => {
+      expect(extractProposalOfferUrl("Entrega imediata em mãos", "Marca Local")).toBeUndefined();
     });
   });
 });

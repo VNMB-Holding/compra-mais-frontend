@@ -1,0 +1,40 @@
+.logoWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.logoImage {
+  display: block;
+  object-fit: contain;
+  width: auto;
+}
+
+.sm .logoImage {
+  height: 14px;
+  max-width: 54px;
+}
+
+.md .logoImage {
+  height: 18px;
+  max-width: 68px;
+}
+
+.lg .logoImage {
+  height: 22px;
+  max-width: 84px;
+}
+
+.magaluAdjust .logoImage {
+  height: 11px;
+}
+
+.md.magaluAdjust .logoImage {
+  height: 14px;
+}
+
+.lg.magaluAdjust .logoImage {
+  height: 17px;
+}
