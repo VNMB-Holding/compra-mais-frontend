@@ -441,7 +441,7 @@ export default function CotacaoFornecedorPage() {
                   <div>
                     <div className={styles.registeredDataLabel}>CNPJ</div>
                     <div className={styles.registeredDataValue}>
-                      {supplierCnpj || paramCnpj || "Homologado"}
+                      {supplierCnpj || paramCnpj || "Cadastrado"}
                     </div>
                   </div>
                 </div>
@@ -729,11 +729,11 @@ export default function CotacaoFornecedorPage() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Icon name="bank" size={20} className={styles.sectionIcon} />
-                <h2>4. Dados Bancários & Homologação</h2>
+                <h2>4. Dados Bancários</h2>
               </div>
               {isRegisteredSupplier && (
                 <Badge variant="success" icon="shield-tick">
-                  Cadastro Homologado
+                  Cadastro Ativo
                 </Badge>
               )}
             </div>
@@ -744,7 +744,7 @@ export default function CotacaoFornecedorPage() {
                 <div>
                   <strong>Informações Cadastrais e Bancárias Validadas</strong>
                   <p>
-                    Sua empresa já possui cadastro ativo e homologado no Compra+. Os dados bancários
+                    Sua empresa já possui cadastro ativo no Compra+. Os dados bancários
                     e tributários para faturamento e pagamento serão utilizados diretamente a partir
                     do seu cadastro ativo.{" "}
                     <strong>
