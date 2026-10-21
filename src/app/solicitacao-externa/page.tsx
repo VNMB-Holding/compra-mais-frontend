@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import styles from "./solicitacao-externa.module.css";
-import { Icon, Select, Tabs } from "@/components/ui";
+import { Icon, Select, Tabs, MarketplaceLogo } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { TourDefinition } from "@/contexts/TourContext";
 import { useTour } from "@/hooks/useTour";
@@ -12,6 +12,7 @@ import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { CatalogItem, itemsApi } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { maskPhone } from "@/lib/utils/masks";
+import { detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
 import { isPuraFeUser } from "@/lib/utils/tenant";
 import MinhasSolicitacoesTab from "./MinhasSolicitacoesTab";
@@ -1184,13 +1185,38 @@ export default function SolicitacaoExternaPage() {
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label>
-                        Link de Referência{" "}
-                        <span className={styles.extraText}>/ Modelo (opcional)</span>
+                      <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                        <span>
+                          Link do Anúncio / Referência{" "}
+                          <span className={styles.extraText}>(Mercado Livre, Loja, etc.)</span>
+                        </span>
+                        {(() => {
+                          const mp = detectMarketplaceFromUrl(item.linkReferencia || item.descricao);
+                          if (!mp) return null;
+                          return (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 5,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 999,
+                                background: mp.isMercadoLivre ? "#fef9c3" : "#e6f5f4",
+                                color: mp.isMercadoLivre ? "#854d0e" : "#007d79",
+                                border: mp.isMercadoLivre ? "1px solid #fde047" : "1px solid #99f6e4",
+                              }}
+                            >
+                              <MarketplaceLogo source={mp} size="sm" />
+                              {mp.label}
+                            </span>
+                          );
+                        })()}
                       </label>
                       <input
                         type="url"
-                        placeholder="https://mercadolivre.com.br/item/..."
+                        placeholder="https://produto.mercadolivre.com.br/..."
                         className={styles.inputField}
                         value={item.linkReferencia || ""}
                         onChange={(e) =>
