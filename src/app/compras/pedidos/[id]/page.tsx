@@ -2,7 +2,17 @@
 
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Skeleton, CardSkeleton, ItemCell } from "@/components/ui";
+import {
+  Card,
+  Button,
+  Badge,
+  Icon,
+  ConfirmDialog,
+  Skeleton,
+  CardSkeleton,
+  ItemCell,
+  MarketplaceLogo,
+} from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -10,6 +20,10 @@ import { formatCorporateBranch } from "@/lib/utils/tenant";
 import { getApprovalChainForOrder } from "@/lib/utils/approval-limits";
 import { maskNfeAccessKey } from "@/lib/utils/masks";
 import { getSupplierDetailUrl } from "@/lib/utils/routes";
+import {
+  detectMarketplaceFromUrl,
+  extractProposalOfferUrl,
+} from "@/lib/utils/item-description";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import {
@@ -402,6 +416,36 @@ export default function PedidoDetailPage() {
   );
   const items = po?.items && po.items.length > 0 ? po.items : null;
 
+  const isPuraFe =
+    companyName.toLowerCase().includes("pura fé") ||
+    companyName.toLowerCase().includes("purafe") ||
+    (po as any)?.companyCode === "PURAFE" ||
+    (po as any)?.filialCode === "PURAFE" ||
+    po?.tenantId === "PURAFE";
+
+  const orderOfferUrl = useMemo(() => {
+    const fromNotes = extractProposalOfferUrl(poNotes, (po as any)?.winningProposal?.notes);
+    if (fromNotes) return fromNotes;
+    const fromItems = (items as any[])?.find((it: any) => it.referenceUrl)?.referenceUrl;
+    if (fromItems) return fromItems;
+    for (const it of items || []) {
+      const extracted = extractProposalOfferUrl(it.description, (it as any)?.notes);
+      if (extracted) return extracted;
+    }
+    return null;
+  }, [poNotes, po, items]);
+
+  const orderMarketplace = useMemo(
+    () => detectMarketplaceFromUrl(orderOfferUrl),
+    [orderOfferUrl],
+  );
+  const isMarketplaceOrder =
+    Boolean(orderOfferUrl) ||
+    fornecedorNome.toLowerCase().includes("mercado livre") ||
+    fornecedorNome.toLowerCase().includes("amazon") ||
+    fornecedorNome.toLowerCase().includes("shopee") ||
+    fornecedorNome.toLowerCase().includes("magalu");
+
   return (
     <div className={styles.detailContainer}>
       <ConfirmDialog
@@ -426,25 +470,44 @@ export default function PedidoDetailPage() {
         open={confirmFaturamento}
         variant="info"
         icon="file-02"
-        title="Confirmar Faturamento do Pedido"
+        title={
+          isMarketplaceOrder
+            ? "Confirmar Compra no Site / Faturamento"
+            : "Confirmar Faturamento do Pedido"
+        }
         loading={updateStatusMutation.isPending}
         loadingConfirmLabel="Confirmando..."
-        confirmLabel="Confirmar Faturamento"
+        confirmLabel={isMarketplaceOrder ? "Confirmar Compra / NF-e" : "Confirmar Faturamento"}
         onConfirm={handleConfirmFaturamento}
         onCancel={() => setConfirmFaturamento(false)}
         message={
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
-              Confirme a emissão da Nota Fiscal Eletrônica de <strong>{displayId}</strong>. O pedido
-              avançará para a etapa de Faturado.
+              {isMarketplaceOrder ? (
+                <>
+                  Confirme o número do pedido gerado na plataforma (ex: Mercado Livre) ou a Nota
+                  Fiscal Eletrônica de <strong>{displayId}</strong>.
+                </>
+              ) : (
+                <>
+                  Confirme a emissão da Nota Fiscal Eletrônica de <strong>{displayId}</strong>. O
+                  pedido avançará para a etapa de Faturado.
+                </>
+              )}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
-                Número da NF-e
+                {isMarketplaceOrder
+                  ? "Número da NF-e ou Código da Compra (Mercado Livre / Site)"
+                  : "Número da NF-e"}
               </label>
               <input
                 type="text"
-                placeholder="Ex: NF-004821"
+                placeholder={
+                  isMarketplaceOrder
+                    ? "Ex: #2000008491234 (Mercado Livre) ou NF-004821"
+                    : "Ex: NF-004821"
+                }
                 value={inputNfe}
                 onChange={(e) => setInputNfe(e.target.value)}
                 style={{
@@ -748,6 +811,95 @@ export default function PedidoDetailPage() {
 
       <div className={styles.layout2Col}>
         <div className={styles.colMain}>
+          {(isMarketplaceOrder || isPuraFe) && (
+            <div
+              style={{
+                background: isPuraFe ? "#fffbeb" : "#f0fdfa",
+                border: `1px solid ${isPuraFe ? "#fcd34d" : "#99f6e4"}`,
+                borderRadius: 12,
+                padding: "16px 20px",
+                marginBottom: 20,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 14,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, flex: 1 }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 8,
+                    background: "#ffffff",
+                    border: `1px solid ${isPuraFe ? "#fcd34d" : "#99f6e4"}`,
+                    color: isPuraFe ? "#b45309" : "#0f766e",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {orderMarketplace?.logoPath ? (
+                    <MarketplaceLogo source={orderMarketplace} size="md" />
+                  ) : (
+                    <MarketplaceLogo source={fornecedorNome || "mercadolivre"} size="md" />
+                  )}
+                </div>
+                <div>
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: isPuraFe ? "#92400e" : "#115e59",
+                    }}
+                  >
+                    {isPuraFe
+                      ? "Execução da Compra pela Igreja Pura Fé (Conta Mercado Livre / Compra Local)"
+                      : `Compra via Link / ${orderMarketplace?.label || "E-commerce"}`}
+                  </h4>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: 13,
+                      color: isPuraFe ? "#78350f" : "#134e4a",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {isPuraFe
+                      ? "A Igreja Pura Fé possui acesso próprio ao Mercado Livre para finalizar a compra diretamente. Após efetivar a compra no link oficial, utilize o botão 'Confirmar Faturamento' acima para registrar o código do pedido ou NF-e."
+                      : "Pedido originado de oferta online. Acesse o link do anúncio para efetivar a compra e registre o código do pedido ou NF-e na etapa de faturamento."}
+                  </p>
+                </div>
+              </div>
+              {orderOfferUrl && (
+                <a
+                  href={orderOfferUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "9px 14px",
+                    borderRadius: 8,
+                    background: orderMarketplace?.isMercadoLivre ? "#f59e0b" : "#007d79",
+                    color: "#ffffff",
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Icon name="link-external-01" size={14} /> Abrir no{" "}
+                  {orderMarketplace?.shortLabel || "Site"}
+                </a>
+              )}
+            </div>
+          )}
+
           <Card className={styles.flowCard}>
             <div className={styles.flowCardHeader}>
               <div>
@@ -1116,9 +1268,16 @@ export default function PedidoDetailPage() {
                 {fornecedorNome.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <strong style={{ fontSize: "14px", color: "#0f172a", display: "block" }}>
-                  {fornecedorNome}
-                </strong>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <MarketplaceLogo
+                    source={orderOfferUrl || fornecedorNome}
+                    size="sm"
+                    showFallbackIcon={false}
+                  />
+                  <strong style={{ fontSize: "14px", color: "#0f172a", display: "block" }}>
+                    {fornecedorNome}
+                  </strong>
+                </div>
                 <small style={{ color: "#64748b", fontSize: "12px" }}>CNPJ: {fornecedorCnpj}</small>
               </div>
             </div>
