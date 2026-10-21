@@ -7,6 +7,7 @@ import {
   cleanNotesDisplay,
   detectMarketplaceFromUrl,
   extractProposalOfferUrl,
+  isMarketplaceOrLocalSupplier,
 } from "../item-description";
 
 describe("item-description utility", () => {
@@ -202,6 +203,27 @@ describe("item-description utility", () => {
 
     it("deve retornar undefined quando não houver URL", () => {
       expect(extractProposalOfferUrl("Entrega imediata em mãos", "Marca Local")).toBeUndefined();
+    });
+  });
+
+  describe("isMarketplaceOrLocalSupplier", () => {
+    it("deve identificar fornecedores de marketplaces e compras locais", () => {
+      expect(isMarketplaceOrLocalSupplier("Mercado Livre")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Mercado Livre (Site)")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Amazon Brasil")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Shopee")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Magalu")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Magazine Luiza")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Comércio Local")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Orçamento Balcão")).toBe(true);
+    });
+
+    it("deve retornar false para fornecedores convencionais B2B", () => {
+      expect(isMarketplaceOrLocalSupplier("Tech Distribuidora Ltda")).toBe(false);
+      expect(isMarketplaceOrLocalSupplier("Kalunga")).toBe(false);
+      expect(isMarketplaceOrLocalSupplier("")).toBe(false);
+      expect(isMarketplaceOrLocalSupplier(null)).toBe(false);
+      expect(isMarketplaceOrLocalSupplier(undefined)).toBe(false);
     });
   });
 });

@@ -6,7 +6,6 @@ import { detectMarketplaceFromUrl, MarketplaceSource } from "@/lib/utils/item-de
 import styles from "./MarketplaceLogo.module.css";
 
 export interface MarketplaceLogoProps {
-  /** Marketplace ID, URL, or supplier name */
   source?: string | MarketplaceSource | null;
   size?: "sm" | "md" | "lg";
   className?: string;

@@ -46,7 +46,7 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("amazon.com") ||
     lower.includes("amzn.to") ||
     lower.includes("a.co/") ||
-    lower === "amazon"
+    lower.includes("amazon")
   ) {
     return {
       id: "amazon",
@@ -56,7 +56,7 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
       logoPath: "/logos/marketplaces/amazon.svg",
     };
   }
-  if (lower.includes("shopee.com") || lower.includes("shp.ee") || lower === "shopee") {
+  if (lower.includes("shopee.com") || lower.includes("shp.ee") || lower.includes("shopee")) {
     return {
       id: "shopee",
       label: "Shopee",
@@ -68,7 +68,7 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
   if (
     lower.includes("magazineluiza.com") ||
     lower.includes("magalu.com") ||
-    lower === "magalu" ||
+    lower.includes("magalu") ||
     lower.includes("magazine luiza")
   ) {
     return {
@@ -79,7 +79,13 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
       logoPath: "/logos/marketplaces/magalu.svg",
     };
   }
-  if (lower.includes("wa.me") || lower.includes("whatsapp.com") || lower === "whatsapp") {
+  if (
+    lower.includes("wa.me") ||
+    lower.includes("whatsapp.com") ||
+    lower.includes("whatsapp") ||
+    lower.includes("comércio local") ||
+    lower.includes("comercio local")
+  ) {
     return {
       id: "whatsapp",
       label: "WhatsApp / Local",
@@ -142,6 +148,13 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
   }
 
   return null;
+}
+
+export function isMarketplaceOrLocalSupplier(name?: string | null): boolean {
+  if (!name) return false;
+  return /mercado\s*livre|amazon|shopee|magalu|magazine\s*luiza|com[eé]rcio\s*local|loja\s*local|balc[aã]o|aliexpress|americanas/i.test(
+    name,
+  );
 }
 
 export function extractProposalOfferUrl(notes?: string | null, brandModel?: string | null): string | undefined {
