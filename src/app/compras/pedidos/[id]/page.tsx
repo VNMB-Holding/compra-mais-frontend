@@ -775,6 +775,7 @@ export default function PedidoDetailPage() {
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
+            autoFocus
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Descreva detalhadamente a justificativa para o cancelamento do pedido..."
@@ -1472,7 +1473,7 @@ export default function PedidoDetailPage() {
                     marginBottom: 4,
                   }}
                 >
-                  <Icon name="info-circle" size={14} /> Canal de Compra Online / Balcão
+                  <Icon name="info-circle" size={14} /> Canal de Compra Online / Loja Local
                 </div>
                 {orderMarketplace?.isMercadoLivre ? (
                   <span>
@@ -1482,7 +1483,7 @@ export default function PedidoDetailPage() {
                   </span>
                 ) : (
                   <span>
-                    Pedido realizado via plataforma digital ou balcão com comprovante / cupom
+                    Pedido realizado via plataforma digital ou loja local com comprovante / cupom
                     fiscal anexado.
                   </span>
                 )}

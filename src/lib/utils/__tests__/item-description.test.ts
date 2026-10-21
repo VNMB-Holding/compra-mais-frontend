@@ -215,6 +215,8 @@ describe("item-description utility", () => {
       expect(isMarketplaceOrLocalSupplier("Magalu")).toBe(true);
       expect(isMarketplaceOrLocalSupplier("Magazine Luiza")).toBe(true);
       expect(isMarketplaceOrLocalSupplier("Comércio Local")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Comércio Local 1")).toBe(true);
+      expect(isMarketplaceOrLocalSupplier("Loja Local")).toBe(true);
       expect(isMarketplaceOrLocalSupplier("Orçamento Balcão")).toBe(true);
     });
 

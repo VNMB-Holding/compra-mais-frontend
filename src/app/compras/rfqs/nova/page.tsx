@@ -1262,7 +1262,7 @@ export default function NewRfqPage() {
                             </span>
                           </div>
                           <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.4, display: "block", marginTop: 2 }}>
-                            RFQ simplificada para Suprimentos colar 3 links (Mercado Livre, Amazon) ou orçamentos locais antes de aprovar.
+                            RFQ com foco em compra online por links (Mercado Livre, Amazon) ou lojas locais com aprovação ágil.
                           </span>
                         </div>
                       </button>
@@ -1587,7 +1587,7 @@ export default function NewRfqPage() {
                     </h2>
                     <p>
                       {rfqModality === "links"
-                        ? "Adicione rapidamente os slots de links (ex: 3 anúncios do Mercado Livre ou 3 orçamentos locais) ou selecione fornecedores."
+                        ? "Adicione opções de compra online por link (Mercado Livre, Amazon) ou fornecedores locais para cotação."
                         : "Selecione os fornecedores que receberão o convite para cotação."}
                     </p>
                   </div>
@@ -1665,18 +1665,18 @@ export default function NewRfqPage() {
                         id: "local1",
                         label: "Comércio Local 1",
                         logo: "whatsapp",
-                        corporateName: "Comércio Local — Orçamento 1 (Balcão)",
+                        corporateName: "Comércio Local 1",
                         cnpj: "00.000.001/0001-01",
-                        segment: "Compra Local / Balcão",
+                        segment: "Fornecedor / Loja Local",
                         contactEmail: "orcamento1@comerciolocal.com.br",
                       },
                       {
                         id: "local2",
                         label: "Comércio Local 2",
                         logo: "whatsapp",
-                        corporateName: "Comércio Local — Orçamento 2 (Balcão)",
+                        corporateName: "Comércio Local 2",
                         cnpj: "00.000.002/0001-02",
-                        segment: "Compra Local / Balcão",
+                        segment: "Fornecedor / Loja Local",
                         contactEmail: "orcamento2@comerciolocal.com.br",
                       },
                     ].map((st) => {
@@ -1724,71 +1724,6 @@ export default function NewRfqPage() {
                         </button>
                       );
                     })}
-                  </div>
-
-                  {/* Atalhos combinados de conveniência */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      disabled={addingQuickSuppliers}
-                      onClick={() =>
-                        handleAddQuickOptions([
-                          {
-                            corporateName: "Mercado Livre (Compra Direta via Link)",
-                            cnpj: "03.007.331/0001-41",
-                            segment: "Marketplace / Link",
-                            contactEmail: "suprimentos.ml@mercadolivre.com.br",
-                          },
-                          {
-                            corporateName: "Amazon Brasil (Compra via Link)",
-                            cnpj: "15.436.940/0001-03",
-                            segment: "Marketplace / Link",
-                            contactEmail: "suprimentos.amz@amazon.com.br",
-                          },
-                          {
-                            corporateName: "Shopee (Compra via Link)",
-                            cnpj: "35.635.824/0001-12",
-                            segment: "Marketplace / Link",
-                            contactEmail: "cotacao.shopee@marketplace.com.br",
-                          },
-                        ])
-                      }
-                      style={{ fontSize: 12, padding: "5px 10px" }}
-                    >
-                      <Icon name="zap" size={13} /> Comparativo Rápido (ML + Amazon + Shopee)
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      disabled={addingQuickSuppliers}
-                      onClick={() =>
-                        handleAddQuickOptions([
-                          {
-                            corporateName: "Comércio Local — Orçamento 1 (Balcão)",
-                            cnpj: "00.000.001/0001-01",
-                            segment: "Compra Local / Balcão",
-                            contactEmail: "orcamento1@comerciolocal.com.br",
-                          },
-                          {
-                            corporateName: "Comércio Local — Orçamento 2 (Balcão)",
-                            cnpj: "00.000.002/0001-02",
-                            segment: "Compra Local / Balcão",
-                            contactEmail: "orcamento2@comerciolocal.com.br",
-                          },
-                          {
-                            corporateName: "Comércio Local — Orçamento 3 (Balcão)",
-                            cnpj: "00.000.003/0001-03",
-                            segment: "Compra Local / Balcão",
-                            contactEmail: "orcamento3@comerciolocal.com.br",
-                          },
-                        ])
-                      }
-                      style={{ fontSize: 12, padding: "5px 10px" }}
-                    >
-                      <MarketplaceLogo source="whatsapp" size="sm" /> 3 Orçamentos Locais (Balcão)
-                    </Button>
                   </div>
                 </div>
 
@@ -1876,6 +1811,9 @@ export default function NewRfqPage() {
                                   fontWeight: 600,
                                   padding: "2px 7px",
                                   borderRadius: 4,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
                                   background:
                                     f.nome.toLowerCase().includes("local") ||
                                     f.nome.toLowerCase().includes("balcão")
@@ -1895,13 +1833,24 @@ export default function NewRfqPage() {
                                 }}
                               >
                                 {f.nome.toLowerCase().includes("local") ||
-                                f.nome.toLowerCase().includes("balcão")
-                                  ? "🏪 Comércio Local"
-                                  : "🛒 Compra Online"}
+                                f.nome.toLowerCase().includes("balcão") ? (
+                                  <>
+                                    <Icon name="building-07" size={12} />
+                                    <span>Comércio Local</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Icon name="shopping-cart-01" size={12} />
+                                    <span>Compra Online</span>
+                                  </>
+                                )}
                               </span>
                             ) : (
                               <span
                                 style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
                                   fontSize: 11,
                                   fontWeight: 600,
                                   padding: "2px 7px",
@@ -1911,7 +1860,8 @@ export default function NewRfqPage() {
                                   border: "1px solid #e2e8f0",
                                 }}
                               >
-                                🏢 Fornecedor B2B
+                                <Icon name="building-01" size={12} />
+                                <span>Fornecedor B2B</span>
                               </span>
                             )}
                             {f.segmento && <span className={styles.segmentTag}>{f.segmento}</span>}

@@ -340,6 +340,9 @@ function PropostaCard({
                   fontWeight: 600,
                   padding: "2px 7px",
                   borderRadius: 4,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
                   background:
                     proposta.supplierName.toLowerCase().includes("local") ||
                     proposta.supplierName.toLowerCase().includes("balcão")
@@ -359,13 +362,24 @@ function PropostaCard({
                 }}
               >
                 {proposta.supplierName.toLowerCase().includes("local") ||
-                proposta.supplierName.toLowerCase().includes("balcão")
-                  ? "🏪 Comércio Local"
-                  : "🛒 Compra Online / Link"}
+                proposta.supplierName.toLowerCase().includes("balcão") ? (
+                  <>
+                    <Icon name="building-07" size={12} />
+                    <span>Comércio Local</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="shopping-cart-01" size={12} />
+                    <span>Compra Online / Link</span>
+                  </>
+                )}
               </span>
             ) : (
               <span
                 style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
                   fontSize: 11,
                   fontWeight: 600,
                   padding: "2px 7px",
@@ -375,7 +389,8 @@ function PropostaCard({
                   border: "1px solid #e2e8f0",
                 }}
               >
-                🏢 Fornecedor B2B
+                <Icon name="building-01" size={12} />
+                <span>Fornecedor B2B</span>
               </span>
             )}
             {(() => {
