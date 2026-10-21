@@ -295,7 +295,7 @@ export default function FornecedorDetailPage() {
                   <div className={styles.fieldValueSub}>
                     <span className={styles.fieldValue}>
                       {supplier.deliveryLeadTime
-                        ? `⚡ ${supplier.deliveryLeadTime} dias úteis`
+                        ? `${supplier.deliveryLeadTime} dias úteis`
                         : "Prazo sob consulta"}
                     </span>
                     <small>Tempo médio de expedição e transporte</small>

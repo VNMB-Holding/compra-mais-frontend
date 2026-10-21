@@ -542,7 +542,7 @@ export default function NovaSolicitacaoPage() {
                         { label: "Material recorrente", value: "Material recorrente" },
                         { label: "Compra spot", value: "Compra spot" },
                         { label: "Compra via Link / E-commerce (Mercado Livre, etc.)", value: "Compra via Link / E-commerce" },
-                        { label: "Compra Local / Balcão", value: "Compra Local / Balcão" },
+                        { label: "Compra Local / Presencial", value: "Compra Local / Presencial" },
                         { label: "Serviço técnico", value: "Serviço técnico" },
                         { label: "Contrato recorrente", value: "Contrato recorrente" },
                         { label: "Projeto especial", value: "Projeto especial" },

@@ -5,7 +5,7 @@ export const solicitacoesTour: TourDefinition = {
   steps: [
     {
       target: '[data-tour="solicitacoes-kpis"]',
-      title: "Visão Geral de Solicitações 📋",
+      title: "Visão Geral de Solicitações",
       description:
         "Acompanhe o funil de demandas sincronizadas do ERP: total de solicitações, prontas para cotação, em andamento e finalizadas.",
       placement: "bottom",

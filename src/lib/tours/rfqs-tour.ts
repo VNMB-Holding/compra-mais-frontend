@@ -5,7 +5,7 @@ export const rfqsTour: TourDefinition = {
   steps: [
     {
       target: '[data-tour="rfqs-new-btn"]',
-      title: "Criar Nova Cotação (RFQ) ⚡",
+      title: "Criar Nova Cotação (RFQ)",
       description:
         "Inicie uma nova rodada de cotação com múltiplos fornecedores a partir das solicitações aprovadas.",
       placement: "bottom",

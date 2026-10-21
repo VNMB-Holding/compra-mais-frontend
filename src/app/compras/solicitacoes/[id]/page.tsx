@@ -520,6 +520,7 @@ export default function SolicitacaoDetailPage() {
             Justificativa da rejeição <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
+            autoFocus
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Descreva detalhadamente o motivo da reprovação..."
@@ -573,6 +574,7 @@ export default function SolicitacaoDetailPage() {
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
+            autoFocus
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Descreva detalhadamente a justificativa para o cancelamento..."
@@ -711,7 +713,7 @@ export default function SolicitacaoDetailPage() {
                           `/compras/rfqs/nova?solicitationId=${sol?.id || solId}&mode=links`,
                         )
                       }
-                      title="Abrir cotação simplificada para colar 3 links do Mercado Livre ou orçamentos locais"
+                      title="Abrir cotação rápida para links de compra online ou lojas locais"
                     >
                       <Icon name="shopping-cart-01" /> Cotação via Links / Local
                     </Button>
@@ -879,7 +881,7 @@ export default function SolicitacaoDetailPage() {
                   <span>
                     {detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre
                       ? "Suprimentos pode abrir uma RFQ simplificada com os links do Mercado Livre ou orçamentos locais para equalização. Após aprovado o vencedor, a própria Igreja Pura Fé tem acesso à conta para efetuar a compra diretamente."
-                      : "Para compras por link ou comércio local, Suprimentos pode abrir uma cotação rápida e registrar diretamente os 3 links/orçamentos locais no comparativo."}
+                      : "Para compras por link ou comércio local, Suprimentos pode abrir uma cotação rápida e registrar diretamente as opções de compra no comparativo."}
                   </span>
                 </div>
               </div>
