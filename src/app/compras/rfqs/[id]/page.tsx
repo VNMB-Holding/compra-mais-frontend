@@ -1050,40 +1050,41 @@ export default function RfqDetailPage() {
         extractProposalOfferUrl((rfq as any)?.notes, (rfq?.purchaseRequest as any)?.notes) ||
         "";
 
+      const onlineCount = propostas.filter((p) =>
+        p.supplierName.toLowerCase().includes("mercado livre") ||
+        p.supplierName.toLowerCase().includes("link") ||
+        p.supplierName.toLowerCase().includes("online")
+      ).length;
+
+      const localCount = propostas.filter((p) =>
+        p.supplierName.toLowerCase().includes("local")
+      ).length;
+
       const templates =
         preset === "mercadolivre"
           ? [
               {
-                name: "Mercado Livre — Opção 1 (Anúncio / Vendedor A)",
+                name:
+                  onlineCount === 0
+                    ? "Mercado Livre (Compra Online via Link)"
+                    : `Mercado Livre — Opção ${onlineCount + 1} (Link)`,
                 cnpj: `03.007.331/${String(Math.floor(1000 + Math.random() * 8999))}-01`,
-                email: "cotacao.ml1@compramais.interno",
-                contactName: "Anúncio Mercado Livre 1",
-                paymentTerms: "Cartão Corporativo / À vista",
-                initialNotes: originItemUrl ? `Link da Oferta: ${originItemUrl}` : "",
-              },
-              {
-                name: "Mercado Livre — Opção 2 (Anúncio / Vendedor B)",
-                cnpj: `03.007.331/${String(Math.floor(1000 + Math.random() * 8999))}-02`,
-                email: "cotacao.ml2@compramais.interno",
-                contactName: "Anúncio Mercado Livre 2",
-                paymentTerms: "Cartão Corporativo / À vista",
-                initialNotes: "",
-              },
-              {
-                name: "Mercado Livre — Opção 3 (Anúncio / Vendedor C)",
-                cnpj: `03.007.331/${String(Math.floor(1000 + Math.random() * 8999))}-03`,
-                email: "cotacao.ml3@compramais.interno",
-                contactName: "Anúncio Mercado Livre 3",
-                paymentTerms: "Cartão Corporativo / À vista",
-                initialNotes: "",
+                email: `cotacao.ml${onlineCount + 1}@compramais.interno`,
+                contactName: `Anúncio Mercado Livre ${onlineCount + 1}`,
+                paymentTerms: "Cartão Corporativo / PIX",
+                initialNotes:
+                  originItemUrl && onlineCount === 0 ? `Link da Oferta: ${originItemUrl}` : "",
               },
             ]
           : [
               {
-                name: `Comércio Local — Orçamento ${propostas.length + 1} (Balcão / WhatsApp)`,
+                name:
+                  localCount === 0
+                    ? "Comércio Local / Loja Regional"
+                    : `Comércio Local — Opção ${localCount + 1}`,
                 cnpj: `00.000.000/${String(Math.floor(1000 + Math.random() * 8999))}-91`,
-                email: `orcamento.local${propostas.length + 1}@compramais.interno`,
-                contactName: "Atendimento Balcão / WhatsApp",
+                email: `orcamento.local${localCount + 1}@compramais.interno`,
+                contactName: "Atendimento Presencial / WhatsApp",
                 paymentTerms: "À vista (PIX / Boleto)",
                 initialNotes: "",
               },
@@ -1139,10 +1140,10 @@ export default function RfqDetailPage() {
         variant: "success",
         title:
           preset === "mercadolivre"
-            ? "3 opções de Link (Mercado Livre) adicionadas!"
-            : "Opção de Orçamento Local adicionada!",
+            ? "Opção de Compra Online adicionada!"
+            : "Opção de Fornecedor Local adicionada!",
         message:
-          "Clique em 'Registrar proposta' em cada card para colar o link do anúncio e o valor.",
+          "Clique em 'Registrar proposta' no card para preencher o valor e as condições.",
       });
     } catch (err) {
       logError("rfqs/[id]/addQuickProposals", err);
@@ -1169,7 +1170,7 @@ export default function RfqDetailPage() {
 
     try {
       setCancelling(true);
-      await rfqsApi.updateStatus(rfqId, "Cancelled", reason);
+      await rfqsApi.updateStatus(rfq?.id || rfqId, "Cancelled", reason);
       const originReqId = rfq?.purchaseRequest?.id || rfq?.requestId;
       if (originReqId) {
         try {
@@ -1451,7 +1452,7 @@ export default function RfqDetailPage() {
             ? "Em análise"
             : "Em aprovação";
 
-  const Header = () => (
+  const headerContent = (
     <>
       <ConfirmDialog
         open={dialog === "encerrar"}
@@ -1679,6 +1680,7 @@ export default function RfqDetailPage() {
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
+            autoFocus
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Descreva detalhadamente a justificativa para o cancelamento da cotação..."
@@ -1805,7 +1807,7 @@ export default function RfqDetailPage() {
   if (stage === "proposal") {
     return (
       <div className={styles.detailContainer}>
-        <Header />
+        {headerContent}
 
         <div className={styles.coletaHeader}>
           <div>
@@ -1845,7 +1847,7 @@ export default function RfqDetailPage() {
                     cursor: addingQuickOption ? "not-allowed" : "pointer",
                   }}
                 >
-                  <MarketplaceLogo source="mercadolivre" size="sm" /> + 3 Links (Mercado Livre)
+                  <MarketplaceLogo source="mercadolivre" size="sm" /> + Adicionar Link Online
                 </button>
                 <button
                   type="button"
@@ -1865,7 +1867,7 @@ export default function RfqDetailPage() {
                     cursor: addingQuickOption ? "not-allowed" : "pointer",
                   }}
                 >
-                  <MarketplaceLogo source="whatsapp" size="sm" /> + Orçamento Local / Balcão
+                  <Icon name="building-07" size={14} style={{ color: "#007d79" }} /> + Adicionar Fornecedor Local
                 </button>
               </>
             )}
@@ -2013,7 +2015,7 @@ export default function RfqDetailPage() {
   if (stage === "analysis") {
     return (
       <div className={styles.detailContainer}>
-        <Header />
+        {headerContent}
 
         {recebidas.length === 0 ? (
           <EmptyState
@@ -2316,7 +2318,7 @@ export default function RfqDetailPage() {
 
   return (
     <div className={styles.detailContainer}>
-      <Header />
+      {headerContent}
 
       <div className={styles.aprovacaoContainer}>
         {generatedPo && (
