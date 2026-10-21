@@ -31,7 +31,12 @@ import {
   resolvePurchaseRequestBranch,
   isPuraFeUser,
 } from "@/lib/utils/tenant";
-import { parseItemDescription, detectMarketplaceFromUrl } from "@/lib/utils/item-description";
+import {
+  parseItemDescription,
+  detectMarketplaceFromUrl,
+  isMarketplaceOrLocalSupplier,
+} from "@/lib/utils/item-description";
+import { maskCnpj } from "@/lib/utils/masks";
 
 interface Solicitacao {
   id: string;
@@ -55,6 +60,7 @@ interface ItemCotacao {
   id: number;
   originalId?: string;
   descricao: string;
+  referenceUrl?: string;
   qtd: number;
   unidade: string;
   category?: string;
@@ -67,7 +73,7 @@ interface FornecedorConvidado {
   nome: string;
   cnpj: string;
   segmento?: string;
-  isHomologado?: boolean;
+  isAtivo?: boolean;
   selecionado: boolean;
 }
 
@@ -170,7 +176,7 @@ export default function NewRfqPage() {
       nome: newSup.corporateName || newSup.tradeName || "Fornecedor Convidado",
       cnpj: newSup.cnpj || "—",
       segmento: newSup.segment || "Convidado Externo",
-      isHomologado: true,
+      isAtivo: true,
       selecionado: true,
     };
     setFornecedores((prev) => [convidado, ...prev]);
@@ -219,30 +225,93 @@ export default function NewRfqPage() {
           nome: created?.corporateName || p.corporateName,
           cnpj: created?.cnpj || p.cnpj,
           segmento: p.segment,
-          isHomologado: true,
+          isAtivo: true,
           selecionado: true,
         });
       }
 
       setFornecedores((prev) => {
-        const map = new Map<string, FornecedorConvidado>();
-        for (const item of addedList) {
-          map.set(item.id, item);
-        }
-        for (const f of prev) {
-          if (map.has(f.id)) {
-            map.set(f.id, { ...f, selecionado: true });
-          } else {
-            map.set(f.id, f);
+        const addedIds = new Set(addedList.map((a) => a.id));
+        const updatedPrev = prev.map((f) => {
+          if (addedIds.has(f.id)) {
+            return { ...f, selecionado: true };
           }
-        }
-        return Array.from(map.values());
+          return { ...f, selecionado: false };
+        });
+
+        const existingIds = new Set(prev.map((f) => f.id));
+        const trulyNew = addedList.filter((a) => !existingIds.has(a.id));
+        return [...trulyNew, ...updatedPrev];
       });
+
+      setSupplierFilterTab("selecionados");
 
       toast({
         variant: "success",
         title: "Opções de cotação adicionadas!",
         message: `${presets.length} opção(ões) adicionadas e selecionadas para registrar os links/orçamentos.`,
+      });
+    } finally {
+      setAddingQuickSuppliers(false);
+    }
+  };
+
+  const handleToggleStoreChip = async (st: {
+    id: string;
+    label: string;
+    logo: string;
+    corporateName: string;
+    cnpj: string;
+    segment: string;
+    contactEmail: string;
+  }) => {
+    const existing = fornecedores.find(
+      (f) =>
+        (st.cnpj && f.cnpj === st.cnpj) ||
+        f.nome.toLowerCase().includes(st.label.toLowerCase()) ||
+        f.nome.toLowerCase() === st.corporateName.toLowerCase(),
+    );
+
+    if (existing) {
+      toggleFornecedor(existing.id);
+      return;
+    }
+
+    setAddingQuickSuppliers(true);
+    try {
+      let created: any = null;
+      try {
+        created = await suppliersApi.create({
+          cnpj: st.cnpj,
+          corporateName: st.corporateName,
+          tradeName: st.corporateName,
+          contactEmail: st.contactEmail,
+          segment: st.segment,
+          status: "Active",
+        });
+      } catch {
+        created = {
+          id: `quick-sup-${Date.now()}`,
+          corporateName: st.corporateName,
+          cnpj: st.cnpj,
+          segment: st.segment,
+        };
+      }
+
+      const newSup: FornecedorConvidado = {
+        id: created?.id || `quick-sup-${Date.now()}`,
+        nome: created?.corporateName || st.corporateName,
+        cnpj: created?.cnpj || st.cnpj,
+        segmento: st.segment,
+        selecionado: true,
+      };
+
+      setFornecedores((prev) => [newSup, ...prev]);
+      setSupplierFilterTab("selecionados");
+      toast({
+        variant: "success",
+        title: "Opção adicionada",
+        message: `${st.label} adicionado para cotar.`,
       });
     } finally {
       setAddingQuickSuppliers(false);
@@ -338,6 +407,7 @@ export default function NewRfqPage() {
               id: idx + 1,
               originalId: it.id,
               descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
+              referenceUrl: (it as any).referenceUrl || parseItemDescription(it.description, (it as any).referenceUrl).referenceUrl,
               qtd: Number(it.quantity) || 1,
               unidade: it.unit || "UN",
               category: (it as any).category || (it as any).costCenterName,
@@ -389,7 +459,7 @@ export default function NewRfqPage() {
           nome: s.corporateName || s.tradeName || "Fornecedor",
           cnpj: s.cnpj,
           segmento: s.segment || "Geral",
-          isHomologado: s.status === "Active" || s.isActive === true,
+          isAtivo: s.status === "Active" || s.isActive !== true,
           selecionado: false,
         }));
         setFornecedores(mappedSups);
@@ -534,6 +604,7 @@ export default function NewRfqPage() {
               itens: (r.items || []).map((it, idx) => ({
                 id: idx + 1,
                 descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
+              referenceUrl: (it as any).referenceUrl || parseItemDescription(it.description, (it as any).referenceUrl).referenceUrl,
                 qtd: Number(it.quantity) || 1,
                 unidade: it.unit || "UN",
               })),
@@ -1132,7 +1203,7 @@ export default function NewRfqPage() {
                             Cotação Tradicional (Fornecedores)
                           </strong>
                           <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.4, display: "block", marginTop: 2 }}>
-                            Convide fornecedores homologados para enviarem propostas pelo link externo.
+                            Convide fornecedores para enviarem propostas pelo link externo.
                           </span>
                         </div>
                       </button>
@@ -1342,6 +1413,36 @@ export default function NewRfqPage() {
                               <span className={styles.itemSummaryTitle}>
                                 {parseItemDescription(item.descricao).cleanDescription || "Novo item complementar sem descrição"}
                               </span>
+                              {Boolean(item.referenceUrl || parseItemDescription(item.descricao).referenceUrl) && (
+                                <a
+                                  href={item.referenceUrl || parseItemDescription(item.descricao).referenceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 5,
+                                    fontSize: 12,
+                                    color: "#0f766e",
+                                    background: "#f0fdfa",
+                                    border: "1px solid #99f6e4",
+                                    borderRadius: 6,
+                                    padding: "2px 8px",
+                                    width: "fit-content",
+                                    marginTop: 3,
+                                    textDecoration: "none",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  <MarketplaceLogo
+                                    source={item.referenceUrl || parseItemDescription(item.descricao).referenceUrl}
+                                    size="sm"
+                                  />
+                                  <span>Abrir link de referência do solicitante</span>
+                                  <Icon name="arrow-up-right" size={12} />
+                                </a>
+                              )}
                               <span className={styles.itemSummaryMeta}>
                                 Qtd: {item.qtd.toLocaleString("pt-BR")} {item.unidade}{" "}
                                 {isFromSol && "• Origem: Solicitação"}
@@ -1487,7 +1588,7 @@ export default function NewRfqPage() {
                     <p>
                       {rfqModality === "links"
                         ? "Adicione rapidamente os slots de links (ex: 3 anúncios do Mercado Livre ou 3 orçamentos locais) ou selecione fornecedores."
-                        : "Selecione os fornecedores homologados que receberão o convite para cotação."}
+                        : "Selecione os fornecedores que receberão o convite para cotação."}
                     </p>
                   </div>
                 </div>
@@ -1518,69 +1619,115 @@ export default function NewRfqPage() {
                     )}
                   </div>
                   <span style={{ fontSize: 12.5, color: "#475569" }}>
-                    Precisa colar 3 links do Mercado Livre ou 3 orçamentos de lojas locais na RFQ antes de aprovar? Clique abaixo para gerar os participantes automaticamente:
+                    Adicione lojas virtuais ou orçamentos locais com 1 clique para comparar:
                   </span>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      disabled={addingQuickSuppliers}
-                      onClick={() =>
-                        handleAddQuickOptions([
-                          {
-                            corporateName: "Mercado Livre — Opção 1 (Anúncio / Link)",
-                            cnpj: "03.007.331/0001-41",
-                            segment: "Marketplace / Link",
-                            contactEmail: "cotacao.ml1@mercadolivre.com.br",
-                          },
-                          {
-                            corporateName: "Mercado Livre — Opção 2 (Anúncio / Link)",
-                            cnpj: "03.007.331/0002-22",
-                            segment: "Marketplace / Link",
-                            contactEmail: "cotacao.ml2@mercadolivre.com.br",
-                          },
-                          {
-                            corporateName: "Mercado Livre — Opção 3 (Anúncio / Link)",
-                            cnpj: "03.007.331/0003-03",
-                            segment: "Marketplace / Link",
-                            contactEmail: "cotacao.ml3@mercadolivre.com.br",
-                          },
-                        ])
-                      }
-                    >
-                      <MarketplaceLogo source="mercadolivre" size="sm" /> + Adicionar 3 Opções Mercado Livre (Links)
-                    </Button>
 
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      disabled={addingQuickSuppliers}
-                      onClick={() =>
-                        handleAddQuickOptions([
-                          {
-                            corporateName: "Comércio Local — Orçamento 1",
-                            cnpj: "00.000.001/0001-01",
-                            segment: "Compra Local / Balcão",
-                            contactEmail: "orcamento1@comerciolocal.com.br",
-                          },
-                          {
-                            corporateName: "Comércio Local — Orçamento 2",
-                            cnpj: "00.000.002/0001-02",
-                            segment: "Compra Local / Balcão",
-                            contactEmail: "orcamento2@comerciolocal.com.br",
-                          },
-                          {
-                            corporateName: "Comércio Local — Orçamento 3",
-                            cnpj: "00.000.003/0001-03",
-                            segment: "Compra Local / Balcão",
-                            contactEmail: "orcamento3@comerciolocal.com.br",
-                          },
-                        ])
-                      }
-                    >
-                      <MarketplaceLogo source="whatsapp" size="sm" /> + Adicionar 3 Opções de Comércio Local
-                    </Button>
+                  {/* Chips individuais rápidos */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                    {[
+                      {
+                        id: "ml",
+                        label: "Mercado Livre",
+                        logo: "mercadolivre",
+                        corporateName: "Mercado Livre (Compra Direta via Link)",
+                        cnpj: "03.007.331/0001-41",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.ml@mercadolivre.com.br",
+                      },
+                      {
+                        id: "amazon",
+                        label: "Amazon Brasil",
+                        logo: "amazon",
+                        corporateName: "Amazon Brasil (Compra via Link)",
+                        cnpj: "15.436.940/0001-03",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.amz@amazon.com.br",
+                      },
+                      {
+                        id: "shopee",
+                        label: "Shopee",
+                        logo: "shopee",
+                        corporateName: "Shopee (Compra via Link)",
+                        cnpj: "35.635.824/0001-12",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.shopee@marketplace.com.br",
+                      },
+                      {
+                        id: "magalu",
+                        label: "Magazine Luiza",
+                        logo: "magalu",
+                        corporateName: "Magazine Luiza (Compra via Link)",
+                        cnpj: "47.960.950/0001-21",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.magalu@magalu.com.br",
+                      },
+                      {
+                        id: "local1",
+                        label: "Comércio Local 1",
+                        logo: "whatsapp",
+                        corporateName: "Comércio Local — Orçamento 1 (Balcão)",
+                        cnpj: "00.000.001/0001-01",
+                        segment: "Compra Local / Balcão",
+                        contactEmail: "orcamento1@comerciolocal.com.br",
+                      },
+                      {
+                        id: "local2",
+                        label: "Comércio Local 2",
+                        logo: "whatsapp",
+                        corporateName: "Comércio Local — Orçamento 2 (Balcão)",
+                        cnpj: "00.000.002/0001-02",
+                        segment: "Compra Local / Balcão",
+                        contactEmail: "orcamento2@comerciolocal.com.br",
+                      },
+                    ].map((st) => {
+                      const isSelected = fornecedores.some(
+                        (f) =>
+                          f.selecionado &&
+                          (f.cnpj === st.cnpj ||
+                            f.nome.toLowerCase().includes(st.label.toLowerCase()) ||
+                            f.nome.toLowerCase() === st.corporateName.toLowerCase()),
+                      );
+                      return (
+                        <button
+                          key={st.id}
+                          type="button"
+                          disabled={addingQuickSuppliers}
+                          onClick={() => handleToggleStoreChip(st)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 20,
+                            border: isSelected ? "1.5px solid #007d79" : "1px solid #cbd5e1",
+                            background: isSelected ? "#f0fdf9" : "#ffffff",
+                            color: isSelected ? "#007d79" : "#334155",
+                            fontSize: 12.5,
+                            fontWeight: isSelected ? 700 : 500,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            boxShadow: isSelected ? "0 1px 3px rgba(0, 125, 121, 0.15)" : "none",
+                          }}
+                          title={
+                            isSelected
+                              ? `Remover ${st.label} da seleção`
+                              : `Adicionar ${st.label} à cotação`
+                          }
+                        >
+                          <MarketplaceLogo source={st.logo} size="sm" />
+                          <span>{st.label}</span>
+                          {isSelected ? (
+                            <Icon name="check" size={13} style={{ color: "#007d79" }} />
+                          ) : (
+                            <Icon name="plus" size={13} style={{ color: "#94a3b8" }} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
 
+                  {/* Atalhos combinados de conveniência */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                     <Button
                       variant="secondary"
                       type="button"
@@ -1600,16 +1747,47 @@ export default function NewRfqPage() {
                             contactEmail: "suprimentos.amz@amazon.com.br",
                           },
                           {
-                            corporateName: "Shopee / Magazine Luiza (Compra via Link)",
+                            corporateName: "Shopee (Compra via Link)",
                             cnpj: "35.635.824/0001-12",
                             segment: "Marketplace / Link",
-                            contactEmail: "suprimentos.mkt@marketplace.com.br",
+                            contactEmail: "cotacao.shopee@marketplace.com.br",
                           },
                         ])
                       }
+                      style={{ fontSize: 12, padding: "5px 10px" }}
                     >
-                      <MarketplaceLogo source="amazon" size="sm" />{" "}
-                      <MarketplaceLogo source="shopee" size="sm" /> + Comparativo Marketplaces (ML / Amazon / Magalu)
+                      <Icon name="zap" size={13} /> Comparativo Rápido (ML + Amazon + Shopee)
+                    </Button>
+
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      disabled={addingQuickSuppliers}
+                      onClick={() =>
+                        handleAddQuickOptions([
+                          {
+                            corporateName: "Comércio Local — Orçamento 1 (Balcão)",
+                            cnpj: "00.000.001/0001-01",
+                            segment: "Compra Local / Balcão",
+                            contactEmail: "orcamento1@comerciolocal.com.br",
+                          },
+                          {
+                            corporateName: "Comércio Local — Orçamento 2 (Balcão)",
+                            cnpj: "00.000.002/0001-02",
+                            segment: "Compra Local / Balcão",
+                            contactEmail: "orcamento2@comerciolocal.com.br",
+                          },
+                          {
+                            corporateName: "Comércio Local — Orçamento 3 (Balcão)",
+                            cnpj: "00.000.003/0001-03",
+                            segment: "Compra Local / Balcão",
+                            contactEmail: "orcamento3@comerciolocal.com.br",
+                          },
+                        ])
+                      }
+                      style={{ fontSize: 12, padding: "5px 10px" }}
+                    >
+                      <MarketplaceLogo source="whatsapp" size="sm" /> 3 Orçamentos Locais (Balcão)
                     </Button>
                   </div>
                 </div>
@@ -1640,6 +1818,28 @@ export default function NewRfqPage() {
                     >
                       Selecionados ({fornecedoresSelecionados.length})
                     </button>
+                    {fornecedoresSelecionados.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearAllSuppliers}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#dc2626",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          padding: "4px 8px",
+                          borderRadius: 6,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                        title="Desmarcar todos os fornecedores"
+                      >
+                        <Icon name="x-close" size={13} /> Limpar seleção
+                      </button>
+                    )}
                   </div>
 
                   <Button
@@ -1669,16 +1869,85 @@ export default function NewRfqPage() {
                           <div className={styles.fornecedorTitleRow}>
                             <MarketplaceLogo source={f.nome} size="sm" showFallbackIcon={false} />
                             <strong>{f.nome}</strong>
+                            {isMarketplaceOrLocalSupplier(f.nome) ? (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "2px 7px",
+                                  borderRadius: 4,
+                                  background:
+                                    f.nome.toLowerCase().includes("local") ||
+                                    f.nome.toLowerCase().includes("balcão")
+                                      ? "#fef3c7"
+                                      : "#e0f2fe",
+                                  color:
+                                    f.nome.toLowerCase().includes("local") ||
+                                    f.nome.toLowerCase().includes("balcão")
+                                      ? "#92400e"
+                                      : "#0369a1",
+                                  border: `1px solid ${
+                                    f.nome.toLowerCase().includes("local") ||
+                                    f.nome.toLowerCase().includes("balcão")
+                                      ? "#fde68a"
+                                      : "#bae6fd"
+                                  }`,
+                                }}
+                              >
+                                {f.nome.toLowerCase().includes("local") ||
+                                f.nome.toLowerCase().includes("balcão")
+                                  ? "🏪 Comércio Local"
+                                  : "🛒 Compra Online"}
+                              </span>
+                            ) : (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "2px 7px",
+                                  borderRadius: 4,
+                                  background: "#f1f5f9",
+                                  color: "#475569",
+                                  border: "1px solid #e2e8f0",
+                                }}
+                              >
+                                🏢 Fornecedor B2B
+                              </span>
+                            )}
                             {f.segmento && <span className={styles.segmentTag}>{f.segmento}</span>}
                           </div>
                           <span>
-                            CNPJ: {f.cnpj} {f.isHomologado ? "• Homologado" : ""}
+                            CNPJ: {maskCnpj(f.cnpj) || f.cnpj}
                           </span>
                         </div>
                         {f.selecionado && (
-                          <span className={styles.fornecedorBadge}>
-                            <Icon name="check-circle" size={14} /> Convidado
-                          </span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span className={styles.fornecedorBadge}>
+                              <Icon name="check-circle" size={14} /> Convidado
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeSupplier(f.id);
+                              }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                color: "#94a3b8",
+                                cursor: "pointer",
+                                padding: 4,
+                                borderRadius: 4,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                              title="Remover fornecedor da cotação"
+                            >
+                              <Icon name="trash-01" size={14} />
+                            </button>
+                          </div>
                         )}
                       </label>
                     ))}

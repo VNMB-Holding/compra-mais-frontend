@@ -32,9 +32,11 @@ import {
 } from "@/lib/utils/tenant";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { maskCnpj } from "@/lib/utils/masks";
 import {
   detectMarketplaceFromUrl,
   extractProposalOfferUrl,
+  isMarketplaceOrLocalSupplier,
 } from "@/lib/utils/item-description";
 import { suppliersApi } from "@/lib/api/suppliers";
 
@@ -176,8 +178,10 @@ function PropostaCard({
   rfqCode,
   rfqId,
   rfqTitle,
+  suggestedOfferUrl,
   onSalvar,
   onOpenTracking,
+  onRemover,
 }: {
   proposta: LocalProposal;
   isWinner: boolean;
@@ -186,13 +190,26 @@ function PropostaCard({
   rfqCode: string;
   rfqId?: string;
   rfqTitle: string;
+  suggestedOfferUrl?: string | null;
   onSalvar: (id: string, dados: Partial<LocalProposal>) => void;
   onOpenTracking?: (proposta: LocalProposal) => void;
+  onRemover?: (supplierId: string) => void;
 }) {
   const { toast } = useToast();
   const [aberto, setAberto] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const isMarketplaceOrLocal = Boolean(
+    detectMarketplaceFromUrl(proposta.supplierName) ||
+      detectMarketplaceFromUrl(proposta.notes) ||
+      proposta.supplierName.toLowerCase().includes("mercado livre") ||
+      proposta.supplierName.toLowerCase().includes("orçamento local") ||
+      proposta.supplierName.toLowerCase().includes("comércio local") ||
+      proposta.supplierName.toLowerCase().includes("amazon") ||
+      proposta.supplierName.toLowerCase().includes("shopee") ||
+      proposta.supplierName.toLowerCase().includes("magalu"),
+  );
   const existingOfferUrl = extractProposalOfferUrl(proposta.notes, proposta.brandModel) || "";
-  const [offerUrl, setOfferUrl] = useState(existingOfferUrl);
+  const [offerUrl, setOfferUrl] = useState(existingOfferUrl || (isMarketplaceOrLocal ? (suggestedOfferUrl || "") : ""));
   const [draft, setDraft] = useState({
     unitPrice: proposta.unitPrice ?? 0,
     freightCost: proposta.freightCost ?? 0,
@@ -316,6 +333,51 @@ function PropostaCard({
               showFallbackIcon={false}
             />
             <strong>{proposta.supplierName}</strong>
+            {isMarketplaceOrLocalSupplier(proposta.supplierName) ? (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "2px 7px",
+                  borderRadius: 4,
+                  background:
+                    proposta.supplierName.toLowerCase().includes("local") ||
+                    proposta.supplierName.toLowerCase().includes("balcão")
+                      ? "#fef3c7"
+                      : "#e0f2fe",
+                  color:
+                    proposta.supplierName.toLowerCase().includes("local") ||
+                    proposta.supplierName.toLowerCase().includes("balcão")
+                      ? "#92400e"
+                      : "#0369a1",
+                  border: `1px solid ${
+                    proposta.supplierName.toLowerCase().includes("local") ||
+                    proposta.supplierName.toLowerCase().includes("balcão")
+                      ? "#fde68a"
+                      : "#bae6fd"
+                  }`,
+                }}
+              >
+                {proposta.supplierName.toLowerCase().includes("local") ||
+                proposta.supplierName.toLowerCase().includes("balcão")
+                  ? "🏪 Comércio Local"
+                  : "🛒 Compra Online / Link"}
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "2px 7px",
+                  borderRadius: 4,
+                  background: "#f1f5f9",
+                  color: "#475569",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                🏢 Fornecedor B2B
+              </span>
+            )}
             {(() => {
               const urlToCheck = offerUrl || existingOfferUrl;
               const mp = detectMarketplaceFromUrl(urlToCheck);
@@ -348,17 +410,19 @@ function PropostaCard({
               );
             })()}
           </div>
-          <span className={styles.propostaCnpj}>{proposta.cnpj}</span>
+          <span className={styles.propostaCnpj}>{maskCnpj(proposta.cnpj) || proposta.cnpj}</span>
         </div>
 
         <div className={styles.propostaCardRight}>
-          <SupplierEngagementBadge
-            rfqId={rfqId}
-            supplierId={proposta.supplierId}
-            supplierName={proposta.supplierName}
-            proposalStatus={proposta.status}
-            onClick={() => onOpenTracking && onOpenTracking(proposta)}
-          />
+          {!isMarketplaceOrLocal && (
+            <SupplierEngagementBadge
+              rfqId={rfqId}
+              supplierId={proposta.supplierId}
+              supplierName={proposta.supplierName}
+              proposalStatus={proposta.status}
+              onClick={() => onOpenTracking && onOpenTracking(proposta)}
+            />
+          )}
           {proposta.status === "received" && !aberto && (
             <div className={styles.propostaSumario}>
               <span className={styles.propostaPreco}>
@@ -372,33 +436,37 @@ function PropostaCard({
           )}
 
           <div className={styles.propostaActions}>
-            <button
-              type="button"
-              className={styles.btnActionIcon}
-              onClick={() => onOpenTracking && onOpenTracking(proposta)}
-              title={`Ver histórico de leitura e atividades de ${proposta.supplierName}`}
-            >
-              <Icon name="activity" size={14} />
-              <span>Atividades</span>
-            </button>
-            <button
-              type="button"
-              className={styles.btnActionIcon}
-              onClick={handleCopyLink}
-              title={`Copiar link exclusivo de ${proposta.supplierName}`}
-            >
-              <Icon name="copy-01" size={14} />
-              <span>Copiar link</span>
-            </button>
-            <button
-              type="button"
-              className={styles.btnActionIcon}
-              onClick={handleWhatsApp}
-              title={`Enviar pelo WhatsApp para ${proposta.supplierName}`}
-            >
-              <MarketplaceLogo source="whatsapp" size="sm" />
-              <span>WhatsApp</span>
-            </button>
+            {!isMarketplaceOrLocal && (
+              <>
+                <button
+                  type="button"
+                  className={styles.btnActionIcon}
+                  onClick={() => onOpenTracking && onOpenTracking(proposta)}
+                  title={`Ver histórico de leitura e atividades de ${proposta.supplierName}`}
+                >
+                  <Icon name="activity" size={14} />
+                  <span>Atividades</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnActionIcon}
+                  onClick={handleCopyLink}
+                  title={`Copiar link exclusivo de ${proposta.supplierName}`}
+                >
+                  <Icon name="copy-01" size={14} />
+                  <span>Copiar link</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnActionIcon}
+                  onClick={handleWhatsApp}
+                  title={`Enviar pelo WhatsApp para ${proposta.supplierName}`}
+                >
+                  <MarketplaceLogo source="whatsapp" size="sm" />
+                  <span>WhatsApp</span>
+                </button>
+              </>
+            )}
             {proposta.status === "awaiting" && (
               <button className={styles.btnRegistrar} onClick={() => setAberto(!aberto)}>
                 <Icon name="plus" size={14} /> Registrar proposta
@@ -409,6 +477,17 @@ function PropostaCard({
                 <Icon name="edit-01" size={14} /> {aberto ? "Fechar" : "Editar"}
               </button>
             )}
+            {onRemover && !isWinner && (
+              <button
+                type="button"
+                className={styles.btnActionIcon}
+                onClick={() => onRemover(proposta.supplierId)}
+                title={`Remover ${proposta.supplierName} desta cotação`}
+                style={{ color: "#ef4444", borderColor: "#fecaca" }}
+              >
+                <Icon name="trash-01" size={14} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -416,6 +495,75 @@ function PropostaCard({
       {aberto && (
         <div className={styles.propostaForm}>
           <div className={styles.propostaFormDivider} />
+
+          {isMarketplaceOrLocal && (
+            <div className={styles.propostaFormSection}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 8,
+                }}
+              >
+                <div className={styles.propostaSectionTitle} style={{ margin: 0 }}>
+                  <Icon name="link-03" size={13} /> Link do Anúncio / Oferta Online
+                </div>
+                {suggestedOfferUrl && suggestedOfferUrl !== offerUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setOfferUrl(suggestedOfferUrl)}
+                    style={{
+                      background: "#f0fdf9",
+                      border: "1px solid #99f6e4",
+                      color: "#0f766e",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "3px 10px",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                    }}
+                    title="Preencher com o link anexado pelo solicitante da compra"
+                  >
+                    <Icon name="link-03" size={12} /> Usar link indicado na solicitação
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="url"
+                  className={styles.propostaInput}
+                  value={offerUrl}
+                  placeholder="Cole aqui o link do anúncio (ex: https://produto.mercadolivre.com.br/...)"
+                  onChange={(e) => setOfferUrl(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                {offerUrl && (
+                  <a
+                    href={offerUrl.startsWith("http") ? offerUrl : `https://${offerUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.btnActionIcon}
+                    title="Abrir este link no navegador"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "8px 12px",
+                      textDecoration: "none",
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Icon name="arrow-up-right" size={14} /> Abrir link
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
 
           {hasSpecificItems ? (
             <div className={styles.propostaFormSection}>
@@ -508,16 +656,23 @@ function PropostaCard({
 
           <div className={styles.propostaFormSection}>
             <div className={styles.propostaSectionTitle}>
-              <Icon name="truck-01" size={13} /> Frete, Logística & Prazos
+              <Icon name="truck-01" size={13} /> {isMarketplaceOrLocal ? "Frete & Previsão de Entrega" : "Frete, Logística & Prazos"}
             </div>
             <div className={styles.propostaFormGrid}>
               <div className={styles.propostaField}>
-                <label>Tipo de Frete (Incoterm)</label>
+                <label>{isMarketplaceOrLocal ? "Modalidade de Envio" : "Tipo de Frete (Incoterm)"}</label>
                 <Select
-                  options={[
-                    { label: "CIF (Incluso pelo fornecedor)", value: "CIF" },
-                    { label: "FOB (A pagar pelo comprador)", value: "FOB" },
-                  ]}
+                  options={
+                    isMarketplaceOrLocal
+                      ? [
+                          { label: "Frete Grátis (Full / Incluso)", value: "CIF" },
+                          { label: "Frete Pago à Parte", value: "FOB" },
+                        ]
+                      : [
+                          { label: "CIF (Incluso pelo fornecedor)", value: "CIF" },
+                          { label: "FOB (A pagar pelo comprador)", value: "FOB" },
+                        ]
+                  }
                   value={draft.freightType}
                   onChange={(val) => {
                     const type = val as "CIF" | "FOB";
@@ -539,7 +694,7 @@ function PropostaCard({
                   min="0"
                   disabled={draft.freightType === "CIF"}
                   className={styles.propostaInput}
-                  placeholder={draft.freightType === "CIF" ? "Incluso no preço" : "0,00"}
+                  placeholder={draft.freightType === "CIF" ? "Grátis / Incluso" : "0,00"}
                   value={draft.freightType === "CIF" ? "" : draft.freightCost || ""}
                   onChange={(e) =>
                     setDraft((d) => ({ ...d, freightCost: Number(e.target.value) || 0 }))
@@ -548,7 +703,7 @@ function PropostaCard({
               </div>
 
               <div className={styles.propostaField}>
-                <label>Prazo de Entrega (dias úteis)</label>
+                <label>{isMarketplaceOrLocal ? "Prazo de Entrega do Site (dias)" : "Prazo de Entrega (dias úteis)"}</label>
                 <input
                   type="number"
                   min="0"
@@ -561,157 +716,243 @@ function PropostaCard({
                 />
               </div>
 
-              <div className={styles.propostaField}>
-                <label>Validade da Proposta (dias)</label>
-                <input
-                  type="number"
-                  min="1"
-                  className={styles.propostaInput}
-                  value={draft.validityDays || ""}
-                  placeholder="Ex: 15"
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, validityDays: Number(e.target.value) || 0 }))
-                  }
-                />
-              </div>
+              {!isMarketplaceOrLocal && (
+                <div className={styles.propostaField}>
+                  <label>Validade da Proposta (dias)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className={styles.propostaInput}
+                    value={draft.validityDays || ""}
+                    placeholder="Ex: 15"
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, validityDays: Number(e.target.value) || 0 }))
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          <div className={styles.propostaFormSection}>
-            <div className={styles.propostaSectionTitle}>
-              <Icon name="bank-note-01" size={13} /> Condições Comerciais & Garantia
-            </div>
-            <div className={styles.propostaFormGrid}>
-              <div className={styles.propostaField}>
-                <label>Condição de Pagamento</label>
-                <input
-                  className={styles.propostaInput}
-                  list={`paymentTerms-${proposta.supplierId}`}
-                  value={draft.paymentTerms}
-                  placeholder="Ex: 30 dias DDL, À vista..."
-                  onChange={(e) => setDraft((d) => ({ ...d, paymentTerms: e.target.value }))}
-                />
-                <datalist id={`paymentTerms-${proposta.supplierId}`}>
-                  <option value="30 dias DDL" />
-                  <option value="28 dias DDL" />
-                  <option value="14 dias DDL" />
-                  <option value="À vista / PIX" />
-                  <option value="28/56 dias DDL" />
-                  <option value="45 dias DDL" />
-                  <option value="60 dias DDL" />
-                </datalist>
+          {isMarketplaceOrLocal ? (
+            <>
+              <div className={styles.propostaFormSection}>
+                <div className={styles.propostaSectionTitle}>
+                  <Icon name="bank-note-01" size={13} /> Condição de Pagamento
+                </div>
+                <div className={styles.propostaField} style={{ maxWidth: 420 }}>
+                  <input
+                    className={styles.propostaInput}
+                    list={`paymentTerms-${proposta.supplierId}`}
+                    value={draft.paymentTerms}
+                    placeholder="Ex: Cartão de Crédito Corporativo, Conta ML Igreja Pura Fé, PIX..."
+                    onChange={(e) => setDraft((d) => ({ ...d, paymentTerms: e.target.value }))}
+                  />
+                  <datalist id={`paymentTerms-${proposta.supplierId}`}>
+                    <option value="Cartão de Crédito Corporativo" />
+                    <option value="À vista / PIX" />
+                    <option value="Boleto Bancário à Vista" />
+                    <option value="Conta Mercado Livre Igreja Pura Fé" />
+                  </datalist>
+                </div>
               </div>
 
-              <div className={styles.propostaField}>
-                <label>Garantia Ofertada (meses)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className={styles.propostaInput}
-                  value={draft.warrantyMonths || ""}
-                  placeholder="Ex: 12"
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, warrantyMonths: Number(e.target.value) || 0 }))
-                  }
-                />
+              <div style={{ marginTop: 4, marginBottom: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#007d79",
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 0",
+                  }}
+                >
+                  <Icon name={showAdvanced ? "chevron-up" : "chevron-down"} size={14} />
+                  {showAdvanced
+                    ? "Recolher informações complementares"
+                    : "+ Informações complementares (Garantia, Loja do Anúncio, Observações)"}
+                </button>
+
+                {showAdvanced && (
+                  <div
+                    style={{
+                      padding: 16,
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 8,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                      marginTop: 8,
+                    }}
+                  >
+                    <div className={styles.propostaFormGrid}>
+                      <div className={styles.propostaField}>
+                        <label>Garantia Ofertada (meses)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          className={styles.propostaInput}
+                          value={draft.warrantyMonths || ""}
+                          placeholder="Ex: 12"
+                          onChange={(e) =>
+                            setDraft((d) => ({
+                              ...d,
+                              warrantyMonths: Number(e.target.value) || 0,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className={styles.propostaField}>
+                        <label>Loja / Vendedor no Anúncio</label>
+                        <input
+                          className={styles.propostaInput}
+                          value={draft.brandModel}
+                          placeholder="Ex: Loja Oficial Bosch, Vendedor Platinum..."
+                          onChange={(e) => setDraft((d) => ({ ...d, brandModel: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className={styles.propostaField}>
+                      <label>Observações Adicionais da Oferta</label>
+                      <textarea
+                        rows={2}
+                        className={styles.propostaTextarea}
+                        value={draft.notes}
+                        placeholder="Informações adicionais, cupom aplicado, especificações..."
+                        onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.propostaFormSection}>
+                <div className={styles.propostaSectionTitle}>
+                  <Icon name="bank-note-01" size={13} /> Condições Comerciais & Garantia
+                </div>
+                <div className={styles.propostaFormGrid}>
+                  <div className={styles.propostaField}>
+                    <label>Condição de Pagamento</label>
+                    <input
+                      className={styles.propostaInput}
+                      list={`paymentTerms-${proposta.supplierId}`}
+                      value={draft.paymentTerms}
+                      placeholder="Ex: 30 dias DDL, À vista..."
+                      onChange={(e) => setDraft((d) => ({ ...d, paymentTerms: e.target.value }))}
+                    />
+                    <datalist id={`paymentTerms-${proposta.supplierId}`}>
+                      <option value="30 dias DDL" />
+                      <option value="28 dias DDL" />
+                      <option value="14 dias DDL" />
+                      <option value="À vista / PIX" />
+                      <option value="28/56 dias DDL" />
+                      <option value="45 dias DDL" />
+                      <option value="60 dias DDL" />
+                    </datalist>
+                  </div>
+
+                  <div className={styles.propostaField}>
+                    <label>Garantia Ofertada (meses)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className={styles.propostaInput}
+                      value={draft.warrantyMonths || ""}
+                      placeholder="Ex: 12"
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, warrantyMonths: Number(e.target.value) || 0 }))
+                      }
+                    />
+                  </div>
+
+                  <div className={styles.propostaField}>
+                    <label>Marca / Fabricante / Modelo</label>
+                    <input
+                      className={styles.propostaInput}
+                      value={draft.brandModel}
+                      placeholder="Ex: Bosch, Dell, Ferragens Silva..."
+                      onChange={(e) => setDraft((d) => ({ ...d, brandModel: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className={styles.propostaField}>
+                    <label>Link da Oferta / Catálogo (opcional)</label>
+                    <input
+                      type="url"
+                      className={styles.propostaInput}
+                      value={offerUrl}
+                      placeholder="https://..."
+                      onChange={(e) => setOfferUrl(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.propostaField}>
-                <label>Marca / Fabricante / Vendedor</label>
-                <input
-                  className={styles.propostaInput}
-                  value={draft.brandModel}
-                  placeholder="Ex: Bosch, Loja Oficial ML, Ferragens Silva..."
-                  onChange={(e) => setDraft((d) => ({ ...d, brandModel: e.target.value }))}
-                />
+              <div className={styles.propostaFormSection}>
+                <div className={styles.propostaSectionTitle}>
+                  <Icon name="users-01" size={13} /> Dados do Vendedor / Representante Comercial
+                </div>
+                <div
+                  className={styles.propostaFormGrid}
+                  style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+                >
+                  <div className={styles.propostaField}>
+                    <label>Nome do Vendedor / Contato</label>
+                    <input
+                      className={styles.propostaInput}
+                      value={draft.contactName}
+                      placeholder="Ex: João da Silva"
+                      onChange={(e) => setDraft((d) => ({ ...d, contactName: e.target.value }))}
+                    />
+                  </div>
+                  <div className={styles.propostaField}>
+                    <label>Telefone / WhatsApp Comercial</label>
+                    <input
+                      className={styles.propostaInput}
+                      value={draft.contactPhone}
+                      placeholder="Ex: (11) 98765-4321"
+                      onChange={(e) => setDraft((d) => ({ ...d, contactPhone: e.target.value }))}
+                    />
+                  </div>
+                  <div className={styles.propostaField}>
+                    <label>E-mail Comercial</label>
+                    <input
+                      type="email"
+                      className={styles.propostaInput}
+                      value={draft.contactEmail}
+                      placeholder="Ex: comercial@fornecedor.com"
+                      onChange={(e) => setDraft((d) => ({ ...d, contactEmail: e.target.value }))}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.propostaField}>
-                <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
-                  <span>Link do Anúncio (Mercado Livre / Loja Online)</span>
-                  {(() => {
-                    const mp = detectMarketplaceFromUrl(offerUrl);
-                    if (!mp) return null;
-                    return (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "1px 6px",
-                          borderRadius: 4,
-                          background: mp.isMercadoLivre ? "#fef08a" : "#ccfbf1",
-                          color: mp.isMercadoLivre ? "#854d0e" : "#007d79",
-                        }}
-                      >
-                        {mp.shortLabel}
-                      </span>
-                    );
-                  })()}
-                </label>
-                <input
-                  type="url"
-                  className={styles.propostaInput}
-                  value={offerUrl}
-                  placeholder="https://produto.mercadolivre.com.br/..."
-                  onChange={(e) => setOfferUrl(e.target.value)}
-                />
+              <div className={styles.propostaFormSection}>
+                <div className={styles.propostaSectionTitle}>
+                  <Icon name="file-01" size={13} /> Observações Comerciais & Justificativa
+                </div>
+                <div className={styles.propostaField}>
+                  <textarea
+                    className={styles.propostaTextarea}
+                    rows={2}
+                    value={draft.notes}
+                    placeholder="Observações complementares, impostos inclusos (ICMS/IPI), lote mínimo de entrega, etc..."
+                    onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className={styles.propostaFormSection}>
-            <div className={styles.propostaSectionTitle}>
-              <Icon name="users-01" size={13} /> Dados do Vendedor / Representante Comercial
-            </div>
-            <div
-              className={styles.propostaFormGrid}
-              style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
-            >
-              <div className={styles.propostaField}>
-                <label>Nome do Vendedor / Contato</label>
-                <input
-                  className={styles.propostaInput}
-                  value={draft.contactName}
-                  placeholder="Ex: João da Silva"
-                  onChange={(e) => setDraft((d) => ({ ...d, contactName: e.target.value }))}
-                />
-              </div>
-              <div className={styles.propostaField}>
-                <label>Telefone / WhatsApp Comercial</label>
-                <input
-                  className={styles.propostaInput}
-                  value={draft.contactPhone}
-                  placeholder="Ex: (11) 98765-4321"
-                  onChange={(e) => setDraft((d) => ({ ...d, contactPhone: e.target.value }))}
-                />
-              </div>
-              <div className={styles.propostaField}>
-                <label>E-mail Comercial</label>
-                <input
-                  type="email"
-                  className={styles.propostaInput}
-                  value={draft.contactEmail}
-                  placeholder="Ex: comercial@fornecedor.com"
-                  onChange={(e) => setDraft((d) => ({ ...d, contactEmail: e.target.value }))}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.propostaFormSection}>
-            <div className={styles.propostaSectionTitle}>
-              <Icon name="file-01" size={13} /> Observações Comerciais & Justificativa
-            </div>
-            <div className={styles.propostaField}>
-              <textarea
-                className={styles.propostaTextarea}
-                rows={2}
-                value={draft.notes}
-                placeholder="Observações complementares, impostos inclusos (ICMS/IPI), lote mínimo de entrega, etc..."
-                onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
-              />
-            </div>
-          </div>
+            </>
+          )}
 
           <div className={styles.propostaTotalBreakdown}>
             <div className={styles.breakdownItems}>
@@ -772,6 +1013,26 @@ export default function RfqDetailPage() {
   const [creatingPo, setCreatingPo] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+
+  const suggestedOfferUrl = useMemo(() => {
+    const rfqAny = rfq as any;
+    for (const it of rfqAny?.items || []) {
+      const fromIt =
+        it.referenceUrl || extractProposalOfferUrl(it.description, it.notes);
+      if (fromIt) return fromIt;
+    }
+    const prItems = rfqAny?.purchaseRequest?.items || [];
+    for (const it of prItems) {
+      const fromPr =
+        it.referenceUrl || extractProposalOfferUrl(it.description, it.notes);
+      if (fromPr) return fromPr;
+    }
+    const fromRfqNotes = extractProposalOfferUrl(rfqAny?.notes);
+    if (fromRfqNotes) return fromRfqNotes;
+    const fromPrNotes = extractProposalOfferUrl(rfqAny?.purchaseRequest?.notes);
+    if (fromPrNotes) return fromPrNotes;
+    return null;
+  }, [rfq]);
 
   const [proposalPage, setProposalPage] = useState(1);
   const [proposalSearch, setProposalSearch] = useState("");
@@ -1044,10 +1305,16 @@ export default function RfqDetailPage() {
       setProposalPage(totalProposalPages);
     }
   }, [proposalPage, totalProposalPages]);
+  const handleRemoverProposta = (supId: string) => {
+    setPropostas((prev) => prev.filter((p) => p.supplierId !== supId));
+    toast({
+      variant: "info",
+      title: "Opção removida",
+      message: "A opção de fornecedor/link foi removida da lista desta cotação.",
+    });
+  };
+
   const handleSalvarProposta = async (id: string, dados: Partial<LocalProposal>) => {
-    setPropostas((c) =>
-      c.map((p) => (p.supplierId === id ? { ...p, ...dados, status: "received" } : p)),
-    );
 
     if (
       dados.unitPrice !== undefined ||
@@ -1698,8 +1965,10 @@ export default function RfqDetailPage() {
                   rfqCode={rfqCode}
                   rfqId={rfq?.id || rfqId}
                   rfqTitle={rfqTitle}
+                  suggestedOfferUrl={suggestedOfferUrl}
                   onSalvar={handleSalvarProposta}
                   onOpenTracking={(prop) => setTrackingSupplier(prop)}
+                  onRemover={handleRemoverProposta}
                 />
               ))}
 
@@ -1877,29 +2146,48 @@ export default function RfqDetailPage() {
                       ))}
                     </tr>
                     <tr>
-                      <td className={styles.rowHeader}>Tipo de Frete (Incoterm)</td>
-                      {propostasRankeadas.map((p, i) => (
-                        <td
-                          key={p.supplierId}
-                          className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
-                        >
-                          {p.freightType === "CIF" ? "CIF (Incluso)" : "FOB (À parte)"}
-                        </td>
-                      ))}
+                      <td className={styles.rowHeader}>Tipo de Frete / Envio</td>
+                      {propostasRankeadas.map((p, i) => {
+                        const isMkt = isMarketplaceOrLocalSupplier(p.supplierName);
+                        const freightDisplay =
+                          p.freightType === "CIF"
+                            ? isMkt
+                              ? "Frete Grátis / Incluso"
+                              : "CIF (Incluso)"
+                            : isMkt
+                              ? "Frete Pago à Parte"
+                              : "FOB (À parte)";
+                        return (
+                          <td
+                            key={p.supplierId}
+                            className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
+                          >
+                            {freightDisplay}
+                          </td>
+                        );
+                      })}
                     </tr>
                     <tr>
-                      <td className={styles.rowHeader}>Validade da Proposta</td>
-                      {propostasRankeadas.map((p, i) => (
-                        <td
-                          key={p.supplierId}
-                          className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
-                        >
-                          {p.validityDays ? `${p.validityDays} dias` : "15 dias"}
-                        </td>
-                      ))}
+                      <td className={styles.rowHeader}>Validade da Oferta</td>
+                      {propostasRankeadas.map((p, i) => {
+                        const isMkt = isMarketplaceOrLocalSupplier(p.supplierName);
+                        const validityDisplay = p.validityDays
+                          ? `${p.validityDays} dias`
+                          : isMkt
+                            ? "Preço do anúncio"
+                            : "15 dias";
+                        return (
+                          <td
+                            key={p.supplierId}
+                            className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
+                          >
+                            {validityDisplay}
+                          </td>
+                        );
+                      })}
                     </tr>
                     <tr>
-                      <td className={styles.rowHeader}>Marca / Fabricante</td>
+                      <td className={styles.rowHeader}>Loja / Vendedor / Marca</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
                           key={p.supplierId}
@@ -2088,7 +2376,7 @@ export default function RfqDetailPage() {
             <Icon name="trophy-01" />
           </div>
           <div className={styles.aprovacaoBannerText}>
-            <h2>{generatedPo ? "Cotação Finalizada & Homologada" : "Proposta Selecionada"}</h2>
+            <h2>{generatedPo ? "Cotação Concluída & Pedido Emitido" : "Proposta Selecionada"}</h2>
             <p>
               {generatedPo
                 ? `O processo foi encerrado com sucesso e o Pedido Oficial ${generatedPo.code} foi gerado.`
