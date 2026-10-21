@@ -2,7 +2,16 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Icon, Select, Badge, Skeleton, EmptyState } from "@/components/ui";
+import {
+  Card,
+  Button,
+  Icon,
+  Select,
+  Badge,
+  Skeleton,
+  EmptyState,
+  MarketplaceLogo,
+} from "@/components/ui";
 import { InviteSupplierModal } from "@/components/modals";
 
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
@@ -22,7 +31,7 @@ import {
   resolvePurchaseRequestBranch,
   isPuraFeUser,
 } from "@/lib/utils/tenant";
-import { parseItemDescription } from "@/lib/utils/item-description";
+import { parseItemDescription, detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 
 interface Solicitacao {
   id: string;
@@ -98,6 +107,7 @@ export default function NewRfqPage() {
     searchParams.get("sol") ??
     searchParams.get("solicitacao") ??
     "";
+  const paramMode = searchParams.get("mode") ?? "";
   const paramTitulo = searchParams.get("titulo") ?? "";
   const paramValor = searchParams.get("valor") ?? "";
   const paramPrioridade = searchParams.get("prioridade") ?? "";
@@ -106,6 +116,15 @@ export default function NewRfqPage() {
 
   const [solicitacaoSelecionada, setSolicitacaoSelecionada] = useState<string>("");
   const [solicitacaoConfirmada, setSolicitacaoConfirmada] = useState<Solicitacao | null>(null);
+  const [rfqModality, setRfqModality] = useState<"standard" | "links">(
+    paramMode === "links" ? "links" : "standard",
+  );
+
+  useEffect(() => {
+    if (paramMode === "links") {
+      setRfqModality("links");
+    }
+  }, [paramMode]);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
@@ -156,6 +175,78 @@ export default function NewRfqPage() {
     };
     setFornecedores((prev) => [convidado, ...prev]);
     setIsInviteModalOpen(false);
+  };
+
+  const [addingQuickSuppliers, setAddingQuickSuppliers] = useState(false);
+
+  const handleAddQuickOptions = async (
+    presets: { corporateName: string; cnpj: string; segment: string; contactEmail: string }[],
+  ) => {
+    setAddingQuickSuppliers(true);
+    try {
+      const addedList: FornecedorConvidado[] = [];
+      for (let i = 0; i < presets.length; i++) {
+        const p = presets[i];
+        const existing = fornecedores.find(
+          (f) => f.nome.toLowerCase() === p.corporateName.toLowerCase() || (p.cnpj && f.cnpj === p.cnpj),
+        );
+        if (existing) {
+          addedList.push({ ...existing, selecionado: true });
+          continue;
+        }
+
+        let created: any = null;
+        try {
+          created = await suppliersApi.create({
+            cnpj: p.cnpj,
+            corporateName: p.corporateName,
+            tradeName: p.corporateName,
+            contactEmail: p.contactEmail,
+            segment: p.segment,
+            status: "Active",
+          });
+        } catch {
+          created = {
+            id: `quick-sup-${Date.now()}-${i}`,
+            corporateName: p.corporateName,
+            cnpj: p.cnpj,
+            segment: p.segment,
+          };
+        }
+
+        addedList.push({
+          id: created?.id || `quick-sup-${Date.now()}-${i}`,
+          nome: created?.corporateName || p.corporateName,
+          cnpj: created?.cnpj || p.cnpj,
+          segmento: p.segment,
+          isHomologado: true,
+          selecionado: true,
+        });
+      }
+
+      setFornecedores((prev) => {
+        const map = new Map<string, FornecedorConvidado>();
+        for (const item of addedList) {
+          map.set(item.id, item);
+        }
+        for (const f of prev) {
+          if (map.has(f.id)) {
+            map.set(f.id, { ...f, selecionado: true });
+          } else {
+            map.set(f.id, f);
+          }
+        }
+        return Array.from(map.values());
+      });
+
+      toast({
+        variant: "success",
+        title: "Opções de cotação adicionadas!",
+        message: `${presets.length} opção(ões) adicionadas e selecionadas para registrar os links/orçamentos.`,
+      });
+    } finally {
+      setAddingQuickSuppliers(false);
+    }
   };
 
   const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
@@ -995,6 +1086,119 @@ export default function NewRfqPage() {
                   </div>
 
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                    <label>Modalidade de Cotação</label>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                        gap: 12,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setRfqModality("standard")}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 12,
+                          padding: "14px 16px",
+                          borderRadius: 10,
+                          border:
+                            rfqModality === "standard"
+                              ? "2px solid #007d79"
+                              : "1px solid #cbd5e1",
+                          background: rfqModality === "standard" ? "#f0fdf9" : "#fff",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
+                            background: rfqModality === "standard" ? "#007d79" : "#f1f5f9",
+                            color: rfqModality === "standard" ? "#fff" : "#475569",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon name="building-07" size={18} />
+                        </div>
+                        <div>
+                          <strong style={{ display: "block", fontSize: 13.5, color: "#0f172a" }}>
+                            Cotação Tradicional (Fornecedores)
+                          </strong>
+                          <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.4, display: "block", marginTop: 2 }}>
+                            Convide fornecedores homologados para enviarem propostas pelo link externo.
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRfqModality("links");
+                          if (!dataEncerramento) {
+                            const d = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+                            setDataEncerramento(d.toISOString().slice(0, 16));
+                          }
+                          if (condicaoPagamento === "30 dias DDL") {
+                            setCondicaoPagamento("À vista / PIX / Cartão");
+                          }
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 12,
+                          padding: "14px 16px",
+                          borderRadius: 10,
+                          border:
+                            rfqModality === "links"
+                              ? "2px solid #007d79"
+                              : "1px solid #cbd5e1",
+                          background: rfqModality === "links" ? "#f0fdf9" : "#fff",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 8,
+                            background: "#ffffff",
+                            border: rfqModality === "links" ? "1px solid #007d79" : "1px solid #fde047",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <MarketplaceLogo source="mercadolivre" size="md" />
+                        </div>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <strong style={{ fontSize: 13.5, color: "#0f172a" }}>
+                              Compra via Link (Mercado Livre) ou Orçamentos Locais
+                            </strong>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, opacity: 0.9 }}>
+                              <MarketplaceLogo source="amazon" size="sm" />
+                              <MarketplaceLogo source="shopee" size="sm" />
+                              <MarketplaceLogo source="magalu" size="sm" />
+                            </span>
+                          </div>
+                          <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.4, display: "block", marginTop: 2 }}>
+                            RFQ simplificada para Suprimentos colar 3 links (Mercado Livre, Amazon) ou orçamentos locais antes de aprovar.
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>
                       Título da RFQ <span className="required-asterisk">*</span>
                     </label>
@@ -1273,15 +1477,140 @@ export default function NewRfqPage() {
               <section className={styles.formSection} data-tour="rfq-form-suppliers">
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
-                    <Icon name="building-07" />
+                    <Icon name={rfqModality === "links" ? "shopping-cart-01" : "building-07"} />
                   </div>
                   <div>
                     <h2>
-                      3. Fornecedores convidados <span className="required-asterisk">*</span>
+                      3. {rfqModality === "links" ? "Opções de Links / Lojas Locais e Fornecedores" : "Fornecedores convidados"}{" "}
+                      <span className="required-asterisk">*</span>
                     </h2>
                     <p>
-                      Selecione os fornecedores homologados que receberão o convite para cotação.
+                      {rfqModality === "links"
+                        ? "Adicione rapidamente os slots de links (ex: 3 anúncios do Mercado Livre ou 3 orçamentos locais) ou selecione fornecedores."
+                        : "Selecione os fornecedores homologados que receberão o convite para cotação."}
                     </p>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: rfqModality === "links" ? "#fefce8" : "#f8fafc",
+                    border: rfqModality === "links" ? "1px solid #fde047" : "1px solid #e2e8f0",
+                    borderRadius: 10,
+                    padding: "14px 16px",
+                    marginBottom: 16,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Icon name="shopping-cart-01" size={16} style={{ color: "#854d0e" }} />
+                      <strong style={{ fontSize: 13, color: "#0f172a" }}>
+                        Atalhos para Compra por Link (Mercado Livre / Internet) ou Comércio Local:
+                      </strong>
+                    </div>
+                    {(solicitacaoConfirmada?.companyCode === "PURAFE" || isPuraFe) && (
+                      <Badge variant="warning" icon="check-circle">
+                        Igreja Pura Fé: Acesso direto à conta do Mercado Livre
+                      </Badge>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12.5, color: "#475569" }}>
+                    Precisa colar 3 links do Mercado Livre ou 3 orçamentos de lojas locais na RFQ antes de aprovar? Clique abaixo para gerar os participantes automaticamente:
+                  </span>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      disabled={addingQuickSuppliers}
+                      onClick={() =>
+                        handleAddQuickOptions([
+                          {
+                            corporateName: "Mercado Livre — Opção 1 (Anúncio / Link)",
+                            cnpj: "03.007.331/0001-41",
+                            segment: "Marketplace / Link",
+                            contactEmail: "cotacao.ml1@mercadolivre.com.br",
+                          },
+                          {
+                            corporateName: "Mercado Livre — Opção 2 (Anúncio / Link)",
+                            cnpj: "03.007.331/0002-22",
+                            segment: "Marketplace / Link",
+                            contactEmail: "cotacao.ml2@mercadolivre.com.br",
+                          },
+                          {
+                            corporateName: "Mercado Livre — Opção 3 (Anúncio / Link)",
+                            cnpj: "03.007.331/0003-03",
+                            segment: "Marketplace / Link",
+                            contactEmail: "cotacao.ml3@mercadolivre.com.br",
+                          },
+                        ])
+                      }
+                    >
+                      <MarketplaceLogo source="mercadolivre" size="sm" /> + Adicionar 3 Opções Mercado Livre (Links)
+                    </Button>
+
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      disabled={addingQuickSuppliers}
+                      onClick={() =>
+                        handleAddQuickOptions([
+                          {
+                            corporateName: "Comércio Local — Orçamento 1",
+                            cnpj: "00.000.001/0001-01",
+                            segment: "Compra Local / Balcão",
+                            contactEmail: "orcamento1@comerciolocal.com.br",
+                          },
+                          {
+                            corporateName: "Comércio Local — Orçamento 2",
+                            cnpj: "00.000.002/0001-02",
+                            segment: "Compra Local / Balcão",
+                            contactEmail: "orcamento2@comerciolocal.com.br",
+                          },
+                          {
+                            corporateName: "Comércio Local — Orçamento 3",
+                            cnpj: "00.000.003/0001-03",
+                            segment: "Compra Local / Balcão",
+                            contactEmail: "orcamento3@comerciolocal.com.br",
+                          },
+                        ])
+                      }
+                    >
+                      <MarketplaceLogo source="whatsapp" size="sm" /> + Adicionar 3 Opções de Comércio Local
+                    </Button>
+
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      disabled={addingQuickSuppliers}
+                      onClick={() =>
+                        handleAddQuickOptions([
+                          {
+                            corporateName: "Mercado Livre (Compra Direta via Link)",
+                            cnpj: "03.007.331/0001-41",
+                            segment: "Marketplace / Link",
+                            contactEmail: "suprimentos.ml@mercadolivre.com.br",
+                          },
+                          {
+                            corporateName: "Amazon Brasil (Compra via Link)",
+                            cnpj: "15.436.940/0001-03",
+                            segment: "Marketplace / Link",
+                            contactEmail: "suprimentos.amz@amazon.com.br",
+                          },
+                          {
+                            corporateName: "Shopee / Magazine Luiza (Compra via Link)",
+                            cnpj: "35.635.824/0001-12",
+                            segment: "Marketplace / Link",
+                            contactEmail: "suprimentos.mkt@marketplace.com.br",
+                          },
+                        ])
+                      }
+                    >
+                      <MarketplaceLogo source="amazon" size="sm" />{" "}
+                      <MarketplaceLogo source="shopee" size="sm" /> + Comparativo Marketplaces (ML / Amazon / Magalu)
+                    </Button>
                   </div>
                 </div>
 
@@ -1338,6 +1667,7 @@ export default function NewRfqPage() {
                         />
                         <div className={styles.fornecedorInfo}>
                           <div className={styles.fornecedorTitleRow}>
+                            <MarketplaceLogo source={f.nome} size="sm" showFallbackIcon={false} />
                             <strong>{f.nome}</strong>
                             {f.segmento && <span className={styles.segmentTag}>{f.segmento}</span>}
                           </div>
@@ -1574,14 +1904,19 @@ export default function NewRfqPage() {
                     onClick={() => {
                       const valor = solicitacaoConfirmada?.valorEstimado || 0;
                       let minSuppliers = 1;
-                      if (valor > 5000) minSuppliers = 3;
-                      else if (valor > 1000) minSuppliers = 2;
+                      if (rfqModality !== "links") {
+                        if (valor > 5000) minSuppliers = 3;
+                        else if (valor > 1000) minSuppliers = 2;
+                      }
 
                       if (fornecedoresSelecionados.length < minSuppliers) {
                         toast({
                           variant: "warning",
                           title: "Política de Compras",
-                          message: `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedor(es).`,
+                          message:
+                            rfqModality === "links"
+                              ? "Selecione ou adicione ao menos 1 opção de Link / Comércio Local."
+                              : `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedor(es).`,
                         });
                         return;
                       }

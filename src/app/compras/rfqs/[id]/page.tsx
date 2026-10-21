@@ -15,6 +15,7 @@ import {
   Stepper,
   Select,
   ItemCell,
+  MarketplaceLogo,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -31,6 +32,11 @@ import {
 } from "@/lib/utils/tenant";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
+import {
+  detectMarketplaceFromUrl,
+  extractProposalOfferUrl,
+} from "@/lib/utils/item-description";
+import { suppliersApi } from "@/lib/api/suppliers";
 
 type RfqStage = "proposal" | "analysis" | "approval";
 
@@ -185,6 +191,8 @@ function PropostaCard({
 }) {
   const { toast } = useToast();
   const [aberto, setAberto] = useState(false);
+  const existingOfferUrl = extractProposalOfferUrl(proposta.notes, proposta.brandModel) || "";
+  const [offerUrl, setOfferUrl] = useState(existingOfferUrl);
   const [draft, setDraft] = useState({
     unitPrice: proposta.unitPrice ?? 0,
     freightCost: proposta.freightCost ?? 0,
@@ -203,6 +211,7 @@ function PropostaCard({
   });
 
   useEffect(() => {
+    setOfferUrl(extractProposalOfferUrl(proposta.notes, proposta.brandModel) || "");
     setDraft({
       unitPrice: proposta.unitPrice ?? 0,
       freightCost: proposta.freightCost ?? 0,
@@ -249,8 +258,17 @@ function PropostaCard({
   const totalEqualizado = subtotalItens + effectiveFreight;
 
   const handleSalvar = () => {
+    const cleanUrl = offerUrl.trim();
+    let finalNotes = draft.notes || "";
+    if (cleanUrl && !finalNotes.includes(cleanUrl)) {
+      finalNotes = finalNotes
+        ? `${finalNotes}\nLink da Oferta: ${cleanUrl}`
+        : `Link da Oferta: ${cleanUrl}`;
+    }
+
     onSalvar(proposta.supplierId, {
       ...draft,
+      notes: finalNotes,
       freightCost: effectiveFreight,
       totalCalculated: totalEqualizado,
       status: "received",
@@ -292,7 +310,43 @@ function PropostaCard({
                 <Icon name="trophy-01" size={12} /> Melhor proposta
               </span>
             )}
+            <MarketplaceLogo
+              source={offerUrl || existingOfferUrl || proposta.supplierName}
+              size="sm"
+              showFallbackIcon={false}
+            />
             <strong>{proposta.supplierName}</strong>
+            {(() => {
+              const urlToCheck = offerUrl || existingOfferUrl;
+              const mp = detectMarketplaceFromUrl(urlToCheck);
+              if (!urlToCheck) return null;
+              return (
+                <a
+                  href={urlToCheck.startsWith("http") ? urlToCheck : `https://${urlToCheck}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    background: mp?.isMercadoLivre ? "#fefce8" : "#f0fdf9",
+                    color: mp?.isMercadoLivre ? "#854d0e" : "#007d79",
+                    border: mp?.isMercadoLivre ? "1px solid #fde047" : "1px solid #ccfbf1",
+                  }}
+                  title={`Abrir link do anúncio: ${urlToCheck}`}
+                >
+                  <MarketplaceLogo source={mp} size="sm" />
+                  <span>{mp ? `Ver no ${mp.shortLabel}` : "Abrir Link da Oferta"}</span>
+                  <Icon name="arrow-up-right" size={10} />
+                </a>
+              );
+            })()}
           </div>
           <span className={styles.propostaCnpj}>{proposta.cnpj}</span>
         </div>
@@ -342,7 +396,7 @@ function PropostaCard({
               onClick={handleWhatsApp}
               title={`Enviar pelo WhatsApp para ${proposta.supplierName}`}
             >
-              <Icon name="message-square-02" size={14} />
+              <MarketplaceLogo source="whatsapp" size="sm" />
               <span>WhatsApp</span>
             </button>
             {proposta.status === "awaiting" && (
@@ -562,13 +616,44 @@ function PropostaCard({
                 />
               </div>
 
-              <div className={styles.propostaField} style={{ gridColumn: "span 2" }}>
-                <label>Marca / Fabricante / Modelo Cotado</label>
+              <div className={styles.propostaField}>
+                <label>Marca / Fabricante / Vendedor</label>
                 <input
                   className={styles.propostaInput}
                   value={draft.brandModel}
-                  placeholder="Ex: Bosch / SKF / Modelo Industrial..."
+                  placeholder="Ex: Bosch, Loja Oficial ML, Ferragens Silva..."
                   onChange={(e) => setDraft((d) => ({ ...d, brandModel: e.target.value }))}
+                />
+              </div>
+
+              <div className={styles.propostaField}>
+                <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+                  <span>Link do Anúncio (Mercado Livre / Loja Online)</span>
+                  {(() => {
+                    const mp = detectMarketplaceFromUrl(offerUrl);
+                    if (!mp) return null;
+                    return (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: "1px 6px",
+                          borderRadius: 4,
+                          background: mp.isMercadoLivre ? "#fef08a" : "#ccfbf1",
+                          color: mp.isMercadoLivre ? "#854d0e" : "#007d79",
+                        }}
+                      >
+                        {mp.shortLabel}
+                      </span>
+                    );
+                  })()}
+                </label>
+                <input
+                  type="url"
+                  className={styles.propostaInput}
+                  value={offerUrl}
+                  placeholder="https://produto.mercadolivre.com.br/..."
+                  onChange={(e) => setOfferUrl(e.target.value)}
                 />
               </div>
             </div>
@@ -694,6 +779,121 @@ export default function RfqDetailPage() {
     "todos" | "awaiting" | "received" | "declined"
   >("todos");
   const PROPOSALS_PER_PAGE = 5;
+  const [addingQuickOption, setAddingQuickOption] = useState(false);
+
+  const handleAddQuickProposals = async (preset: "mercadolivre" | "local") => {
+    setAddingQuickOption(true);
+    try {
+      const originItemUrl =
+        rfqItems?.find((it: any) => it.referenceUrl)?.referenceUrl ||
+        extractProposalOfferUrl((rfq as any)?.notes, (rfq?.purchaseRequest as any)?.notes) ||
+        "";
+
+      const templates =
+        preset === "mercadolivre"
+          ? [
+              {
+                name: "Mercado Livre — Opção 1 (Anúncio / Vendedor A)",
+                cnpj: `03.007.331/${String(Math.floor(1000 + Math.random() * 8999))}-01`,
+                email: "cotacao.ml1@compramais.interno",
+                contactName: "Anúncio Mercado Livre 1",
+                paymentTerms: "Cartão Corporativo / À vista",
+                initialNotes: originItemUrl ? `Link da Oferta: ${originItemUrl}` : "",
+              },
+              {
+                name: "Mercado Livre — Opção 2 (Anúncio / Vendedor B)",
+                cnpj: `03.007.331/${String(Math.floor(1000 + Math.random() * 8999))}-02`,
+                email: "cotacao.ml2@compramais.interno",
+                contactName: "Anúncio Mercado Livre 2",
+                paymentTerms: "Cartão Corporativo / À vista",
+                initialNotes: "",
+              },
+              {
+                name: "Mercado Livre — Opção 3 (Anúncio / Vendedor C)",
+                cnpj: `03.007.331/${String(Math.floor(1000 + Math.random() * 8999))}-03`,
+                email: "cotacao.ml3@compramais.interno",
+                contactName: "Anúncio Mercado Livre 3",
+                paymentTerms: "Cartão Corporativo / À vista",
+                initialNotes: "",
+              },
+            ]
+          : [
+              {
+                name: `Comércio Local — Orçamento ${propostas.length + 1} (Balcão / WhatsApp)`,
+                cnpj: `00.000.000/${String(Math.floor(1000 + Math.random() * 8999))}-91`,
+                email: `orcamento.local${propostas.length + 1}@compramais.interno`,
+                contactName: "Atendimento Balcão / WhatsApp",
+                paymentTerms: "À vista (PIX / Boleto)",
+                initialNotes: "",
+              },
+            ];
+
+      const newProposals: LocalProposal[] = [];
+
+      for (const tpl of templates) {
+        let createdSupplierId = `quick-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        let createdName = tpl.name;
+        let createdCnpj = tpl.cnpj;
+
+        try {
+          const res = await rfqsApi.inviteUnregisteredSupplier(rfqId, {
+            cnpj: tpl.cnpj,
+            corporateName: tpl.name,
+            contactEmail: tpl.email,
+            contactName: tpl.contactName,
+          });
+          if (res?.supplier?.id) {
+            createdSupplierId = res.supplier.id;
+            createdName = res.supplier.tradeName || res.supplier.corporateName || tpl.name;
+            createdCnpj = res.supplier.cnpj || tpl.cnpj;
+          }
+        } catch {
+          try {
+            const sup = await suppliersApi.create({
+              corporateName: tpl.name,
+              tradeName: tpl.name,
+              cnpj: tpl.cnpj,
+              contactEmail: tpl.email,
+              contactName: tpl.contactName,
+            });
+            if (sup?.id) {
+              createdSupplierId = sup.id;
+            }
+          } catch {}
+        }
+
+        newProposals.push({
+          supplierId: createdSupplierId,
+          supplierName: createdName,
+          cnpj: createdCnpj,
+          status: "awaiting",
+          paymentTerms: tpl.paymentTerms,
+          contactName: tpl.contactName,
+          notes: tpl.initialNotes,
+        });
+      }
+
+      setPropostas((prev) => [...prev, ...newProposals]);
+      toast({
+        variant: "success",
+        title:
+          preset === "mercadolivre"
+            ? "3 opções de Link (Mercado Livre) adicionadas!"
+            : "Opção de Orçamento Local adicionada!",
+        message:
+          "Clique em 'Registrar proposta' em cada card para colar o link do anúncio e o valor.",
+      });
+    } catch (err) {
+      logError("rfqs/[id]/addQuickProposals", err);
+      toast({
+        variant: "error",
+        title: "Erro ao adicionar opção",
+        message: getErrorMessage(err),
+      });
+    } finally {
+      setAddingQuickOption(false);
+    }
+  };
 
   const handleCancelRfq = async () => {
     const reason = cancelReason.trim();
@@ -932,6 +1132,31 @@ export default function RfqDetailPage() {
 
   const prObj = rfq?.purchaseRequest as any;
   const companyName = resolvePurchaseRequestBranch(prObj || rfq, user);
+  const isPuraFe =
+    companyName.toLowerCase().includes("pura fé") ||
+    companyName.toLowerCase().includes("purafe") ||
+    prObj?.companyCode === "PURAFE" ||
+    prObj?.filialCode === "PURAFE";
+
+  const vencedorOfferUrl = useMemo(() => {
+    return (
+      extractProposalOfferUrl(vencedor?.notes, vencedor?.brandModel) ||
+      rfqItems?.find((it: any) => it.referenceUrl)?.referenceUrl ||
+      extractProposalOfferUrl((rfq as any)?.notes, prObj?.notes) ||
+      null
+    );
+  }, [vencedor, rfqItems, rfq, prObj?.notes]);
+
+  const vencedorMarketplace = useMemo(
+    () => detectMarketplaceFromUrl(vencedorOfferUrl),
+    [vencedorOfferUrl],
+  );
+  const isWinnerMarketplaceOrLink =
+    Boolean(vencedorOfferUrl) ||
+    Boolean(vencedor?.supplierName?.toLowerCase().includes("mercado livre")) ||
+    Boolean(vencedor?.supplierName?.toLowerCase().includes("amazon")) ||
+    Boolean(vencedor?.supplierName?.toLowerCase().includes("shopee")) ||
+    Boolean(vencedor?.supplierName?.toLowerCase().includes("magalu"));
 
   const isFinished = rfq?.status === "Finished" || rfq?.status === "Closed" || !!generatedPo;
   const isDraft = rfq?.status === "Draft";
@@ -1332,7 +1557,51 @@ export default function RfqDetailPage() {
               </span>
             )}
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {!isCancelled && !isFinished && (
+              <>
+                <button
+                  type="button"
+                  disabled={addingQuickOption}
+                  onClick={() => handleAddQuickProposals("mercadolivre")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: "1px solid #f59e0b",
+                    background: "#fffbeb",
+                    color: "#92400e",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: addingQuickOption ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <MarketplaceLogo source="mercadolivre" size="sm" /> + 3 Links (Mercado Livre)
+                </button>
+                <button
+                  type="button"
+                  disabled={addingQuickOption}
+                  onClick={() => handleAddQuickProposals("local")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    color: "#334155",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: addingQuickOption ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <MarketplaceLogo source="whatsapp" size="sm" /> + Orçamento Local / Balcão
+                </button>
+              </>
+            )}
             {recebidas.length > 0 && (
               <Button variant="primary" onClick={() => setDialog("encerrar")}>
                 Encerrar coleta e ir para análise
@@ -1550,7 +1819,14 @@ export default function RfqDetailPage() {
                       {propostasRankeadas.map((p, i) => (
                         <th key={p.supplierId} className={i === 0 ? styles.winnerHeaderCol : ""}>
                           {i === 0 && <div className={styles.winnerBadgeTip}>MELHOR OPÇÃO</div>}
-                          {p.supplierName.split(" ").slice(0, 2).join(" ")}
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
+                            <MarketplaceLogo
+                              source={extractProposalOfferUrl(p.notes, p.brandModel) || p.supplierName}
+                              size="sm"
+                              showFallbackIcon={false}
+                            />
+                            <span>{p.supplierName.split(" ").slice(0, 2).join(" ")}</span>
+                          </div>
                         </th>
                       ))}
                     </tr>
@@ -1644,6 +1920,51 @@ export default function RfqDetailPage() {
                         </td>
                       ))}
                     </tr>
+                    {propostasRankeadas.some((p) =>
+                      Boolean(extractProposalOfferUrl(p.notes, p.brandModel)),
+                    ) && (
+                      <tr>
+                        <td className={styles.rowHeader}>Link do Anúncio / Oferta</td>
+                        {propostasRankeadas.map((p, i) => {
+                          const pUrl = extractProposalOfferUrl(p.notes, p.brandModel);
+                          const pMkt = detectMarketplaceFromUrl(pUrl);
+                          return (
+                            <td
+                              key={p.supplierId}
+                              className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
+                            >
+                              {pUrl ? (
+                                <a
+                                  href={pUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 5,
+                                    padding: "3px 8px",
+                                    borderRadius: 6,
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    textDecoration: "none",
+                                  background: pMkt?.isMercadoLivre ? "#fef3c7" : "#f0fdfa",
+                                  color: pMkt?.isMercadoLivre ? "#92400e" : "#0f766e",
+                                  border: `1px solid ${
+                                    pMkt?.isMercadoLivre ? "#fcd34d" : "#99f6e4"
+                                  }`,
+                                }}
+                              >
+                                <MarketplaceLogo source={pMkt} size="sm" />{" "}
+                                {pMkt ? `Abrir ${pMkt.shortLabel}` : "Ver Anúncio"}
+                              </a>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    )}
                     <tr className={styles.totalRow}>
                       <td className={styles.rowHeaderTotal}>Custo Total Equalizado</td>
                       {propostasRankeadas.map((p, i) => (
@@ -1776,6 +2097,98 @@ export default function RfqDetailPage() {
           </div>
         </div>
 
+        {(isWinnerMarketplaceOrLink || isPuraFe) && (
+          <div
+            style={{
+              background: isPuraFe ? "#fffbeb" : "#f0fdfa",
+              border: `1px solid ${isPuraFe ? "#fcd34d" : "#99f6e4"}`,
+              borderRadius: 12,
+              padding: "16px 20px",
+              marginBottom: 24,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, flex: 1 }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 8,
+                  background: "#ffffff",
+                  border: `1px solid ${isPuraFe ? "#fcd34d" : "#99f6e4"}`,
+                  color: isPuraFe ? "#b45309" : "#0f766e",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {vencedorMarketplace?.logoPath ? (
+                  <MarketplaceLogo source={vencedorMarketplace} size="md" />
+                ) : (
+                  <MarketplaceLogo
+                    source={vencedor?.supplierName || "mercadolivre"}
+                    size="md"
+                  />
+                )}
+              </div>
+              <div>
+                <h4
+                  style={{
+                    margin: 0,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: isPuraFe ? "#92400e" : "#115e59",
+                  }}
+                >
+                  {isPuraFe
+                    ? "Execução Direta pela Igreja Pura Fé (Conta Mercado Livre / Compra Local)"
+                    : `Compra via Link / ${vencedorMarketplace?.label || "E-commerce"}`}
+                </h4>
+                <p
+                  style={{
+                    margin: "4px 0 0",
+                    fontSize: 13,
+                    color: isPuraFe ? "#78350f" : "#134e4a",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {isPuraFe
+                    ? "Como esta cotação pertence à Igreja Pura Fé, a própria unidade possui acesso à sua conta do Mercado Livre (ou comércio local) para efetivar o pagamento e a compra diretamente a partir do link vencedor abaixo. Emita o Pedido de Compra para formalizar a aprovação e rastrear a entrega."
+                    : "A proposta vencedora corresponde a uma oferta online. Utilize o link oficial abaixo para concluir a compra na plataforma e emita o Pedido de Compra para registro financeiro."}
+                </p>
+              </div>
+            </div>
+            {vencedorOfferUrl && (
+              <a
+                href={vencedorOfferUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "10px 16px",
+                  borderRadius: 8,
+                  background: vencedorMarketplace?.isMercadoLivre ? "#f59e0b" : "#007d79",
+                  color: "#ffffff",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <Icon name="link-external-01" size={15} /> Abrir Anúncio Vencedor (
+                {vencedorMarketplace?.shortLabel || "Link"})
+              </a>
+            )}
+          </div>
+        )}
+
         <div className={styles.aprovacaoGrid}>
           <Card className={styles.aprovacaoBox}>
             <h3>
@@ -1789,6 +2202,27 @@ export default function RfqDetailPage() {
               <span>CNPJ</span>
               <strong>{vencedor?.cnpj ?? "—"}</strong>
             </div>
+            {vencedorOfferUrl && (
+              <div className={styles.aprovacaoDataRow}>
+                <span>Link da Oferta</span>
+                <a
+                  href={vencedorOfferUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#007d79",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  Ver no {vencedorMarketplace?.shortLabel || "Site"}{" "}
+                  <Icon name="link-external-01" size={12} />
+                </a>
+              </div>
+            )}
           </Card>
 
           <Card className={styles.aprovacaoBox}>
