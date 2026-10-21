@@ -367,6 +367,25 @@ export default function PedidoDetailPage() {
     return getApprovalChainForOrder(po?.companyCode || po?.tenantId || "", Number(valorTotal || 0));
   }, [po?.companyCode, po?.tenantId, valorTotal]);
 
+  const items = po?.items && po.items.length > 0 ? po.items : null;
+
+  const orderOfferUrl = useMemo(() => {
+    const fromNotes = extractProposalOfferUrl(poNotes, (po as any)?.winningProposal?.notes);
+    if (fromNotes) return fromNotes;
+    const fromItems = (items as any[])?.find((it: any) => it.referenceUrl)?.referenceUrl;
+    if (fromItems) return fromItems;
+    for (const it of items || []) {
+      const extracted = extractProposalOfferUrl(it.description, (it as any)?.notes);
+      if (extracted) return extracted;
+    }
+    return null;
+  }, [poNotes, po, items]);
+
+  const orderMarketplace = useMemo(
+    () => detectMarketplaceFromUrl(orderOfferUrl),
+    [orderOfferUrl],
+  );
+
   if (!isNewFlow && (isDirectLoading || (isListLoading && !po))) {
     return (
       <div className={styles.detailContainer}>
@@ -414,7 +433,6 @@ export default function PedidoDetailPage() {
     po?.tenantId,
     user,
   );
-  const items = po?.items && po.items.length > 0 ? po.items : null;
 
   const isPuraFe =
     companyName.toLowerCase().includes("pura fé") ||
@@ -423,22 +441,6 @@ export default function PedidoDetailPage() {
     (po as any)?.filialCode === "PURAFE" ||
     po?.tenantId === "PURAFE";
 
-  const orderOfferUrl = useMemo(() => {
-    const fromNotes = extractProposalOfferUrl(poNotes, (po as any)?.winningProposal?.notes);
-    if (fromNotes) return fromNotes;
-    const fromItems = (items as any[])?.find((it: any) => it.referenceUrl)?.referenceUrl;
-    if (fromItems) return fromItems;
-    for (const it of items || []) {
-      const extracted = extractProposalOfferUrl(it.description, (it as any)?.notes);
-      if (extracted) return extracted;
-    }
-    return null;
-  }, [poNotes, po, items]);
-
-  const orderMarketplace = useMemo(
-    () => detectMarketplaceFromUrl(orderOfferUrl),
-    [orderOfferUrl],
-  );
   const isMarketplaceOrder =
     Boolean(orderOfferUrl) ||
     fornecedorNome.toLowerCase().includes("mercado livre") ||
