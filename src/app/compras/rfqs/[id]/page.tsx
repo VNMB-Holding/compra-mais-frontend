@@ -134,11 +134,33 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
       mapBySupplier.set(p.supplierId, {
         supplierId: p.supplierId,
         proposalId: p.id,
-        supplierName:
-          p.supplier?.tradeName ||
-          p.supplier?.corporateName ||
-          existing?.supplierName ||
-          "Razão Social não informada",
+        supplierName: (() => {
+          const detectedOfferUrl = extractProposalOfferUrl(pAny.notes, pAny.brandModel);
+          const detectedMkt = detectMarketplaceFromUrl(detectedOfferUrl);
+          let initialSupplierName =
+            p.supplier?.tradeName ||
+            p.supplier?.corporateName ||
+            existing?.supplierName ||
+            "Razão Social não informada";
+
+          if (detectedMkt) {
+            const lowerName = initialSupplierName.toLowerCase();
+            if (
+              lowerName.includes("mercado livre") ||
+              lowerName.includes("compra online") ||
+              lowerName.includes("link") ||
+              lowerName.includes("loja virtual") ||
+              lowerName.includes("marketplace")
+            ) {
+              const optionMatch = initialSupplierName.match(/Opção\s*(\d+)/i);
+              const optionSuffix = optionMatch ? ` (Opção ${optionMatch[1]})` : "";
+              const storeLabel =
+                detectedMkt.id === "ecommerce" ? detectedMkt.shortLabel : detectedMkt.label;
+              initialSupplierName = `${storeLabel}${optionSuffix}`;
+            }
+          }
+          return initialSupplierName;
+        })(),
         cnpj: p.supplier?.cnpj || existing?.cnpj || "—",
         status,
         unitPrice: Number(unitPrice),
@@ -210,6 +232,33 @@ function PropostaCard({
   );
   const existingOfferUrl = extractProposalOfferUrl(proposta.notes, proposta.brandModel) || "";
   const [offerUrl, setOfferUrl] = useState(existingOfferUrl || (isMarketplaceOrLocal ? (suggestedOfferUrl || "") : ""));
+
+  const currentUrl = offerUrl.trim() || existingOfferUrl;
+  const detectedMarketplace = detectMarketplaceFromUrl(currentUrl);
+
+  const displaySupplierName = useMemo(() => {
+    if (detectedMarketplace) {
+      const lower = proposta.supplierName.toLowerCase();
+      const isOnlineOrMarketplaceSlot =
+        lower.includes("mercado livre") ||
+        lower.includes("compra online") ||
+        lower.includes("link") ||
+        lower.includes("loja virtual") ||
+        lower.includes("marketplace") ||
+        lower.includes("opção");
+
+      if (isOnlineOrMarketplaceSlot) {
+        const optionMatch = proposta.supplierName.match(/Opção\s*(\d+)/i);
+        const optionSuffix = optionMatch ? ` (Opção ${optionMatch[1]})` : "";
+        const storeLabel =
+          detectedMarketplace.id === "ecommerce"
+            ? detectedMarketplace.shortLabel
+            : detectedMarketplace.label;
+        return `${storeLabel}${optionSuffix}`;
+      }
+    }
+    return proposta.supplierName;
+  }, [detectedMarketplace, proposta.supplierName]);
   const [draft, setDraft] = useState({
     unitPrice: proposta.unitPrice ?? 0,
     freightCost: proposta.freightCost ?? 0,
@@ -285,6 +334,7 @@ function PropostaCard({
 
     onSalvar(proposta.supplierId, {
       ...draft,
+      supplierName: displaySupplierName,
       notes: finalNotes,
       freightCost: effectiveFreight,
       totalCalculated: totalEqualizado,
@@ -328,12 +378,12 @@ function PropostaCard({
               </span>
             )}
             <MarketplaceLogo
-              source={offerUrl || existingOfferUrl || proposta.supplierName}
+              source={offerUrl || existingOfferUrl || displaySupplierName}
               size="sm"
               showFallbackIcon={false}
             />
-            <strong>{proposta.supplierName}</strong>
-            {isMarketplaceOrLocalSupplier(proposta.supplierName) ? (
+            <strong>{displaySupplierName}</strong>
+            {isMarketplaceOrLocalSupplier(displaySupplierName) || isMarketplaceOrLocalSupplier(proposta.supplierName) ? (
               <span
                 style={{
                   fontSize: 11,
@@ -552,7 +602,7 @@ function PropostaCard({
                   type="url"
                   className={styles.propostaInput}
                   value={offerUrl}
-                  placeholder="Cole aqui o link do anúncio (ex: https://produto.mercadolivre.com.br/...)"
+                  placeholder="Cole aqui o link do anúncio (ex: https://produto.mercadolivre.com.br/... ou https://www.amazon.com.br/...)"
                   onChange={(e) => setOfferUrl(e.target.value)}
                   style={{ flex: 1 }}
                 />
@@ -577,6 +627,24 @@ function PropostaCard({
                   </a>
                 )}
               </div>
+              {detectedMarketplace && (
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 12,
+                    color: "#007d79",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontWeight: 600,
+                  }}
+                >
+                  <Icon name="check-circle" size={13} />
+                  <span>
+                    Loja identificada: <strong>{detectedMarketplace.id === "ecommerce" ? detectedMarketplace.shortLabel : detectedMarketplace.label}</strong>
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -1362,15 +1430,18 @@ export default function RfqDetailPage() {
           items: itemsPayload,
         });
 
-        if (propostaCriada?.id) {
-          setPropostas((c) =>
-            c.map((p) =>
-              p.supplierId === id
-                ? { ...p, ...dados, proposalId: propostaCriada.id, status: "received" }
-                : p,
-            ),
-          );
-        }
+        setPropostas((c) =>
+          c.map((p) =>
+            p.supplierId === id
+              ? {
+                  ...p,
+                  ...dados,
+                  proposalId: propostaCriada?.id || p.proposalId,
+                  status: "received",
+                }
+              : p,
+          ),
+        );
         toast({
           variant: "success",
           title: "Proposta salva!",
