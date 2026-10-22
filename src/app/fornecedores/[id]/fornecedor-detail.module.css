@@ -684,3 +684,95 @@
     text-align: left;
   }
 }
+
+.tabsSection {
+  margin-top: 20px;
+  margin-bottom: 4px;
+}
+
+.historyCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.historyHeader h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.historyStats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.statValue {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.codeCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #007d79;
+  cursor: pointer;
+}
+
+.codeCell:hover {
+  text-decoration: underline;
+}
+
+.iconBtn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.iconBtn:hover {
+  background: #f1f5f9;
+  color: #007d79;
+  border-color: #cbd5e1;
+}
