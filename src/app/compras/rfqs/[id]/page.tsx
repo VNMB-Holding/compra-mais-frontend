@@ -43,6 +43,7 @@ import { suppliersApi } from "@/lib/api/suppliers";
 type RfqStage = "proposal" | "analysis" | "approval";
 
 interface LocalProposal {
+  id: string;
   supplierId: string;
   proposalId?: string;
   supplierName: string;
@@ -66,11 +67,130 @@ interface LocalProposal {
 }
 
 function mapPropostas(rfq: Rfq): LocalProposal[] {
-  const mapBySupplier = new Map<string, LocalProposal>();
+  const proposalsList: LocalProposal[] = [];
+  const reqItems = rfq.purchaseRequest?.items ?? [];
+  const rawQtdTotal = reqItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0) || 1;
 
+  // Contabilizar propostas existentes por fornecedor para numerar ofertas múltiplas
+  const supplierProposalCount = new Map<string, number>();
+  (rfq.proposals ?? []).forEach((p) => {
+    if (p.supplierId) {
+      supplierProposalCount.set(p.supplierId, (supplierProposalCount.get(p.supplierId) || 0) + 1);
+    }
+  });
+
+  const supplierProposalIndex = new Map<string, number>();
+
+  (rfq.proposals ?? []).forEach((p) => {
+    if (!p.supplierId) return;
+
+    const totalCount = supplierProposalCount.get(p.supplierId) || 1;
+    const currentIndex = (supplierProposalIndex.get(p.supplierId) || 0) + 1;
+    supplierProposalIndex.set(p.supplierId, currentIndex);
+
+    let subtotal = 0;
+    let hasItemPrices = false;
+    if (p.items && p.items.length > 0) {
+      for (const item of p.items) {
+        const reqItem = reqItems.find((ri) => ri.id === (item.requestItemId || item.id));
+        const qty = reqItem ? Number(reqItem.quantity || 1) : 1;
+        const uPrice = Number(item.unitPrice) || 0;
+        if (uPrice > 0) hasItemPrices = true;
+        subtotal += uPrice * qty;
+      }
+    }
+
+    const freight = Number(
+      p.items && p.items.length > 0
+        ? (p.items[0].freightCost ?? (p as any).freightCost ?? (p as any).shippingCost ?? 0)
+        : ((p as any).freightCost ?? (p as any).shippingCost ?? 0),
+    );
+
+    const firstItemUnitPrice = Number(p.items?.[0]?.unitPrice) || 0;
+    const unitPrice = hasItemPrices
+      ? subtotal / rawQtdTotal
+      : firstItemUnitPrice || Number(p.totalValue ?? 0);
+
+    const totalCalculated = subtotal > 0 ? subtotal + freight : unitPrice * rawQtdTotal + freight;
+
+    const hasPrices =
+      hasItemPrices || Number(unitPrice) > 0 || subtotal > 0 || Number(p.totalValue ?? 0) > 0;
+    const isDeclined = p.status === "Declined" && !hasPrices;
+    const isDraftWithoutPrice = p.status === "Draft" && !hasPrices;
+    const status: LocalProposal["status"] = isDeclined
+      ? "declined"
+      : isDraftWithoutPrice
+        ? "awaiting"
+        : "received";
+
+    const initialItemPrices: Record<string, number> = {};
+    if (p.items && p.items.length > 0) {
+      for (const it of p.items) {
+        const reqId = it.requestItemId || it.id;
+        if (reqId) initialItemPrices[reqId] = Number(it.unitPrice) || 0;
+      }
+    }
+
+    const pAny = p as any;
+    let initialSupplierName = (() => {
+      const detectedOfferUrl = extractProposalOfferUrl(pAny.notes, pAny.brandModel);
+      const detectedMkt = detectMarketplaceFromUrl(detectedOfferUrl);
+      let sName =
+        p.supplier?.tradeName ||
+        p.supplier?.corporateName ||
+        "Razão Social não informada";
+
+      if (detectedMkt) {
+        const lowerName = sName.toLowerCase();
+        if (
+          lowerName.includes("mercado livre") ||
+          lowerName.includes("compra online") ||
+          lowerName.includes("link") ||
+          lowerName.includes("loja virtual") ||
+          lowerName.includes("marketplace")
+        ) {
+          const storeLabel =
+            detectedMkt.id === "ecommerce" ? detectedMkt.shortLabel : detectedMkt.label;
+          sName = storeLabel;
+        }
+      }
+      return sName;
+    })();
+
+    if (totalCount > 1 && !initialSupplierName.match(/Oferta\s*\d+|Opção\s*\d+/i)) {
+      initialSupplierName = `${initialSupplierName} (Oferta ${currentIndex})`;
+    }
+
+    proposalsList.push({
+      id: p.id,
+      supplierId: p.supplierId,
+      proposalId: p.id,
+      supplierName: initialSupplierName,
+      cnpj: p.supplier?.cnpj || "—",
+      status,
+      unitPrice: Number(unitPrice),
+      freightCost: Number(freight),
+      freightType: (pAny.freightType as "CIF" | "FOB") || (freight > 0 ? "FOB" : "CIF"),
+      deliveryTime: p.deliveryTime ?? 5,
+      validityDays: pAny.validityDays ?? 15,
+      paymentTerms: p.paymentTerms || "30 dias DDL",
+      warrantyMonths: pAny.warrantyMonths ?? 12,
+      brandModel: pAny.brandModel || pAny.brand || "",
+      contactName: pAny.contactName || "",
+      contactEmail: pAny.contactEmail || "",
+      contactPhone: pAny.contactPhone || "",
+      notes: pAny.notes || "",
+      itemPrices: initialItemPrices,
+      totalCalculated,
+      isWinner: !!p.isWinner,
+    });
+  });
+
+  // Incluir fornecedores convidados sem nenhuma proposta cadastrada ainda
   (rfq.rfqSuppliers ?? []).forEach((rs) => {
-    if (rs.supplierId) {
-      mapBySupplier.set(rs.supplierId, {
+    if (rs.supplierId && !supplierProposalCount.has(rs.supplierId)) {
+      proposalsList.push({
+        id: `sup-${rs.supplierId}`,
         supplierId: rs.supplierId,
         supplierName:
           rs.supplier?.tradeName || rs.supplier?.corporateName || "Razão Social não informada",
@@ -80,109 +200,7 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
     }
   });
 
-  const reqItems = rfq.purchaseRequest?.items ?? [];
-  const rawQtdTotal = reqItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0) || 1;
-
-  (rfq.proposals ?? []).forEach((p) => {
-    if (p.supplierId) {
-      const existing = mapBySupplier.get(p.supplierId);
-
-      let subtotal = 0;
-      let hasItemPrices = false;
-      if (p.items && p.items.length > 0) {
-        for (const item of p.items) {
-          const reqItem = reqItems.find((ri) => ri.id === (item.requestItemId || item.id));
-          const qty = reqItem ? Number(reqItem.quantity || 1) : 1;
-          const uPrice = Number(item.unitPrice) || 0;
-          if (uPrice > 0) hasItemPrices = true;
-          subtotal += uPrice * qty;
-        }
-      }
-
-      const freight = Number(
-        p.items && p.items.length > 0
-          ? (p.items[0].freightCost ?? (p as any).freightCost ?? (p as any).shippingCost ?? 0)
-          : ((p as any).freightCost ?? (p as any).shippingCost ?? 0),
-      );
-
-      const firstItemUnitPrice = Number(p.items?.[0]?.unitPrice) || 0;
-      const unitPrice = hasItemPrices
-        ? subtotal / rawQtdTotal
-        : firstItemUnitPrice || Number(p.totalValue ?? 0);
-
-      const totalCalculated = subtotal > 0 ? subtotal + freight : unitPrice * rawQtdTotal + freight;
-
-      const hasPrices =
-        hasItemPrices || Number(unitPrice) > 0 || subtotal > 0 || Number(p.totalValue ?? 0) > 0;
-      const isDeclined = p.status === "Declined" && !hasPrices;
-      const isDraftWithoutPrice = p.status === "Draft" && !hasPrices;
-      const status: LocalProposal["status"] = isDeclined
-        ? "declined"
-        : isDraftWithoutPrice
-          ? "awaiting"
-          : "received";
-
-      const initialItemPrices: Record<string, number> = {};
-      if (p.items && p.items.length > 0) {
-        for (const it of p.items) {
-          const reqId = it.requestItemId || it.id;
-          if (reqId) initialItemPrices[reqId] = Number(it.unitPrice) || 0;
-        }
-      }
-
-      const pAny = p as any;
-      mapBySupplier.set(p.supplierId, {
-        supplierId: p.supplierId,
-        proposalId: p.id,
-        supplierName: (() => {
-          const detectedOfferUrl = extractProposalOfferUrl(pAny.notes, pAny.brandModel);
-          const detectedMkt = detectMarketplaceFromUrl(detectedOfferUrl);
-          let initialSupplierName =
-            p.supplier?.tradeName ||
-            p.supplier?.corporateName ||
-            existing?.supplierName ||
-            "Razão Social não informada";
-
-          if (detectedMkt) {
-            const lowerName = initialSupplierName.toLowerCase();
-            if (
-              lowerName.includes("mercado livre") ||
-              lowerName.includes("compra online") ||
-              lowerName.includes("link") ||
-              lowerName.includes("loja virtual") ||
-              lowerName.includes("marketplace")
-            ) {
-              const optionMatch = initialSupplierName.match(/Opção\s*(\d+)/i);
-              const optionSuffix = optionMatch ? ` (Opção ${optionMatch[1]})` : "";
-              const storeLabel =
-                detectedMkt.id === "ecommerce" ? detectedMkt.shortLabel : detectedMkt.label;
-              initialSupplierName = `${storeLabel}${optionSuffix}`;
-            }
-          }
-          return initialSupplierName;
-        })(),
-        cnpj: p.supplier?.cnpj || existing?.cnpj || "—",
-        status,
-        unitPrice: Number(unitPrice),
-        freightCost: Number(freight),
-        freightType: (pAny.freightType as "CIF" | "FOB") || (freight > 0 ? "FOB" : "CIF"),
-        deliveryTime: p.deliveryTime ?? 5,
-        validityDays: pAny.validityDays ?? 15,
-        paymentTerms: p.paymentTerms || "30 dias DDL",
-        warrantyMonths: pAny.warrantyMonths ?? 12,
-        brandModel: pAny.brandModel || pAny.brand || "",
-        contactName: pAny.contactName || "",
-        contactEmail: pAny.contactEmail || "",
-        contactPhone: pAny.contactPhone || "",
-        notes: pAny.notes || "",
-        itemPrices: initialItemPrices,
-        totalCalculated,
-        isWinner: !!p.isWinner,
-      });
-    }
-  });
-
-  return Array.from(mapBySupplier.values());
+  return proposalsList;
 }
 
 function getStage(rfq: Rfq): RfqStage {
@@ -213,9 +231,9 @@ function PropostaCard({
   rfqId?: string;
   rfqTitle: string;
   suggestedOfferUrl?: string | null;
-  onSalvar: (id: string, dados: Partial<LocalProposal>) => void;
+  onSalvar: (cardId: string, dados: Partial<LocalProposal>) => void;
   onOpenTracking?: (proposta: LocalProposal) => void;
-  onRemover?: (supplierId: string) => void;
+  onRemover?: (cardId: string) => void;
 }) {
   const { toast } = useToast();
   const [aberto, setAberto] = useState(false);
@@ -332,7 +350,7 @@ function PropostaCard({
         : `Link da Oferta: ${cleanUrl}`;
     }
 
-    onSalvar(proposta.supplierId, {
+    onSalvar(proposta.id, {
       ...draft,
       supplierName: displaySupplierName,
       notes: finalNotes,
@@ -546,7 +564,7 @@ function PropostaCard({
               <button
                 type="button"
                 className={styles.btnActionIcon}
-                onClick={() => onRemover(proposta.supplierId)}
+                onClick={() => onRemover(proposta.id)}
                 title={`Remover ${proposta.supplierName} desta cotação`}
                 style={{ color: "#ef4444", borderColor: "#fecaca" }}
               >
@@ -1169,29 +1187,16 @@ export default function RfqDetailPage() {
         }
       } catch {}
 
-      if (masterSupplier) {
-        const alreadyInRfq = propostas.some((p) => p.supplierId === masterSupplier.id);
-        if (alreadyInRfq) {
-          toast({
-            variant: "warning",
-            title:
-              preset === "mercadolivre"
-                ? "Mercado Livre já adicionado"
-                : "Fornecedor Local já adicionado",
-            message:
-              "Esta cotação já possui uma proposta registrada para este canal. Você pode editar os dados no card existente.",
-          });
-          return;
-        }
-      }
+      const count = preset === "mercadolivre" ? onlineCount : localCount;
+      const offerSuffix = count > 0 ? ` (Oferta ${count + 1})` : "";
 
       const templates =
         preset === "mercadolivre"
           ? [
               {
                 name: masterSupplier
-                  ? masterSupplier.tradeName || masterSupplier.corporateName
-                  : "Mercado Livre (Compra Online via Link)",
+                  ? `${masterSupplier.tradeName || masterSupplier.corporateName}${offerSuffix}`
+                  : `Mercado Livre${offerSuffix || " (Compra Online via Link)"}`,
                 cnpj: masterSupplier ? masterSupplier.cnpj : "03.007.331/0001-41",
                 email: masterSupplier?.contactEmail || "cotacao@mercadolivre.com.br",
                 contactName: "Equipe Mercado Livre",
@@ -1202,8 +1207,8 @@ export default function RfqDetailPage() {
           : [
               {
                 name: masterSupplier
-                  ? masterSupplier.tradeName || masterSupplier.corporateName
-                  : "Comércio Local / Compra Presencial",
+                  ? `${masterSupplier.tradeName || masterSupplier.corporateName}${offerSuffix}`
+                  : `Comércio Local${offerSuffix || " / Compra Presencial"}`,
                 cnpj: masterSupplier ? masterSupplier.cnpj : "00.000.000/0001-91",
                 email: masterSupplier?.contactEmail || "orcamento.local@compramais.interno",
                 contactName: "Atendimento Presencial",
@@ -1216,7 +1221,7 @@ export default function RfqDetailPage() {
 
       for (const tpl of templates) {
         let createdSupplierId = masterSupplier?.id || `quick-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        let createdName = masterSupplier?.tradeName || masterSupplier?.corporateName || tpl.name;
+        let createdName = tpl.name;
         let createdCnpj = masterSupplier?.cnpj || tpl.cnpj;
 
         if (!masterSupplier) {
@@ -1248,7 +1253,9 @@ export default function RfqDetailPage() {
           }
         }
 
+        const uniqueCardId = `card-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         newProposals.push({
+          id: uniqueCardId,
           supplierId: createdSupplierId,
           supplierName: createdName,
           cnpj: createdCnpj,
@@ -1370,7 +1377,7 @@ export default function RfqDetailPage() {
         setPropostas(mapPropostas(data));
         setStage(getStage(data));
         const winner = (data.proposals ?? []).find((p) => p.isWinner);
-        if (winner) setVencedorId(winner.supplierId);
+        if (winner) setVencedorId(winner.id);
 
         try {
           const orders = await purchaseOrdersApi.list();
@@ -1430,8 +1437,22 @@ export default function RfqDetailPage() {
       setProposalPage(totalProposalPages);
     }
   }, [proposalPage, totalProposalPages]);
-  const handleRemoverProposta = (supId: string) => {
-    setPropostas((prev) => prev.filter((p) => p.supplierId !== supId));
+  const handleRemoverProposta = async (cardId: string) => {
+    const propToRemove = propostas.find((p) => p.id === cardId);
+    if (propToRemove?.proposalId) {
+      try {
+        await rfqsApi.deleteProposal(rfqId, propToRemove.proposalId);
+      } catch (err: any) {
+        logError("rfqs/[id]/deleteProposal", err);
+        toast({
+          variant: "error",
+          title: "Erro ao excluir proposta",
+          message: getErrorMessage(err),
+        });
+        return;
+      }
+    }
+    setPropostas((prev) => prev.filter((p) => p.id !== cardId));
     toast({
       variant: "info",
       title: "Opção removida",
@@ -1439,7 +1460,9 @@ export default function RfqDetailPage() {
     });
   };
 
-  const handleSalvarProposta = async (id: string, dados: Partial<LocalProposal>) => {
+  const handleSalvarProposta = async (cardId: string, dados: Partial<LocalProposal>) => {
+    const currentProp = propostas.find((p) => p.id === cardId);
+    if (!currentProp) return;
 
     if (
       dados.unitPrice !== undefined ||
@@ -1455,7 +1478,8 @@ export default function RfqDetailPage() {
             : undefined;
 
         const propostaCriada = await rfqsApi.createProposal(rfqId, {
-          supplierId: id,
+          proposalId: currentProp.proposalId,
+          supplierId: currentProp.supplierId,
           unitPrice: Number(dados.unitPrice) || 0,
           freightCost: dados.freightType === "CIF" ? 0 : Number(dados.freightCost) || 0,
           freightType: dados.freightType,
@@ -1471,13 +1495,16 @@ export default function RfqDetailPage() {
           items: itemsPayload,
         });
 
+        const newProposalId = propostaCriada?.id || currentProp.proposalId;
+
         setPropostas((c) =>
           c.map((p) =>
-            p.supplierId === id
+            p.id === cardId
               ? {
                   ...p,
                   ...dados,
-                  proposalId: propostaCriada?.id || p.proposalId,
+                  id: newProposalId || p.id,
+                  proposalId: newProposalId,
                   status: "received",
                 }
               : p,
@@ -1496,6 +1523,10 @@ export default function RfqDetailPage() {
           message: getErrorMessage(err),
         });
       }
+    } else {
+      setPropostas((c) =>
+        c.map((p) => (p.id === cardId ? { ...p, ...dados } : p)),
+      );
     }
   };
 
@@ -1517,8 +1548,8 @@ export default function RfqDetailPage() {
   });
   const melhorProposta = propostasRankeadas[0] || null;
 
-  const vencedor = propostas.find((p) => p.supplierId === vencedorId);
-  const pendingVencedor = propostas.find((p) => p.supplierId === pendingVencedorId);
+  const vencedor = propostas.find((p) => p.id === vencedorId || p.proposalId === vencedorId);
+  const pendingVencedor = propostas.find((p) => p.id === pendingVencedorId || p.proposalId === pendingVencedorId);
 
   const rfqTitle = rfq?.title || rfq?.purchaseRequest?.description || "—";
   const rfqCode = rfq?.code || rfqId;
@@ -1629,18 +1660,18 @@ export default function RfqDetailPage() {
           if (pendingVencedorId) {
             setSelectingWinner(true);
             try {
-              let propostaIdParaEnviar = propostas.find(
-                (p) => p.supplierId === pendingVencedorId,
-              )?.proposalId;
+              const prop = propostas.find(
+                (p) => p.id === pendingVencedorId || p.proposalId === pendingVencedorId,
+              );
+              let propostaIdParaEnviar = prop?.proposalId;
 
-              if (!propostaIdParaEnviar) {
-                const propLocal = propostas.find((p) => p.supplierId === pendingVencedorId);
+              if (!propostaIdParaEnviar && prop) {
                 const propCriada = await rfqsApi.createProposal(rfqId, {
-                  supplierId: pendingVencedorId,
-                  unitPrice: propLocal?.unitPrice ?? 0,
-                  freightCost: propLocal?.freightCost ?? 0,
-                  paymentTerms: propLocal?.paymentTerms || "30 dias DDL",
-                  deliveryTime: propLocal?.deliveryTime ?? 5,
+                  supplierId: prop.supplierId,
+                  unitPrice: prop.unitPrice ?? 0,
+                  freightCost: prop.freightCost ?? 0,
+                  paymentTerms: prop.paymentTerms || "30 dias DDL",
+                  deliveryTime: prop.deliveryTime ?? 5,
                 });
                 propostaIdParaEnviar = propCriada?.id;
               }
@@ -1662,7 +1693,7 @@ export default function RfqDetailPage() {
               setRfq(updated);
               setPropostas(mapPropostas(updated));
               const winner = (updated.proposals ?? []).find((p) => p.isWinner);
-              setVencedorId(winner ? winner.supplierId : pendingVencedorId);
+              setVencedorId(winner ? winner.id : propostaIdParaEnviar);
               setStage(getStage(updated));
 
               toast({
@@ -2086,9 +2117,9 @@ export default function RfqDetailPage() {
             <>
               {paginatedPropostas.map((p) => (
                 <PropostaCard
-                  key={p.supplierId}
+                  key={p.id}
                   proposta={p}
-                  isWinner={vencedorId === p.supplierId || !!p.isWinner}
+                  isWinner={vencedor?.id === p.id || (p.proposalId ? vencedor?.proposalId === p.proposalId : false) || vencedorId === p.id || !!p.isWinner}
                   totalQtd={totalQtd}
                   rfqItems={rfqItems}
                   rfqCode={rfqCode}
@@ -2215,7 +2246,7 @@ export default function RfqDetailPage() {
                     <tr>
                       <th className={styles.rowHeader}>Critério</th>
                       {propostasRankeadas.map((p, i) => (
-                        <th key={p.supplierId} className={i === 0 ? styles.winnerHeaderCol : ""}>
+                        <th key={p.id} className={i === 0 ? styles.winnerHeaderCol : ""}>
                           {i === 0 && <div className={styles.winnerBadgeTip}>MELHOR OPÇÃO</div>}
                           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
                             <MarketplaceLogo
@@ -2223,7 +2254,7 @@ export default function RfqDetailPage() {
                               size="sm"
                               showFallbackIcon={false}
                             />
-                            <span>{p.supplierName.split(" ").slice(0, 2).join(" ")}</span>
+                            <span>{p.supplierName}</span>
                           </div>
                         </th>
                       ))}
@@ -2234,7 +2265,7 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Preço Unitário Líquido</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.supplierId}
+                          key={p.id}
                           className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}
                         >
                           {formatCurrency(p.unitPrice!)}
@@ -2245,7 +2276,7 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Custo de Frete (Total)</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.supplierId}
+                          key={p.id}
                           className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}
                         >
                           {formatCurrency(p.freightCost!)}
@@ -2256,7 +2287,7 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Prazo de Entrega</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.supplierId}
+                          key={p.id}
                           className={i === 0 ? styles.winnerCellSuccess : styles.mutedCellText}
                         >
                           {p.deliveryTime} dia(s)
@@ -2267,7 +2298,7 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Condição de Pagamento</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.supplierId}
+                          key={p.id}
                           className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                         >
                           {p.paymentTerms}
@@ -2288,7 +2319,7 @@ export default function RfqDetailPage() {
                               : "FOB (À parte)";
                         return (
                           <td
-                            key={p.supplierId}
+                            key={p.id}
                             className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                           >
                             {freightDisplay}
@@ -2307,7 +2338,7 @@ export default function RfqDetailPage() {
                             : "15 dias";
                         return (
                           <td
-                            key={p.supplierId}
+                            key={p.id}
                             className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                           >
                             {validityDisplay}
@@ -2319,7 +2350,7 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Loja / Vendedor / Marca</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.supplierId}
+                          key={p.id}
                           className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                         >
                           {p.brandModel || "—"}
@@ -2330,7 +2361,7 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeader}>Garantia</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.supplierId}
+                          key={p.id}
                           className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                         >
                           {p.warrantyMonths ? `${p.warrantyMonths} meses` : "—"}
@@ -2347,7 +2378,7 @@ export default function RfqDetailPage() {
                           const pMkt = detectMarketplaceFromUrl(pUrl);
                           return (
                             <td
-                              key={p.supplierId}
+                              key={p.id}
                               className={i === 0 ? styles.winnerCellNormal : styles.mutedCellText}
                             >
                               {pUrl ? (
@@ -2386,7 +2417,7 @@ export default function RfqDetailPage() {
                       <td className={styles.rowHeaderTotal}>Custo Total Equalizado</td>
                       {propostasRankeadas.map((p, i) => (
                         <td
-                          key={p.supplierId}
+                          key={p.id}
                           className={i === 0 ? styles.winnerCellTotal : styles.totalMutedText}
                         >
                           {formatCurrency(getProposalTotal(p))}
@@ -2396,7 +2427,7 @@ export default function RfqDetailPage() {
                     <tr>
                       <td className={styles.rowHeader} />
                       {propostasRankeadas.map((p, i) => (
-                        <td key={p.supplierId} className={styles.selectCell}>
+                        <td key={p.id} className={styles.selectCell}>
                           <button
                             className={
                               i === 0
@@ -2410,12 +2441,12 @@ export default function RfqDetailPage() {
                                 : undefined
                             }
                             onClick={() => {
-                              setPendingVencedorId(p.supplierId);
+                              setPendingVencedorId(p.id);
                               setDialog("selecionar");
                             }}
                           >
                             {isFinished || !!generatedPo ? (
-                              vencedor?.supplierId === p.supplierId ? (
+                              vencedor?.id === p.id || (p.proposalId && vencedor?.proposalId === p.proposalId) ? (
                                 <>
                                   <Icon name="check" size={14} /> Contratado
                                 </>
