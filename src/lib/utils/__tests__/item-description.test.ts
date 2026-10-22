@@ -183,6 +183,9 @@ describe("item-description utility", () => {
       const shp = detectMarketplaceFromUrl("https://shopee.com.br/item-123");
       expect(shp?.id).toBe("shopee");
       expect(shp?.label).toBe("Shopee");
+      expect(detectMarketplaceFromUrl("Shoppe Brasil")?.id).toBe("shopee");
+      expect(detectMarketplaceFromUrl("SHPS Tecnologia e Serviços Ltda.")?.id).toBe("shopee");
+      expect(detectMarketplaceFromUrl("35.635.824/0001-12")?.id).toBe("shopee");
     });
 
     it("deve retornar ecommerce genérico para outros domínios", () => {

@@ -1389,17 +1389,27 @@ export default function PedidoDetailPage() {
                   width: "42px",
                   height: "42px",
                   borderRadius: "50%",
-                  background: "#f0fdf9",
-                  border: "1px solid #ccfbf1",
+                  background: orderMarketplace?.logoPath ? "#ffffff" : "#f0fdf9",
+                  border: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "#007d79",
                   fontWeight: "700",
                   fontSize: "15px",
+                  padding: orderMarketplace?.logoPath ? "6px" : 0,
+                  overflow: "hidden",
                 }}
               >
-                {fornecedorNome.slice(0, 2).toUpperCase()}
+                {orderMarketplace?.logoPath ? (
+                  <img
+                    src={orderMarketplace.logoPath}
+                    alt={fornecedorNome}
+                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  />
+                ) : (
+                  fornecedorNome.slice(0, 2).toUpperCase()
+                )}
               </div>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1490,7 +1500,7 @@ export default function PedidoDetailPage() {
               </div>
             )}
 
-            {po?.supplier?.id && !isMarketplaceOrLocalSupplier(fornecedorNome) && (
+            {po?.supplier?.id && (
               <Button
                 variant="secondary"
                 onClick={() => router.push(getSupplierDetailUrl(po.supplier?.id || ""))}

@@ -32,7 +32,10 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("produto.mercadolivre") ||
     lower.includes("meli.la") ||
     lower === "mercadolivre" ||
-    lower.includes("mercado livre")
+    lower.includes("mercado livre") ||
+    lower.includes("ebazar") ||
+    lower.includes("03007331") ||
+    lower.includes("03.007.331")
   ) {
     return {
       id: "mercadolivre",
@@ -46,7 +49,9 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("amazon.com") ||
     lower.includes("amzn.to") ||
     lower.includes("a.co/") ||
-    lower.includes("amazon")
+    lower.includes("amazon") ||
+    lower.includes("15436940") ||
+    lower.includes("15.436.940")
   ) {
     return {
       id: "amazon",
@@ -56,7 +61,15 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
       logoPath: "/logos/marketplaces/amazon.svg",
     };
   }
-  if (lower.includes("shopee.com") || lower.includes("shp.ee") || lower.includes("shopee")) {
+  if (
+    lower.includes("shopee.com") ||
+    lower.includes("shp.ee") ||
+    lower.includes("shopee") ||
+    lower.includes("shoppe") ||
+    lower.includes("shps") ||
+    lower.includes("35635824") ||
+    lower.includes("35.635.824")
+  ) {
     return {
       id: "shopee",
       label: "Shopee",
@@ -69,7 +82,9 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("magazineluiza.com") ||
     lower.includes("magalu.com") ||
     lower.includes("magalu") ||
-    lower.includes("magazine luiza")
+    lower.includes("magazine luiza") ||
+    lower.includes("47960950") ||
+    lower.includes("47.960.950")
   ) {
     return {
       id: "magalu",
@@ -152,7 +167,7 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
 
 export function isMarketplaceOrLocalSupplier(name?: string | null): boolean {
   if (!name) return false;
-  return /mercado\s*livre|amazon|shopee|magalu|magazine\s*luiza|com[eé]rcio\s*local|loja\s*local|balc[aã]o|aliexpress|americanas/i.test(
+  return /mercado\s*livre|amazon|shopee|shoppe|shps|magalu|magazine\s*luiza|com[eé]rcio\s*local|loja\s*local|balc[aã]o|aliexpress|americanas/i.test(
     name,
   );
 }

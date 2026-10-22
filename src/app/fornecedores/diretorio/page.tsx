@@ -18,6 +18,7 @@ import styles from "./fornecedores.module.css";
 import { suppliersApi, Supplier, SupplierKpis } from "@/lib/api/suppliers";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import { getSupplierDetailUrl } from "@/lib/utils/routes";
+import { detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 
 import { useAuth } from "@/hooks/useAuth";
 import { isPuraFeUser, getCompanyFilterOptions } from "@/lib/utils/tenant";
@@ -29,6 +30,7 @@ interface FornecedorRow {
   id: string;
   iniciais: string;
   nome: string;
+  nomeFantasia?: string;
   cnpj: string;
   cidade: string;
   estado: string;
@@ -66,8 +68,9 @@ function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRo
 
   return {
     id: s.id,
-    iniciais: (s.corporateName || s.tradeName || "FR").substring(0, 2).toUpperCase(),
+    iniciais: (s.tradeName || s.corporateName || "FR").substring(0, 2).toUpperCase(),
     nome: s.corporateName || s.tradeName || "Fornecedor",
+    nomeFantasia: s.tradeName || "",
     cnpj: s.cnpj,
     cidade,
     estado,
@@ -237,22 +240,33 @@ export default function FornecedoresListPage() {
   const columns: ColumnDef<FornecedorRow>[] = [
     {
       header: "Fornecedor",
-      cell: (row) => (
-        <div className={styles.fornecedorCell}>
-          <div
-            className={`${styles.avatar} ${row.cor === "green" ? styles.avatarGreen : styles.avatarOrange}`}
-          >
-            {row.iniciais}
+      cell: (row) => {
+        const textToMatch = [row.nome, row.nomeFantasia, row.cnpj].filter(Boolean).join(" ");
+        const detectedLogo = detectMarketplaceFromUrl(textToMatch);
+        return (
+          <div className={styles.fornecedorCell}>
+            {detectedLogo?.logoPath ? (
+              <div className={`${styles.avatar} ${styles.avatarWithLogo}`} title={detectedLogo.label}>
+                <img src={detectedLogo.logoPath} alt={row.nome} className={styles.supplierLogoImg} />
+              </div>
+            ) : (
+              <div
+                className={`${styles.avatar} ${row.cor === "green" ? styles.avatarGreen : styles.avatarOrange}`}
+              >
+                {row.iniciais}
+              </div>
+            )}
+            <div className={styles.doubleText}>
+              <strong>{row.nome}</strong>
+              <span>
+                {row.nomeFantasia && row.nomeFantasia !== row.nome ? `${row.nomeFantasia} • ` : ""}
+                CNPJ {row.cnpj}{" "}
+                {row.integrationCode !== "—" ? `• Cód. ERP: ${row.integrationCode}` : ""}
+              </span>
+            </div>
           </div>
-          <div className={styles.doubleText}>
-            <strong>{row.nome}</strong>
-            <span>
-              CNPJ {row.cnpj}{" "}
-              {row.integrationCode !== "—" ? `• Cód. ERP: ${row.integrationCode}` : ""}
-            </span>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: "Localização / Praça",
