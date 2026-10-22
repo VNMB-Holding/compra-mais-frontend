@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
+  Button,
   Icon,
   Select,
   TableSkeleton,
@@ -29,6 +30,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
+import { useToast } from "@/contexts/ToastContext";
+import { downloadPdfResponse } from "@/lib/utils/pdf";
 import {
   getCompanyFilterOptions,
   resolvePurchaseRequestBranch,
@@ -103,6 +106,25 @@ function SolicitacoesContent() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDrawerRequest, setSelectedDrawerRequest] = useState<PurchaseRequest | null>(null);
+  const [loadingDrawerPdf, setLoadingDrawerPdf] = useState(false);
+  const { toast } = useToast();
+
+  const handleDownloadDrawerPdf = async () => {
+    if (!selectedDrawerRequest?.id) return;
+    setLoadingDrawerPdf(true);
+    try {
+      const response = await purchaseRequestsApi.generatePdf(selectedDrawerRequest.id);
+      await downloadPdfResponse(response, selectedDrawerRequest.code || "solicitacao-compra");
+    } catch (e) {
+      toast({
+        variant: "error",
+        title: "Erro ao gerar PDF",
+        message: e instanceof Error ? e.message : "Tente novamente.",
+      });
+    } finally {
+      setLoadingDrawerPdf(false);
+    }
+  };
   const itemsPerPage = 10;
 
   const companyOptions = React.useMemo(() => getCompanyFilterOptions(user), [user]);
@@ -433,7 +455,19 @@ function SolicitacoesContent() {
           primaryActionLabel="Abrir Detalhes Completos"
           onPrimaryAction={() => router.push(`/compras/solicitacoes/${selectedDrawerRequest.id}`)}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                variant="secondary"
+                onClick={handleDownloadDrawerPdf}
+                disabled={loadingDrawerPdf}
+                loading={loadingDrawerPdf}
+                loadingText="Gerando PDF..."
+                title="Imprimir ou baixar a Solicitação de Compra em formato PDF oficial"
+              >
+                <Icon name="printer" /> Imprimir / Baixar SC
+              </Button>
+            </div>
             <div
               style={{
                 display: "grid",
