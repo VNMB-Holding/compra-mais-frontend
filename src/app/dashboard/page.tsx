@@ -209,7 +209,7 @@ export default function DashboardPage() {
       <div className={styles.pageHeaderSimple}>
         <div>
           <h1>
-            Bom dia, {firstName}. <span className={styles.wave}>👋</span>
+            Bom dia, {firstName}.
           </h1>
           <p>Aqui está o panorama das suas operações de suprimentos hoje.</p>
         </div>

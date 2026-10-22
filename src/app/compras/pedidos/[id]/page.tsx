@@ -2,14 +2,29 @@
 
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Badge, Icon, ConfirmDialog, Skeleton, CardSkeleton, ItemCell } from "@/components/ui";
+import {
+  Card,
+  Button,
+  Badge,
+  Icon,
+  ConfirmDialog,
+  Skeleton,
+  CardSkeleton,
+  ItemCell,
+  MarketplaceLogo,
+} from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { formatCorporateBranch } from "@/lib/utils/tenant";
 import { getApprovalChainForOrder } from "@/lib/utils/approval-limits";
-import { maskNfeAccessKey } from "@/lib/utils/masks";
+import { maskNfeAccessKey, maskCnpj } from "@/lib/utils/masks";
 import { getSupplierDetailUrl } from "@/lib/utils/routes";
+import {
+  detectMarketplaceFromUrl,
+  extractProposalOfferUrl,
+  isMarketplaceOrLocalSupplier,
+} from "@/lib/utils/item-description";
 import { useAuth } from "@/hooks/useAuth";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import {
@@ -76,6 +91,7 @@ export default function PedidoDetailPage() {
   const [inputTransportadora, setInputTransportadora] = useState("");
   const [inputRastreio, setInputRastreio] = useState("");
   const [inputRecebimentoNotas, setInputRecebimentoNotas] = useState("");
+  const [inputMarketplaceOrderCode, setInputMarketplaceOrderCode] = useState("");
 
   const [loadingPdf, setLoadingPdf] = useState(false);
   const { toast } = useToast();
@@ -160,25 +176,37 @@ export default function PedidoDetailPage() {
   const handleConfirmAssinatura = async () => {
     try {
       const orderIdToUpdate = po?.id || (isUuid ? rawId : null);
+      const note = isMarketplaceOrder
+        ? `Compra realizada no ${orderMarketplace?.label || "site"}${
+            inputMarketplaceOrderCode.trim()
+              ? ` (Pedido/Protocolo: ${inputMarketplaceOrderCode.trim()})`
+              : ""
+          }`
+        : "Pedido de compra assinado e formalizado pelo gestor responsável.";
+
+      const newStatus = isMarketplaceOrder ? "Processing" : "Signed";
+
       if (orderIdToUpdate) {
         await updateStatusMutation.mutateAsync({
           id: orderIdToUpdate,
-          status: "Signed",
-          notes: "Pedido de compra assinado e formalizado pelo gestor responsável.",
+          status: newStatus,
+          notes: note,
         });
       }
-      setStatusOverride("Signed");
+      setStatusOverride(newStatus);
       setConfirmAssinatura(false);
       toast({
         variant: "success",
-        title: "Pedido Assinado!",
-        message: `O pedido ${displayId} foi assinado com sucesso e está emitido para o fornecedor.`,
+        title: isMarketplaceOrder ? "Compra Efetivada!" : "Pedido Assinado!",
+        message: isMarketplaceOrder
+          ? `A compra de ${displayId} no ${orderMarketplace?.label || "site"} foi registrada como realizada com sucesso.`
+          : `O pedido de compra ${displayId} foi assinado com sucesso e está emitido para o fornecedor.`,
       });
     } catch (e) {
       toast({
         variant: "error",
-        title: "Erro ao assinar pedido",
-        message: e instanceof Error ? e.message : "Não foi possível assinar o pedido.",
+        title: isMarketplaceOrder ? "Erro ao confirmar compra" : "Erro ao assinar pedido",
+        message: e instanceof Error ? e.message : "Não foi possível concluir a ação.",
       });
     }
   };
@@ -353,6 +381,25 @@ export default function PedidoDetailPage() {
     return getApprovalChainForOrder(po?.companyCode || po?.tenantId || "", Number(valorTotal || 0));
   }, [po?.companyCode, po?.tenantId, valorTotal]);
 
+  const items = po?.items && po.items.length > 0 ? po.items : null;
+
+  const orderOfferUrl = useMemo(() => {
+    const fromNotes = extractProposalOfferUrl(poNotes, (po as any)?.winningProposal?.notes);
+    if (fromNotes) return fromNotes;
+    const fromItems = (items as any[])?.find((it: any) => it.referenceUrl)?.referenceUrl;
+    if (fromItems) return fromItems;
+    for (const it of items || []) {
+      const extracted = extractProposalOfferUrl(it.description, (it as any)?.notes);
+      if (extracted) return extracted;
+    }
+    return null;
+  }, [poNotes, po, items]);
+
+  const orderMarketplace = useMemo(
+    () => detectMarketplaceFromUrl(orderOfferUrl),
+    [orderOfferUrl],
+  );
+
   if (!isNewFlow && (isDirectLoading || (isListLoading && !po))) {
     return (
       <div className={styles.detailContainer}>
@@ -400,25 +447,117 @@ export default function PedidoDetailPage() {
     po?.tenantId,
     user,
   );
-  const items = po?.items && po.items.length > 0 ? po.items : null;
+
+  const isPuraFe =
+    companyName.toLowerCase().includes("pura fé") ||
+    companyName.toLowerCase().includes("purafe") ||
+    (po as any)?.companyCode === "PURAFE" ||
+    (po as any)?.filialCode === "PURAFE" ||
+    po?.tenantId === "PURAFE";
+
+  const isMarketplaceOrder =
+    Boolean(orderOfferUrl) ||
+    fornecedorNome.toLowerCase().includes("mercado livre") ||
+    fornecedorNome.toLowerCase().includes("amazon") ||
+    fornecedorNome.toLowerCase().includes("shopee") ||
+    fornecedorNome.toLowerCase().includes("magalu");
 
   return (
     <div className={styles.detailContainer}>
       <ConfirmDialog
         open={confirmAssinatura}
         variant="success"
-        icon="check-circle"
-        title="Assinar e Formalizar Pedido de Compra?"
+        icon={isMarketplaceOrder ? "shopping-cart-01" : "check-circle"}
+        title={
+          isMarketplaceOrder
+            ? `Efetivar Compra no ${orderMarketplace?.label || "Site / Marketplace"}`
+            : "Assinar e Formalizar Pedido de Compra?"
+        }
         loading={updateStatusMutation.isPending}
-        loadingConfirmLabel="Assinando..."
-        confirmLabel="Assinar Pedido"
+        loadingConfirmLabel={isMarketplaceOrder ? "Confirmando Compra..." : "Assinando..."}
+        confirmLabel={isMarketplaceOrder ? "Confirmar Compra Efetivada" : "Assinar Pedido"}
         onConfirm={handleConfirmAssinatura}
         onCancel={() => setConfirmAssinatura(false)}
         message={
-          <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
-            Ao assinar, o pedido <strong>{displayId}</strong> será formalizado com o fornecedor{" "}
-            <strong>{fornecedorNome}</strong> e liberado para faturamento e despacho logístico.
-          </p>
+          isMarketplaceOrder ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
+              <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
+                Esta compra deve ser realizada diretamente pelo site ou aplicativo do{" "}
+                <strong>{orderMarketplace?.label || fornecedorNome}</strong>.
+              </p>
+
+              {orderOfferUrl && (
+                <div style={{ margin: "4px 0" }}>
+                  <a
+                    href={orderOfferUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "8px 14px",
+                      background: orderMarketplace?.isMercadoLivre ? "#fef3c7" : "#f0fdf9",
+                      color: orderMarketplace?.isMercadoLivre ? "#78350f" : "#0f766e",
+                      border: `1px solid ${
+                        orderMarketplace?.isMercadoLivre ? "#fcd34d" : "#99f6e4"
+                      }`,
+                      borderRadius: 8,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <MarketplaceLogo source={orderOfferUrl} size="sm" />
+                    <span>Abrir anúncio oficial para comprar</span>
+                    <Icon name="arrow-up-right" size={14} />
+                  </a>
+                </div>
+              )}
+
+              {isPuraFe && (
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    background: "#fffbeb",
+                    border: "1px solid #fde68a",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    color: "#92400e",
+                  }}
+                >
+                  <strong>Orientação Igreja Pura Fé:</strong> Efetue o pagamento utilizando a
+                  conta oficial da igreja (cartão de crédito corporativo ou chave PIX).
+                </div>
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                  Código do Pedido no Site / Protocolo (opcional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: #2000008491234 (Mercado Livre) ou #701-9281920 (Amazon)"
+                  value={inputMarketplaceOrderCode}
+                  onChange={(e) => setInputMarketplaceOrderCode(e.target.value)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid #cbd5e1",
+                    fontSize: 13,
+                    outline: "none",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
+              Ao assinar, o pedido <strong>{displayId}</strong> será formalizado com o fornecedor{" "}
+              <strong>{fornecedorNome}</strong> e liberado para faturamento e despacho logístico.
+            </p>
+          )
         }
       />
 
@@ -426,25 +565,44 @@ export default function PedidoDetailPage() {
         open={confirmFaturamento}
         variant="info"
         icon="file-02"
-        title="Confirmar Faturamento do Pedido"
+        title={
+          isMarketplaceOrder
+            ? "Confirmar Compra no Site / Faturamento"
+            : "Confirmar Faturamento do Pedido"
+        }
         loading={updateStatusMutation.isPending}
         loadingConfirmLabel="Confirmando..."
-        confirmLabel="Confirmar Faturamento"
+        confirmLabel={isMarketplaceOrder ? "Confirmar Compra / NF-e" : "Confirmar Faturamento"}
         onConfirm={handleConfirmFaturamento}
         onCancel={() => setConfirmFaturamento(false)}
         message={
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             <p style={{ margin: 0, color: "#475569", fontSize: 13.5 }}>
-              Confirme a emissão da Nota Fiscal Eletrônica de <strong>{displayId}</strong>. O pedido
-              avançará para a etapa de Faturado.
+              {isMarketplaceOrder ? (
+                <>
+                  Confirme o número do pedido gerado na plataforma (ex: Mercado Livre) ou a Nota
+                  Fiscal Eletrônica de <strong>{displayId}</strong>.
+                </>
+              ) : (
+                <>
+                  Confirme a emissão da Nota Fiscal Eletrônica de <strong>{displayId}</strong>. O
+                  pedido avançará para a etapa de Faturado.
+                </>
+              )}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
-                Número da NF-e
+                {isMarketplaceOrder
+                  ? "Número da NF-e ou Código da Compra (Mercado Livre / Site)"
+                  : "Número da NF-e"}
               </label>
               <input
                 type="text"
-                placeholder="Ex: NF-004821"
+                placeholder={
+                  isMarketplaceOrder
+                    ? "Ex: #2000008491234 (Mercado Livre) ou NF-004821"
+                    : "Ex: NF-004821"
+                }
                 value={inputNfe}
                 onChange={(e) => setInputNfe(e.target.value)}
                 style={{
@@ -617,6 +775,7 @@ export default function PedidoDetailPage() {
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
+            autoFocus
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Descreva detalhadamente a justificativa para o cancelamento do pedido..."
@@ -655,7 +814,9 @@ export default function PedidoDetailPage() {
                       : isBilled
                         ? "warning"
                         : currentStatus === "AwaitingSignature"
-                          ? "warning"
+                          ? isMarketplaceOrder
+                            ? "primary"
+                            : "warning"
                           : "gray"
               }
             >
@@ -666,9 +827,13 @@ export default function PedidoDetailPage() {
                   : isInTransit
                     ? "Em Transporte"
                     : isBilled
-                      ? "Faturado"
+                      ? isMarketplaceOrder
+                        ? "Comprado no Site"
+                        : "Faturado"
                       : currentStatus === "AwaitingSignature"
-                        ? "Aguardando Assinatura"
+                        ? isMarketplaceOrder
+                          ? "Pronto para Compra no Site"
+                          : "Aguardando Assinatura"
                         : "Emitido"}
             </Badge>
           </div>
@@ -697,8 +862,22 @@ export default function PedidoDetailPage() {
           {!isCancelled && (
             <>
               {currentStatus === "AwaitingSignature" && (
-                <Button variant="primary" onClick={() => setConfirmAssinatura(true)}>
-                  <Icon name="check-circle" /> Assinar Pedido
+                <Button
+                  variant="primary"
+                  onClick={() => setConfirmAssinatura(true)}
+                  style={
+                    isMarketplaceOrder
+                      ? {
+                          background: orderMarketplace?.isMercadoLivre ? "#eab308" : "#0f766e",
+                          borderColor: orderMarketplace?.isMercadoLivre ? "#ca8a04" : "#0f766e",
+                          color: orderMarketplace?.isMercadoLivre ? "#78350f" : "#ffffff",
+                          fontWeight: 700,
+                        }
+                      : undefined
+                  }
+                >
+                  <Icon name={isMarketplaceOrder ? "shopping-cart-01" : "check-circle"} />{" "}
+                  {isMarketplaceOrder ? "Efetivar Compra no Site" : "Assinar Pedido"}
                 </Button>
               )}
               {!isBilled && currentStatus !== "AwaitingSignature" && (
@@ -748,6 +927,95 @@ export default function PedidoDetailPage() {
 
       <div className={styles.layout2Col}>
         <div className={styles.colMain}>
+          {(isMarketplaceOrder || isPuraFe) && (
+            <div
+              style={{
+                background: isPuraFe ? "#fffbeb" : "#f0fdfa",
+                border: `1px solid ${isPuraFe ? "#fcd34d" : "#99f6e4"}`,
+                borderRadius: 12,
+                padding: "16px 20px",
+                marginBottom: 20,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 14,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, flex: 1 }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 8,
+                    background: "#ffffff",
+                    border: `1px solid ${isPuraFe ? "#fcd34d" : "#99f6e4"}`,
+                    color: isPuraFe ? "#b45309" : "#0f766e",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {orderMarketplace?.logoPath ? (
+                    <MarketplaceLogo source={orderMarketplace} size="md" />
+                  ) : (
+                    <MarketplaceLogo source={fornecedorNome || "mercadolivre"} size="md" />
+                  )}
+                </div>
+                <div>
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: isPuraFe ? "#92400e" : "#115e59",
+                    }}
+                  >
+                    {isPuraFe
+                      ? "Execução da Compra pela Igreja Pura Fé (Conta Mercado Livre / Compra Local)"
+                      : `Compra via Link / ${orderMarketplace?.label || "E-commerce"}`}
+                  </h4>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: 13,
+                      color: isPuraFe ? "#78350f" : "#134e4a",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {isPuraFe
+                      ? "A Igreja Pura Fé possui acesso próprio ao Mercado Livre para finalizar a compra diretamente. Após efetivar a compra no link oficial, utilize o botão 'Confirmar Faturamento' acima para registrar o código do pedido ou NF-e."
+                      : "Pedido originado de oferta online. Acesse o link do anúncio para efetivar a compra e registre o código do pedido ou NF-e na etapa de faturamento."}
+                  </p>
+                </div>
+              </div>
+              {orderOfferUrl && (
+                <a
+                  href={orderOfferUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "9px 14px",
+                    borderRadius: 8,
+                    background: orderMarketplace?.isMercadoLivre ? "#f59e0b" : "#007d79",
+                    color: "#ffffff",
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Icon name="link-external-01" size={14} /> Abrir no{" "}
+                  {orderMarketplace?.shortLabel || "Site"}
+                </a>
+              )}
+            </div>
+          )}
+
           <Card className={styles.flowCard}>
             <div className={styles.flowCardHeader}>
               <div>
@@ -764,10 +1032,14 @@ export default function PedidoDetailPage() {
                     : isInTransit
                       ? "Em Transporte"
                       : isBilled
-                        ? "Faturado (Aguardando Envio)"
+                        ? isMarketplaceOrder
+                          ? "Comprado no Site"
+                          : "Faturado (Aguardando Envio)"
                         : currentStatus === "AwaitingSignature"
-                          ? "Aguardando Assinatura do Gestor"
-                          : "Emitido (Aguardando Faturamento)"}
+                          ? isMarketplaceOrder
+                            ? "Pronto para Compra no Site"
+                            : "Aguardando Assinatura do Gestor"
+                          : "Emitido"}
                 </strong>
               </div>
             </div>
@@ -777,7 +1049,7 @@ export default function PedidoDetailPage() {
                 className={`${styles.step} ${currentStatus === "AwaitingSignature" ? styles.active : styles.completed}`}
               >
                 <div className={styles.stepIcon}>
-                  <Icon name="receipt-check" />
+                  <Icon name={isMarketplaceOrder ? "shopping-cart-01" : "receipt-check"} />
                   {currentStatus !== "AwaitingSignature" && (
                     <div className={styles.checkBadge}>
                       <Icon name="check" />
@@ -786,9 +1058,13 @@ export default function PedidoDetailPage() {
                 </div>
                 <div className={styles.stepInfo}>
                   <strong>
-                    {currentStatus === "AwaitingSignature"
-                      ? "Assinatura Pendente"
-                      : "Pedido Assinado"}
+                    {isMarketplaceOrder
+                      ? currentStatus === "AwaitingSignature"
+                        ? "Aguardando Compra no Site"
+                        : "Compra Efetivada"
+                      : currentStatus === "AwaitingSignature"
+                        ? "Assinatura Pendente"
+                        : "Pedido Assinado"}
                   </strong>
                   <span>
                     {po?.createdAt
@@ -796,9 +1072,13 @@ export default function PedidoDetailPage() {
                       : new Date().toLocaleDateString("pt-BR")}
                   </span>
                   <small>
-                    {currentStatus === "AwaitingSignature"
-                      ? "Aguardando gestor"
-                      : "Ordem formalizada"}
+                    {isMarketplaceOrder
+                      ? currentStatus === "AwaitingSignature"
+                        ? "Pronto para efetivação online"
+                        : "Pedido realizado na loja"
+                      : currentStatus === "AwaitingSignature"
+                        ? "Aguardando gestor"
+                        : "Ordem formalizada"}
                   </small>
                   {currentStatus === "AwaitingSignature" ? (
                     <button
@@ -806,7 +1086,11 @@ export default function PedidoDetailPage() {
                       className={styles.btnStepActionHighlight}
                       onClick={() => setConfirmAssinatura(true)}
                     >
-                      <Icon name="check-circle" size={12} /> Assinar Pedido
+                      <Icon
+                        name={isMarketplaceOrder ? "shopping-cart-01" : "check-circle"}
+                        size={12}
+                      />{" "}
+                      {isMarketplaceOrder ? "Efetivar compra no site" : "Assinar Pedido"}
                     </button>
                   ) : (
                     <span className={styles.stepStatusBadgeCompleted}>
@@ -818,7 +1102,9 @@ export default function PedidoDetailPage() {
 
               <div className={`${styles.stepLine} ${isBilled ? styles.lineActive : ""}`} />
 
-              <div className={`${styles.step} ${isBilled ? styles.completed : isSigned ? styles.active : styles.disabledStep}`}>
+              <div
+                className={`${styles.step} ${isBilled ? styles.completed : isSigned ? styles.active : styles.disabledStep}`}
+              >
                 <div className={styles.stepIcon}>
                   <Icon name="file-02" />
                   {isBilled && (
@@ -828,7 +1114,7 @@ export default function PedidoDetailPage() {
                   )}
                 </div>
                 <div className={styles.stepInfo}>
-                  <strong>Faturado (NF-e)</strong>
+                  <strong>{isMarketplaceOrder ? "NF-e / Comprovante" : "Faturado (NF-e)"}</strong>
                   <span>
                     {isBilled
                       ? activeNfe || "Nota Fiscal Emitida"
@@ -1116,13 +1402,95 @@ export default function PedidoDetailPage() {
                 {fornecedorNome.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <strong style={{ fontSize: "14px", color: "#0f172a", display: "block" }}>
-                  {fornecedorNome}
-                </strong>
-                <small style={{ color: "#64748b", fontSize: "12px" }}>CNPJ: {fornecedorCnpj}</small>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <MarketplaceLogo
+                    source={orderOfferUrl || fornecedorNome}
+                    size="sm"
+                    showFallbackIcon={false}
+                  />
+                  <strong style={{ fontSize: "14px", color: "#0f172a", display: "block" }}>
+                    {fornecedorNome}
+                  </strong>
+                </div>
+                <small style={{ color: "#64748b", fontSize: "12px" }}>
+                  CNPJ: {maskCnpj(fornecedorCnpj) || fornecedorCnpj}
+                </small>
               </div>
             </div>
-            {po?.supplier?.id && (
+
+            {orderOfferUrl && (
+              <a
+                href={orderOfferUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: "9px 14px",
+                  background: orderMarketplace?.isMercadoLivre ? "#fef3c7" : "#0f766e",
+                  color: orderMarketplace?.isMercadoLivre ? "#78350f" : "#ffffff",
+                  border: `1px solid ${orderMarketplace?.isMercadoLivre ? "#fcd34d" : "#0f766e"}`,
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  marginBottom: 10,
+                  cursor: "pointer",
+                }}
+              >
+                <MarketplaceLogo source={orderOfferUrl} size="sm" />
+                <span>
+                  {orderMarketplace
+                    ? `Abrir Anúncio no ${orderMarketplace.label}`
+                    : "Abrir Link da Compra"}
+                </span>
+                <Icon name="arrow-up-right" size={14} />
+              </a>
+            )}
+
+            {isMarketplaceOrLocalSupplier(fornecedorNome) && (
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  fontSize: "12px",
+                  color: "#475569",
+                  lineHeight: "1.45",
+                  marginBottom: 10,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontWeight: 600,
+                    color: "#1e293b",
+                    marginBottom: 4,
+                  }}
+                >
+                  <Icon name="info-circle" size={14} /> Canal de Compra Online / Loja Local
+                </div>
+                {orderMarketplace?.isMercadoLivre ? (
+                  <span>
+                    Compra direta recomendada via{" "}
+                    <strong>Conta Mercado Livre da Igreja Pura Fé</strong> com cartão corporativo ou
+                    PIX.
+                  </span>
+                ) : (
+                  <span>
+                    Pedido realizado via plataforma digital ou loja local com comprovante / cupom
+                    fiscal anexado.
+                  </span>
+                )}
+              </div>
+            )}
+
+            {po?.supplier?.id && !isMarketplaceOrLocalSupplier(fornecedorNome) && (
               <Button
                 variant="secondary"
                 onClick={() => router.push(getSupplierDetailUrl(po.supplier?.id || ""))}

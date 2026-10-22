@@ -12,6 +12,7 @@ import {
   Skeleton,
   CardSkeleton,
   ItemCell,
+  MarketplaceLogo,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -21,6 +22,7 @@ import { rfqsApi } from "@/lib/api/rfqs";
 import {
   extractItemReferenceUrlsFromNotes,
   cleanNotesDisplay,
+  detectMarketplaceFromUrl,
 } from "@/lib/utils/item-description";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
@@ -386,6 +388,45 @@ export default function SolicitacaoDetailPage() {
 
   const companyName = resolvePurchaseRequestBranch(sol, user);
 
+  const detectedLinksInfo = useMemo(() => {
+    if (!sol) return { hasAnyLink: false, hasMercadoLivre: false, marketplaces: [] as string[], isIgreja: false };
+    const notesRefUrls = extractItemReferenceUrlsFromNotes(sol.notes);
+    const foundSources = new Set<string>();
+    let hasAnyLink = false;
+    let hasMercadoLivre = false;
+
+    for (const item of sol.items || []) {
+      const refUrl =
+        (item as any).referenceUrl ||
+        notesRefUrls.get(item.description?.trim().toLowerCase()) ||
+        item.description;
+      const mp = detectMarketplaceFromUrl(refUrl);
+      if (mp) {
+        hasAnyLink = true;
+        foundSources.add(mp.label);
+        if (mp.isMercadoLivre) hasMercadoLivre = true;
+      }
+    }
+
+    const pType = (sol.purchaseType || "").toLowerCase();
+    if (pType.includes("link") || pType.includes("e-commerce") || pType.includes("mercado livre")) {
+      hasAnyLink = true;
+    }
+
+    const isIgreja =
+      sol.companyCode === "PURAFE" ||
+      sol.tenantId === "PURAFE" ||
+      companyName.toUpperCase().includes("PURA F") ||
+      companyName.toUpperCase().includes("IGREJA");
+
+    return {
+      hasAnyLink,
+      hasMercadoLivre,
+      marketplaces: Array.from(foundSources),
+      isIgreja,
+    };
+  }, [sol, companyName]);
+
   const chain = remoteChain ?? getApprovalChainForRequest(companyName, budget);
 
   const pendingHistories = (sol?.approvalHistories || []).filter((h) => h.status === "Pending");
@@ -479,6 +520,7 @@ export default function SolicitacaoDetailPage() {
             Justificativa da rejeição <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
+            autoFocus
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Descreva detalhadamente o motivo da reprovação..."
@@ -532,6 +574,7 @@ export default function SolicitacaoDetailPage() {
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
+            autoFocus
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Descreva detalhadamente a justificativa para o cancelamento..."
@@ -621,6 +664,22 @@ export default function SolicitacaoDetailPage() {
                     {formatPriority((sol as any)?.priority || (sol as any)?.prioridade)}
                   </span>
                 )}
+                {detectedLinksInfo.hasAnyLink && (
+                  <span
+                    className={styles.infoTag}
+                    style={{
+                      background: detectedLinksInfo.hasMercadoLivre ? "#fefce8" : "#f0fdf9",
+                      borderColor: detectedLinksInfo.hasMercadoLivre ? "#fde047" : "#99f6e4",
+                      color: detectedLinksInfo.hasMercadoLivre ? "#854d0e" : "#007d79",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Icon name="shopping-cart-01" />{" "}
+                    {detectedLinksInfo.marketplaces.length > 0
+                      ? `Compra via Link (${detectedLinksInfo.marketplaces.join(", ")})`
+                      : "Compra via Link / E-commerce"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -646,10 +705,25 @@ export default function SolicitacaoDetailPage() {
                 </div>
               ) : isEligibleForRfq ? (
                 <div className={styles.headerActions}>
+                  {detectedLinksInfo.hasAnyLink && (
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        router.push(
+                          `/compras/rfqs/nova?solicitationId=${sol?.id || solId}&mode=links`,
+                        )
+                      }
+                      title="Abrir cotação rápida para links de compra online ou lojas locais"
+                    >
+                      <Icon name="shopping-cart-01" /> Cotação via Links / Local
+                    </Button>
+                  )}
                   <Button
                     variant="primary"
                     onClick={() =>
-                      router.push(`/compras/rfqs/nova?solicitationId=${sol?.id || solId}`)
+                      router.push(
+                        `/compras/rfqs/nova?solicitationId=${sol?.id || solId}${detectedLinksInfo.hasAnyLink ? "&mode=links" : ""}`,
+                      )
                     }
                   >
                     <Icon name="plus" /> Criar Cotação (RFQ)
@@ -759,6 +833,72 @@ export default function SolicitacaoDetailPage() {
               )}
             </div>
           </div>
+
+          {detectedLinksInfo.hasAnyLink && (
+            <div
+              style={{
+                background: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "#fefce8" : "#f0fdf9",
+                border: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "1px solid #fde047" : "1px solid #99f6e4",
+                borderRadius: 10,
+                padding: "14px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 12,
+                color: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "#854d0e" : "#0f766e",
+                fontSize: 13,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 260 }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    background: "#ffffff",
+                    border: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "1px solid #fde047" : "1px solid #99f6e4",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {detectedLinksInfo.hasMercadoLivre ? (
+                    <MarketplaceLogo source="mercadolivre" size="md" />
+                  ) : detectedLinksInfo.marketplaces[0] ? (
+                    <MarketplaceLogo source={detectedLinksInfo.marketplaces[0]} size="md" />
+                  ) : (
+                    <Icon name="shopping-cart-01" size={18} />
+                  )}
+                </div>
+                <div>
+                  <strong style={{ display: "block", fontSize: 13.5, color: "#0f172a", marginBottom: 2 }}>
+                    {detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre
+                      ? "Compra via Link do Mercado Livre — Acesso Direto Igreja Pura Fé"
+                      : `Demanda com Link de E-commerce / Referência (${detectedLinksInfo.marketplaces.join(", ") || "Link Web"})`}
+                  </strong>
+                  <span>
+                    {detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre
+                      ? "Suprimentos pode abrir uma RFQ simplificada com os links do Mercado Livre ou orçamentos locais para equalização. Após aprovado o vencedor, a própria Igreja Pura Fé tem acesso à conta para efetuar a compra diretamente."
+                      : "Para compras por link ou comércio local, Suprimentos pode abrir uma cotação rápida e registrar diretamente as opções de compra no comparativo."}
+                  </span>
+                </div>
+              </div>
+              {isEligibleForRfq && (
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    router.push(
+                      `/compras/rfqs/nova?solicitationId=${sol?.id || solId}&mode=links`,
+                    )
+                  }
+                >
+                  <Icon name="arrow-right" /> Abrir RFQ Simplificada (Links / Local)
+                </Button>
+              )}
+            </div>
+          )}
 
           {isDraft && (
             <div

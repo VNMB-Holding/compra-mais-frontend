@@ -284,7 +284,7 @@ export default function EconomiaPage() {
       trendEconomia: "Economia efetiva sobre compras negociadas",
       trendEconPct: "vs. orçamento inicial da demanda",
       trendPotencial: "Projeção com equalização total de RFQs",
-      trendNegociacoes: "Fornecedores homologados envolvidos",
+      trendNegociacoes: "Fornecedores cadastrados envolvidos",
     };
   }, [apiData, totals.economiaGerada, suppliersData.length]);
 

@@ -77,3 +77,20 @@
   opacity: 1;
   transform: translate(1px, -1px);
 }
+
+.mercadoLivreBadge {
+  background-color: #fefce8;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
+.mercadoLivreBadge:hover {
+  background-color: #fef08a;
+  border-color: #facc15;
+  color: #713f12;
+  box-shadow: 0 1px 3px rgba(234, 179, 8, 0.2);
+}
+
+.mercadoLivreBadge .referenceIcon {
+  color: #ca8a04;
+}

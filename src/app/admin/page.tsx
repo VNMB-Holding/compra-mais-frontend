@@ -1051,7 +1051,7 @@ export default function AdminPage() {
                                       {!step.active && <Badge variant="gray">Inativo</Badge>}
                                     </div>
                                     <div className={styles.stepMeta}>
-                                      <span className={styles.stepTypeTag}>👤 Usuário</span>
+                                      <span className={styles.stepTypeTag} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="user-01" size={12} /> Usuário</span>
                                       <span className={styles.stepIdTag}>
                                         {step.approverIdentifier}
                                       </span>
@@ -1355,9 +1355,7 @@ export default function AdminPage() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3>{editingRangeKey ? "Editar Limites da Faixa" : "Nova Faixa de Valor"}</h3>
-              <button className={styles.modalClose} onClick={() => setRangeModalOpen(false)}>
-                ✓
-              </button>
+              <button className={styles.modalClose} onClick={() => setRangeModalOpen(false)} aria-label="Fechar"><Icon name="x-close" size={16} /></button>
             </div>
             <form onSubmit={handleSaveRange}>
               <div className={styles.modalBody}>
@@ -1412,9 +1410,7 @@ export default function AdminPage() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3>{editingRule ? "Editar Aprovador do Nível" : "Adicionar Nível de Aprovação"}</h3>
-              <button className={styles.modalClose} onClick={() => setStepModalOpen(false)}>
-                ✓
-              </button>
+              <button className={styles.modalClose} onClick={() => setStepModalOpen(false)} aria-label="Fechar"><Icon name="x-close" size={16} /></button>
             </div>
             <form onSubmit={handleSaveStep}>
               <div className={styles.modalBody}>
@@ -1524,9 +1520,7 @@ export default function AdminPage() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3>{editingCompany ? "Editar Unidade" : "Nova Unidade / Filial"}</h3>
-              <button className={styles.modalClose} onClick={() => setCompanyModalOpen(false)}>
-                ✓
-              </button>
+              <button className={styles.modalClose} onClick={() => setCompanyModalOpen(false)} aria-label="Fechar"><Icon name="x-close" size={16} /></button>
             </div>
             <form onSubmit={handleSaveCompany}>
               <div className={styles.modalBody}>

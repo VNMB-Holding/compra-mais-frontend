@@ -2,7 +2,16 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, Button, Icon, Select, Badge, Skeleton, EmptyState } from "@/components/ui";
+import {
+  Card,
+  Button,
+  Icon,
+  Select,
+  Badge,
+  Skeleton,
+  EmptyState,
+  MarketplaceLogo,
+} from "@/components/ui";
 import { InviteSupplierModal } from "@/components/modals";
 
 import { purchaseRequestsApi, PurchaseRequest } from "@/lib/api/purchase-requests";
@@ -22,7 +31,12 @@ import {
   resolvePurchaseRequestBranch,
   isPuraFeUser,
 } from "@/lib/utils/tenant";
-import { parseItemDescription } from "@/lib/utils/item-description";
+import {
+  parseItemDescription,
+  detectMarketplaceFromUrl,
+  isMarketplaceOrLocalSupplier,
+} from "@/lib/utils/item-description";
+import { maskCnpj } from "@/lib/utils/masks";
 
 interface Solicitacao {
   id: string;
@@ -46,6 +60,7 @@ interface ItemCotacao {
   id: number;
   originalId?: string;
   descricao: string;
+  referenceUrl?: string;
   qtd: number;
   unidade: string;
   category?: string;
@@ -58,7 +73,7 @@ interface FornecedorConvidado {
   nome: string;
   cnpj: string;
   segmento?: string;
-  isHomologado?: boolean;
+  isAtivo?: boolean;
   selecionado: boolean;
 }
 
@@ -98,6 +113,7 @@ export default function NewRfqPage() {
     searchParams.get("sol") ??
     searchParams.get("solicitacao") ??
     "";
+  const paramMode = searchParams.get("mode") ?? "";
   const paramTitulo = searchParams.get("titulo") ?? "";
   const paramValor = searchParams.get("valor") ?? "";
   const paramPrioridade = searchParams.get("prioridade") ?? "";
@@ -106,6 +122,15 @@ export default function NewRfqPage() {
 
   const [solicitacaoSelecionada, setSolicitacaoSelecionada] = useState<string>("");
   const [solicitacaoConfirmada, setSolicitacaoConfirmada] = useState<Solicitacao | null>(null);
+  const [rfqModality, setRfqModality] = useState<"standard" | "links">(
+    paramMode === "links" ? "links" : "standard",
+  );
+
+  useEffect(() => {
+    if (paramMode === "links") {
+      setRfqModality("links");
+    }
+  }, [paramMode]);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<number | null>(1);
@@ -151,11 +176,146 @@ export default function NewRfqPage() {
       nome: newSup.corporateName || newSup.tradeName || "Fornecedor Convidado",
       cnpj: newSup.cnpj || "—",
       segmento: newSup.segment || "Convidado Externo",
-      isHomologado: true,
+      isAtivo: true,
       selecionado: true,
     };
     setFornecedores((prev) => [convidado, ...prev]);
     setIsInviteModalOpen(false);
+  };
+
+  const [addingQuickSuppliers, setAddingQuickSuppliers] = useState(false);
+
+  const handleAddQuickOptions = async (
+    presets: { corporateName: string; cnpj: string; segment: string; contactEmail: string }[],
+  ) => {
+    setAddingQuickSuppliers(true);
+    try {
+      const addedList: FornecedorConvidado[] = [];
+      for (let i = 0; i < presets.length; i++) {
+        const p = presets[i];
+        const existing = fornecedores.find(
+          (f) => f.nome.toLowerCase() === p.corporateName.toLowerCase() || (p.cnpj && f.cnpj === p.cnpj),
+        );
+        if (existing) {
+          addedList.push({ ...existing, selecionado: true });
+          continue;
+        }
+
+        let created: any = null;
+        try {
+          created = await suppliersApi.create({
+            cnpj: p.cnpj,
+            corporateName: p.corporateName,
+            tradeName: p.corporateName,
+            contactEmail: p.contactEmail,
+            segment: p.segment,
+            status: "Active",
+          });
+        } catch {
+          created = {
+            id: `quick-sup-${Date.now()}-${i}`,
+            corporateName: p.corporateName,
+            cnpj: p.cnpj,
+            segment: p.segment,
+          };
+        }
+
+        addedList.push({
+          id: created?.id || `quick-sup-${Date.now()}-${i}`,
+          nome: created?.corporateName || p.corporateName,
+          cnpj: created?.cnpj || p.cnpj,
+          segmento: p.segment,
+          isAtivo: true,
+          selecionado: true,
+        });
+      }
+
+      setFornecedores((prev) => {
+        const addedIds = new Set(addedList.map((a) => a.id));
+        const updatedPrev = prev.map((f) => {
+          if (addedIds.has(f.id)) {
+            return { ...f, selecionado: true };
+          }
+          return { ...f, selecionado: false };
+        });
+
+        const existingIds = new Set(prev.map((f) => f.id));
+        const trulyNew = addedList.filter((a) => !existingIds.has(a.id));
+        return [...trulyNew, ...updatedPrev];
+      });
+
+      setSupplierFilterTab("selecionados");
+
+      toast({
+        variant: "success",
+        title: "Opções de cotação adicionadas!",
+        message: `${presets.length} opção(ões) adicionadas e selecionadas para registrar os links/orçamentos.`,
+      });
+    } finally {
+      setAddingQuickSuppliers(false);
+    }
+  };
+
+  const handleToggleStoreChip = async (st: {
+    id: string;
+    label: string;
+    logo: string;
+    corporateName: string;
+    cnpj: string;
+    segment: string;
+    contactEmail: string;
+  }) => {
+    const existing = fornecedores.find(
+      (f) =>
+        (st.cnpj && f.cnpj === st.cnpj) ||
+        f.nome.toLowerCase().includes(st.label.toLowerCase()) ||
+        f.nome.toLowerCase() === st.corporateName.toLowerCase(),
+    );
+
+    if (existing) {
+      toggleFornecedor(existing.id);
+      return;
+    }
+
+    setAddingQuickSuppliers(true);
+    try {
+      let created: any = null;
+      try {
+        created = await suppliersApi.create({
+          cnpj: st.cnpj,
+          corporateName: st.corporateName,
+          tradeName: st.corporateName,
+          contactEmail: st.contactEmail,
+          segment: st.segment,
+          status: "Active",
+        });
+      } catch {
+        created = {
+          id: `quick-sup-${Date.now()}`,
+          corporateName: st.corporateName,
+          cnpj: st.cnpj,
+          segment: st.segment,
+        };
+      }
+
+      const newSup: FornecedorConvidado = {
+        id: created?.id || `quick-sup-${Date.now()}`,
+        nome: created?.corporateName || st.corporateName,
+        cnpj: created?.cnpj || st.cnpj,
+        segmento: st.segment,
+        selecionado: true,
+      };
+
+      setFornecedores((prev) => [newSup, ...prev]);
+      setSupplierFilterTab("selecionados");
+      toast({
+        variant: "success",
+        title: "Opção adicionada",
+        message: `${st.label} adicionado para cotar.`,
+      });
+    } finally {
+      setAddingQuickSuppliers(false);
+    }
   };
 
   const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
@@ -247,6 +407,7 @@ export default function NewRfqPage() {
               id: idx + 1,
               originalId: it.id,
               descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
+              referenceUrl: (it as any).referenceUrl || parseItemDescription(it.description, (it as any).referenceUrl).referenceUrl,
               qtd: Number(it.quantity) || 1,
               unidade: it.unit || "UN",
               category: (it as any).category || (it as any).costCenterName,
@@ -298,7 +459,7 @@ export default function NewRfqPage() {
           nome: s.corporateName || s.tradeName || "Fornecedor",
           cnpj: s.cnpj,
           segmento: s.segment || "Geral",
-          isHomologado: s.status === "Active" || s.isActive === true,
+          isAtivo: s.status === "Active" || s.isActive !== true,
           selecionado: false,
         }));
         setFornecedores(mappedSups);
@@ -443,6 +604,7 @@ export default function NewRfqPage() {
               itens: (r.items || []).map((it, idx) => ({
                 id: idx + 1,
                 descricao: parseItemDescription(it.description, (it as any).referenceUrl).cleanDescription,
+              referenceUrl: (it as any).referenceUrl || parseItemDescription(it.description, (it as any).referenceUrl).referenceUrl,
                 qtd: Number(it.quantity) || 1,
                 unidade: it.unit || "UN",
               })),
@@ -995,6 +1157,119 @@ export default function NewRfqPage() {
                   </div>
 
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                    <label>Modalidade de Cotação</label>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                        gap: 12,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setRfqModality("standard")}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 12,
+                          padding: "14px 16px",
+                          borderRadius: 10,
+                          border:
+                            rfqModality === "standard"
+                              ? "2px solid #007d79"
+                              : "1px solid #cbd5e1",
+                          background: rfqModality === "standard" ? "#f0fdf9" : "#fff",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
+                            background: rfqModality === "standard" ? "#007d79" : "#f1f5f9",
+                            color: rfqModality === "standard" ? "#fff" : "#475569",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon name="building-07" size={18} />
+                        </div>
+                        <div>
+                          <strong style={{ display: "block", fontSize: 13.5, color: "#0f172a" }}>
+                            Cotação Tradicional (Fornecedores)
+                          </strong>
+                          <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.4, display: "block", marginTop: 2 }}>
+                            Convide fornecedores para enviarem propostas pelo link externo.
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRfqModality("links");
+                          if (!dataEncerramento) {
+                            const d = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+                            setDataEncerramento(d.toISOString().slice(0, 16));
+                          }
+                          if (condicaoPagamento === "30 dias DDL") {
+                            setCondicaoPagamento("À vista / PIX / Cartão");
+                          }
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 12,
+                          padding: "14px 16px",
+                          borderRadius: 10,
+                          border:
+                            rfqModality === "links"
+                              ? "2px solid #007d79"
+                              : "1px solid #cbd5e1",
+                          background: rfqModality === "links" ? "#f0fdf9" : "#fff",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 8,
+                            background: "#ffffff",
+                            border: rfqModality === "links" ? "1px solid #007d79" : "1px solid #fde047",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <MarketplaceLogo source="mercadolivre" size="md" />
+                        </div>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <strong style={{ fontSize: 13.5, color: "#0f172a" }}>
+                              Compra via Link (Mercado Livre) ou Orçamentos Locais
+                            </strong>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, opacity: 0.9 }}>
+                              <MarketplaceLogo source="amazon" size="sm" />
+                              <MarketplaceLogo source="shopee" size="sm" />
+                              <MarketplaceLogo source="magalu" size="sm" />
+                            </span>
+                          </div>
+                          <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.4, display: "block", marginTop: 2 }}>
+                            RFQ com foco em compra online por links (Mercado Livre, Amazon) ou lojas locais com aprovação ágil.
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>
                       Título da RFQ <span className="required-asterisk">*</span>
                     </label>
@@ -1138,6 +1413,36 @@ export default function NewRfqPage() {
                               <span className={styles.itemSummaryTitle}>
                                 {parseItemDescription(item.descricao).cleanDescription || "Novo item complementar sem descrição"}
                               </span>
+                              {Boolean(item.referenceUrl || parseItemDescription(item.descricao).referenceUrl) && (
+                                <a
+                                  href={item.referenceUrl || parseItemDescription(item.descricao).referenceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 5,
+                                    fontSize: 12,
+                                    color: "#0f766e",
+                                    background: "#f0fdfa",
+                                    border: "1px solid #99f6e4",
+                                    borderRadius: 6,
+                                    padding: "2px 8px",
+                                    width: "fit-content",
+                                    marginTop: 3,
+                                    textDecoration: "none",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  <MarketplaceLogo
+                                    source={item.referenceUrl || parseItemDescription(item.descricao).referenceUrl}
+                                    size="sm"
+                                  />
+                                  <span>Abrir link de referência do solicitante</span>
+                                  <Icon name="arrow-up-right" size={12} />
+                                </a>
+                              )}
                               <span className={styles.itemSummaryMeta}>
                                 Qtd: {item.qtd.toLocaleString("pt-BR")} {item.unidade}{" "}
                                 {isFromSol && "• Origem: Solicitação"}
@@ -1273,15 +1578,152 @@ export default function NewRfqPage() {
               <section className={styles.formSection} data-tour="rfq-form-suppliers">
                 <div className={styles.sectionHeader}>
                   <div className={styles.sectionIcon}>
-                    <Icon name="building-07" />
+                    <Icon name={rfqModality === "links" ? "shopping-cart-01" : "building-07"} />
                   </div>
                   <div>
                     <h2>
-                      3. Fornecedores convidados <span className="required-asterisk">*</span>
+                      3. {rfqModality === "links" ? "Opções de Links / Lojas Locais e Fornecedores" : "Fornecedores convidados"}{" "}
+                      <span className="required-asterisk">*</span>
                     </h2>
                     <p>
-                      Selecione os fornecedores homologados que receberão o convite para cotação.
+                      {rfqModality === "links"
+                        ? "Adicione opções de compra online por link (Mercado Livre, Amazon) ou fornecedores locais para cotação."
+                        : "Selecione os fornecedores que receberão o convite para cotação."}
                     </p>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: rfqModality === "links" ? "#fefce8" : "#f8fafc",
+                    border: rfqModality === "links" ? "1px solid #fde047" : "1px solid #e2e8f0",
+                    borderRadius: 10,
+                    padding: "14px 16px",
+                    marginBottom: 16,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Icon name="shopping-cart-01" size={16} style={{ color: "#854d0e" }} />
+                      <strong style={{ fontSize: 13, color: "#0f172a" }}>
+                        Atalhos para Compra por Link (Mercado Livre / Internet) ou Comércio Local:
+                      </strong>
+                    </div>
+                    {(solicitacaoConfirmada?.companyCode === "PURAFE" || isPuraFe) && (
+                      <Badge variant="warning" icon="check-circle">
+                        Igreja Pura Fé: Acesso direto à conta do Mercado Livre
+                      </Badge>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12.5, color: "#475569" }}>
+                    Adicione lojas virtuais ou orçamentos locais com 1 clique para comparar:
+                  </span>
+
+                  {/* Chips individuais rápidos */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                    {[
+                      {
+                        id: "ml",
+                        label: "Mercado Livre",
+                        logo: "mercadolivre",
+                        corporateName: "Mercado Livre (Compra Direta via Link)",
+                        cnpj: "03.007.331/0001-41",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.ml@mercadolivre.com.br",
+                      },
+                      {
+                        id: "amazon",
+                        label: "Amazon Brasil",
+                        logo: "amazon",
+                        corporateName: "Amazon Brasil (Compra via Link)",
+                        cnpj: "15.436.940/0001-03",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.amz@amazon.com.br",
+                      },
+                      {
+                        id: "shopee",
+                        label: "Shopee",
+                        logo: "shopee",
+                        corporateName: "Shopee (Compra via Link)",
+                        cnpj: "35.635.824/0001-12",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.shopee@marketplace.com.br",
+                      },
+                      {
+                        id: "magalu",
+                        label: "Magazine Luiza",
+                        logo: "magalu",
+                        corporateName: "Magazine Luiza (Compra via Link)",
+                        cnpj: "47.960.950/0001-21",
+                        segment: "Marketplace / Link",
+                        contactEmail: "cotacao.magalu@magalu.com.br",
+                      },
+                      {
+                        id: "local1",
+                        label: "Comércio Local 1",
+                        logo: "whatsapp",
+                        corporateName: "Comércio Local 1",
+                        cnpj: "00.000.001/0001-01",
+                        segment: "Fornecedor / Loja Local",
+                        contactEmail: "orcamento1@comerciolocal.com.br",
+                      },
+                      {
+                        id: "local2",
+                        label: "Comércio Local 2",
+                        logo: "whatsapp",
+                        corporateName: "Comércio Local 2",
+                        cnpj: "00.000.002/0001-02",
+                        segment: "Fornecedor / Loja Local",
+                        contactEmail: "orcamento2@comerciolocal.com.br",
+                      },
+                    ].map((st) => {
+                      const isSelected = fornecedores.some(
+                        (f) =>
+                          f.selecionado &&
+                          (f.cnpj === st.cnpj ||
+                            f.nome.toLowerCase().includes(st.label.toLowerCase()) ||
+                            f.nome.toLowerCase() === st.corporateName.toLowerCase()),
+                      );
+                      return (
+                        <button
+                          key={st.id}
+                          type="button"
+                          disabled={addingQuickSuppliers}
+                          onClick={() => handleToggleStoreChip(st)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 20,
+                            border: isSelected ? "1.5px solid #007d79" : "1px solid #cbd5e1",
+                            background: isSelected ? "#f0fdf9" : "#ffffff",
+                            color: isSelected ? "#007d79" : "#334155",
+                            fontSize: 12.5,
+                            fontWeight: isSelected ? 700 : 500,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            boxShadow: isSelected ? "0 1px 3px rgba(0, 125, 121, 0.15)" : "none",
+                          }}
+                          title={
+                            isSelected
+                              ? `Remover ${st.label} da seleção`
+                              : `Adicionar ${st.label} à cotação`
+                          }
+                        >
+                          <MarketplaceLogo source={st.logo} size="sm" />
+                          <span>{st.label}</span>
+                          {isSelected ? (
+                            <Icon name="check" size={13} style={{ color: "#007d79" }} />
+                          ) : (
+                            <Icon name="plus" size={13} style={{ color: "#94a3b8" }} />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1311,6 +1753,28 @@ export default function NewRfqPage() {
                     >
                       Selecionados ({fornecedoresSelecionados.length})
                     </button>
+                    {fornecedoresSelecionados.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearAllSuppliers}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#dc2626",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          padding: "4px 8px",
+                          borderRadius: 6,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                        title="Desmarcar todos os fornecedores"
+                      >
+                        <Icon name="x-close" size={13} /> Limpar seleção
+                      </button>
+                    )}
                   </div>
 
                   <Button
@@ -1338,17 +1802,102 @@ export default function NewRfqPage() {
                         />
                         <div className={styles.fornecedorInfo}>
                           <div className={styles.fornecedorTitleRow}>
+                            <MarketplaceLogo source={f.nome} size="sm" showFallbackIcon={false} />
                             <strong>{f.nome}</strong>
+                            {isMarketplaceOrLocalSupplier(f.nome) ? (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "2px 7px",
+                                  borderRadius: 4,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  background:
+                                    f.nome.toLowerCase().includes("local") ||
+                                    f.nome.toLowerCase().includes("balcão")
+                                      ? "#fef3c7"
+                                      : "#e0f2fe",
+                                  color:
+                                    f.nome.toLowerCase().includes("local") ||
+                                    f.nome.toLowerCase().includes("balcão")
+                                      ? "#92400e"
+                                      : "#0369a1",
+                                  border: `1px solid ${
+                                    f.nome.toLowerCase().includes("local") ||
+                                    f.nome.toLowerCase().includes("balcão")
+                                      ? "#fde68a"
+                                      : "#bae6fd"
+                                  }`,
+                                }}
+                              >
+                                {f.nome.toLowerCase().includes("local") ||
+                                f.nome.toLowerCase().includes("balcão") ? (
+                                  <>
+                                    <Icon name="building-07" size={12} />
+                                    <span>Comércio Local</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Icon name="shopping-cart-01" size={12} />
+                                    <span>Compra Online</span>
+                                  </>
+                                )}
+                              </span>
+                            ) : (
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "2px 7px",
+                                  borderRadius: 4,
+                                  background: "#f1f5f9",
+                                  color: "#475569",
+                                  border: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <Icon name="building-01" size={12} />
+                                <span>Fornecedor B2B</span>
+                              </span>
+                            )}
                             {f.segmento && <span className={styles.segmentTag}>{f.segmento}</span>}
                           </div>
                           <span>
-                            CNPJ: {f.cnpj} {f.isHomologado ? "• Homologado" : ""}
+                            CNPJ: {maskCnpj(f.cnpj) || f.cnpj}
                           </span>
                         </div>
                         {f.selecionado && (
-                          <span className={styles.fornecedorBadge}>
-                            <Icon name="check-circle" size={14} /> Convidado
-                          </span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span className={styles.fornecedorBadge}>
+                              <Icon name="check-circle" size={14} /> Convidado
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeSupplier(f.id);
+                              }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                color: "#94a3b8",
+                                cursor: "pointer",
+                                padding: 4,
+                                borderRadius: 4,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                              title="Remover fornecedor da cotação"
+                            >
+                              <Icon name="trash-01" size={14} />
+                            </button>
+                          </div>
                         )}
                       </label>
                     ))}
@@ -1574,14 +2123,19 @@ export default function NewRfqPage() {
                     onClick={() => {
                       const valor = solicitacaoConfirmada?.valorEstimado || 0;
                       let minSuppliers = 1;
-                      if (valor > 5000) minSuppliers = 3;
-                      else if (valor > 1000) minSuppliers = 2;
+                      if (rfqModality !== "links") {
+                        if (valor > 5000) minSuppliers = 3;
+                        else if (valor > 1000) minSuppliers = 2;
+                      }
 
                       if (fornecedoresSelecionados.length < minSuppliers) {
                         toast({
                           variant: "warning",
                           title: "Política de Compras",
-                          message: `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedor(es).`,
+                          message:
+                            rfqModality === "links"
+                              ? "Selecione ou adicione ao menos 1 opção de Link / Comércio Local."
+                              : `Para esta faixa de valor, é obrigatório convidar no mínimo ${minSuppliers} fornecedor(es).`,
                         });
                         return;
                       }

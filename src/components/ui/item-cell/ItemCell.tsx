@@ -1,6 +1,7 @@
 import React from "react";
-import { parseItemDescription } from "@/lib/utils/item-description";
+import { parseItemDescription, detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 import Icon from "../icon/Icon";
+import MarketplaceLogo from "../marketplace-logo/MarketplaceLogo";
 import styles from "./ItemCell.module.css";
 
 export interface ItemCellProps {
@@ -20,7 +21,7 @@ export default function ItemCell({
   subtitle,
   itemNumber,
   hideLink = false,
-  linkText = "Link de referência",
+  linkText,
   className = "",
   style,
 }: ItemCellProps) {
@@ -28,6 +29,15 @@ export default function ItemCell({
     description,
     referenceUrl
   );
+
+  const marketplace = parsedUrl ? detectMarketplaceFromUrl(parsedUrl) : null;
+  const resolvedLinkText =
+    linkText ||
+    (marketplace
+      ? marketplace.id === "ecommerce"
+        ? `Ver anúncio (${marketplace.shortLabel})`
+        : `Ver no ${marketplace.label}`
+      : "Link de referência");
 
   return (
     <div className={`${styles.itemCell} ${className}`} style={style}>
@@ -45,12 +55,20 @@ export default function ItemCell({
           href={parsedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={styles.referenceBadge}
+          className={`${styles.referenceBadge} ${marketplace?.isMercadoLivre ? styles.mercadoLivreBadge : ""}`}
           title={`Abrir referência externa: ${parsedUrl}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <Icon name="link-01" size={12} className={styles.referenceIcon} />
-          <span>{linkText}</span>
+          {marketplace?.logoPath ? (
+            <MarketplaceLogo source={marketplace} size="sm" />
+          ) : (
+            <Icon
+              name={marketplace ? "shopping-cart-01" : "link-01"}
+              size={12}
+              className={styles.referenceIcon}
+            />
+          )}
+          <span>{resolvedLinkText}</span>
           <Icon name="arrow-up-right" size={11} className={styles.arrowIcon} />
         </a>
       )}

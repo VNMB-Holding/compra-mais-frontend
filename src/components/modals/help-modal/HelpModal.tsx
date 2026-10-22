@@ -29,9 +29,9 @@ const FAQ_ITEMS = [
   },
   {
     category: "Fornecedores",
-    question: "Como realizar a homologação de um fornecedor?",
+    question: "Como cadastrar um novo fornecedor?",
     answer:
-      "Vá para a seção 'Fornecedores > Homologação'. Selecione o fornecedor na lista de cadastros pendentes, revise os documentos enviados (CNPJ, Certidões, Contrato Social) e clique em 'Aprovar Cadastro' caso todas as exigências de compliance sejam atendidas.",
+      "Vá para a seção 'Fornecedores > Diretório' e clique em 'Novo Fornecedor'. Preencha os dados cadastrais (Razão Social, CNPJ, Contato e Endereço) e salve o cadastro para disponibilizá-lo para cotações.",
   },
   {
     category: "Processos de Compras",
@@ -136,7 +136,7 @@ export default function HelpModal({ open, onClose }: HelpModalProps) {
     {
       id: "fornecedores-intro",
       title: "Diretório de Fornecedores",
-      description: "Consulta de homologação e scores de parceiros",
+      description: "Consulta de cadastro e contatos de parceiros",
       icon: "users-01",
       path: "/fornecedores/diretorio",
       tour: fornecedoresTour,

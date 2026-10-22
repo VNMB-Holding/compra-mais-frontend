@@ -83,12 +83,12 @@ export default function FornecedorDetailPage() {
   const isSuspended = supplier.status === "Suspended";
   const isInactive = supplier.status === "Inactive" || supplier.isActive === false;
   const statusLabel = isActive
-    ? "Homologado"
+    ? "Ativo"
     : isSuspended
       ? "Suspenso"
       : isInactive
         ? "Inativo"
-        : "Em homologação";
+        : "Cadastrado";
   const statusVariant = isActive ? "success" : isSuspended ? "danger" : "gray";
 
   return (
@@ -106,7 +106,7 @@ export default function FornecedorDetailPage() {
             <p className={styles.subtitleLarge}>
               {supplier.tradeName && supplier.tradeName !== supplier.corporateName
                 ? supplier.tradeName
-                : "Parceiro Comercial Homologado"}
+                : "Parceiro Comercial Cadastrado"}
             </p>
             <div className={styles.metadataTags}>
               <span className={styles.infoTag}>
@@ -295,7 +295,7 @@ export default function FornecedorDetailPage() {
                   <div className={styles.fieldValueSub}>
                     <span className={styles.fieldValue}>
                       {supplier.deliveryLeadTime
-                        ? `⚡ ${supplier.deliveryLeadTime} dias úteis`
+                        ? `${supplier.deliveryLeadTime} dias úteis`
                         : "Prazo sob consulta"}
                     </span>
                     <small>Tempo médio de expedição e transporte</small>

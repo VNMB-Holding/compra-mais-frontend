@@ -46,7 +46,7 @@ interface FornecedorRow {
 }
 
 function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRow {
-  const isHomologado = s.status === "Active" && s.isActive !== false;
+  const isActive = s.status === "Active" && s.isActive !== false;
 
   const rawScore =
     s.performanceScore !== undefined && s.performanceScore !== null
@@ -75,9 +75,9 @@ function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRo
     localizacaoSub,
     contatoNome,
     contatoInfo,
-    status: isHomologado ? "Homologado" : "Em homologação",
-    statusSub: isHomologado ? "Ativo no ERP" : "Pendente",
-    cor: isHomologado ? "green" : "orange",
+    status: isActive ? "Ativo" : "Cadastrado",
+    statusSub: "Ativo no ERP",
+    cor: "green",
     nota,
     estrelas,
     categoria: s.segment || "Geral",
@@ -135,8 +135,8 @@ export default function FornecedoresListPage() {
       setError(null);
       setLoading(true);
       const statusMap: Record<string, string> = {
-        Homologado: "Active",
-        "Em homologação": "UnderCertification",
+        Ativo: "Active",
+        Cadastrado: "Active",
         Inativo: "Inactive",
       };
       const [suppliers, kpisData] = await Promise.all([
@@ -206,8 +206,8 @@ export default function FornecedoresListPage() {
 
   const statusOptions = [
     { label: "Status: Todos", value: "Todos" },
-    { label: "Homologado", value: "Homologado" },
-    { label: "Em homologação", value: "Em homologação" },
+    { label: "Ativo", value: "Ativo" },
+    { label: "Cadastrado", value: "Cadastrado" },
     { label: "Inativo", value: "Inativo" },
   ];
 
@@ -287,7 +287,7 @@ export default function FornecedoresListPage() {
     {
       header: "Status",
       cell: (row) => (
-        <Badge variant={row.status === "Homologado" ? "success" : "warning"}>{row.status}</Badge>
+        <Badge variant={row.status === "Inativo" ? "gray" : "success"}>{row.status}</Badge>
       ),
     },
     {
@@ -315,28 +315,28 @@ export default function FornecedoresListPage() {
       <div className={styles.pageHeader}>
         <div>
           <h1>Base de Fornecedores</h1>
-          <p>Consulte parceiros homologados, localização, contatos e nível de performance.</p>
+          <p>Consulte parceiros cadastrados, localização, contatos e dados operacionais.</p>
         </div>
       </div>
 
       <div className={styles.kpiGrid} data-tour="fornecedores-kpis">
         <KpiCard
-          title="Fornecedores homologados"
+          title="Fornecedores cadastrados"
           value={String(
-            kpis?.active || fornecedores.filter((f) => f.status === "Homologado").length,
+            kpis?.total || fornecedores.length,
           )}
           icon="check-circle"
-          description="Ativos no ERP"
+          description="Total na base"
           loading={loading}
         />
         <KpiCard
-          title="Em homologação"
+          title="Cadastros Ativos"
           value={String(
-            kpis?.underCertification ||
-              fornecedores.filter((f) => f.status === "Em homologação").length,
+            kpis?.active || fornecedores.filter((f) => f.status === "Ativo").length,
+
           )}
-          icon="clock"
-          description="Pendente"
+          icon="check-circle"
+          description="Ativos no ERP"
           loading={loading}
         />
         {(() => {
