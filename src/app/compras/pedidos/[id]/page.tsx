@@ -26,49 +26,13 @@ import {
   isMarketplaceOrLocalSupplier,
 } from "@/lib/utils/item-description";
 import { useAuth } from "@/hooks/useAuth";
+import { downloadPdfResponse } from "@/lib/utils/pdf";
 import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import {
   usePurchaseOrder,
   usePurchaseOrders,
   useUpdatePurchaseOrderStatus,
 } from "@/hooks/useQueries";
-
-function getPdfFilename(response: Response, fallbackCode: string) {
-  const disposition = response.headers.get("content-disposition") || "";
-  const encodedMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
-  if (encodedMatch?.[1]) {
-    return decodeURIComponent(encodedMatch[1].replace(/['"]/g, "").trim());
-  }
-
-  const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
-  if (filenameMatch?.[1]) {
-    return filenameMatch[1].trim();
-  }
-
-  const safeCode =
-    fallbackCode.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "") || "pedido-compra";
-  return `${safeCode}.pdf`;
-}
-
-async function getPdfErrorMessage(response: Response) {
-  const contentType = response.headers.get("content-type") || "";
-
-  if (contentType.includes("application/json")) {
-    try {
-      const data = await response.json();
-      return data?.message || data?.error || `Erro ${response.status}`;
-    } catch {
-      return `Erro ${response.status}`;
-    }
-  }
-
-  try {
-    const text = await response.text();
-    return text.trim() || `Erro ${response.status}`;
-  } catch {
-    return `Erro ${response.status}`;
-  }
-}
 
 export default function PedidoDetailPage() {
   const params = useParams();
@@ -325,26 +289,7 @@ export default function PedidoDetailPage() {
     setLoadingPdf(true);
     try {
       const response = await purchaseOrdersApi.generatePdf(idToUse);
-      const contentType = response.headers.get("content-type") || "";
-
-      if (!response.ok) {
-        throw new Error(await getPdfErrorMessage(response));
-      }
-
-      if (!contentType.includes("application/pdf")) {
-        throw new Error("O servidor não retornou um PDF válido para este pedido.");
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const filename = getPdfFilename(response, po.code || displayId);
-      const link = document.createElement("a");
-      link.href = url;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.download = filename;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      await downloadPdfResponse(response, po.code || displayId);
     } catch (e) {
       toast({
         variant: "error",

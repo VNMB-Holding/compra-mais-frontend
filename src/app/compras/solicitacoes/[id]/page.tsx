@@ -33,6 +33,7 @@ import {
 } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
+import { downloadPdfResponse } from "@/lib/utils/pdf";
 import {
   getTenantDisplayName,
   formatCorporateBranch,
@@ -70,6 +71,7 @@ export default function SolicitacaoDetailPage() {
   const [cancelReason, setCancelReason] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [approved, setApproved] = useState<boolean | null>(null);
+  const [loadingPdf, setLoadingPdf] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -383,6 +385,32 @@ export default function SolicitacaoDetailPage() {
       });
     } finally {
       setSendingApproval(false);
+    }
+  };
+
+  const handlePrintSC = async () => {
+    const idToUse = sol?.id || solId;
+    if (!idToUse) {
+      toast({
+        variant: "warning",
+        title: "PDF indisponível",
+        message: "O PDF só está disponível para solicitações carregadas do banco de dados.",
+      });
+      return;
+    }
+
+    setLoadingPdf(true);
+    try {
+      const response = await purchaseRequestsApi.generatePdf(idToUse);
+      await downloadPdfResponse(response, sol?.code || solId || "solicitacao-compra");
+    } catch (e) {
+      toast({
+        variant: "error",
+        title: "Erro ao gerar PDF",
+        message: e instanceof Error ? e.message : "Tente novamente.",
+      });
+    } finally {
+      setLoadingPdf(false);
     }
   };
 
@@ -819,6 +847,19 @@ export default function SolicitacaoDetailPage() {
                   </div>
                 )
               )}
+
+              <div className={styles.headerActions}>
+                <Button
+                  variant="secondary"
+                  onClick={handlePrintSC}
+                  disabled={loadingPdf}
+                  loading={loadingPdf}
+                  loadingText="Gerando PDF..."
+                  title="Imprimir ou baixar a Solicitação de Compra em formato PDF oficial"
+                >
+                  <Icon name="printer" /> Imprimir / Baixar SC
+                </Button>
+              </div>
 
               {!isCancelled && !isFinished && (
                 <div className={styles.headerActions}>
