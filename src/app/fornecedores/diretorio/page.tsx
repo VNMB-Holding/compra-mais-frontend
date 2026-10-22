@@ -30,6 +30,7 @@ interface FornecedorRow {
   id: string;
   iniciais: string;
   nome: string;
+  nomeFantasia?: string;
   cnpj: string;
   cidade: string;
   estado: string;
@@ -67,8 +68,9 @@ function mapSupplierToRow(s: Supplier, _currentUser?: User | null): FornecedorRo
 
   return {
     id: s.id,
-    iniciais: (s.corporateName || s.tradeName || "FR").substring(0, 2).toUpperCase(),
+    iniciais: (s.tradeName || s.corporateName || "FR").substring(0, 2).toUpperCase(),
     nome: s.corporateName || s.tradeName || "Fornecedor",
+    nomeFantasia: s.tradeName || "",
     cnpj: s.cnpj,
     cidade,
     estado,
@@ -239,7 +241,8 @@ export default function FornecedoresListPage() {
     {
       header: "Fornecedor",
       cell: (row) => {
-        const detectedLogo = detectMarketplaceFromUrl(row.nome || row.cnpj);
+        const textToMatch = [row.nome, row.nomeFantasia, row.cnpj].filter(Boolean).join(" ");
+        const detectedLogo = detectMarketplaceFromUrl(textToMatch);
         return (
           <div className={styles.fornecedorCell}>
             {detectedLogo?.logoPath ? (
@@ -256,6 +259,7 @@ export default function FornecedoresListPage() {
             <div className={styles.doubleText}>
               <strong>{row.nome}</strong>
               <span>
+                {row.nomeFantasia && row.nomeFantasia !== row.nome ? `${row.nomeFantasia} • ` : ""}
                 CNPJ {row.cnpj}{" "}
                 {row.integrationCode !== "—" ? `• Cód. ERP: ${row.integrationCode}` : ""}
               </span>

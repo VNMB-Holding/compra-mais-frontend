@@ -65,6 +65,8 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("shopee.com") ||
     lower.includes("shp.ee") ||
     lower.includes("shopee") ||
+    lower.includes("shoppe") ||
+    lower.includes("shps") ||
     lower.includes("35635824") ||
     lower.includes("35.635.824")
   ) {
@@ -165,7 +167,7 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
 
 export function isMarketplaceOrLocalSupplier(name?: string | null): boolean {
   if (!name) return false;
-  return /mercado\s*livre|amazon|shopee|magalu|magazine\s*luiza|com[eé]rcio\s*local|loja\s*local|balc[aã]o|aliexpress|americanas/i.test(
+  return /mercado\s*livre|amazon|shopee|shoppe|shps|magalu|magazine\s*luiza|com[eé]rcio\s*local|loja\s*local|balc[aã]o|aliexpress|americanas/i.test(
     name,
   );
 }

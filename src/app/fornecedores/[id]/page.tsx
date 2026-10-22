@@ -307,9 +307,14 @@ export default function FornecedorDetailPage() {
         <div className={styles.summaryGrid}>
           <div className={styles.summaryColBase}>
             {(() => {
-              const detectedLogo = detectMarketplaceFromUrl(
-                supplier.tradeName || supplier.corporateName || supplier.cnpj,
-              );
+              const textToMatch = [
+                supplier.tradeName,
+                supplier.corporateName,
+                supplier.cnpj,
+              ]
+                .filter(Boolean)
+                .join(" ");
+              const detectedLogo = detectMarketplaceFromUrl(textToMatch);
               if (detectedLogo?.logoPath) {
                 return (
                   <div
@@ -328,7 +333,7 @@ export default function FornecedorDetailPage() {
                 <div
                   className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}
                 >
-                  {getInitials(supplier.corporateName)}
+                  {getInitials(supplier.tradeName || supplier.corporateName)}
                 </div>
               );
             })()}
