@@ -1143,31 +1143,70 @@ export default function RfqDetailPage() {
         p.supplierName.toLowerCase().includes("local")
       ).length;
 
+      let masterSupplier: any = null;
+      const targetCnpj =
+        preset === "mercadolivre" ? "03007331000141" : "00000000000191";
+      const targetSearch = preset === "mercadolivre" ? "Mercado Livre" : "Comércio Local";
+
+      try {
+        const foundList = await suppliersApi.list({ search: targetSearch });
+        masterSupplier = foundList.find((s) => {
+          const clean = s.cnpj?.replace(/\D/g, "");
+          return (
+            clean === targetCnpj ||
+            (preset === "mercadolivre" &&
+              (s.corporateName.toLowerCase().includes("mercado livre") ||
+                s.tradeName?.toLowerCase().includes("mercado livre"))) ||
+            (preset === "local" &&
+              (s.corporateName.toLowerCase().includes("comércio local") ||
+                s.tradeName?.toLowerCase().includes("comércio local")))
+          );
+        });
+
+        if (!masterSupplier) {
+          const byCnpj = await suppliersApi.list({ search: targetCnpj });
+          if (byCnpj && byCnpj.length > 0) masterSupplier = byCnpj[0];
+        }
+      } catch {}
+
+      if (masterSupplier) {
+        const alreadyInRfq = propostas.some((p) => p.supplierId === masterSupplier.id);
+        if (alreadyInRfq) {
+          toast({
+            variant: "warning",
+            title:
+              preset === "mercadolivre"
+                ? "Mercado Livre já adicionado"
+                : "Fornecedor Local já adicionado",
+            message:
+              "Esta cotação já possui uma proposta registrada para este canal. Você pode editar os dados no card existente.",
+          });
+          return;
+        }
+      }
+
       const templates =
         preset === "mercadolivre"
           ? [
               {
-                name:
-                  onlineCount === 0
-                    ? "Mercado Livre (Compra Online via Link)"
-                    : `Mercado Livre — Opção ${onlineCount + 1} (Link)`,
-                cnpj: `03.007.331/${String(Math.floor(1000 + Math.random() * 8999))}-01`,
-                email: `cotacao.ml${onlineCount + 1}@compramais.interno`,
-                contactName: `Anúncio Mercado Livre ${onlineCount + 1}`,
+                name: masterSupplier
+                  ? masterSupplier.tradeName || masterSupplier.corporateName
+                  : "Mercado Livre (Compra Online via Link)",
+                cnpj: masterSupplier ? masterSupplier.cnpj : "03.007.331/0001-41",
+                email: masterSupplier?.contactEmail || "cotacao@mercadolivre.com.br",
+                contactName: "Equipe Mercado Livre",
                 paymentTerms: "Cartão Corporativo / PIX",
-                initialNotes:
-                  originItemUrl && onlineCount === 0 ? `Link da Oferta: ${originItemUrl}` : "",
+                initialNotes: originItemUrl ? `Link da Oferta: ${originItemUrl}` : "",
               },
             ]
           : [
               {
-                name:
-                  localCount === 0
-                    ? "Comércio Local / Loja Regional"
-                    : `Comércio Local — Opção ${localCount + 1}`,
-                cnpj: `00.000.000/${String(Math.floor(1000 + Math.random() * 8999))}-91`,
-                email: `orcamento.local${localCount + 1}@compramais.interno`,
-                contactName: "Atendimento Presencial / WhatsApp",
+                name: masterSupplier
+                  ? masterSupplier.tradeName || masterSupplier.corporateName
+                  : "Comércio Local / Compra Presencial",
+                cnpj: masterSupplier ? masterSupplier.cnpj : "00.000.000/0001-91",
+                email: masterSupplier?.contactEmail || "orcamento.local@compramais.interno",
+                contactName: "Atendimento Presencial",
                 paymentTerms: "À vista (PIX / Boleto)",
                 initialNotes: "",
               },
@@ -1176,35 +1215,37 @@ export default function RfqDetailPage() {
       const newProposals: LocalProposal[] = [];
 
       for (const tpl of templates) {
-        let createdSupplierId = `quick-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        let createdName = tpl.name;
-        let createdCnpj = tpl.cnpj;
+        let createdSupplierId = masterSupplier?.id || `quick-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        let createdName = masterSupplier?.tradeName || masterSupplier?.corporateName || tpl.name;
+        let createdCnpj = masterSupplier?.cnpj || tpl.cnpj;
 
-        try {
-          const res = await rfqsApi.inviteUnregisteredSupplier(rfqId, {
-            cnpj: tpl.cnpj,
-            corporateName: tpl.name,
-            contactEmail: tpl.email,
-            contactName: tpl.contactName,
-          });
-          if (res?.supplier?.id) {
-            createdSupplierId = res.supplier.id;
-            createdName = res.supplier.tradeName || res.supplier.corporateName || tpl.name;
-            createdCnpj = res.supplier.cnpj || tpl.cnpj;
-          }
-        } catch {
+        if (!masterSupplier) {
           try {
-            const sup = await suppliersApi.create({
-              corporateName: tpl.name,
-              tradeName: tpl.name,
+            const res = await rfqsApi.inviteUnregisteredSupplier(rfqId, {
               cnpj: tpl.cnpj,
+              corporateName: tpl.name,
               contactEmail: tpl.email,
               contactName: tpl.contactName,
             });
-            if (sup?.id) {
-              createdSupplierId = sup.id;
+            if (res?.supplier?.id) {
+              createdSupplierId = res.supplier.id;
+              createdName = res.supplier.tradeName || res.supplier.corporateName || tpl.name;
+              createdCnpj = res.supplier.cnpj || tpl.cnpj;
             }
-          } catch {}
+          } catch {
+            try {
+              const sup = await suppliersApi.create({
+                corporateName: tpl.name,
+                tradeName: tpl.name,
+                cnpj: tpl.cnpj,
+                contactEmail: tpl.email,
+                contactName: tpl.contactName,
+              });
+              if (sup?.id) {
+                createdSupplierId = sup.id;
+              }
+            } catch {}
+          }
         }
 
         newProposals.push({
