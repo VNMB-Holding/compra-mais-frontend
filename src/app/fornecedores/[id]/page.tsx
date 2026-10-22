@@ -17,6 +17,7 @@ import {
 import styles from "./fornecedor-detail.module.css";
 import { useSupplier, usePurchaseOrders } from "@/hooks/useQueries";
 import { formatCurrency } from "@/lib/utils/format-display";
+import { detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 import {
   PURCHASE_ORDER_STATUS_MAP,
   getStatusBadgeVariant,
@@ -305,11 +306,32 @@ export default function FornecedorDetailPage() {
       <Card noPadding className={styles.topSummaryCard}>
         <div className={styles.summaryGrid}>
           <div className={styles.summaryColBase}>
-            <div
-              className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}
-            >
-              {getInitials(supplier.corporateName)}
-            </div>
+            {(() => {
+              const detectedLogo = detectMarketplaceFromUrl(
+                supplier.tradeName || supplier.corporateName || supplier.cnpj,
+              );
+              if (detectedLogo?.logoPath) {
+                return (
+                  <div
+                    className={`${styles.avatarBig} ${styles.avatarBigWithLogo}`}
+                    title={detectedLogo.label}
+                  >
+                    <img
+                      src={detectedLogo.logoPath}
+                      alt={supplier.tradeName || supplier.corporateName}
+                      className={styles.supplierLogoImgBig}
+                    />
+                  </div>
+                );
+              }
+              return (
+                <div
+                  className={`${styles.avatarBig} ${isActive ? styles.avatarGreen : styles.avatarOrange}`}
+                >
+                  {getInitials(supplier.corporateName)}
+                </div>
+              );
+            })()}
             <div className={styles.baseInfo}>
               <div className={styles.titleRow}>
                 <h2>{supplier.corporateName}</h2>

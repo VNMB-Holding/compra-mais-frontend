@@ -32,7 +32,10 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("produto.mercadolivre") ||
     lower.includes("meli.la") ||
     lower === "mercadolivre" ||
-    lower.includes("mercado livre")
+    lower.includes("mercado livre") ||
+    lower.includes("ebazar") ||
+    lower.includes("03007331") ||
+    lower.includes("03.007.331")
   ) {
     return {
       id: "mercadolivre",
@@ -46,7 +49,9 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("amazon.com") ||
     lower.includes("amzn.to") ||
     lower.includes("a.co/") ||
-    lower.includes("amazon")
+    lower.includes("amazon") ||
+    lower.includes("15436940") ||
+    lower.includes("15.436.940")
   ) {
     return {
       id: "amazon",
@@ -56,7 +61,13 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
       logoPath: "/logos/marketplaces/amazon.svg",
     };
   }
-  if (lower.includes("shopee.com") || lower.includes("shp.ee") || lower.includes("shopee")) {
+  if (
+    lower.includes("shopee.com") ||
+    lower.includes("shp.ee") ||
+    lower.includes("shopee") ||
+    lower.includes("35635824") ||
+    lower.includes("35.635.824")
+  ) {
     return {
       id: "shopee",
       label: "Shopee",
@@ -69,7 +80,9 @@ export function detectMarketplaceFromUrl(url?: string | null): MarketplaceSource
     lower.includes("magazineluiza.com") ||
     lower.includes("magalu.com") ||
     lower.includes("magalu") ||
-    lower.includes("magazine luiza")
+    lower.includes("magazine luiza") ||
+    lower.includes("47960950") ||
+    lower.includes("47.960.950")
   ) {
     return {
       id: "magalu",

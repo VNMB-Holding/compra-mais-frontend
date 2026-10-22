@@ -198,6 +198,18 @@
   background: #ffedd5;
   color: #c2410c;
 }
+.avatarWithLogo {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 5px;
+  overflow: hidden;
+}
+.supplierLogoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .doubleText {
   display: flex;
   flex-direction: column;
