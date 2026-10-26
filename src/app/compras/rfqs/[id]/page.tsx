@@ -16,6 +16,7 @@ import {
   Select,
   ItemCell,
   MarketplaceLogo,
+  Breadcrumb,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -71,7 +72,6 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
   const reqItems = rfq.purchaseRequest?.items ?? [];
   const rawQtdTotal = reqItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0) || 1;
 
-  // Contabilizar propostas existentes por fornecedor para numerar ofertas múltiplas
   const supplierProposalCount = new Map<string, number>();
   (rfq.proposals ?? []).forEach((p) => {
     if (p.supplierId) {
@@ -186,7 +186,6 @@ function mapPropostas(rfq: Rfq): LocalProposal[] {
     });
   });
 
-  // Incluir fornecedores convidados sem nenhuma proposta cadastrada ainda
   (rfq.rfqSuppliers ?? []).forEach((rs) => {
     if (rs.supplierId && !supplierProposalCount.has(rs.supplierId)) {
       proposalsList.push({
@@ -1858,6 +1857,14 @@ export default function RfqDetailPage() {
         </div>
       </ConfirmDialog>
 
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Cotações (RFQs)", href: "/compras/rfqs" },
+          { label: rfqCode },
+        ]}
+      />
+
       <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
         <Icon name="chevron-left" /> Voltar para Cotações
       </button>
@@ -1937,6 +1944,13 @@ export default function RfqDetailPage() {
   if (loading) {
     return (
       <div className={styles.detailContainer}>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Cotações (RFQs)", href: "/compras/rfqs" },
+            { label: rfqCode || "Carregando..." },
+          ]}
+        />
         <button className={styles.backBtn} onClick={() => router.push("/compras/rfqs")}>
           <Icon name="chevron-left" /> Voltar para Cotações
         </button>
@@ -1958,6 +1972,32 @@ export default function RfqDetailPage() {
           </div>
           <CardSkeleton height={340} />
         </div>
+      </div>
+    );
+  }
+
+  if (!loading && !rfq) {
+    return (
+      <div className={styles.detailContainer}>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Cotações (RFQs)", href: "/compras/rfqs" },
+            { label: rfqCode || "Cotação não encontrada" },
+          ]}
+        />
+        <Card style={{ padding: "48px 24px", marginTop: 16 }}>
+          <EmptyState
+            illustration="not-found"
+            title="Cotação não encontrada"
+            description={`Não localizamos o processo de cotação "${rfqId}". O link pode estar incorreto ou o processo foi cancelado.`}
+            action={{
+              label: "Voltar para Cotações",
+              icon: "chevron-left",
+              onClick: () => router.push("/compras/rfqs"),
+            }}
+          />
+        </Card>
       </div>
     );
   }

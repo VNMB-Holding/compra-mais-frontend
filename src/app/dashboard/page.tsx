@@ -193,7 +193,29 @@ export default function DashboardPage() {
     },
     {
       header: "",
-      cell: () => <Icon name="dots-horizontal" className={styles.rowActions} />,
+      width: "40px",
+      cell: (row) => (
+        <button
+          className={styles.rowActions}
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/compras/rfqs/${row.id}`);
+          }}
+          title="Ver detalhes da cotação"
+          aria-label={`Ver detalhes da cotação ${row.codigo}`}
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            color: "#64748b",
+            padding: 4,
+          }}
+        >
+          <Icon name="chevron-right" size={16} />
+        </button>
+      ),
     },
   ];
 

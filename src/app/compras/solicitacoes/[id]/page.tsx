@@ -13,6 +13,8 @@ import {
   CardSkeleton,
   ItemCell,
   MarketplaceLogo,
+  Breadcrumb,
+  EmptyState,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -622,6 +624,14 @@ export default function SolicitacaoDetailPage() {
         </div>
       </ConfirmDialog>
 
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Solicitações de Compra", href: "/compras/solicitacoes" },
+          { label: sol?.code || solId },
+        ]}
+      />
+
       <Button
         variant="secondary"
         className={styles.backBtn}
@@ -657,6 +667,19 @@ export default function SolicitacaoDetailPage() {
             </div>
           </div>
         </div>
+      ) : !sol ? (
+        <Card style={{ padding: "48px 24px", marginTop: 16 }}>
+          <EmptyState
+            illustration="not-found"
+            title="Solicitação de Compra não encontrada"
+            description={`Não localizamos a solicitação "${solId}". O link pode estar incorreto ou o registro foi cancelado.`}
+            action={{
+              label: "Voltar para Solicitações",
+              icon: "chevron-left",
+              onClick: () => router.push("/compras/solicitacoes"),
+            }}
+          />
+        </Card>
       ) : (
         <>
           <div className={styles.pageHeader}>

@@ -13,6 +13,7 @@ import {
   EmptyState,
   DataTable,
   ColumnDef,
+  Breadcrumb,
 } from "@/components/ui";
 import styles from "./fornecedor-detail.module.css";
 import { useSupplier, usePurchaseOrders } from "@/hooks/useQueries";
@@ -205,6 +206,13 @@ export default function FornecedorDetailPage() {
   if (isLoading) {
     return (
       <div className={styles.pageContainer}>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Diretório de Fornecedores", href: "/fornecedores/diretorio" },
+            { label: supplierId || "Carregando..." },
+          ]}
+        />
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório
         </button>
@@ -232,14 +240,24 @@ export default function FornecedorDetailPage() {
   if (isError || !supplier) {
     return (
       <div className={styles.pageContainer}>
-        <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
-          <Icon name="arrow-left" size={16} /> Voltar ao diretório
-        </button>
-        <Card style={{ padding: 40, textAlign: "center", marginTop: 24 }}>
-          <h2>Fornecedor não localizado</h2>
-          <p style={{ color: "#64748b", marginTop: 8 }}>
-            Não foi possível encontrar os dados para o código informado.
-          </p>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Diretório de Fornecedores", href: "/fornecedores/diretorio" },
+            { label: supplierId || "Fornecedor não localizado" },
+          ]}
+        />
+        <Card style={{ padding: "48px 24px", marginTop: 16 }}>
+          <EmptyState
+            illustration="not-found"
+            title="Fornecedor não localizado"
+            description={`Não foi possível encontrar os dados para o código "${supplierId}". O registro pode ter sido inativado ou o link está incorreto.`}
+            action={{
+              label: "Voltar ao Diretório de Fornecedores",
+              icon: "arrow-left",
+              onClick: () => router.push("/fornecedores/diretorio"),
+            }}
+          />
         </Card>
       </div>
     );
@@ -272,6 +290,14 @@ export default function FornecedorDetailPage() {
 
   return (
     <div className={styles.pageContainer}>
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Diretório de Fornecedores", href: "/fornecedores/diretorio" },
+          { label: supplier.tradeName || supplier.corporateName },
+        ]}
+      />
+
       <div className={styles.topSection}>
         <button className={styles.backBtn} onClick={() => router.push("/fornecedores/diretorio")}>
           <Icon name="arrow-left" size={16} /> Voltar ao diretório

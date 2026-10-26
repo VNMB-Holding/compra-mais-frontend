@@ -12,6 +12,8 @@ import {
   CardSkeleton,
   ItemCell,
   MarketplaceLogo,
+  Breadcrumb,
+  EmptyState,
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import styles from "./pedido-detail.module.css";
@@ -348,6 +350,13 @@ export default function PedidoDetailPage() {
   if (!isNewFlow && (isDirectLoading || (isListLoading && !po))) {
     return (
       <div className={styles.detailContainer}>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Pedidos de Compra", href: "/compras/pedidos" },
+            { label: displayId || "Carregando..." },
+          ]}
+        />
         <button className={styles.backBtn} onClick={() => router.push("/compras/pedidos")}>
           <Icon name="chevron-left" /> Voltar para Pedidos
         </button>
@@ -379,6 +388,32 @@ export default function PedidoDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!isNewFlow && !isDirectLoading && !isListLoading && !po) {
+    return (
+      <div className={styles.detailContainer}>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Pedidos de Compra", href: "/compras/pedidos" },
+            { label: rawId || "Pedido não encontrado" },
+          ]}
+        />
+        <Card style={{ padding: "48px 24px", marginTop: 16 }}>
+          <EmptyState
+            illustration="not-found"
+            title="Pedido de Compra não encontrado"
+            description={`Não localizamos o pedido "${rawId}". O link pode estar incorreto, o pedido foi cancelado ou você não possui permissão para acessá-lo.`}
+            action={{
+              label: "Voltar para Pedidos de Compra",
+              icon: "chevron-left",
+              onClick: () => router.push("/compras/pedidos"),
+            }}
+          />
+        </Card>
       </div>
     );
   }
@@ -739,6 +774,14 @@ export default function PedidoDetailPage() {
           />
         </div>
       </ConfirmDialog>
+
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Pedidos de Compra", href: "/compras/pedidos" },
+          { label: displayId },
+        ]}
+      />
 
       <button className={styles.backBtn} onClick={() => router.push("/compras/pedidos")}>
         <Icon name="chevron-left" /> Voltar para Pedidos
