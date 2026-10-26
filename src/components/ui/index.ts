@@ -46,3 +46,6 @@ export { default as ItemCell } from "./item-cell/ItemCell";
 export type { ItemCellProps } from "./item-cell/ItemCell";
 export { default as MarketplaceLogo } from "./marketplace-logo/MarketplaceLogo";
 export type { MarketplaceLogoProps } from "./marketplace-logo/MarketplaceLogo";
+export { default as Breadcrumb } from "./breadcrumb/Breadcrumb";
+export type { BreadcrumbProps, BreadcrumbItem } from "./breadcrumb/Breadcrumb";
+

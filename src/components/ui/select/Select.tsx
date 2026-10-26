@@ -51,6 +51,7 @@ export default function Select({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,8 +75,12 @@ export default function Select({
     if (!isOpen) {
       setSearchQuery("");
       setCurrentPage(1);
+      setHighlightedIndex(-1);
       return;
     }
+
+    const idx = visibleOptions.findIndex((opt) => opt.value === value);
+    setHighlightedIndex(idx >= 0 ? idx : 0);
 
     if (hasEnhancedMenu) {
       window.setTimeout(() => searchInputRef.current?.focus(), 0);
@@ -84,6 +89,7 @@ export default function Select({
 
   useEffect(() => {
     setCurrentPage(1);
+    setHighlightedIndex(0);
   }, [searchQuery, options.length]);
 
   useEffect(() => {
@@ -98,7 +104,24 @@ export default function Select({
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setIsOpen(false);
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      } else if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setHighlightedIndex((prev) =>
+          prev < visibleOptions.length - 1 ? prev + 1 : 0,
+        );
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setHighlightedIndex((prev) =>
+          prev > 0 ? prev - 1 : visibleOptions.length - 1,
+        );
+      } else if (event.key === "Enter") {
+        if (highlightedIndex >= 0 && visibleOptions[highlightedIndex]) {
+          event.preventDefault();
+          handleSelect(visibleOptions[highlightedIndex].value);
+        }
+      }
     }
 
     if (isOpen) {
@@ -110,7 +133,7 @@ export default function Select({
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, visibleOptions, highlightedIndex]);
 
   const handleToggle = () => {
     if (!disabled) {
@@ -133,6 +156,8 @@ export default function Select({
         className={`${styles.trigger} ${triggerClassName} ${isOpen ? styles.triggerOpen : ""}`}
         onClick={handleToggle}
         disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
         <div className={styles.triggerLeft}>
           {icon && <Icon name={icon} className={styles.leadingIcon} />}
@@ -161,6 +186,7 @@ export default function Select({
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder="Buscar opção..."
+                  aria-label="Buscar opção"
                 />
                 {searchQuery && (
                   <button
@@ -176,14 +202,20 @@ export default function Select({
             </div>
           )}
 
-          <ul className={styles.optionsList}>
+          <ul className={styles.optionsList} role="listbox">
             {visibleOptions.length > 0 ? (
               visibleOptions.map((option, idx) => (
-                <li key={`${String(option.value)}-${idx}`} className={styles.optionItem}>
+                <li
+                  key={`${String(option.value)}-${idx}`}
+                  className={styles.optionItem}
+                  role="option"
+                  aria-selected={option.value === value}
+                >
                   <button
                     type="button"
-                    className={`${styles.optionButton} ${option.value === value ? styles.selected : ""}`}
+                    className={`${styles.optionButton} ${option.value === value ? styles.selected : ""} ${highlightedIndex === idx ? styles.highlighted : ""}`}
                     onClick={() => handleSelect(option.value)}
+                    onMouseEnter={() => setHighlightedIndex(idx)}
                   >
                     {option.icon && <Icon name={option.icon} className={styles.optionIcon} />}
                     <span>{option.label}</span>

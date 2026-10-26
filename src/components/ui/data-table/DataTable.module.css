@@ -2,14 +2,18 @@
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+  border-radius: inherit;
 }
+
 .dataTable {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
+
 .dataTable th {
-  padding: 9px 14px;
+  padding: 10px 14px;
   font-size: 11px;
   font-weight: 700;
   color: #64748b;
@@ -17,43 +21,87 @@
   letter-spacing: 0.05em;
   border-bottom: 1px solid #e2e8f0;
   background: #ffffff;
+  user-select: none;
 }
+
+.headerContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sortableHeader {
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.sortableHeader:hover {
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+.sortIcon {
+  display: inline-flex;
+  align-items: center;
+  color: #007d79;
+}
+
+.sortIndicatorDefault {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.sortableHeader:hover .sortIndicatorDefault {
+  background-color: #cbd5e1;
+}
+
 .dataTable td {
-  padding: 9px 14px;
+  padding: 10px 14px;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
   background: #ffffff;
   color: #334155;
   font-size: 12.5px;
   transition:
-    background-color var(--duration-fast) var(--ease-in-out),
-    color var(--duration-fast) var(--ease-in-out);
+    background-color var(--duration-fast, 120ms) var(--ease-in-out, ease),
+    color var(--duration-fast, 120ms) var(--ease-in-out, ease);
 }
+
 .dataTable tbody tr:last-child td {
   border-bottom: none;
 }
+
 .compact th {
   padding: 6px 10px;
   font-size: 11px;
 }
+
 .compact td {
   padding: 6px 10px;
   font-size: 12px;
 }
+
 .clickableRow {
   cursor: pointer;
 }
+
 .clickableRow:hover td {
   background-color: #f8fafc;
 }
+
 .animatedRow {
-  animation: fadeInRow var(--duration-enter) var(--ease-out) both;
-  animation-delay: calc(var(--row-index, 0) * 30ms);
+  animation: fadeInRow var(--duration-enter, 260ms) var(--ease-out, ease) both;
+  animation-delay: calc(var(--row-index, 0) * 25ms);
 }
+
 @keyframes fadeInRow {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(3px);
   }
   to {
     opacity: 1;
@@ -63,7 +111,7 @@
 
 @media (max-width: 768px) {
   .dataTable {
-    min-width: 600px;
+    min-width: 640px;
   }
   .dataTable th,
   .dataTable td {
@@ -71,4 +119,3 @@
     font-size: 12px;
   }
 }
-

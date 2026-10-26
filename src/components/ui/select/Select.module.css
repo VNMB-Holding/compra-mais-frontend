@@ -185,7 +185,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.optionButton:hover {
+.optionButton:hover,
+.highlighted {
   background-color: var(--bg-hover, #f1f5f9);
   color: var(--text-main, #0f172a);
 }
