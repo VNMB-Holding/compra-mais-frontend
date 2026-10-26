@@ -44,6 +44,7 @@ import {
 import { formatUserDisplayName } from "@/lib/utils/format-display";
 import { usePurchaseRequests } from "@/hooks/useQueries";
 import { useTour } from "@/hooks/useTour";
+import { useDebounce } from "@/hooks/useDebounce";
 import { solicitacoesTour } from "@/lib/tours";
 
 interface SolicitationCorporateRow {
@@ -100,9 +101,23 @@ function SolicitacoesContent() {
 
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [kpis, setKpis] = useState<PurchaseRequestKpis | null>(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() !== "" ||
+      statusFilter !== "Todos" ||
+      selectedCompanyId !== "TODAS",
+  );
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("Todos");
+    setSelectedCompanyId("TODAS");
+    setCurrentPage(1);
+  };
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDrawerRequest, setSelectedDrawerRequest] = useState<PurchaseRequest | null>(null);
@@ -135,9 +150,9 @@ function SolicitacoesContent() {
     () => ({
       companyCode: queryCompanyCode,
       status: statusFilter !== "Todos" ? statusFilter : undefined,
-      search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+      search: debouncedSearch.trim() !== "" ? debouncedSearch.trim() : undefined,
     }),
-    [queryCompanyCode, statusFilter, searchQuery],
+    [queryCompanyCode, statusFilter, debouncedSearch],
   );
 
   const {
@@ -354,6 +369,15 @@ function SolicitacoesContent() {
                 setCurrentPage(1);
               }}
             />
+            {hasActiveFilters && (
+              <Button
+                variant="secondary"
+                onClick={handleClearFilters}
+                style={{ height: 36, padding: "0 12px", fontSize: 12, whiteSpace: "nowrap" }}
+              >
+                <Icon name="x-close" size={14} /> Limpar
+              </Button>
+            )}
           </div>
         </div>
 

@@ -1622,7 +1622,6 @@ export default function NewRfqPage() {
                     Adicione lojas virtuais ou orçamentos locais com 1 clique para comparar:
                   </span>
 
-                  {/* Chips individuais rápidos */}
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                     {[
                       {

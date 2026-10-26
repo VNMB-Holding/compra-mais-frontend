@@ -28,6 +28,8 @@ import {
 } from "@/lib/constants/status";
 import { useAuth } from "@/hooks/useAuth";
 import { useTour } from "@/hooks/useTour";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useToast } from "@/contexts/ToastContext";
 import { pedidosTour } from "@/lib/tours";
 
 interface PedidoRow {
@@ -73,8 +75,10 @@ function mapToRow(po: PurchaseOrder, currentUser?: any): PedidoRow {
 export default function PedidosPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
   const [supplier, setSupplier] = useState("Todos");
   const [status, setStatus] = useState("Todos");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
@@ -86,6 +90,42 @@ export default function PedidosPage() {
 
   const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() !== "" ||
+      status !== "Todos" ||
+      (supplier !== "Todos" && supplier !== "Todas") ||
+      selectedCompanyId !== "TODAS",
+  );
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setStatus("Todos");
+    setSupplier("Todos");
+    setSelectedCompanyId("TODAS");
+    setCurrentPage(1);
+  };
+
+  const handleCopyLink = (row: PedidoRow, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/compras/pedidos/${row.id}`;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        toast({
+          variant: "success",
+          title: "Link copiado",
+          message: `Link do pedido ${row.numero} copiado para a área de transferência.`,
+        });
+      })
+      .catch(() => {
+        toast({
+          variant: "error",
+          title: "Erro ao copiar",
+          message: "Não foi possível copiar o link.",
+        });
+      });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -109,7 +149,7 @@ export default function PedidosPage() {
         companyCode: queryCompanyCode,
         status: status !== "Todos" ? status : undefined,
         supplier: supplier !== "Todos" && supplier !== "Todas" ? supplier : undefined,
-        search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+        search: debouncedSearch.trim() !== "" ? debouncedSearch.trim() : undefined,
       });
       const rows = data.map((po) => mapToRow(po, user));
       setPedidos(rows);
@@ -130,7 +170,7 @@ export default function PedidosPage() {
     } finally {
       setLoading(false);
     }
-  }, [queryCompanyCode, status, supplier, searchQuery, user]);
+  }, [queryCompanyCode, status, supplier, debouncedSearch, user]);
 
   useEffect(() => {
     fetchData();
@@ -192,14 +232,20 @@ export default function PedidosPage() {
     { header: "Entrega Prevista", accessorKey: "entrega" },
     {
       header: "Status",
+      accessorKey: "status",
       cell: (row) => <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>,
     },
     {
       header: "",
-      width: "40px",
-      cell: () => (
-        <button className={styles.iconBtn}>
-          <Icon name="share-03" />
+      width: "48px",
+      cell: (row) => (
+        <button
+          className={styles.iconBtn}
+          onClick={(e) => handleCopyLink(row, e)}
+          title="Copiar link do pedido"
+          aria-label="Copiar link do pedido"
+        >
+          <Icon name="share-03" size={16} />
         </button>
       ),
     },
@@ -294,6 +340,15 @@ export default function PedidosPage() {
               }}
               className={styles.customSelectFilter}
             />
+            {hasActiveFilters && (
+              <Button
+                variant="secondary"
+                onClick={handleClearFilters}
+                style={{ height: 36, padding: "0 12px", fontSize: 12, whiteSpace: "nowrap" }}
+              >
+                <Icon name="x-close" size={14} /> Limpar
+              </Button>
+            )}
           </div>
         </div>
 

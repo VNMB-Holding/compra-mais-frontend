@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
+  Button,
   Icon,
   Select,
   ErrorState,
@@ -21,6 +22,7 @@ import { getSupplierDetailUrl } from "@/lib/utils/routes";
 import { detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useDebounce } from "@/hooks/useDebounce";
 import { isPuraFeUser, getCompanyFilterOptions } from "@/lib/utils/tenant";
 import { User } from "@/types/auth";
 import { useTour } from "@/hooks/useTour";
@@ -99,12 +101,30 @@ export default function FornecedoresListPage() {
   const [selectedCity, setSelectedCity] = useState("Todas");
   const [status, setStatus] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
   const [fornecedores, setFornecedores] = useState<FornecedorRow[]>([]);
   const [allSegments, setAllSegments] = useState<string[]>([]);
   const [allCities, setAllCities] = useState<string[]>([]);
   const [kpis, setKpis] = useState<SupplierKpis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() !== "" ||
+      selectedSegment !== "Todos" ||
+      selectedCity !== "Todas" ||
+      status !== "Todos" ||
+      (!isPuraFe && selectedCompany !== "TODAS"),
+  );
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setSelectedSegment("Todos");
+    setSelectedCity("Todas");
+    setStatus("Todos");
+    if (!isPuraFe) setSelectedCompany("TODAS");
+    setCurrentPage(1);
+  };
 
   const queryCompany = useMemo(() => {
     if (isPuraFe) return "PURAFE";
@@ -148,7 +168,7 @@ export default function FornecedoresListPage() {
           status: status !== "Todos" ? statusMap[status] || status : undefined,
           city: selectedCity !== "Todas" ? selectedCity : undefined,
           segment: selectedSegment !== "Todos" ? selectedSegment : undefined,
-          search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+          search: debouncedSearch.trim() !== "" ? debouncedSearch.trim() : undefined,
         }),
         suppliersApi.getKpis(queryCompany || user?.tenantId),
       ]);
@@ -168,7 +188,7 @@ export default function FornecedoresListPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, isPuraFe, status, selectedCity, selectedSegment, searchQuery]);
+  }, [user, isPuraFe, queryCompany, status, selectedCity, selectedSegment, debouncedSearch]);
 
   useEffect(() => {
     fetchData();
@@ -456,6 +476,16 @@ export default function FornecedoresListPage() {
               }}
               className={styles.customSelectFilter}
             />
+
+            {hasActiveFilters && (
+              <Button
+                variant="secondary"
+                onClick={handleClearFilters}
+                style={{ height: 36, padding: "0 12px", fontSize: 12, whiteSpace: "nowrap" }}
+              >
+                <Icon name="x-close" size={14} /> Limpar
+              </Button>
+            )}
           </div>
         </div>
 

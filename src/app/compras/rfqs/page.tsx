@@ -33,6 +33,8 @@ import { RfqRow } from "@/types/domain";
 import { useRfqs } from "@/hooks/useQueries";
 import { mapRfqStatus } from "@/lib/constants/status";
 import { useTour } from "@/hooks/useTour";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useToast } from "@/contexts/ToastContext";
 import { rfqsTour } from "@/lib/tours";
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -85,6 +87,7 @@ function mapToRow(rfq: Rfq, currentUser?: any): RfqRow {
 export default function RfqsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [category, setCategory] = useState("Todas");
   const [status, setStatus] = useState("Todos");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
@@ -93,15 +96,52 @@ export default function RfqsPage() {
   const companyOptions = React.useMemo(() => getCompanyFilterOptions(user), [user]);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() !== "" ||
+      status !== "Todos" ||
+      category !== "Todas" ||
+      selectedCompanyId !== "TODAS",
+  );
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setStatus("Todos");
+    setCategory("Todas");
+    setSelectedCompanyId("TODAS");
+    setCurrentPage(1);
+  };
+
+  const handleCopyLink = (row: RfqRow, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/compras/rfqs/${row.id}`;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        toast({
+          variant: "success",
+          title: "Link copiado",
+          message: `Link da cotação ${row.codigo} copiado para a área de transferência.`,
+        });
+      })
+      .catch(() => {
+        toast({
+          variant: "error",
+          title: "Erro ao copiar",
+          message: "Não foi possível copiar o link.",
+        });
+      });
+  };
 
   const queryParams = React.useMemo(
     () => ({
       companyCode: queryCompanyCode,
       status: status !== "Todos" ? status : undefined,
       category: category !== "Todas" ? category : undefined,
-      search: searchQuery.trim() !== "" ? searchQuery.trim() : undefined,
+      search: debouncedSearch.trim() !== "" ? debouncedSearch.trim() : undefined,
     }),
-    [queryCompanyCode, status, category, searchQuery],
+    [queryCompanyCode, status, category, debouncedSearch],
   );
 
   const { data: rawRfqs = [], isLoading: loadingRfqs, error: queryError } = useRfqs(queryParams);
@@ -230,10 +270,15 @@ export default function RfqsPage() {
     },
     {
       header: "",
-      width: "40px",
-      cell: () => (
-        <button className={styles.iconBtn}>
-          <Icon name="share-03" />
+      width: "48px",
+      cell: (row) => (
+        <button
+          className={styles.iconBtn}
+          onClick={(e) => handleCopyLink(row, e)}
+          title="Copiar link da cotação"
+          aria-label="Copiar link da cotação"
+        >
+          <Icon name="share-03" size={16} />
         </button>
       ),
     },
@@ -291,15 +336,16 @@ export default function RfqsPage() {
         />
         <KpiCard
           title="Finalizadas"
-          value={String(kpis?.total || 0)}
+          value={String(kpis?.closed || 0)}
           icon="check-circle"
           description="Concluídas"
           loading={loading}
         />
         <KpiCard
-          title="Em Negociação"
+          title="Total Geral"
           value={String(kpis?.total || 0)}
-          icon="users-01"
+          icon="receipt-check"
+          description="Total de cotações"
           loading={loading}
         />
       </div>
@@ -348,6 +394,15 @@ export default function RfqsPage() {
               }}
               className={styles.customSelectFilter}
             />
+            {hasActiveFilters && (
+              <Button
+                variant="secondary"
+                onClick={handleClearFilters}
+                style={{ height: 36, padding: "0 12px", fontSize: 12, whiteSpace: "nowrap" }}
+              >
+                <Icon name="x-close" size={14} /> Limpar
+              </Button>
+            )}
           </div>
         </div>
 
