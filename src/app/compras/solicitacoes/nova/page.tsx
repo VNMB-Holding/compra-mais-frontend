@@ -198,6 +198,23 @@ export default function NovaSolicitacaoPage() {
     [items],
   );
 
+  const isDirty = Boolean(
+    title.trim() !== "" ||
+      justification.trim() !== "" ||
+      items.some((i) => i.description.trim() !== ""),
+  );
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && !isSubmitting && !savingDraft) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, isSubmitting, savingDraft]);
+
   const updateItem = <K extends keyof RequestItem>(id: number, field: K, value: RequestItem[K]) => {
     setItems((current) =>
       current.map((item) => (item.id === id ? { ...item, [field]: value } : item)),

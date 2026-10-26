@@ -13,13 +13,14 @@ import {
   ChartSkeleton,
   CalendarFilter,
   DateFilterValue,
+  ErrorState,
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
 import { formatCurrency, formatDateTimePtBr } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, EconomyAnalyticsResponse } from "@/lib/api/dashboard";
 import { getCompanyFilterOptions } from "@/lib/utils/tenant";
-import { logError } from "@/lib/utils/error";
+import { logError, getErrorMessage } from "@/lib/utils/error";
 
 interface CategoryEconomy {
   categoria: string;
@@ -62,6 +63,7 @@ export default function EconomiaPage() {
   const [exportingType, setExportingType] = useState<"PDF" | "XLS" | null>(null);
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [apiData, setApiData] = useState<EconomyAnalyticsResponse | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [showAllInitiatives, setShowAllInitiatives] = useState(false);
@@ -89,6 +91,7 @@ export default function EconomiaPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      setError(null);
       setLoading(true);
       const [economyData, monthlyData] = await Promise.all([
         dashboardApi.getEconomyAnalytics(
@@ -116,6 +119,7 @@ export default function EconomiaPage() {
       setLastUpdatedAt(new Date());
     } catch (err) {
       logError("analytics/economia/fetchData", err);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -381,7 +385,19 @@ export default function EconomiaPage() {
         </button>
       </div>
 
-      <div className={styles.kpiGrid}>
+      {error ? (
+        <Card style={{ padding: "48px 24px", marginTop: 24 }}>
+          <ErrorState
+            illustration="server-error"
+            title="Erro ao carregar análise de Economia"
+            message={error}
+            onRetry={fetchData}
+            retryLabel="Tentar novamente"
+          />
+        </Card>
+      ) : (
+        <>
+          <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiTitle}>Economia realizada (Saving)</span>
@@ -670,6 +686,8 @@ export default function EconomiaPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       <div className={styles.footerRow}>
         <Icon name="refresh-ccw-01" size={14} />

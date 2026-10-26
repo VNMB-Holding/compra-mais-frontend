@@ -96,8 +96,41 @@ export default function NovoFornecedorPage() {
     setFormData((prev) => ({ ...prev, contatoTelefone: maskPhone(e.target.value) }));
   };
 
-  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, cep: maskCep(e.target.value) }));
+  const [loadingCep, setLoadingCep] = useState(false);
+
+  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    const masked = maskCep(rawVal);
+    setFormData((prev) => ({ ...prev, cep: masked }));
+
+    const cleanCep = masked.replace(/\D/g, "");
+    if (cleanCep.length === 8) {
+      setLoadingCep(true);
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.erro) {
+            setFormData((prev) => ({
+              ...prev,
+              logradouro: data.logradouro || prev.logradouro,
+              bairro: data.bairro || prev.bairro,
+              cidade: data.localidade || prev.cidade,
+              estado: data.uf || prev.estado,
+            }));
+            toast({
+              variant: "success",
+              title: "Endereço localizado",
+              message: `${data.logradouro ? data.logradouro + ", " : ""}${data.localidade} - ${data.uf}`,
+            });
+          }
+        }
+      } catch (err) {
+        logError("novoFornecedor/fetchCep", err);
+      } finally {
+        setLoadingCep(false);
+      }
+    }
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -118,6 +151,25 @@ export default function NovoFornecedorPage() {
     }
     return name.slice(0, 2).toUpperCase();
   };
+
+  const isFormDirty = Boolean(
+    formData.corporateName.trim() !== "" ||
+      formData.cnpj.trim() !== "" ||
+      formData.contatoNome.trim() !== "" ||
+      formData.contatoEmail.trim() !== "" ||
+      formData.logradouro.trim() !== "",
+  );
+
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isFormDirty && !loading) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isFormDirty, loading]);
 
   const isBasicInfoDone = formData.corporateName.trim() !== "" && formData.cnpj.length === 18;
   const isCategoryDone = formData.categoria !== "";
@@ -403,14 +455,21 @@ export default function NovoFornecedorPage() {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>CEP</label>
+                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>CEP</span>
+                      {loadingCep && (
+                        <span style={{ fontSize: "11px", color: "#007d79", fontWeight: "normal" }}>
+                          Buscando endereço...
+                        </span>
+                      )}
+                    </label>
                     <input
                       className={styles.formControl}
                       name="cep"
                       value={formData.cep}
                       onChange={handleCepChange}
                       placeholder="00000-000"
-                      disabled={loading}
+                      disabled={loading || loadingCep}
                     />
                   </div>
                   <div className={styles.formGroup}>
