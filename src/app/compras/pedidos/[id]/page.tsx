@@ -284,12 +284,12 @@ export default function PedidoDetailPage() {
   };
 
   const handlePrintPO = async () => {
-    const idToUse = po?.id || (isUuid ? rawId : null);
-    if (!idToUse || !po) {
+    const idToUse = po?.id || po?.code || rawId;
+    if (!idToUse) {
       toast({
         variant: "warning",
         title: "PDF indisponível",
-        message: "O PDF só está disponível para pedidos carregados do banco de dados.",
+        message: "O PDF só está disponível para pedidos válidos cadastrados.",
       });
       return;
     }
@@ -309,7 +309,7 @@ export default function PedidoDetailPage() {
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const filename = getPdfFilename(response, po.code || displayId);
+      const filename = getPdfFilename(response, po?.code || displayId || rawId);
       const link = document.createElement("a");
       link.href = url;
       link.target = "_blank";
@@ -317,6 +317,11 @@ export default function PedidoDetailPage() {
       link.download = filename;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
+      toast({
+        variant: "success",
+        title: "PDF gerado com sucesso!",
+        message: `O download de ${filename} foi iniciado.`,
+      });
     } catch (e) {
       toast({
         variant: "error",

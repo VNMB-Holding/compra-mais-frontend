@@ -146,11 +146,11 @@ export default function ItensCatalogoPage() {
       setNewSupplierId("");
       setNewNotes("");
       refetch();
-    } catch {
+    } catch (err: any) {
       toast({
         variant: "error",
         title: "Erro ao cadastrar",
-        message: "Não foi possível cadastrar o item. Verifique os dados e tente novamente.",
+        message: getErrorMessage(err) || "Não foi possível cadastrar o item. Verifique os dados e tente novamente.",
       });
     }
   };

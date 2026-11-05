@@ -12,4 +12,5 @@ export const solicitacoesService = {
     purchaseRequestsApi.create(data),
   updateStatus: (id: string, status: PurchaseRequest["status"], comments?: string) =>
     purchaseRequestsApi.updateStatus(id, status, comments),
+  generatePdf: (id: string) => purchaseRequestsApi.generatePdf(id),
 };

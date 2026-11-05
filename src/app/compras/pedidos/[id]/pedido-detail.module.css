@@ -379,6 +379,7 @@
 }
 .itemsTable {
   width: 100%;
+  min-width: 650px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -765,13 +766,17 @@
   .pageHeader {
     flex-direction: column;
     align-items: stretch;
+    gap: 14px;
   }
   .headerActions {
     width: 100%;
-    flex-direction: column;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
   .headerActions button {
-    width: 100%;
+    flex: 1 1 calc(50% - 8px);
+    min-width: 130px;
     justify-content: center;
   }
   .infoGrid {
@@ -781,7 +786,7 @@
   .stepperContainer {
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 14px;
   }
   .step {
     flex-direction: row;
@@ -790,6 +795,10 @@
     max-width: none;
     width: 100%;
     gap: 14px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
   }
   .stepInfo {
     align-items: flex-start;
@@ -804,5 +813,16 @@
 @media (max-width: 520px) {
   .premiumMetricsGrid {
     grid-template-columns: 1fr;
+  }
+  .headerActions button {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .titleRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .titleRow h1 {
+    font-size: 19px;
   }
 }

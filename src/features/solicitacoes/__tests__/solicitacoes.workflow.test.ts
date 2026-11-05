@@ -120,6 +120,26 @@ describe("TC-USR-05 / TC-ADM-02: Solicitações Workflow & Ciclo de Vida", () =>
     });
   });
 
+  describe("Geração e Exportação de PDF", () => {
+    it("deve chamar endpoint para gerar PDF oficial da solicitação de compra", async () => {
+      const mockBlob = new Blob(["%PDF-1.4 Mock Solicitação Content"], { type: "application/pdf" });
+      const getRawSpy = vi.spyOn(apiClient, "getRaw").mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "application/pdf" }),
+        blob: async () => mockBlob,
+      } as any);
+
+      const result = await solicitacoesService.generatePdf("pr-5001");
+
+      expect(getRawSpy).toHaveBeenCalledWith("/api/purchase-requests/pr-5001/pdf", {
+        headers: { Accept: "application/pdf" },
+        timeoutMs: 60_000,
+      });
+      expect(result.ok).toBe(true);
+    });
+  });
+
   describe("Filtros Avançados e KPIs", () => {
     it("deve construir query string completa ao filtrar por status, busca e tenant", async () => {
       const getSpy = vi.spyOn(apiClient, "get").mockResolvedValue([] as any);

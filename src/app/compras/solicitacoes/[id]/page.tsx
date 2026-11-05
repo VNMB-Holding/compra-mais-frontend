@@ -215,6 +215,70 @@ export default function SolicitacaoDetailPage() {
     }
   };
 
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const handleDownloadPdf = async () => {
+    const idToUse = sol?.id || sol?.code || solId;
+    if (!idToUse) {
+      toast({
+        variant: "warning",
+        title: "PDF indisponível",
+        message: "Não foi possível identificar a Solicitação para geração do PDF.",
+      });
+      return;
+    }
+
+    setLoadingPdf(true);
+    try {
+      const response = await purchaseRequestsApi.generatePdf(idToUse);
+      const contentType = response.headers.get("content-type") || "";
+
+      if (!response.ok) {
+        let errMsg = `Erro ${response.status}`;
+        try {
+          const json = await response.json();
+          errMsg = json?.message || errMsg;
+        } catch {
+          const text = await response.text();
+          if (text) errMsg = text;
+        }
+        throw new Error(errMsg);
+      }
+
+      if (!contentType.includes("application/pdf")) {
+        throw new Error("O servidor não retornou um documento PDF válido.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const safeCode = (sol?.code || solId || "solicitacao-compra")
+        .replace(/[^a-z0-9-_]+/gi, "-")
+        .replace(/^-+|-+$/g, "");
+      const filename = `${safeCode}.pdf`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+
+      toast({
+        variant: "success",
+        title: "PDF gerado com sucesso!",
+        message: `O download de ${filename} foi iniciado.`,
+      });
+    } catch (e) {
+      toast({
+        variant: "error",
+        title: "Erro ao gerar PDF",
+        message: e instanceof Error ? e.message : "Tente novamente mais tarde.",
+      });
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
   const [cancelling, setCancelling] = useState(false);
   const handleCancel = async () => {
     if (!sol) return;
@@ -625,6 +689,18 @@ export default function SolicitacaoDetailPage() {
             </div>
 
             <div className={styles.headerActionGroup}>
+              <div className={styles.headerActions}>
+                <Button
+                  variant="secondary"
+                  onClick={handleDownloadPdf}
+                  disabled={loadingPdf}
+                  loading={loadingPdf}
+                  loadingText="Gerando PDF..."
+                  title="Baixar espelho oficial em PDF da Solicitação de Compra"
+                >
+                  <Icon name="printer" /> Exportar PDF
+                </Button>
+              </div>
               {isDraft ? (
                 <div className={styles.headerActions}>
                   <Button

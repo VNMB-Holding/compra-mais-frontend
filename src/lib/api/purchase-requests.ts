@@ -166,4 +166,10 @@ export const purchaseRequestsApi = {
 
   rejectByToken: (token: string, comments?: string) =>
     apiClient.post<any>(`/api/purchase-requests/approval-link/${token}/reject`, { comments }),
+
+  generatePdf: (id: string) =>
+    apiClient.getRaw(`/api/purchase-requests/${id}/pdf`, {
+      headers: { Accept: "application/pdf" },
+      timeoutMs: 60_000,
+    }),
 };
