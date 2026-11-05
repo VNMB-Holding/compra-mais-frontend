@@ -447,6 +447,7 @@
 }
 .itemsTable {
   width: 100%;
+  min-width: 620px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -478,15 +479,31 @@
   .pageHeader {
     flex-direction: column;
     align-items: stretch;
+    gap: 16px;
   }
-  .headerActionGroup,
-  .headerActions,
+  .headerActionGroup {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .headerActions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .headerActions button {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 130px;
+    justify-content: center;
+  }
   .waitingApproverInfo {
     width: 100%;
     flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
-  .headerActionGroup button,
-  .headerActions button,
   .waitingApproverInfo button {
     width: 100%;
     justify-content: center;
@@ -501,7 +518,7 @@
   .stepperContainer {
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    gap: 12px;
   }
   .step {
     flex-direction: row;
@@ -509,11 +526,32 @@
     width: 100%;
     text-align: left;
     gap: 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
   }
   .stepInfo {
     align-items: flex-start;
   }
   .stepLine {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerActions button {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .titleRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .titleRow h1 {
+    font-size: 19px;
+  }
+  .itemsTableCard {
+    border-radius: 8px;
   }
 }

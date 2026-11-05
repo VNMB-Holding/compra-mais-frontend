@@ -276,12 +276,12 @@ export default function PedidoDetailPage() {
   };
 
   const handlePrintPO = async () => {
-    const idToUse = po?.id || (isUuid ? rawId : null);
-    if (!idToUse || !po) {
+    const idToUse = po?.id || po?.code || rawId;
+    if (!idToUse) {
       toast({
         variant: "warning",
         title: "PDF indisponível",
-        message: "O PDF só está disponível para pedidos carregados do banco de dados.",
+        message: "O PDF só está disponível para pedidos válidos cadastrados.",
       });
       return;
     }
@@ -289,7 +289,12 @@ export default function PedidoDetailPage() {
     setLoadingPdf(true);
     try {
       const response = await purchaseOrdersApi.generatePdf(idToUse);
-      await downloadPdfResponse(response, po.code || displayId);
+      await downloadPdfResponse(response, po?.code || displayId || rawId);
+      toast({
+        variant: "success",
+        title: "PDF gerado com sucesso!",
+        message: "O download do PDF foi iniciado.",
+      });
     } catch (e) {
       toast({
         variant: "error",
