@@ -12,7 +12,6 @@ import {
   Skeleton,
   CardSkeleton,
   ItemCell,
-  MarketplaceLogo,
 } from "@/components/ui";
 
 import { useToast } from "@/contexts/ToastContext";
@@ -22,7 +21,6 @@ import { rfqsApi } from "@/lib/api/rfqs";
 import {
   extractItemReferenceUrlsFromNotes,
   cleanNotesDisplay,
-  detectMarketplaceFromUrl,
 } from "@/lib/utils/item-description";
 import { getCategoryIcon } from "@/lib/utils/category-icon";
 import { formatUserDisplayName, isUuid } from "@/lib/utils/format-display";
@@ -33,7 +31,6 @@ import {
 } from "@/lib/utils/approval-limits";
 import { useAuth } from "@/hooks/useAuth";
 import { logError, getErrorMessage } from "@/lib/utils/error";
-import { downloadPdfResponse } from "@/lib/utils/pdf";
 import {
   getTenantDisplayName,
   formatCorporateBranch,
@@ -71,6 +68,153 @@ export default function SolicitacaoDetailPage() {
   const [cancelReason, setCancelReason] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [approved, setApproved] = useState<boolean | null>(null);
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    setSolOverride(null);
+    setApproved(null);
+  }, [solId]);
+
+  const sol = solOverride || querySol || null;
+  const loading = isCode ? codeLoading : queryLoading && !solOverride;
+
+  useEffect(() => {
+    if (isCode) {
+      let cancelled = false;
+      setCodeLoading(true);
+      (async () => {
+        try {
+          let full: PurchaseRequest | null = null;
+          try {
+            full = await purchaseRequestsApi.getById(solId);
+          } catch {}
+
+          if (!full) {
+            const list = await purchaseRequestsApi.list({ companyCode: "TODAS" });
+            const found = list.find((item) => item.code === solId || item.id === solId);
+            if (found) {
+              try {
+                full = await purchaseRequestsApi.getById(found.id);
+              } catch {
+                full = found;
+              }
+            }
+          }
+
+          if (cancelled) return;
+          setSolOverride(full || null);
+          if (!full) {
+            toast({
+              variant: "error",
+              title: "Solicitação não encontrada",
+              message: `Não foi possível localizar ${solId}.`,
+            });
+          }
+        } catch (err) {
+          logError("solicitacoes/[id]/load", err);
+          if (!cancelled)
+            toast({
+              variant: "error",
+              title: "Erro ao carregar Solicitação",
+              message: getErrorMessage(err),
+            });
+        } finally {
+          if (!cancelled) setCodeLoading(false);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [solId, isCode, toast]);
+
+  useEffect(() => {
+    if (queryError && !querySol) {
+      logError("solicitacoes/[id]/load", queryError);
+      toast({
+        variant: "error",
+        title: "Erro ao carregar Solicitação",
+        message: getErrorMessage(queryError),
+      });
+    }
+  }, [queryError, querySol, toast]);
+
+  useEffect(() => {
+    if (sol) {
+      if (sol.status === "Approved" || sol.status === "InQuote" || sol.status === "Finished")
+        setApproved(true);
+      if (sol.status === "Rejected") setApproved(false);
+    }
+  }, [sol]);
+
+  const approveMutation = useApprovePurchaseRequest();
+  const rejectMutation = useRejectPurchaseRequest();
+
+  const handleApprove = async () => {
+    if (sol) {
+      try {
+        await approveMutation.mutateAsync({ id: sol.id });
+        const fresh = await purchaseRequestsApi.getById(sol.id);
+        setSolOverride(fresh);
+
+        const isFinal =
+          fresh.status === "Approved" || fresh.status === "InQuote" || fresh.status === "Finished";
+
+        if (isFinal) {
+          setApproved(true);
+          toast({
+            variant: "success",
+            title: "Solicitação aprovada!",
+            message: `${fresh.code || solId} foi totalmente aprovada e está liberada para abertura de RFQ.`,
+          });
+        } else {
+          toast({
+            variant: "success",
+            title: "Alçada aprovada!",
+            message: `Sua Aprovação foi registrada na Alçada atual. A Solicitação avançou para o próximo nível.`,
+          });
+        }
+      } catch (e) {
+        logError("solicitacoes/[id]/approve", e);
+        toast({ variant: "error", title: "Erro ao aprovar", message: getErrorMessage(e) });
+        return;
+      }
+    }
+    setDialog(null);
+  };
+
+  const handleReject = async () => {
+    if (!sol) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      toast({
+        variant: "warning",
+        title: "Justificativa obrigatória",
+        message: "Por favor, informe a justificativa da rejeição.",
+      });
+      return;
+    }
+    try {
+      await rejectMutation.mutateAsync({ id: sol.id, comments: reason });
+      const fresh = await purchaseRequestsApi.getById(sol.id);
+      setSolOverride(fresh);
+      setApproved(false);
+      setRejectReason("");
+      toast({
+        variant: "warning",
+        title: "Solicitação rejeitada",
+        message: `${sol?.code || solId} foi rejeitada. O solicitante será notificado.`,
+      });
+    } catch (e) {
+      logError("solicitacoes/[id]/reject", e);
+      toast({ variant: "error", title: "Erro ao rejeitar", message: getErrorMessage(e) });
+      return;
+    } finally {
+      setDialog(null);
+    }
+  };
+
   const [loadingPdf, setLoadingPdf] = useState(false);
   const handleDownloadPdf = async () => {
     const idToUse = sol?.id || sol?.code || solId;
@@ -86,11 +230,43 @@ export default function SolicitacaoDetailPage() {
     setLoadingPdf(true);
     try {
       const response = await purchaseRequestsApi.generatePdf(idToUse);
-      await downloadPdfResponse(response, sol?.code || solId || "solicitacao-compra");
+      const contentType = response.headers.get("content-type") || "";
+
+      if (!response.ok) {
+        let errMsg = `Erro ${response.status}`;
+        try {
+          const json = await response.json();
+          errMsg = json?.message || errMsg;
+        } catch {
+          const text = await response.text();
+          if (text) errMsg = text;
+        }
+        throw new Error(errMsg);
+      }
+
+      if (!contentType.includes("application/pdf")) {
+        throw new Error("O servidor não retornou um documento PDF válido.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const safeCode = (sol?.code || solId || "solicitacao-compra")
+        .replace(/[^a-z0-9-_]+/gi, "-")
+        .replace(/^-+|-+$/g, "");
+      const filename = `${safeCode}.pdf`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+
       toast({
         variant: "success",
         title: "PDF gerado com sucesso!",
-        message: "O download da solicitação foi iniciado com sucesso.",
+        message: `O download de ${filename} foi iniciado.`,
       });
     } catch (e) {
       toast({
@@ -101,7 +277,6 @@ export default function SolicitacaoDetailPage() {
     } finally {
       setLoadingPdf(false);
     }
-  }
   };
 
   const [cancelling, setCancelling] = useState(false);
@@ -273,72 +448,7 @@ export default function SolicitacaoDetailPage() {
     }
   };
 
-  const handlePrintSC = async () => {
-    const idToUse = sol?.id || solId;
-    if (!idToUse) {
-      toast({
-        variant: "warning",
-        title: "PDF indisponível",
-        message: "O PDF só está disponível para solicitações carregadas do banco de dados.",
-      });
-      return;
-    }
-
-    setLoadingPdf(true);
-    try {
-      const response = await purchaseRequestsApi.generatePdf(idToUse);
-      await downloadPdfResponse(response, sol?.code || solId || "solicitacao-compra");
-    } catch (e) {
-      toast({
-        variant: "error",
-        title: "Erro ao gerar PDF",
-        message: e instanceof Error ? e.message : "Tente novamente.",
-      });
-    } finally {
-      setLoadingPdf(false);
-    }
-  };
-
   const companyName = resolvePurchaseRequestBranch(sol, user);
-
-  const detectedLinksInfo = useMemo(() => {
-    if (!sol) return { hasAnyLink: false, hasMercadoLivre: false, marketplaces: [] as string[], isIgreja: false };
-    const notesRefUrls = extractItemReferenceUrlsFromNotes(sol.notes);
-    const foundSources = new Set<string>();
-    let hasAnyLink = false;
-    let hasMercadoLivre = false;
-
-    for (const item of sol.items || []) {
-      const refUrl =
-        (item as any).referenceUrl ||
-        notesRefUrls.get(item.description?.trim().toLowerCase()) ||
-        item.description;
-      const mp = detectMarketplaceFromUrl(refUrl);
-      if (mp) {
-        hasAnyLink = true;
-        foundSources.add(mp.label);
-        if (mp.isMercadoLivre) hasMercadoLivre = true;
-      }
-    }
-
-    const pType = (sol.purchaseType || "").toLowerCase();
-    if (pType.includes("link") || pType.includes("e-commerce") || pType.includes("mercado livre")) {
-      hasAnyLink = true;
-    }
-
-    const isIgreja =
-      sol.companyCode === "PURAFE" ||
-      sol.tenantId === "PURAFE" ||
-      companyName.toUpperCase().includes("PURA F") ||
-      companyName.toUpperCase().includes("IGREJA");
-
-    return {
-      hasAnyLink,
-      hasMercadoLivre,
-      marketplaces: Array.from(foundSources),
-      isIgreja,
-    };
-  }, [sol, companyName]);
 
   const chain = remoteChain ?? getApprovalChainForRequest(companyName, budget);
 
@@ -433,7 +543,6 @@ export default function SolicitacaoDetailPage() {
             Justificativa da rejeição <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
-            autoFocus
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Descreva detalhadamente o motivo da reprovação..."
@@ -487,7 +596,6 @@ export default function SolicitacaoDetailPage() {
             Motivo do cancelamento <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <textarea
-            autoFocus
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Descreva detalhadamente a justificativa para o cancelamento..."
@@ -577,22 +685,6 @@ export default function SolicitacaoDetailPage() {
                     {formatPriority((sol as any)?.priority || (sol as any)?.prioridade)}
                   </span>
                 )}
-                {detectedLinksInfo.hasAnyLink && (
-                  <span
-                    className={styles.infoTag}
-                    style={{
-                      background: detectedLinksInfo.hasMercadoLivre ? "#fefce8" : "#f0fdf9",
-                      borderColor: detectedLinksInfo.hasMercadoLivre ? "#fde047" : "#99f6e4",
-                      color: detectedLinksInfo.hasMercadoLivre ? "#854d0e" : "#007d79",
-                      fontWeight: 600,
-                    }}
-                  >
-                    <Icon name="shopping-cart-01" />{" "}
-                    {detectedLinksInfo.marketplaces.length > 0
-                      ? `Compra via Link (${detectedLinksInfo.marketplaces.join(", ")})`
-                      : "Compra via Link / E-commerce"}
-                  </span>
-                )}
               </div>
             </div>
 
@@ -630,25 +722,10 @@ export default function SolicitacaoDetailPage() {
                 </div>
               ) : isEligibleForRfq ? (
                 <div className={styles.headerActions}>
-                  {detectedLinksInfo.hasAnyLink && (
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        router.push(
-                          `/compras/rfqs/nova?solicitationId=${sol?.id || solId}&mode=links`,
-                        )
-                      }
-                      title="Abrir cotação rápida para links de compra online ou lojas locais"
-                    >
-                      <Icon name="shopping-cart-01" /> Cotação via Links / Local
-                    </Button>
-                  )}
                   <Button
                     variant="primary"
                     onClick={() =>
-                      router.push(
-                        `/compras/rfqs/nova?solicitationId=${sol?.id || solId}${detectedLinksInfo.hasAnyLink ? "&mode=links" : ""}`,
-                      )
+                      router.push(`/compras/rfqs/nova?solicitationId=${sol?.id || solId}`)
                     }
                   >
                     <Icon name="plus" /> Criar Cotação (RFQ)
@@ -745,19 +822,6 @@ export default function SolicitacaoDetailPage() {
                 )
               )}
 
-              <div className={styles.headerActions}>
-                <Button
-                  variant="secondary"
-                  onClick={handlePrintSC}
-                  disabled={loadingPdf}
-                  loading={loadingPdf}
-                  loadingText="Gerando PDF..."
-                  title="Imprimir ou baixar a Solicitação de Compra em formato PDF oficial"
-                >
-                  <Icon name="printer" /> Imprimir / Baixar SC
-                </Button>
-              </div>
-
               {!isCancelled && !isFinished && (
                 <div className={styles.headerActions}>
                   <Button
@@ -771,72 +835,6 @@ export default function SolicitacaoDetailPage() {
               )}
             </div>
           </div>
-
-          {detectedLinksInfo.hasAnyLink && (
-            <div
-              style={{
-                background: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "#fefce8" : "#f0fdf9",
-                border: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "1px solid #fde047" : "1px solid #99f6e4",
-                borderRadius: 10,
-                padding: "14px 18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 12,
-                color: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "#854d0e" : "#0f766e",
-                fontSize: 13,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 260 }}>
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 8,
-                    background: "#ffffff",
-                    border: detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre ? "1px solid #fde047" : "1px solid #99f6e4",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  {detectedLinksInfo.hasMercadoLivre ? (
-                    <MarketplaceLogo source="mercadolivre" size="md" />
-                  ) : detectedLinksInfo.marketplaces[0] ? (
-                    <MarketplaceLogo source={detectedLinksInfo.marketplaces[0]} size="md" />
-                  ) : (
-                    <Icon name="shopping-cart-01" size={18} />
-                  )}
-                </div>
-                <div>
-                  <strong style={{ display: "block", fontSize: 13.5, color: "#0f172a", marginBottom: 2 }}>
-                    {detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre
-                      ? "Compra via Link do Mercado Livre — Acesso Direto Igreja Pura Fé"
-                      : `Demanda com Link de E-commerce / Referência (${detectedLinksInfo.marketplaces.join(", ") || "Link Web"})`}
-                  </strong>
-                  <span>
-                    {detectedLinksInfo.isIgreja && detectedLinksInfo.hasMercadoLivre
-                      ? "Suprimentos pode abrir uma RFQ simplificada com os links do Mercado Livre ou orçamentos locais para equalização. Após aprovado o vencedor, a própria Igreja Pura Fé tem acesso à conta para efetuar a compra diretamente."
-                      : "Para compras por link ou comércio local, Suprimentos pode abrir uma cotação rápida e registrar diretamente as opções de compra no comparativo."}
-                  </span>
-                </div>
-              </div>
-              {isEligibleForRfq && (
-                <Button
-                  variant="primary"
-                  onClick={() =>
-                    router.push(
-                      `/compras/rfqs/nova?solicitationId=${sol?.id || solId}&mode=links`,
-                    )
-                  }
-                >
-                  <Icon name="arrow-right" /> Abrir RFQ Simplificada (Links / Local)
-                </Button>
-              )}
-            </div>
-          )}
 
           {isDraft && (
             <div
