@@ -5,7 +5,7 @@ export const pedidosTour: TourDefinition = {
   steps: [
     {
       target: '[data-tour="pedidos-kpis"]',
-      title: "Controle de Pedidos Emitidos 📦",
+      title: "Controle de Pedidos Emitidos",
       description:
         "Acompanhe o volume financeiro total comprometido, pedidos pendentes de entrega e contratos formalizados com fornecedores.",
       placement: "bottom",

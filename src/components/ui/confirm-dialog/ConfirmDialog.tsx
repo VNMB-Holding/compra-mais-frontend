@@ -60,7 +60,7 @@ const VARIANT_CONFIG = {
   },
 };
 
-export default function ConfirmDialog({
+function ConfirmDialog({
   open,
   variant = "info",
   title,
@@ -153,3 +153,5 @@ export default function ConfirmDialog({
     document.body,
   );
 }
+
+export default React.memo(ConfirmDialog);

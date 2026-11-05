@@ -163,12 +163,21 @@ export default function ItensCatalogoPage() {
     },
     {
       header: "Material / Serviço",
-      cell: (item) => (
-        <div className={styles.doubleText}>
-          <strong>{item.description}</strong>
-          {item.notes && <span>{item.notes}</span>}
-        </div>
-      ),
+      cell: (item) => {
+        const isItemPuraFe =
+          item.companyCode === "PURAFE" ||
+          item.purchaseAudits?.some((a) => a.companyCode === "PURAFE");
+
+        return (
+          <div className={styles.doubleText}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <strong>{item.description}</strong>
+              {isItemPuraFe && <Badge variant="dark">Pura Fé</Badge>}
+            </div>
+            {item.notes && <span>{item.notes}</span>}
+          </div>
+        );
+      },
     },
     {
       header: "Categoria",

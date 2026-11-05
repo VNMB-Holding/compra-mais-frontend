@@ -5,7 +5,7 @@ export const fornecedoresTour: TourDefinition = {
   steps: [
     {
       target: '[data-tour="fornecedores-kpis"]',
-      title: "Indicadores de Fornecedores 🏢",
+      title: "Indicadores de Fornecedores",
       description:
         "Consulte parceiros homologados, em processo de certificação e a média de pontuação de performance dos seus fornecedores.",
       placement: "bottom",

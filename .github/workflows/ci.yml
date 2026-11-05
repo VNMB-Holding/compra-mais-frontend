@@ -1,19 +1,31 @@
-name: CI Pipeline
+name: CI & HML Pipeline
 
 on:
-  push:
-    branches: [main, master, develop]
   pull_request:
-    branches: [main, master, develop]
+    branches:
+      - main
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-${{ github.repository }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+  statuses: write
 
 jobs:
-  validate:
-    name: Lint, Type Check & Build
+  quality-gate:
+    name: 1. Quality Gate (Lint, Testes & Build)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout PR Head Commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -21,7 +33,7 @@ jobs:
           node-version: 22
           cache: "npm"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci --legacy-peer-deps
 
       - name: Run ESLint
@@ -33,7 +45,134 @@ jobs:
       - name: Run Automated Tests
         run: npm run test
 
-      - name: Build Next.js app
+      - name: Build Next.js App Check
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+
+  deploy-hml:
+    name: 2. Deploy em Homologação (HML)
+    needs: quality-gate
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.labels.*.name, 'deploy:hml'))
+    runs-on: ubuntu-latest
+    environment: homologation
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+      image_digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout PR Head Commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+            type=raw,value=hml-latest
+
+      - name: Build and Push Docker Image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://hml-api-compramais.vnmbholding.com
+            NEXT_PUBLIC_AUTH_API_URL=https://hml-identity.vnmbholding.com
+            NEXT_PUBLIC_GEOAPIFY_API_KEY=2259d519a04e42bcbf5003b9366404a0
+            NEXT_PUBLIC_SUPPORT_WHATSAPP=5511986055544
+            NEXT_PUBLIC_SUPPORT_EMAIL=breno@vnmb.com.br
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy Container to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euo pipefail
+            IMAGE_URI=$(echo "ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}" | tr '[:upper:]' '[:lower:]')
+            COMPOSE_FILE="/data/coolify/applications/compra-mais-hml/docker-compose.yaml"
+            
+            echo "Atualizando imagem do frontend no docker-compose de HML para $IMAGE_URI..."
+            sed -i "s|image:.*compra-mais-frontend.*|image: ${IMAGE_URI}|g" "$COMPOSE_FILE"
+            
+            echo "Autenticando docker no GHCR e puxando nova imagem..."
+            echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin || true
+            docker pull "$IMAGE_URI"
+            
+            echo "Reiniciando servico compra-mais-frontend-hml..."
+            docker compose -f "$COMPOSE_FILE" up -d --no-deps compra-mais-frontend-hml
+            
+            echo "Aguardando healthcheck do frontend..."
+            for i in {1..20}; do
+              STATUS=$(docker inspect --format '{{.State.Health.Status}}' compra-mais-frontend-hml 2>/dev/null || echo "starting")
+              if [ "$STATUS" = "healthy" ]; then
+                echo "Frontend saudavel em HML!"
+                exit 0
+              fi
+              echo "Tentativa $i: status = $STATUS. Aguardando 3s..."
+              sleep 3
+            done
+            echo "Falha no healthcheck apos 60s!"
+            exit 1
+
+      - name: Update PR Status Check (hml/active-deployment)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: 'success',
+              context: 'hml/active-deployment',
+              description: 'Frontend homologado via digest ${{ steps.build.outputs.digest }}',
+              target_url: 'https://hml-compra-mais.vnmbholding.com'
+            });
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `### 🚀 Frontend HML Atualizado com Sucesso
+            - **PR:** #${context.payload.pull_request.number}
+            - **Commit SHA:** \`${context.payload.pull_request.head.sha}\`
+            - **Image Digest:** \`${{ steps.build.outputs.digest }}\`
+            - **URL HML:** https://hml-compra-mais.vnmbholding.com
+            - **Status:** \`hml/active-deployment: SUCCESS\`
+            
+            > [!IMPORTANT]
+            > Este frontend está conectado às APIs de Homologação:
+            > - **API Compra+:** \`https://hml-api-compramais.vnmbholding.com\`
+            > - **Identity Auth:** \`https://hml-identity.vnmbholding.com\``;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

@@ -25,7 +25,7 @@ describe("HelpModal Component", () => {
     render(<HelpModal open={true} onClose={() => {}} />);
 
     expect(screen.getByText("Como cadastrar uma nova RFQ?")).toBeInTheDocument();
-    expect(screen.getByText("Como realizar a homologação de um fornecedor?")).toBeInTheDocument();
+    expect(screen.getByText("Como cadastrar um novo fornecedor?")).toBeInTheDocument();
   });
 
   it("deve filtrar perguntas ao digitar no campo de busca", () => {

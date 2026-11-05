@@ -187,12 +187,12 @@ export default function NovoFornecedorPage() {
         contactName: formData.contatoNome.trim() || undefined,
         contactEmail: formData.contatoEmail.trim() || undefined,
         contactPhone: formData.contatoTelefone.trim() || undefined,
-        status: "UnderCertification",
+        status: "Active",
       } as any);
 
       toast({
         title: "Fornecedor cadastrado com sucesso!",
-        message: `O fornecedor ${formData.tradeName || formData.corporateName} foi cadastrado e iniciou a homologação.`,
+        message: `O fornecedor ${formData.tradeName || formData.corporateName} foi cadastrado com sucesso.`,
         variant: "success",
       });
 
@@ -231,8 +231,8 @@ export default function NovoFornecedorPage() {
           <span className={styles.eyebrow}>Gestão de Fornecedores</span>
           <h1>Novo Fornecedor</h1>
           <p>
-            Cadastre parceiros corporativos fornecendo dados básicos, contato, endereço e dados de
-            homologação.
+            Cadastre parceiros corporativos fornecendo dados básicos, contato, endereço e dados
+            bancários.
           </p>
         </div>
       </div>
@@ -500,7 +500,7 @@ export default function NovoFornecedorPage() {
                     <Icon name="bank-note-01" />
                   </div>
                   <div>
-                    <h2>4. Informações Financeiras e Homologação</h2>
+                    <h2>4. Informações Financeiras e Bancárias</h2>
                     <p>Parâmetros para faturamento e pagamento de ordens.</p>
                   </div>
                 </div>
@@ -585,7 +585,7 @@ export default function NovoFornecedorPage() {
                   loading={loading}
                   loadingText="Salvando..."
                 >
-                  <Icon name="save-01" /> Salvar e Iniciar Homologação
+                  <Icon name="save-01" /> Salvar Cadastro do Fornecedor
                 </Button>
               </div>
             </form>

@@ -5,7 +5,7 @@ export const dashboardTour: TourDefinition = {
   steps: [
     {
       target: '[data-tour="hero-banner"]',
-      title: "Bem-vindo ao Compra+ 👋",
+      title: "Bem-vindo ao Compra+",
       description:
         "Este é o seu painel de controle. Aqui você acompanha KPIs, cotações urgentes e a performance de compras de todas as empresas do grupo.",
       placement: "bottom",

@@ -34,6 +34,7 @@ export interface CatalogItem {
   description: string;
   category?: string;
   unit: string;
+  companyCode?: string;
   lastSupplierId?: string;
   lastUnitPrice?: number;
   lastPurchaseDate?: string;

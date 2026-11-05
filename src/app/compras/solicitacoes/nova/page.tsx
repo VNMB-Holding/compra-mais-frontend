@@ -9,7 +9,7 @@ import {
   GeoapifyContext,
 } from "@geoapify/react-geocoder-autocomplete";
 import "@geoapify/geocoder-autocomplete/styles/minimal.css";
-import { Card, Button, Icon, Select, Badge } from "@/components/ui";
+import { Card, Button, Icon, Select, Badge, MarketplaceLogo } from "@/components/ui";
 import styles from "./solicitacoes-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatCurrency } from "@/lib/utils/format-display";
@@ -21,7 +21,7 @@ import { CATEGORY_LABEL_MAP } from "@/lib/utils/category-icon";
 import { ApprovalModal } from "@/components";
 import { itemsApi, CatalogItem } from "@/lib/api/items";
 import { GEOAPIFY_API_KEY } from "@/config/env";
-import { parseItemDescription } from "@/lib/utils/item-description";
+import { parseItemDescription, detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 
 type Priority = "Baixa" | "Media" | "Alta" | "Critica";
 
@@ -541,6 +541,8 @@ export default function NovaSolicitacaoPage() {
                       options={[
                         { label: "Material recorrente", value: "Material recorrente" },
                         { label: "Compra spot", value: "Compra spot" },
+                        { label: "Compra via Link / E-commerce (Mercado Livre, etc.)", value: "Compra via Link / E-commerce" },
+                        { label: "Compra Local / Presencial", value: "Compra Local / Presencial" },
                         { label: "Serviço técnico", value: "Serviço técnico" },
                         { label: "Contrato recorrente", value: "Contrato recorrente" },
                         { label: "Projeto especial", value: "Projeto especial" },
@@ -814,16 +816,51 @@ export default function NovaSolicitacaoPage() {
                               </div>
 
                               <div className={`${styles.formGroup} ${styles.col6}`}>
-                                <label>Link de referência / Modelo (opcional)</label>
+                                <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                                  <span>Link do anúncio / Referência (Mercado Livre, E-commerce, etc.)</span>
+                                  {(() => {
+                                    const mp = detectMarketplaceFromUrl(item.referenceUrl || item.description);
+                                    if (!mp) return null;
+                                    return (
+                                      <span
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: 6,
+                                          padding: "3px 8px",
+                                          borderRadius: 6,
+                                          background: mp.isMercadoLivre ? "#fef3c7" : "#f0fdfa",
+                                          border: `1px solid ${mp.isMercadoLivre ? "#fcd34d" : "#99f6e4"}`,
+                                          color: mp.isMercadoLivre ? "#92400e" : "#0f766e",
+                                          fontSize: 11.5,
+                                          fontWeight: 700,
+                                        }}
+                                      >
+                                        <MarketplaceLogo source={mp} size="sm" />
+                                        {mp.label}
+                                      </span>
+                                    );
+                                  })()}
+                                </label>
                                 <input
                                   type="url"
-                                  placeholder="https://exemplo.com.br/produto/..."
+                                  placeholder="https://produto.mercadolivre.com.br/..."
                                   className={styles.formControl}
                                   value={item.referenceUrl || ""}
-                                  onChange={(event) =>
-                                    updateItem(item.id, "referenceUrl", event.target.value)
-                                  }
+                                  onChange={(event) => {
+                                    const val = event.target.value;
+                                    updateItem(item.id, "referenceUrl", val);
+                                    const mp = detectMarketplaceFromUrl(val);
+                                    if (mp && purchaseType === "Material recorrente") {
+                                      setPurchaseType("Compra via Link / E-commerce");
+                                    }
+                                  }}
                                 />
+                                {targetTenantId === "PURAFE" && detectMarketplaceFromUrl(item.referenceUrl || item.description)?.isMercadoLivre && (
+                                  <small style={{ color: "#007d79", fontSize: 11.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                                    <Icon name="check-circle" size={13} /> Link do Mercado Livre identificado — A Igreja Pura Fé possui acesso direto para realizar a compra após cotação/aprovação.
+                                  </small>
+                                )}
                               </div>
                             </div>
                           </div>

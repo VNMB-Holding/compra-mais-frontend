@@ -248,6 +248,7 @@ export const rfqsApi = {
   createProposal: (
     rfqId: string,
     data: {
+      proposalId?: string;
       supplierId: string;
       unitPrice: number;
       freightCost?: number;
@@ -271,6 +272,11 @@ export const rfqsApi = {
       status: string;
       isWinner: boolean;
     }>(`/api/rfqs/${rfqId}/proposals`, data),
+
+  deleteProposal: (rfqId: string, proposalId: string) =>
+    apiClient.delete<{ success: boolean; message: string }>(
+      `/api/rfqs/${rfqId}/proposals/${proposalId}`,
+    ),
 
   selectWinner: (rfqId: string, proposalId: string) =>
     apiClient.patch(`/api/rfqs/${rfqId}/winner`, { proposalId }),

@@ -1,3 +1,3 @@
 export function getSupplierDetailUrl(id: string): string {
-  return `/fornecedores/homologacao/${encodeURIComponent(id)}`;
+  return `/fornecedores/${encodeURIComponent(id)}`;
 }

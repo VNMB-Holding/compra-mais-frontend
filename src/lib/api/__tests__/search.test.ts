@@ -129,7 +129,7 @@ describe("searchApi (Global Real-time Search)", () => {
       expect(res.pedidos).toHaveLength(1);
       expect(res.fornecedores).toHaveLength(1);
       expect(res.fornecedores[0].corporateName).toBe("Dell Computadores do Brasil");
-      expect(res.fornecedores[0].url).toBe("/fornecedores/homologacao/sup-1");
+      expect(res.fornecedores[0].url).toBe("/fornecedores/sup-1");
     });
 
     it("deve realizar fallback resiliente e paralelo caso /api/search falhe", async () => {
@@ -200,7 +200,7 @@ describe("searchApi (Global Real-time Search)", () => {
 
       expect(res.fornecedores).toHaveLength(1);
       expect(res.fornecedores[0].tradeName).toBe("LG");
-      expect(res.fornecedores[0].url).toBe("/fornecedores/homologacao/sup-10");
+      expect(res.fornecedores[0].url).toBe("/fornecedores/sup-10");
     });
   });
 });

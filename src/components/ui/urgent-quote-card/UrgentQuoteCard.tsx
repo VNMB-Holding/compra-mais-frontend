@@ -1,6 +1,7 @@
 import React from "react";
 import Card from "../card/Card";
 import Icon from "../icon/Icon";
+import Badge from "../badge/Badge";
 import styles from "./UrgentQuoteCard.module.css";
 
 interface QuoteData {
@@ -22,47 +23,64 @@ interface UrgentQuoteCardProps {
 export default function UrgentQuoteCard({ quote, onAction }: UrgentQuoteCardProps) {
   const localOuCentro = quote.category || "Almoxarifado Geral";
   const estrategia = quote.type || "Menor Preço Equalizado";
+  const isUrgentToday =
+    quote.timeRemaining.toLowerCase().includes("hoje") ||
+    quote.timeRemaining.toLowerCase().includes("vence");
 
   return (
     <Card className={styles.urgentCard}>
       <div className={styles.cardHeader}>
-        <div className={styles.headerTitles}>
-          <div className={styles.titleWithIndicator}>
+        <div className={styles.headerRow}>
+          <div>
             <h4>Cotação mais urgente</h4>
-            <span className={styles.pulseDot} />
+            <span className={styles.subtitle}>Prazo mais próximo de encerramento</span>
           </div>
-          <span className={styles.subtitle}>Encerramento prioritário no módulo RFQ</span>
+          <Badge
+            variant={isUrgentToday ? "danger" : "warning"}
+            icon="clock"
+          >
+            {quote.timeRemaining}
+          </Badge>
         </div>
       </div>
 
-      <div className={styles.quoteBox}>
-        <div className={styles.quoteBoxHeader}>
-          <span className={styles.codeTag}>{quote.code}</span>
-          <span className={styles.urgencyTag}>
-            <Icon name="clock" size={12} /> {quote.timeRemaining}
-          </span>
+      <div className={styles.cardBody}>
+        <div className={styles.quoteHeader}>
+          <Badge variant="gray">{quote.code}</Badge>
         </div>
 
-        <h3 className={styles.quoteTitle} title={quote.title}>
+        <h3
+          className={`${styles.quoteTitle}${onAction ? ` ${styles.clickableTitle}` : ""}`}
+          title={quote.title}
+          onClick={onAction}
+        >
           {quote.title}
         </h3>
 
         <div className={styles.quoteMetaList}>
           <div className={styles.metaItem}>
-            <Icon name="building-01" size={14} className={styles.metaIcon} />
-            <span className={styles.metaText} title={localOuCentro}>
-              {localOuCentro}
-            </span>
+            <Icon name="building-01" size={15} className={styles.metaIcon} />
+            <div className={styles.metaContent}>
+              <span className={styles.metaLabel}>Almoxarifado</span>
+              <span className={styles.metaValue} title={localOuCentro}>
+                {localOuCentro}
+              </span>
+            </div>
           </div>
           <div className={styles.metaItem}>
-            <Icon name="check-verified-01" size={14} className={styles.metaIcon} />
-            <span className={styles.metaText}>{estrategia}</span>
+            <Icon name="tag-01" size={15} className={styles.metaIcon} />
+            <div className={styles.metaContent}>
+              <span className={styles.metaLabel}>Critério</span>
+              <span className={styles.metaValue} title={estrategia}>
+                {estrategia}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       <button className={styles.cardLink} onClick={onAction}>
-        Acessar cotação na íntegra <Icon name="arrow-right" size={16} />
+        Ver detalhes da cotação <Icon name="arrow-right" size={16} />
       </button>
     </Card>
   );

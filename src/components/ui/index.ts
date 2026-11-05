@@ -44,3 +44,5 @@ export type { ColumnDef } from "./data-table/DataTable";
 export { default as GuidedTour } from "./guided-tour/GuidedTour";
 export { default as ItemCell } from "./item-cell/ItemCell";
 export type { ItemCellProps } from "./item-cell/ItemCell";
+export { default as MarketplaceLogo } from "./marketplace-logo/MarketplaceLogo";
+export type { MarketplaceLogoProps } from "./marketplace-logo/MarketplaceLogo";
