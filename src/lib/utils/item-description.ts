@@ -223,7 +223,7 @@ export function deriveTitleFromUrl(url: string): string {
       })
       .filter(
         (p) =>
-          !/^(?:dp|p|item|produto|itm|gp|pd|product|MLB\d*|index)$/i.test(p) &&
+          !/^(?:dp|p|item|produto|itm|gp|pd|product|up|MLB\d*|MLBU\d*|index)$/i.test(p) &&
           !/^[0-9a-f-]{20,}$/i.test(p) &&
           !/^[A-Z0-9]{10,}$/.test(p) &&
           !/^\d+$/.test(p)

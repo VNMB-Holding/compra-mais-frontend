@@ -107,7 +107,7 @@ export default function NovaSolicitacaoPage() {
           setItems(
             data.items.map((item, idx) => ({
               id: idx + 1,
-              description: item.description || "",
+              description: parseItemDescription(item.description, (item as any).referenceUrl).cleanDescription || item.description || "",
               category: item.costCenterName || "MRO / Pecas",
               quantity: Number(item.quantity) || 1,
               unit: item.unit || "UN",
@@ -116,7 +116,7 @@ export default function NovaSolicitacaoPage() {
                 ? new Date(item.requiredDate).toISOString().split("T")[0]
                 : "",
               catalogItemId: (item as any).catalogItemId,
-              referenceUrl: (item as any).referenceUrl || "",
+              referenceUrl: parseItemDescription(item.description, (item as any).referenceUrl).referenceUrl || "",
             })),
           );
         }
@@ -334,14 +334,14 @@ export default function NovaSolicitacaoPage() {
         items: items
           .filter((i) => i.description.trim())
           .map((i) => ({
-            description: i.description,
+            description: parseItemDescription(i.description, i.referenceUrl).cleanDescription,
             quantity: Number(i.quantity) || 1,
             unit: i.unit || "UN",
             estimatedUnitPrice: Number(i.unitPrice) || 0,
             category: i.category || "Geral",
             requiredDate: i.requiredDate || undefined,
             catalogItemId: i.catalogItemId || undefined,
-            referenceUrl: i.referenceUrl?.trim() || undefined,
+            referenceUrl: parseItemDescription(i.description, i.referenceUrl).referenceUrl || undefined,
           })),
       };
 

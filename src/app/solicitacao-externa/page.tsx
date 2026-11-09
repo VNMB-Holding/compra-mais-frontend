@@ -12,7 +12,7 @@ import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
 import { CatalogItem, itemsApi } from "@/lib/api/items";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { maskPhone } from "@/lib/utils/masks";
-import { detectMarketplaceFromUrl } from "@/lib/utils/item-description";
+import { detectMarketplaceFromUrl, parseItemDescription } from "@/lib/utils/item-description";
 import { COMPANY_BRANCHES, findCompanyBranch } from "@/lib/constants/companies";
 import { isPuraFeUser } from "@/lib/utils/tenant";
 import MinhasSolicitacoesTab from "./MinhasSolicitacoesTab";
@@ -560,7 +560,7 @@ export default function SolicitacaoExternaPage() {
                 ? "Low"
                 : "Medium",
         items: itensComCatalogo.map((it) => ({
-          description: it.descricao.trim(),
+          description: parseItemDescription(it.descricao, it.linkReferencia).cleanDescription,
           quantity: Number(it.quantidade) || 1,
           unit: it.unidade || "UN",
           estimatedUnitPrice: Number(it.valorEstimado) || 0,
@@ -568,7 +568,7 @@ export default function SolicitacaoExternaPage() {
           costCenterName: setorNomeFormatado,
           costCenterCode: setor,
           requiredDate: dataDesejada ? new Date(dataDesejada).toISOString() : undefined,
-          referenceUrl: it.linkReferencia?.trim() || undefined,
+          referenceUrl: parseItemDescription(it.descricao, it.linkReferencia).referenceUrl || undefined,
         })),
       };
 
