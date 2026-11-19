@@ -13,7 +13,7 @@ import {
   DateFilterValue,
 } from "@/components/ui";
 import { useToast } from "@/contexts/ToastContext";
-import { getCompanyFilterOptions } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 import { dashboardApi } from "@/lib/api/dashboard";
 import { usePurchaseOrders, usePurchaseRequests, useRfqs } from "@/hooks/useQueries";
 
@@ -89,7 +89,7 @@ export default function RelatoriosPage() {
   const { data: requests = [] } = usePurchaseRequests();
   const { data: rfqs = [] } = useRfqs();
 
-  const companyOptions = getCompanyFilterOptions();
+  const companyOptions = useCompanyFilterOptions();
 
   const [history, setHistory] = useState<GeneratedReport[]>([]);
 

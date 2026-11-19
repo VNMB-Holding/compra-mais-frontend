@@ -21,7 +21,8 @@ import { getSupplierDetailUrl } from "@/lib/utils/routes";
 import { detectMarketplaceFromUrl } from "@/lib/utils/item-description";
 
 import { useAuth } from "@/hooks/useAuth";
-import { isPuraFeUser, getCompanyFilterOptions } from "@/lib/utils/tenant";
+import { isPuraFeUser } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 import { User } from "@/types/auth";
 import { useTour } from "@/hooks/useTour";
 import { fornecedoresTour } from "@/lib/tours";
@@ -93,7 +94,7 @@ export default function FornecedoresListPage() {
   const { user } = useAuth();
   const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
   const [selectedCompany, setSelectedCompany] = useState<string>("TODAS");
-  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
+  const companyOptions = useCompanyFilterOptions(user);
 
   const [selectedSegment, setSelectedSegment] = useState("Todos");
   const [selectedCity, setSelectedCity] = useState("Todas");
