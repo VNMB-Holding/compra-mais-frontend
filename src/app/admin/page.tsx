@@ -106,67 +106,12 @@ export default function AdminPage() {
         adminApi.getApprovalRules(),
         adminApi.getApprovers(),
       ]);
-      const mergedComps: CompanyBranchConfig[] = [];
-      const seenCanonical = new Set<string>();
-      const seenCode = new Set<string>();
-
-      for (const p of PRIMARY_COMPANIES) {
-        mergedComps.push({
-          id: `comp-${p.code.toLowerCase()}`,
-          code: p.code,
-          name: p.name,
-          acronym: p.acronym,
-          unitName: p.unitName,
-          type: "Matriz",
-          active: true,
-        });
-        seenCanonical.add(p.code);
-        seenCode.add(p.code);
-      }
-
-      for (const c of comps) {
-        const canonical = getCanonicalCompanyCode(c.code);
-        const existing = mergedComps.find(
-          (m) => m.code === canonical || getCanonicalCompanyCode(m.code) === canonical,
-        );
-        if (existing) {
-          if (c.cnpj && !existing.cnpj) existing.cnpj = c.cnpj;
-          if (c.email && !existing.email) existing.email = c.email;
-          if (c.address && !existing.address) existing.address = c.address;
-          if (c.city && !existing.city) existing.city = c.city;
-          if (c.state && !existing.state) existing.state = c.state;
-          if (c.zipCode && !existing.zipCode) existing.zipCode = c.zipCode;
-        } else if (!seenCode.has(c.code) && !seenCanonical.has(canonical)) {
-          mergedComps.push(c);
-          seenCode.add(c.code);
-          seenCanonical.add(canonical);
-        }
-      }
-
-      for (const b of COMPANY_BRANCHES) {
-        if (b.code === "2313" || b.code === "PURAFE" || b.code === "VNMB") {
-          continue;
-        }
-        if (!seenCode.has(b.code)) {
-          mergedComps.push({
-            id: `comp-${b.code.toLowerCase()}`,
-            code: b.code,
-            name: b.name,
-            acronym: b.acronym,
-            unitName: b.unitName,
-            type: "Filial",
-            active: true,
-          });
-          seenCode.add(b.code);
-        }
-      }
-
-      setCompanies(mergedComps);
+      setCompanies(comps);
       setRules(rls);
       setApproverOptions(approvers);
-      if (mergedComps.length > 0 && !mergedComps.some((c) => c.code === selectedWorkflowCompany)) {
+      if (comps.length > 0 && !comps.some((c) => c.code === selectedWorkflowCompany)) {
         setSelectedWorkflowCompany(
-          mergedComps.some((c) => c.code === "2313") ? "2313" : mergedComps[0].code,
+          comps.some((c) => c.code === "2313") ? "2313" : comps[0].code,
         );
       }
     } catch (err: any) {

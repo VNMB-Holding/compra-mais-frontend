@@ -27,10 +27,10 @@ import styles from "./rfq-new.module.css";
 import { logError, getErrorMessage } from "@/lib/utils/error";
 import { formatPriority } from "@/lib/constants/status";
 import {
-  getCompanyFilterOptions,
   resolvePurchaseRequestBranch,
   isPuraFeUser,
 } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 import {
   parseItemDescription,
   detectMarketplaceFromUrl,
@@ -329,7 +329,7 @@ export default function NewRfqPage() {
     }
   }, [isPuraFe]);
 
-  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
+  const companyOptions = useCompanyFilterOptions(user);
 
   const [requestsApi, setRequestsApi] = useState<Solicitacao[]>([]);
   const [loadingData, setLoadingData] = useState(true);

@@ -18,7 +18,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { formatCurrency, formatDateTimePtBr } from "@/lib/utils/format-display";
 import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi, SpendAnalyticsResponse } from "@/lib/api/dashboard";
-import { getCompanyFilterOptions } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 import { logError } from "@/lib/utils/error";
 
 interface SpendItem {
@@ -61,7 +61,7 @@ export default function SpendPage() {
     },
   );
 
-  const companyOptions = getCompanyFilterOptions();
+  const companyOptions = useCompanyFilterOptions();
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   useEffect(() => {

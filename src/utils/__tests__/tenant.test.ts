@@ -16,8 +16,29 @@ describe("Tenant Utilities", () => {
   });
 
   describe("getCompanyFilterOptions", () => {
+    const mockCompanies = [
+      {
+        id: "1",
+        code: "2313",
+        name: "VB AGRO LTDA",
+        acronym: "BRD",
+        unitName: "Matriz",
+        type: "Matriz" as const,
+        active: true,
+      },
+      {
+        id: "2",
+        code: "2345",
+        name: "VB AGRO LTDA - Vargem Grande",
+        acronym: "VBA",
+        unitName: "Vargem Grande",
+        type: "Filial" as const,
+        active: true,
+      },
+    ];
+
     it("deve incluir a opção TODAS no início", () => {
-      const options = getCompanyFilterOptions();
+      const options = getCompanyFilterOptions(undefined, mockCompanies);
       expect(options.length).toBeGreaterThan(1);
       expect(options[0]).toEqual({
         label: "Unidade: Todas as Unidades",
@@ -25,8 +46,15 @@ describe("Tenant Utilities", () => {
       });
     });
 
+    it("não deve retornar unidades hardcoded quando a API ainda não retornou empresas", () => {
+      const options = getCompanyFilterOptions(undefined, []);
+      expect(options).toEqual([
+        { label: "Unidade: Todas as Unidades", value: "TODAS" },
+      ]);
+    });
+
     it("todas as opções devem conter label e value válidos", () => {
-      const options = getCompanyFilterOptions();
+      const options = getCompanyFilterOptions(undefined, mockCompanies);
       options.forEach((opt) => {
         expect(opt.label).toBeDefined();
         expect(opt.value).toBeDefined();

@@ -23,7 +23,8 @@ import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage } from "@/lib/utils/error";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
-import { isPuraFeUser, getCompanyFilterOptions } from "@/lib/utils/tenant";
+import { isPuraFeUser } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 import styles from "./itens.module.css";
 
 const CATEGORY_OPTIONS = [
@@ -42,7 +43,7 @@ export default function ItensCatalogoPage() {
   const { user } = useAuth();
   const isPuraFe = useMemo(() => isPuraFeUser(user), [user]);
   const [selectedCompany, setSelectedCompany] = useState<string>("TODAS");
-  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
+  const companyOptions = useCompanyFilterOptions(user);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");

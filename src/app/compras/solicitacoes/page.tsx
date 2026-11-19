@@ -33,9 +33,9 @@ import { getErrorMessage, logError } from "@/lib/utils/error";
 import { useToast } from "@/contexts/ToastContext";
 import { downloadPdfResponse } from "@/lib/utils/pdf";
 import {
-  getCompanyFilterOptions,
   resolvePurchaseRequestBranch,
 } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 
 import {
   PURCHASE_REQUEST_STATUS_MAP as STATUS_MAP,
@@ -127,7 +127,7 @@ function SolicitacoesContent() {
   };
   const itemsPerPage = 10;
 
-  const companyOptions = React.useMemo(() => getCompanyFilterOptions(user), [user]);
+  const companyOptions = useCompanyFilterOptions(user);
 
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
