@@ -172,6 +172,7 @@
   font-size: 12px;
   overflow: hidden;
   flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .userAvatarImg {
@@ -179,8 +180,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-}
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .userAvatarSmall:hover {
   transform: scale(1.08);
@@ -330,8 +329,6 @@
   font-weight: bold;
   font-size: 16px;
   overflow: hidden;
-  flex-shrink: 0;
-}
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 125, 121, 0.2);
 }
