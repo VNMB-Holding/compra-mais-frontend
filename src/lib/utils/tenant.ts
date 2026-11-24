@@ -64,17 +64,34 @@ export function isVnmbUser(user: User | null): boolean {
   return !isPuraFeUser(user);
 }
 
-export function getCompanyFilterOptions(user?: User | null): { label: string; value: string }[] {
+import type { CompanyBranchConfig } from "@/lib/api/admin";
+
+export function getCompanyFilterOptions(
+  user?: User | null,
+  companies: CompanyBranchConfig[] = [],
+): { label: string; value: string }[] {
   if (isPuraFeUser(user)) {
-    return [{ label: "IGREJA PURA FÉ (IPF)", value: "PURAFE" }];
+    const puraFe = companies.find((c) => c.code === "PURAFE");
+    return [
+      {
+        label: puraFe ? `${puraFe.name} (${puraFe.acronym})` : "IGREJA PURA FÉ (IPF)",
+        value: "PURAFE",
+      },
+    ];
   }
 
-  const branches = sortCompanyBranchesMatrixFirst(COMPANY_BRANCHES);
+  const activeBranches = companies
+    .filter((c) => c.code !== "TODAS" && c.active !== false)
+    .sort((a, b) => {
+      if (a.type === "Matriz" && b.type !== "Matriz") return -1;
+      if (a.type !== "Matriz" && b.type === "Matriz") return 1;
+      return a.code.localeCompare(b.code);
+    });
 
   return [
     { label: "Unidade: Todas as Unidades", value: "TODAS" },
-    ...branches.map((b) => ({
-      label: `${b.code} - ${b.name} (${b.acronym})`,
+    ...activeBranches.map((b) => ({
+      label: `${b.code} - ${b.name}${b.acronym ? ` (${b.acronym})` : ""}`,
       value: b.code,
     })),
   ];

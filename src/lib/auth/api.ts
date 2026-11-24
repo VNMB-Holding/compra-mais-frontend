@@ -11,6 +11,7 @@ export interface IdentityLoginResponse {
     email: string;
     tenant_id?: string;
     tenant_name?: string;
+    avatar_url?: string | null;
     roles?: string[];
     scopes?: string[];
   };
@@ -228,6 +229,7 @@ export interface IdentityUserResponse {
   tenant_id: string;
   name: string;
   email: string;
+  avatar_url?: string | null;
   status: string;
   created_at: string;
 }

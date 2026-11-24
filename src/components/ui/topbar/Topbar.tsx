@@ -143,6 +143,7 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
 
   const userName = user?.name || "Usuário";
   const userEmail = user?.email || "";
+  const userAvatar = user?.avatar;
   const rawSpecialistRole = user?.roles?.find((r) => {
     const lower = r.toLowerCase();
     return (
@@ -300,13 +301,23 @@ export default function Topbar({ isSidebarCollapsed, onToggleSidebar }: TopbarPr
             onClick={() => togglePopup("user")}
             title={userName}
           >
-            {getInitials(userName)}
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} className={styles.userAvatarImg} />
+            ) : (
+              getInitials(userName)
+            )}
           </div>
 
           {activePopup === "user" && (
             <div className={`${styles.dropdownBox} ${styles.userDropdown}`}>
               <div className={styles.dropdownUserHeader}>
-                <div className={styles.userAvatarLarge}>{getInitials(userName)}</div>
+                <div className={styles.userAvatarLarge}>
+                  {userAvatar ? (
+                    <img src={userAvatar} alt={userName} className={styles.userAvatarImg} />
+                  ) : (
+                    getInitials(userName)
+                  )}
+                </div>
                 <div>
                   <strong>{userName}</strong>
                   <p>{userEmail}</p>

@@ -31,7 +31,8 @@ import {
 } from "@/lib/api/dashboard";
 import { rfqsApi, Rfq } from "@/lib/api/rfqs";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCompanyFilterOptions, getTenantDisplayName } from "@/lib/utils/tenant";
+import { getTenantDisplayName } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 
 import { RFQRow } from "@/types/domain";
 import { mapRfqStatus, getStatusBadgeVariant } from "@/lib/constants/status";
@@ -61,7 +62,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
+  const companyOptions = useCompanyFilterOptions(user);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   const fetchData = useCallback(async () => {

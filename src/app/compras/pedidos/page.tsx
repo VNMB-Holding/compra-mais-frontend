@@ -21,7 +21,8 @@ import { purchaseOrdersApi, PurchaseOrder } from "@/lib/api/purchase-orders";
 import { dashboardApi } from "@/lib/api/dashboard";
 import { formatCurrency } from "@/lib/utils/format-display";
 import { getErrorMessage, logError } from "@/lib/utils/error";
-import { getCompanyFilterOptions, formatCorporateBranch } from "@/lib/utils/tenant";
+import { formatCorporateBranch } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 import {
   PURCHASE_ORDER_STATUS_MAP as STATUS_MAP,
   getStatusBadgeVariant,
@@ -84,7 +85,7 @@ export default function PedidosPage() {
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const companyOptions = useMemo(() => getCompanyFilterOptions(user), [user]);
+  const companyOptions = useCompanyFilterOptions(user);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
 
   useEffect(() => {

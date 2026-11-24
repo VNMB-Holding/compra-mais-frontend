@@ -24,10 +24,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/auth";
 import { getErrorMessage, logError } from "@/lib/utils/error";
 import {
-  getCompanyFilterOptions,
   formatCorporateBranch,
   getTenantDisplayName,
 } from "@/lib/utils/tenant";
+import { useCompanyFilterOptions } from "@/hooks/useCompanies";
 
 import { RfqRow } from "@/types/domain";
 import { useRfqs } from "@/hooks/useQueries";
@@ -90,7 +90,7 @@ export default function RfqsPage() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("TODAS");
   const [kpis, setKpis] = useState<RfqKpis | null>(null);
 
-  const companyOptions = React.useMemo(() => getCompanyFilterOptions(user), [user]);
+  const companyOptions = useCompanyFilterOptions(user);
   const queryCompanyCode = selectedCompanyId !== "TODAS" ? selectedCompanyId : undefined;
   const [searchQuery, setSearchQuery] = useState("");
 
