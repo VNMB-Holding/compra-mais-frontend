@@ -165,10 +165,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const meRoles = updatedUser.roles || [];
             const meScopes = updatedUser.scopes || [];
 
+            let refreshedAvatar: string | undefined = updatedUser.avatar;
             if (updatedUser.id) {
               const userData = await getUserByIdApi(updatedUser.id).catch(() => null);
               if (userData && userData.tenant_id) {
                 tenantId = userData.tenant_id;
+              }
+              if (userData && userData.avatar_url) {
+                refreshedAvatar = userData.avatar_url;
               }
             }
 
@@ -193,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const enrichedUser: User = {
               ...updatedUser,
+              avatar: refreshedAvatar,
               tenantId: tenantId || updatedUser.tenantId,
               tenantName: tenantName || updatedUser.tenantName,
               availableTenants:
@@ -232,11 +237,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let tenantId: string | undefined = backendUser.tenant_id;
     const userId = backendUser.id;
 
+    let avatarUrl: string | undefined = backendUser.avatar_url || undefined;
+
     if (userId) {
       try {
         const userData = await getUserByIdApi(userId);
         if (userData && userData.tenant_id) {
           tenantId = userData.tenant_id;
+        }
+        if (userData && userData.avatar_url) {
+          avatarUrl = userData.avatar_url;
         }
       } catch (err) {
         logError("AuthContext/getUserByIdApi", err);
@@ -287,7 +297,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       availableTenants: availableTenants.length > 0 ? availableTenants : undefined,
       accessToken: token,
       refreshToken: loginData.refresh_token,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(backendUser.name || "User")}`,
+      avatar:
+        avatarUrl ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(backendUser.name || "User")}`,
     };
 
     setAccessToken(loginData.access_token);
